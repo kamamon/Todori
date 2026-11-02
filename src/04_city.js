@@ -77,7 +77,7 @@ function cityStats() {
     const s = c.d[D.id];
     pop += s.pop; firms += s.firms; vitW += s.vit * s.pop; dep += s.depMkt; land += s.land * s.pop;
   }
-  return { pop, firms, vit: vitW / pop, depMkt: dep, land: land / pop, share: deposits() / dep };
+  return { pop, firms, vit: vitW / pop, depMkt: dep, land: land / pop, share: cityDeposits() / dep };
 }
 
 /* 地区の開発段階（地図の描画用、1〜10） */

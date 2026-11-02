@@ -461,8 +461,66 @@ table.t { width: 100%; border-collapse: collapse; font-size: 13px; }
 .appoint .body-text input { font-family: var(--f-doc); font-size: 17px; border: 0; border-bottom: 1px solid var(--ink-2); border-radius: 0; background: transparent; padding: 0 4px; width: 9em; text-align: center; }
 .appoint .issuer { text-align: right; font-family: var(--f-doc); margin-top: 24px; line-height: 1.9; }
 .appoint .opts { margin-top: 26px; display: grid; gap: 12px; }
+.appoint .field .seg { justify-self: start; }
 .appoint .start { margin-top: 26px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
 .appoint .start .btn.primary { padding: 10px 28px; font-size: 15px; }
+
+/* 場面の画像（Canvaで生成。img/ にあれば表示） */
+.scene { margin: 0; overflow: hidden; border-radius: var(--r-m); background: var(--sheet-3); }
+.scene img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.scene.ph { background: radial-gradient(120% 90% at 20% 10%, var(--vault-soft), var(--sheet-3)); }
+.hero { max-width: 1120px; margin: 20px auto 0; aspect-ratio: 2 / 1; border-radius: var(--r-l); box-shadow: var(--shadow); }
+.appoint.with-hero { margin-top: -72px; }
+.modal-art { aspect-ratio: 21 / 9; margin: 0 0 12px; }
+.panel-art { aspect-ratio: 3 / 1; margin: 0 0 12px; }
+
+/* 業態ステージ */
+.stagecard { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); background: var(--sheet); border: 1px solid var(--rule); border-radius: var(--r-l); overflow: hidden; box-shadow: var(--shadow); }
+.stagecard .stage-art { border-radius: 0; min-height: 230px; }
+.stage-body { padding: 16px 20px 18px; min-width: 0; }
+.stage-steps { list-style: none; display: flex; align-items: center; gap: 6px; padding: 0; margin: 0 0 12px; flex-wrap: wrap; }
+.stage-steps li { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-3); }
+.stage-steps li + li::before { content: ""; width: 18px; height: 1px; background: var(--rule-strong); }
+.stage-steps .n { width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--rule-strong); display: grid; place-items: center; font-size: 11px; font-family: var(--f-num); }
+.stage-steps .done .n { background: var(--vault-soft); border-color: var(--vault); color: var(--vault); }
+.stage-steps .now { color: var(--ink); font-weight: 700; }
+.stage-steps .now .n { background: var(--vault); border-color: var(--vault); color: var(--on-vault); }
+.stage-name { font-family: var(--f-doc); font-size: 26px; margin: 0 0 6px; letter-spacing: .04em; }
+.stage-badge { display: inline-block; margin-left: 8px; padding: 1px 8px; font-size: 11px; font-weight: 700; border-radius: 999px; background: var(--brass); color: #fff; vertical-align: 3px; letter-spacing: .06em; }
+.stage-badge.s2 { background: var(--on-mast); color: var(--mast); }
+
+/* 店舗網のタイル地図 */
+.tilemap { width: 100%; height: auto; display: block; max-height: 380px; }
+.tile { fill: var(--sheet-2); stroke: var(--rule-strong); stroke-width: 1; cursor: pointer; }
+.tile.lv1, .tile.lv2, .tile.lv3, .tile.lv4, .tile.lv5 { fill: var(--vault); }
+.tile.lv1 { fill-opacity: .2; } .tile.lv2 { fill-opacity: .38; } .tile.lv3 { fill-opacity: .6; } .tile.lv4 { fill-opacity: .8; } .tile.lv5 { fill-opacity: 1; }
+.tile.building { stroke: var(--brass); stroke-width: 2; stroke-dasharray: 5 3; }
+.tile.frozen { stroke: var(--shu); stroke-width: 2; }
+.tile.sel { stroke: var(--ink); stroke-width: 2.5; stroke-dasharray: none; }
+.tile.home { fill: var(--brass-soft); stroke: var(--brass); cursor: default; }
+.tilemap g[data-act]:hover .tile { stroke: var(--ink); }
+.tilemap g[data-act]:focus { outline: none; }
+.tilemap g[data-act]:focus-visible .tile { stroke: var(--brass); stroke-width: 3; }
+.tile-t { font-size: 13px; font-weight: 700; fill: var(--ink); pointer-events: none; font-family: var(--f-ui); }
+.tile-t.inv { fill: var(--on-vault); }
+.tilemap circle { pointer-events: none; }
+.tilemap circle.on { fill: var(--brass); }
+.tilemap circle.off { fill: var(--rule-strong); opacity: .55; }
+.tilemap circle.bd { fill: none; stroke: var(--brass); stroke-width: 1.5; }
+.nextlv { border-top: 1px dashed var(--rule-strong); padding-top: 10px; margin-top: 12px; }
+.policy h3 { font-size: 14px; margin: 0 0 8px; }
+.policy .kv { margin-top: 10px; }
+
+/* カスタムスタート */
+.presets { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.preset { text-align: left; border: 1px solid var(--rule-strong); background: var(--sheet); border-radius: var(--r-m); padding: 8px 10px; cursor: pointer; display: grid; gap: 2px; font: inherit; color: inherit; }
+.preset b { font-size: 13px; }
+.preset span { font-size: 11px; color: var(--ink-3); line-height: 1.45; }
+.preset:hover { border-color: var(--vault-2); }
+.preset.on { border-color: var(--vault); background: var(--vault-soft); box-shadow: inset 0 0 0 1px var(--vault); }
+.custom-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 14px; padding: 12px; border: 1px solid var(--rule); border-radius: var(--r-m); background: var(--sheet-2); }
+.custom-grid select { width: 100%; }
+.linkish { background: none; border: 0; padding: 0; color: var(--vault-2); text-decoration: underline; cursor: pointer; justify-self: start; font: inherit; }
 
 /* レスポンシブ */
 @media (max-width: 1180px) {
@@ -511,6 +569,12 @@ table.t { width: 100%; border-collapse: collapse; font-size: 13px; }
   .ringi section { padding: 12px 16px; }
   .decide { padding: 12px 16px; }
   .appoint { padding: 28px 22px 24px; margin-top: 16px; }
+  .appoint.with-hero { margin-top: -28px; }
+  .hero { margin-top: 0; border-radius: 0; }
+  .stagecard { grid-template-columns: minmax(0, 1fr); }
+  .stagecard .stage-art { min-height: 0; aspect-ratio: 16 / 9; }
+  .presets { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .custom-grid { grid-template-columns: minmax(0, 1fr); }
   .appoint h1 { font-size: 28px; }
   .modal .mb { padding: 14px 16px; }
   .modal .mh, .modal .mf { padding-left: 16px; padding-right: 16px; }
@@ -531,6 +595,7 @@ table.t { width: 100%; border-collapse: collapse; font-size: 13px; }
 <script>
 'use strict';
 (function () {
+const ART_FILES = {};
 /* ---- 00_util.js ---- */
 /* =========================================================
  *  頭取 ― 地方銀行経営シミュレーション
@@ -699,10 +764,12 @@ const ACCT = {
   loans:       { code: '1200', name: '貸出金', type: 'A' },
   tangible:    { code: '1300', name: '有形固定資産', type: 'A' },
   intangible:  { code: '1310', name: '無形固定資産', type: 'A' },
+  goodwill:    { code: '1320', name: 'のれん', type: 'A' },
   otherAssets: { code: '1400', name: 'その他資産', type: 'A' },
   allowance:   { code: '1900', name: '貸倒引当金', type: 'CA' },
   depOrd:      { code: '2000', name: '普通預金', type: 'L' },
   depTime:     { code: '2010', name: '定期預金', type: 'L' },
+  depFx:       { code: '2020', name: '海外店預金', type: 'L' },
   callMoney:   { code: '2100', name: 'コールマネー', type: 'L' },
   bojBorrow:   { code: '2110', name: '借用金（日銀借入）', type: 'L' },
   taxPayable:  { code: '2200', name: '未払法人税等', type: 'L' },
@@ -718,6 +785,7 @@ const ACCT = {
   intBoj:      { code: '4030', name: '預け金利息', type: 'R', grp: 'fund' },
   fees:        { code: '4100', name: '役務取引等収益', type: 'R', grp: 'fee' },
   bondGain:    { code: '4200', name: '国債等債券売却益', type: 'R', grp: 'oth' },
+  fxGain:      { code: '4210', name: '外国為替売買益', type: 'R', grp: 'oth' },
   recoveries:  { code: '4300', name: '償却債権取立益', type: 'R', grp: 'ordOth' },
   provRev:     { code: '4310', name: '貸倒引当金戻入益', type: 'R', grp: 'ordOth' },
   otherInc:    { code: '4400', name: 'その他の経常収益', type: 'R', grp: 'ordOth' },
@@ -725,8 +793,10 @@ const ACCT = {
   intDep:      { code: '5000', name: '預金利息', type: 'X', grp: 'fund' },
   intCallM:    { code: '5010', name: 'コールマネー利息', type: 'X', grp: 'fund' },
   intBorrow:   { code: '5020', name: '借用金利息', type: 'X', grp: 'fund' },
+  fundingCost: { code: '5030', name: '外貨調達費用', type: 'X', grp: 'fund' },
   feeExp:      { code: '5100', name: '役務取引等費用', type: 'X', grp: 'fee' },
   bondLoss:    { code: '5200', name: '国債等債券売却損', type: 'X', grp: 'oth' },
+  fxLoss:      { code: '5210', name: '外国為替売買損', type: 'X', grp: 'oth' },
   personnel:   { code: '5300', name: '人件費', type: 'X', grp: 'opex' },
   premises:    { code: '5310', name: '物件費', type: 'X', grp: 'opex' },
   taxes:       { code: '5320', name: '税金', type: 'X', grp: 'opex' },
@@ -860,6 +930,8 @@ const SYSTEMS = {
     { name: '第3次オンラインシステム', cap: 150000, cost: 6e8, months: 6, maint: 500e4 },
     { name: 'オープン勘定系システム', cap: 500000, cost: 18e8, months: 9, maint: 1000e4 },
     { name: 'クラウドネイティブ勘定系', cap: 2000000, cost: 45e8, months: 12, maint: 1800e4 },
+    { name: 'メガバンク統合基盤', cap: 25000000, cost: 600e8, months: 18, maint: 10e8 },
+    { name: 'グローバル勘定系プラットフォーム', cap: 150000000, cost: 2500e8, months: 24, maint: 35e8 },
   ] },
   credit: { name: '融資審査システム', desc: '決算書のスコアリング、粉飾の兆候検知、AI審査を提供する。', levels: [
     { name: '導入なし（手計算）', maint: 0 },
@@ -954,6 +1026,7 @@ const PURPOSES = {
   capex:   { name: '設備資金', term: [60, 144], repay: 'equal', mult: [0, 0] },
   refi:    { name: '借換資金（他行肩代わり）', term: [48, 96], repay: 'equal', mult: [0, 0] },
   deficit: { name: '赤字補填資金', term: [24, 60], repay: 'equal', mult: [0.5, 1.5] },
+  mna:     { name: '買収資金（M&Aファイナンス）', term: [60, 96], repay: 'equal', mult: [0, 0] },
 };
 
 /* ---------- 景気局面 ---------- */
@@ -990,6 +1063,112 @@ const BANK_CLASSES = [
 ];
 const RATINGS = ['AA+', 'AA', 'AA−', 'A+', 'A', 'A−', 'BBB+', 'BBB', 'BBB−', 'BB+', 'BB', 'B', 'CCC'];
 const RATING_SCORE = [90, 85, 80, 75, 70, 65, 60, 55, 50, 45, 40, 32];
+
+/* =========================================================
+ *  業態ステージ：地域銀行 → メガバンク → テラバンク
+ * ========================================================= */
+const STAGES = [
+  { id: 0, name: '地域銀行', area: CITY_NAME, reqCR: 4, basis: '国内基準' },
+  { id: 1, name: 'メガバンク', area: '日本全国', reqCR: 8, minRating: 7, maxNpl: 6, aml: 2, basis: '国際統一基準' },
+  { id: 2, name: 'テラバンク', area: '世界', reqCR: 10.5, minRating: 5, maxNpl: 4, aml: 3, basis: '国際統一基準＋G-SIBバッファー' },
+];
+
+/* 国内の主要地域（メガバンク）。dep/loan は市場規模（兆円） */
+const NATIONS = [
+  { id: 'n-shutoken', name: '首都圏', sub: '東京・神奈川・埼玉・千葉', dep: 450, loan: 320, time: 0.38, compet: 1.35, tile: [5, 3], mix: { it: 3, whl: 3, re: 3, mfg: 2, med: 1, ret: 1 } },
+  { id: 'n-kansai', name: '関西', sub: '大阪・京都・兵庫', dep: 150, loan: 100, time: 0.42, compet: 1.15, tile: [3, 3], mix: { mfg: 3, whl: 3, re: 2, ret: 1, med: 1 } },
+  { id: 'n-chubu', name: '中部', sub: '愛知・静岡・岐阜', dep: 100, loan: 72, time: 0.45, compet: 1.05, tile: [4, 3], mix: { mfg: 6, trn: 2, whl: 1, con: 1 } },
+  { id: 'n-kitakanto', name: '北関東', sub: '茨城・栃木・群馬', dep: 45, loan: 28, time: 0.48, compet: 0.95, tile: [5, 2], mix: { mfg: 4, agr: 2, con: 2, trn: 1 } },
+  { id: 'n-hokuriku', name: '北陸・甲信越', sub: '新潟・長野・石川・富山', dep: 55, loan: 35, time: 0.5, compet: 0.95, tile: [4, 2], mix: { mfg: 3, con: 2, htl: 2, agr: 1 } },
+  { id: 'n-tohoku', name: '東北', sub: '宮城・福島・岩手ほか', dep: 50, loan: 30, time: 0.5, compet: 0.95, tile: [5, 1], mix: { agr: 2, con: 3, mfg: 2, med: 1 } },
+  { id: 'n-hokkaido', name: '北海道', sub: '札幌・旭川・函館ほか', dep: 35, loan: 22, time: 0.5, compet: 0.9, tile: [6, 0], mix: { agr: 3, htl: 2, ret: 2, con: 1 } },
+  { id: 'n-chushikoku', name: '中国・四国', sub: '広島・岡山・香川ほか', dep: 70, loan: 45, time: 0.48, compet: 1.0, tile: [2, 3], mix: { mfg: 3, trn: 2, whl: 2, con: 1 } },
+  { id: 'n-kyushu', name: '九州・沖縄', sub: '福岡・熊本・鹿児島・沖縄', dep: 75, loan: 55, time: 0.45, compet: 1.0, tile: [1, 4], mix: { mfg: 2, ret: 2, htl: 2, agr: 2, con: 1 } },
+];
+/* 海外の地域（テラバンク）。rate0=現地の政策金利 risk=カントリーリスク(1-5) reg=規制の厳しさ fxVol=為替の月次変動 */
+const OVERSEAS = [
+  { id: 'o-na', name: '北米', city: 'ニューヨーク', dep: 1800, loan: 1600, rate0: 4.0, risk: 1, reg: 3, fxVol: 0.025, growth: 2.0, tile: [0, 1], mix: { it: 3, re: 2, med: 2, whl: 2, mfg: 1 } },
+  { id: 'o-eu', name: '欧州', city: 'ロンドン・フランクフルト', dep: 1500, loan: 1300, rate0: 2.5, risk: 1, reg: 2.5, fxVol: 0.022, growth: 1.2, tile: [2, 0], mix: { mfg: 3, whl: 2, it: 2, med: 1, re: 1 } },
+  { id: 'o-cn', name: '中華圏', city: '香港・上海', dep: 1200, loan: 1000, rate0: 2.2, risk: 3, reg: 2, fxVol: 0.02, growth: 4.0, geo: true, tile: [5, 1], mix: { mfg: 4, re: 3, whl: 2, it: 1 } },
+  { id: 'o-sea', name: '東南アジア', city: 'シンガポール・バンコク', dep: 300, loan: 280, rate0: 3.2, risk: 3, reg: 1.5, fxVol: 0.025, growth: 4.5, tile: [5, 2], mix: { mfg: 3, trn: 2, ret: 2, re: 1, htl: 1 } },
+  { id: 'o-in', name: 'インド', city: 'ムンバイ', dep: 200, loan: 180, rate0: 6.0, risk: 4, reg: 2, fxVol: 0.03, growth: 6.0, tile: [4, 2], mix: { it: 3, mfg: 3, whl: 2, con: 1 } },
+  { id: 'o-me', name: '中東', city: 'ドバイ', dep: 150, loan: 130, rate0: 4.5, risk: 3, reg: 1.5, fxVol: 0.008, growth: 3.0, geo: true, tile: [3, 1], mix: { con: 3, trn: 2, re: 2, htl: 1 } },
+  { id: 'o-latam', name: '中南米', city: 'サンパウロ・メキシコシティ', dep: 250, loan: 230, rate0: 9.5, risk: 5, reg: 1.5, fxVol: 0.045, growth: 2.5, tile: [0, 3], mix: { agr: 3, mfg: 2, trn: 2, ret: 1 } },
+  { id: 'o-oc', name: 'オセアニア', city: 'シドニー', dep: 180, loan: 170, rate0: 3.8, risk: 1, reg: 2, fxVol: 0.028, growth: 2.2, tile: [6, 3], mix: { re: 2, agr: 2, med: 2, whl: 1 } },
+];
+const NATR = Object.fromEntries(NATIONS.map(r => [r.id, r]));
+const OVSR = Object.fromEntries(OVERSEAS.map(r => [r.id, r]));
+const COUNTRY_PD = [1, 1, 1.25, 1.6, 2.2, 3.0];
+
+/* 国内ネットワークの段階。dep/loan=地域市場に占めるシェア、capex=その段階へ上げる投資額（億円・規模1あたり）、
+ * opex=段階ごとの月間経費（人件費・物件費込み）、staff=行員数、br=店舗数（いずれも規模1あたり） */
+const NAT_LEVELS = [
+  { lv: 0, name: '未進出', dep: 0, loan: 0, capex: 0, opex: 0, staff: 0, br: 0, months: 0 },
+  { lv: 1, name: '拠点支店', dep: 0.0005, loan: 0.0005, capex: 8e8, opex: 0.4e8, staff: 40, br: 1, months: 3 },
+  { lv: 2, name: '主要都市の支店網', dep: 0.0025, loan: 0.0025, capex: 35e8, opex: 1.5e8, staff: 180, br: 6, months: 6 },
+  { lv: 3, name: '地域全域の支店網', dep: 0.01, loan: 0.01, capex: 120e8, opex: 5e8, staff: 700, br: 25, months: 9 },
+  { lv: 4, name: '地域トップクラスの店舗網', dep: 0.025, loan: 0.025, capex: 300e8, opex: 11e8, staff: 1800, br: 60, months: 12 },
+  { lv: 5, name: '圧倒的な地盤', dep: 0.05, loan: 0.05, capex: 600e8, opex: 20e8, staff: 3500, br: 120, months: 18 },
+];
+/* 海外拠点の段階（Lv4は現地銀行の買収でのみ到達できる） */
+const OVS_LEVELS = [
+  { lv: 0, name: '未進出', dep: 0, loan: 0, capex: 0, opex: 0, staff: 0, br: 0, months: 0 },
+  { lv: 1, name: '駐在員事務所', dep: 0, loan: 0, capex: 5e8, opex: 0.3e8, staff: 10, br: 1, months: 6 },
+  { lv: 2, name: '支店', dep: 0.00005, loan: 0.0002, capex: 50e8, opex: 2e8, staff: 120, br: 2, months: 9 },
+  { lv: 3, name: '現地法人（銀行子会社）', dep: 0.0005, loan: 0.001, capex: 300e8, opex: 9e8, staff: 800, br: 12, months: 12 },
+  { lv: 4, name: '現地有力銀行（買収）', dep: 0.003, loan: 0.0035, capex: 0, opex: 38e8, staff: 5000, br: 150, months: 0, acqOnly: true },
+  { lv: 5, name: '地域統括本部', dep: 0.006, loan: 0.0075, capex: 1200e8, opex: 65e8, staff: 8000, br: 250, months: 18 },
+];
+const natScale = R => R.dep / 100;
+const ovsScale = R => R.loan / 1000;
+
+/* リテール・中小企業向けポートフォリオ（全国・海外の店舗網が積み上げる小口融資） */
+const SEG = {
+  retail: { name: '個人向けローン', ovsName: '個人向けローン', mix: 0.45, repay: 0.006, pd: 0.35, lgd: 0.25, rw: 0.35, spread: -0.9, ovsSpread: 1.5 },
+  sme: { name: '中小企業向け融資', ovsName: '現地法人向け融資', mix: 0.55, repay: 0.025, pd: 1.0, lgd: 0.4, rw: 0.75, spread: 0.35, ovsSpread: 1.8 },
+};
+const APPETITE = {
+  stop: { name: '新規停止', vol: 0, risk: 1 },
+  careful: { name: '慎重', vol: 0.7, risk: 0.8 },
+  std: { name: '標準', vol: 1, risk: 1 },
+  bold: { name: '積極', vol: 1.35, risk: 1.45 },
+};
+
+/* 大企業・海外企業の名前 */
+const BIG_PREFIX = ['日東', '東亜', '大日本', '中央', '太平洋', '日本', '新日本', '帝都', '東洋', '関東', '西日本', '北日本', '全日本', '昭栄', '丸紅葉', '三和', '住吉', '富岳', '旭光', '瑞穂', '扶桑', '敷島', '大八洲', '桜花'];
+const BIG_CORE = {
+  mfg: ['重工業', '電機', '製鉄', '化学工業', '精機', '自動車工業'], con: ['建設', '総合建設', 'エンジニアリング'], whl: ['商事', '物産', '通商'],
+  ret: ['リテイリング', '百貨店', 'ストアーズ'], food: ['フードサービス', '外食ホールディングス'], trn: ['海運', '陸運', 'エアライン', 'ロジスティクス'],
+  re: ['不動産', '地所', 'リアルティ'], it: ['通信', 'システムズ', 'デジタル'], med: ['製薬', 'メディカル', 'ヘルスケア'], htl: ['ホテルズ', 'リゾーツ'], agr: ['食品', 'アグリ'],
+};
+const OVS_PREFIX = ['アトラス', 'ノースブリッジ', 'パシフィカ', 'ブライトン', 'クレストウッド', 'オリオン', 'ゼニス', 'メリディアン', 'ハーバーライト', 'オーロラ', 'ノヴァテック', 'ペガサス', 'ミネルヴァ', 'セレスト', 'アルカディア', 'コーラルベイ', 'エメラルド', 'サンストーン', 'ルミナ', 'ヴェルダント'];
+const OVS_CORE = {
+  mfg: ['インダストリーズ', 'マニュファクチャリング'], con: ['コンストラクション', 'インフラストラクチャー'], whl: ['トレーディング', 'ディストリビューション'],
+  ret: ['リテール', 'マーケッツ'], food: ['フーズ', 'レストラン・グループ'], trn: ['ロジスティクス', 'シッピング'], re: ['プロパティーズ', 'リアルエステート'],
+  it: ['テクノロジーズ', 'ネットワークス'], med: ['ヘルスケア', 'ファーマ'], htl: ['ホスピタリティ', 'リゾーツ'], agr: ['アグリビジネス', 'ファームズ'],
+};
+
+/* カスタムスタートの選択肢 */
+const CUSTOM_PRESETS = {
+  standard: { name: '標準', desc: `${OLD_UNION}を承継した地域銀行から。`, stage: 0, capMul: 1, depMul: 1, quality: 'normal', branches: 4, sys: 'std', econ: 'expansion', rate: 'std', fraud: 'normal', term: 10 },
+  easy: { name: '資本に余裕', desc: '資本が厚く景気も良い。初めての人向け。', stage: 0, capMul: 2, depMul: 1, quality: 'good', branches: 4, sys: 'std', econ: 'boom', rate: 'std', fraud: 'low', term: 10 },
+  hard: { name: '不良債権の山', desc: '問題債権だらけの承継。バブル崩壊前夜。', stage: 0, capMul: 0.8, depMul: 1, quality: 'bad', branches: 3, sys: 'old', econ: 'precrisis', rate: 'std', fraud: 'high', term: 10 },
+  mega: { name: 'メガバンクから', desc: '全国に支店網を持つメガバンクの頭取として就任。', stage: 1, capMul: 1, depMul: 1, quality: 'normal', branches: 6, sys: 'new', econ: 'expansion', rate: 'std', fraud: 'normal', term: 20 },
+  tera: { name: 'テラバンクから', desc: '世界に拠点を持つ巨大銀行グループの頭取として就任。', stage: 2, capMul: 1, depMul: 1, quality: 'normal', branches: 8, sys: 'new', econ: 'expansion', rate: 'std', fraud: 'normal', term: 20 },
+};
+const CUSTOM_OPTS = {
+  stage: [[0, '地域銀行'], [1, 'メガバンク'], [2, 'テラバンク']],
+  capMul: [[0.6, '少ない（×0.6）'], [1, '標準'], [1.5, '多い（×1.5）'], [2.5, 'とても多い（×2.5）']],
+  depMul: [[0.6, '少ない（×0.6）'], [1, '標準'], [1.6, '多い（×1.6）']],
+  quality: [['good', '良好'], ['normal', '標準'], ['bad', '問題先が多い']],
+  branches: [[1, '本店のみ'], [3, '3店'], [4, '4店（標準）'], [6, '6店'], [8, '全8地区']],
+  sys: [['old', '旧式'], ['std', '標準'], ['new', '最新']],
+  econ: [['boom', '好況'], ['expansion', '回復・拡大'], ['slowdown', '減速'], ['recession', '景気後退'], ['precrisis', 'バブル崩壊前夜']],
+  rate: [['low', '超低金利（0.10%）'], ['std', '標準（0.50%）'], ['high', '高金利（1.50%）']],
+  fraud: [['low', '少ない'], ['normal', '普通'], ['high', '多い']],
+  term: [[10, '10年'], [20, '20年'], [30, '30年'], [0, '無期限']],
+};
+const FRAUD_RATE = { low: 0.08, normal: 0.16, high: 0.26 };
 
 /* ---- 02_ledger.js ---- */
 /* =========================================================
@@ -1060,14 +1239,15 @@ function curProfit() {
   return r;
 }
 function totalAssets() {
-  return B('cash') + B('boj') + B('callLoan') + B('securities') + B('loans') + B('tangible') + B('intangible') + B('otherAssets') - B('allowance');
+  return B('cash') + B('boj') + B('callLoan') + B('securities') + B('loans') + B('tangible') + B('intangible') + B('goodwill') + B('otherAssets') - B('allowance');
 }
 function totalLiab() {
-  return B('depOrd') + B('depTime') + B('callMoney') + B('bojBorrow') + B('taxPayable') + B('divPayable') + B('otherLiab');
+  return B('depOrd') + B('depTime') + B('depFx') + B('callMoney') + B('bojBorrow') + B('taxPayable') + B('divPayable') + B('otherLiab');
 }
 function netAssets() { return B('capital') + B('prefCapital') + B('capSurplus') + B('retained') + curProfit(); }
 function ledgerDiff() { return totalAssets() - totalLiab() - netAssets(); }
-function deposits() { return B('depOrd') + B('depTime'); }
+/* 預金の合計（国内の普通・定期＋海外店預金） */
+function deposits() { return B('depOrd') + B('depTime') + B('depFx'); }
 
 /* 月末の元帳スナップショット（BS科目＋当月PL） */
 function bsSnapshot() {
@@ -1146,6 +1326,28 @@ function marketLoanRate(grade, termM) {
   return Math.max(0.3, base + termPrem);
 }
 
+/* 開始時の景気と金利（カスタムスタート） */
+const RATE_START = { low: 0.1, std: 0.5, high: 1.5 };
+function initEconomy(econ, rateKey) {
+  const e = G.eco;
+  const regime = econ === 'precrisis' ? 'boom' : (REGIMES[econ] ? econ : 'expansion');
+  const R = REGIMES[regime];
+  e.regime = regime; e.age = 6;
+  e.gdp = R.gdp; e.cpi = R.cpi; e.unemp = R.unemp; e.defMult = R.def; e.demand = R.demand;
+  if (econ === 'precrisis') { e.land = 135; e.stock = 140; }
+  else if (econ === 'recession') { e.land = 92; e.stock = 80; }
+  e.policy = RATE_START[rateKey] ?? 0.5;
+  const ex = 0.45 * (e.cpi - 2.0) + 0.25 * (e.gdp - 1.0);
+  e.y = { 2: e.policy + 0.12 + 0.3 * ex, 5: e.policy + 0.42 + 0.45 * ex, 10: e.policy + 1.05 + 0.45 * ex, 20: e.policy + 1.85 + 0.35 * ex };
+  for (const k of [2, 5, 10, 20]) e.y[k] = Math.max(k <= 5 ? -0.1 : 0.05, +e.y[k].toFixed(3));
+  e.call = Math.max(0, e.policy - 0.02);
+  e.mktOrd = Math.max(0.001, 0.35 * e.policy);
+  e.mktTime = Math.max(0.002, 0.55 * e.policy + 0.04);
+  e.mktPrime = e.policy + 1.375;
+  e.mortVar = Math.max(0.3, e.policy + 0.35);
+  e.mortFix = e.y[10] + 0.65;
+}
+
 const REGIME_NEWS = {
   boom: '内閣府、景気判断を「拡大」に上方修正。企業の設備投資が活発に',
   expansion: '景気は緩やかに回復。月例経済報告で「持ち直し」との判断',
@@ -1155,12 +1357,13 @@ const REGIME_NEWS = {
 };
 
 function ecoStep() {
-  const e = G.eco, diff = DIFFICULTY[G.difficulty];
+  const e = G.eco, cfg = G.cfg || DIFFICULTY[G.difficulty];
   // 景気局面の遷移
   const tr = REGIME_TRANS[e.regime];
   const items = tr.map(t => t[0]);
+  const bubble = (cfg.bubbleUntil ?? -1) > G.m;
   const w = tr.map(t => {
-    if (t[0] === 'crisis' && e.regime !== 'crisis') return G.m < 18 ? 0 : t[1] * diff.crisis;
+    if (t[0] === 'crisis' && e.regime !== 'crisis') return G.m < (bubble ? 6 : 18) ? 0 : t[1] * cfg.crisis * (bubble ? 5 : 1);
     return t[1];
   });
   const next = wpick(items, w);
@@ -1325,7 +1528,7 @@ function cityStats() {
     const s = c.d[D.id];
     pop += s.pop; firms += s.firms; vitW += s.vit * s.pop; dep += s.depMkt; land += s.land * s.pop;
   }
-  return { pop, firms, vit: vitW / pop, depMkt: dep, land: land / pop, share: deposits() / dep };
+  return { pop, firms, vit: vitW / pop, depMkt: dep, land: land / pop, share: cityDeposits() / dep };
 }
 
 /* 地区の開発段階（地図の描画用、1〜10） */
@@ -1487,6 +1690,7 @@ function finalize(s) {
 }
 
 function capitalFor(S) {
+  if (S >= 300e8) return K(S * uni(0.008, 0.03));
   if (S < 3e8) return pick([3e6, 10e6, 10e6]);
   if (S < 10e8) return pick([10e6, 20e6, 30e6]);
   if (S < 50e8) return pick([30e6, 50e6]);
@@ -1607,6 +1811,12 @@ function newCompanyName(indId) {
   return `有限会社${pre}${core}`;
 }
 const personName = () => pick(FAMILY_NAMES) + ' ' + pick(GIVEN_NAMES);
+/* 大企業・海外企業の社名 */
+function bigCompanyName(indId, overseas) {
+  if (overseas) return `${pick(OVS_PREFIX)}・${pick(OVS_CORE[indId])}`;
+  const core = pick(BIG_CORE[indId]);
+  return rand() < 0.5 ? `${pick(BIG_PREFIX)}${core}株式会社` : `株式会社${pick(BIG_PREFIX)}${core}`;
+}
 
 /* 最新の決算期末（現在月より2か月以上前） */
 function lastFiscalEnd(fyEnd, m) {
@@ -1617,12 +1827,13 @@ function lastFiscalEnd(fyEnd, m) {
 
 function genCompany(opts) {
   const did = opts.district;
-  const D = DIST[did];
-  const indId = opts.ind || wpick(Object.keys(D.mix), Object.values(D.mix));
+  const mix = areaMix(did);
+  const big = !!opts.big;
+  const indId = opts.ind || wpick(Object.keys(mix), Object.values(mix));
   const ind = IND[indId];
-  let q = clamp(randn() * 0.9 + (opts.qBias || 0), -3, 3);
-  const df = DIFFICULTY[G.difficulty];
-  const fp = df.fraud * (q < -0.7 ? 2.2 : q < 0 ? 1.2 : 0.35) * (opts.fraudMul ?? 1);
+  let q = clamp(randn() * 0.9 + (opts.qBias || 0) + (big ? 0.25 : 0), -3, 3);
+  const fraudBase = (G.cfg || DIFFICULTY[G.difficulty]).fraud;
+  const fp = fraudBase * (q < -0.7 ? 2.2 : q < 0 ? 1.2 : 0.35) * (opts.fraudMul ?? 1) * (big ? 0.55 : 1);
   let fraud = null;
   if (chance(fp)) {
     const type = pickFraudType(indId);
@@ -1631,13 +1842,14 @@ function genCompany(opts) {
   }
   const drift = fraud ? -0.12 : randn() * 0.06;
   const co = {
-    id: 'c' + (++G.seq.co), name: newCompanyName(indId), rep: personName(), ind: indId, district: did,
+    id: 'c' + (++G.seq.co), name: big ? bigCompanyName(indId, isOvsArea(did)) : newCompanyName(indId), rep: personName(), ind: indId, district: did, big,
     founded: ymOf(G.m).y - randInt(3, 62), fyEnd: wpick([3, 6, 9, 12, 5, 8, 11, 2], [40, 8, 10, 14, 6, 6, 6, 6]),
     q, qStmt: q, mq: clamp(0.5 * q + randn() * 0.85, -2.5, 2.5), drift,
     arBase: ind.ar * Math.exp(randn() * 0.15), invBase: ind.inv * Math.exp(randn() * 0.18), apBase: ind.ap * Math.exp(randn() * 0.15),
     ocaR: uni(0.008, 0.025), ownsRE: chance(ind.re), fraud, years: [], decoy: null, mon: {}, pendingLoan: 0, pendingCapex: 0,
   };
-  co.S0 = clamp(ind.size * Math.exp(randn() * 0.75) * (opts.sizeMul || 1), 0.4e8, 300e8);
+  co.S0 = big ? clamp(ind.size * 120 * Math.exp(randn() * 0.8) * (opts.sizeMul || 1), 100e8, 3e12)
+    : clamp(ind.size * Math.exp(randn() * 0.75) * (opts.sizeMul || 1), 0.4e8, 300e8);
   // 正直な企業にも紛らわしい変化を混ぜる（調査すれば説明がつく）
   if (!fraud && chance(0.14)) {
     co.decoy = chance(0.6)
@@ -1657,7 +1869,7 @@ function genCompany(opts) {
       if (co.decoy.type === 'ar') co.arBase *= co.decoy.mult; else co.invBase *= co.decoy.mult;
     }
     const ctx = {
-      q: qh, gdp: G.eco.gdp + randn() * 0.8, cond: indCond(indId) * 0.5 + randn() * 0.2, vit: G.city.d[did].vit,
+      q: qh, gdp: G.eco.gdp + randn() * 0.8, cond: indCond(indId) * 0.5 + randn() * 0.2, vit: areaVit(did),
       policy: G.eco.policy, fraudActive, fy: fraud ? fraud.years : 0,
     };
     const { T, hidden } = genYear(co, Tp, ctx);
@@ -1669,8 +1881,8 @@ function genCompany(opts) {
   const last = co.years[co.years.length - 1];
   co.emp = Math.max(3, Math.round(last.T.S / ind.spe * uni(0.8, 1.2)));
   if (co.ownsRE) {
-    co.reTrue = (last.T.LAND * uni(1.0, 1.6) + (last.T.PPE - last.T.LAND) * 0.3) * (G.city.d[did].land / 100);
-    co.reLand0 = G.city.d[did].land;
+    co.reTrue = (last.T.LAND * uni(1.0, 1.6) + (last.T.PPE - last.T.LAND) * 0.3) * (areaLand(did) / 100);
+    co.reLand0 = areaLand(did);
     co.reEst = co.reTrue * uni(0.78, 1.3);
     co.reLien = chance(0.3); // 他行の先順位抵当
   }
@@ -1690,7 +1902,7 @@ function advanceCompanyYear(co) {
   const fraudActive = !!f && !f.exposed;
   if (fraudActive) f.years++;
   const ctx = {
-    q: co.q, gdp: G.eco.gdp, cond: indCond(co.ind), vit: G.city.d[co.district].vit, policy: G.eco.policy,
+    q: co.q, gdp: G.eco.gdp, cond: indCond(co.ind), vit: areaVit(co.district), policy: G.eco.policy,
     fraudActive, fy: f ? f.years : 0, newLTD: co.pendingLoan * 0.9, plannedCapex: co.pendingCapex,
   };
   co.pendingLoan = 0; co.pendingCapex = 0;
@@ -1852,7 +2064,7 @@ function genPerson(did) {
   const termY = clamp(maxTerm - (chance(0.3) ? randInt(0, 10) : 0), 10, 35);
   const otherDebt = chance(0.35) ? roundTo(uni(12e4, 60e4), 1e4) : 0;
   let fraud = null;
-  if (chance(DIFFICULTY[G.difficulty].fraud * 0.6)) fraud = { type: wpick(['income', 'hiddenDebt', 'investment'], [4, 4, 2]), found: false };
+  if (chance((G.cfg || DIFFICULTY[G.difficulty]).fraud * 0.6)) fraud = { type: wpick(['income', 'hiddenDebt', 'investment'], [4, 4, 2]), found: false };
   const repIncome = fraud && fraud.type === 'income' ? roundTo(income * uni(1.25, 1.6), 10e4) : income;
   const hiddenDebt = fraud && fraud.type === 'hiddenDebt' ? roundTo(uni(60e4, 200e4), 1e4) : 0;
   const valueTrue = price * (ptype.startsWith('新築') || ptype === '注文住宅' ? uni(0.82, 0.95) : uni(0.85, 1.05)) * (fraud && fraud.type === 'investment' ? 0.85 : 1);
@@ -1922,6 +2134,8 @@ function genApplications() {
     }
     G.apps.push(makeBizApp(co));
   }
+  // 大企業・海外企業との取引（メガバンク以上）
+  if (stageOf() >= 1 && G.net) genBigApplications(trustF);
   // 住宅ローン
   const ourVar = mortVarRate();
   const comp = Math.exp(-4 * (ourVar - G.eco.mortVar));
@@ -1935,11 +2149,35 @@ function genApplications() {
   }
 }
 
+function genBigApplications(trustF) {
+  const areas = [], w = [];
+  for (const R of NATIONS) { const r = G.net[R.id]; if (r.lv >= 1) { areas.push(R.id); w.push(R.loan * (0.5 + r.lv)); } }
+  if (stageOf() >= 2) for (const R of OVERSEAS) { const r = G.net[R.id]; if (r.lv >= 1 && r.frozenUntil <= G.m) { areas.push(R.id); w.push(R.loan * 0.2 * (0.5 + r.lv)); } }
+  if (!areas.length) return;
+  const lam = (0.5 + 0.06 * natLevelSum() + 0.12 * ovsLevelSum()) * G.eco.demand * trustF;
+  const n = Math.min(4, poisson(lam));
+  const existing = [...new Set(G.loans.filter(L => L.kind === 'biz' && L.status === 'current' && L.coId && G.companies[L.coId] && G.companies[L.coId].big && G.m - L.startM > 8).map(L => L.coId))];
+  for (let i = 0; i < n; i++) {
+    let co;
+    if (existing.length && chance(0.2)) {
+      co = G.companies[pick(existing)];
+      if (!co || G.apps.some(a => a.coId === co.id)) continue;
+    } else {
+      const a = wpick(areas, w);
+      co = genCompany({ district: a, big: true, sizeMul: isOvsArea(a) ? 1.8 : 1 });
+      G.companies[co.id] = co;
+    }
+    G.apps.push(makeBizApp(co));
+  }
+}
+
 function makeBizApp(co) {
   const Lr = latestRep(co), Lt = latestTrue(co);
   const existing = G.loans.some(L => L.coId === co.id && isActiveLoan(L));
   const losing = Lt.ORD < 0 || (co.fraud && co.q < -0.8);
-  const purpose = wpick(Object.keys(PURPOSES), [30, 12, 30, existing ? 4 : 15, losing ? 18 : 2]);
+  const purpose = co.big
+    ? wpick(Object.keys(PURPOSES), [22, 6, 30, existing ? 4 : 12, losing ? 10 : 1, 18])
+    : wpick(Object.keys(PURPOSES), [30, 12, 30, existing ? 4 : 15, losing ? 18 : 2, 0]);
   const P = PURPOSES[purpose];
   let amt;
   switch (purpose) {
@@ -1947,9 +2185,11 @@ function makeBizApp(co) {
     case 'season': amt = Lr.S / 12 * uni(0.5, 1.2); break;
     case 'capex': amt = Lr.S * uni(0.08, 0.4); break;
     case 'refi': amt = (Lr.STD + Lr.LTD) * uni(0.3, 0.7); break;
+    case 'mna': amt = Lr.S * uni(0.1, 0.5); break;
     default: amt = Lr.S / 12 * uni(0.5, 1.5);
   }
-  amt = niceAmount(clamp(amt, 5e6, 60e8));
+  if (co.big) amt = niceAmount(clamp(Math.min(amt, Math.max(5e8, largeExposureLimit() * uni(0.35, 1.15))), 5e8, 2e12));
+  else amt = niceAmount(clamp(amt, 5e6, 60e8));
   let termM = randInt(P.term[0], P.term[1]);
   termM = purpose === 'season' ? termM : Math.max(12, Math.round(termM / 12) * 12);
   const hiddenPurpose = losing && purpose !== 'deficit' && chance(0.6);
@@ -1965,6 +2205,7 @@ function makeBizApp(co) {
     trn: ['トラック10台の入替', '物流センターの新設'], re: ['賃貸マンションの建設', '収益ビルの取得'], it: ['データセンター設備の増強', '本社移転・開発環境の整備'],
     med: ['介護施設の新設', '医療機器の更新'], htl: ['客室の全面改装', '露天風呂付き客室の新設'], agr: ['ハウス栽培施設の建設', '農業機械の購入'],
   }[co.ind]);
+  if (purpose === 'mna') app.capexItem = pick(['同業他社の買収', '海外企業の買収', '事業部門の買収（カーブアウト）', '上場子会社の完全子会社化']);
   app.terms = defaultTerms(app);
   return app;
 }
@@ -2026,7 +2267,7 @@ function acceptProb(app, t, mode = 'true') {
     x -= 0.6 * Math.max(0, (app.termReqM - t.termM) / app.termReqM);
     if (t.collateral && app.hasRE) x -= 0.35;
     if (t.guarantee === 'cgc') x -= 0.45;
-    if (t.guarantee === 'personal') x -= 0.3;
+    if (t.guarantee === 'personal') x -= co.big ? 2.5 : 0.3;
     if (app.existing) x += 0.5;
     if (app.purpose === 'refi' && app.otherRate) x += 3 * (app.otherRate - rate) * 0.5;
   } else {
@@ -2113,7 +2354,7 @@ const HINT_TEXT = {
 };
 
 /* 不動産の現在価値（地区の地価で補正） */
-function reNow(co, v) { return v * G.city.d[co.district].land / (co.reLand0 || G.city.d[co.district].land); }
+function reNow(co, v) { const land = areaLand(co.district); return v * land / (co.reLand0 || land); }
 
 function fraudAmountOf(co) {
   const f = co.fraud;
@@ -2245,7 +2486,7 @@ function validateTerms(app, t) {
   if (app.kind === 'biz') {
     const co = G.companies[app.coId];
     if (exposureOf(co.id) + t.amount > largeExposureLimit()) return `大口信用供与規制：同一先への与信は自己資本の25%（${fmtYen(largeExposureLimit())}）までです`;
-    if (t.guarantee === 'cgc' && (t.amount > 2.8e8 || latestRep(co).S > 300e8)) return '信用保証協会の保証は中小企業向け2億8,000万円までです';
+    if (t.guarantee === 'cgc' && (co.big || t.amount > 2.8e8 || latestRep(co).S > 300e8)) return '信用保証協会の保証は中小企業向け2億8,000万円までです';
     if (t.rateType === 'fixed' && !(t.rate > 0)) return '金利を入力してください';
   }
   if (G.flags.lendingBan > G.m) return '早期是正措置により新規融資が制限されています';
@@ -2300,7 +2541,7 @@ function bookLoan(app, t) {
     L.cgc = t.guarantee === 'cgc' ? 0.8 : 0;
     L.personal = t.guarantee === 'personal';
     if (t.collateral && co.ownsRE) {
-      const land = G.city.d[co.district].land;
+      const land = areaLand(co.district);
       const bankVal = co.reAppraised || reNow(co, co.reEst);
       L.collateral = { bank0: bankVal * (co.reLien ? 0.6 : 1), true0: reNow(co, co.reTrue) * (co.reLien ? 0.6 : 1), land0: land };
     }
@@ -2377,7 +2618,10 @@ function loanPD(L) {
   if (L.kind === 'biz') {
     const co = G.companies[L.coId];
     pd = GRADE_PD[co.gTrue] * Math.exp(-0.6 * (co.q - co.qStmt)) * (e.defMult / 0.9)
-      * Math.exp(-0.7 * indCond(co.ind)) * Math.exp(-(G.city.d[co.district].vit - 100) / 60);
+      * Math.exp(-0.7 * indCond(co.ind)) * Math.exp(-(areaVit(co.district) - 100) / 60);
+    if (isOvsArea(co.district)) pd *= COUNTRY_PD[OVSR[co.district].risk];
+    if (!isCityArea(co.district) && G.net[co.district].pdUntil >= G.m) pd *= Math.sqrt(G.net[co.district].pdMul);
+    if (L.purpose === 'mna') pd *= 1.3;
     if (co.fraud && !co.fraud.exposed && co.fraud.years > 0) pd *= 1.3;
     if (L.personal) pd *= 0.9;
     if (L.rateType === 'var') pd *= 1 + Math.max(0, L.rate - (L.rate0 || L.rate)) * 0.15;
@@ -2397,6 +2641,7 @@ function processLoans() {
   for (const L of G.loans) {
     if (!isActiveLoan(L)) continue;
     if (L.kind === 'pool') { processPool(L); continue; }
+    if (L.kind === 'seg') continue; // 全国・海外のポートフォリオは networkMonthEnd で処理
     if (L.startM === G.m) continue; // 実行月は返済なし
     L.rate = currentRate(L);
     if (L.status === 'bankrupt') { processWorkout(L); continue; }
@@ -2437,7 +2682,7 @@ function processLoans() {
   }
   // 期日一括返済の到来・期限前返済
   for (const L of G.loans) {
-    if (L.status !== 'current' || L.kind === 'pool' || L.startM === G.m) continue;
+    if (L.status !== 'current' || L.kind === 'pool' || L.kind === 'seg' || L.startM === G.m) continue;
     if (L.bal <= 0) { L.status = 'closed'; L.closedM = G.m; continue; }
     prepaymentCheck(L);
   }
@@ -2526,8 +2771,7 @@ function goBankrupt(L, how) {
   G.stats.defaultAmt += L.bal;
   if (L.kind === 'biz') {
     const co = G.companies[L.coId];
-    const D = G.city.d[co.district];
-    D.failPen += Math.min(6, 1 + co.emp / 60);
+    if (isCityArea(co.district)) G.city.d[co.district].failPen += Math.min(6, 1 + co.emp / 60);
     addNews('loan', `融資先「${L.name}」が${how}。従業員${co.emp}人。当行の債権残高${fmtYen(L.bal)}`, 'bad', { loanId: L.id });
   } else if (L.kind === 'proj') {
     projectLoanFailed(L);
@@ -2547,16 +2791,16 @@ function exposeFraud(co) {
     goBankrupt(L, '粉飾発覚により民事再生法の適用を申請');
     G.stats.fraudLossAmt += L.bal;
   }
-  if (!loans.length) G.city.d[co.district].failPen += 2;
+  if (!loans.length && isCityArea(co.district)) G.city.d[co.district].failPen += 2;
 }
 
 function collateralBank(L) {
   if (!L.collateral) return 0;
-  return L.collateral.bank0 * G.city.d[L.district].land / L.collateral.land0;
+  return L.collateral.bank0 * areaLand(L.district) / L.collateral.land0;
 }
 function collateralTrue(L) {
   if (!L.collateral) return 0;
-  return L.collateral.true0 * G.city.d[L.district].land / L.collateral.land0;
+  return L.collateral.true0 * areaLand(L.district) / L.collateral.land0;
 }
 
 function processWorkout(L) {
@@ -2643,7 +2887,7 @@ function callLoan(L) {
 /* システムの判定（銀行が観測できる情報のみ） */
 function sysClass(L) {
   if (L.status === 'bankrupt') return 5;
-  if (L.kind === 'pool') return 0;
+  if (L.kind === 'pool' || L.kind === 'seg') return 0;
   if (L.status === 'default') return L.dpd >= 6 ? 4 : 3;
   let c = 0;
   if (L.kind === 'biz') {
@@ -2663,7 +2907,7 @@ function sysClass(L) {
 /* 金融庁の見立て（実態ベース） */
 function fsaClass(L, knowsFraud) {
   if (L.status === 'bankrupt') return 5;
-  if (L.kind === 'pool') return 0;
+  if (L.kind === 'pool' || L.kind === 'seg') return 0;
   if (L.status === 'default') return L.dpd >= 6 ? 4 : 3;
   let c = 0;
   if (L.kind === 'biz') {
@@ -2685,6 +2929,7 @@ function fsaClass(L, knowsFraud) {
 function provisionFor(L, cls) {
   if (!isActiveLoan(L) || L.bal <= 0) return 0;
   if (L.kind === 'pool') return Math.round(L.bal * 0.0025);
+  if (L.kind === 'seg') return Math.round(L.bal * (L.pd ?? SEG[L.seg].pd) / 100 * segLGD(L) * 1.2);
   const bal = L.bal;
   const cover = L.kind === 'mort' ? (L.mortGuar && !L.guarVoid ? 0.9 : 0) : (L.cgc || 0);
   if (cls <= 2) return Math.round(bal * (1 - cover) * CLS[cls].rate);
@@ -2736,6 +2981,56 @@ function borrowerMonthly() {
       G.inbox.push({ id: 'I' + (++G.seq.inbox), type: 'resched', coId: co.id, loanId: L.id, m: G.m, exp: G.m });
     }
   }
+}
+
+/* ---------- 審査基準による一括処理・決裁権限の委譲 ---------- */
+/* 標準条件：市場の目安金利、不動産があれば担保、格付6以下の中小企業は信用保証協会付き */
+function standardTerms(app) {
+  const t = defaultTerms(app);
+  if (app.kind === 'biz') {
+    const g = appSysGrade(app);
+    const co = G.companies[app.coId];
+    t.collateral = !!co.ownsRE;
+    if (!co.big && g >= 6 && t.amount <= 2.8e8 && latestRep(co).S <= 300e8) t.guarantee = 'cgc';
+    const lim = largeExposureLimit() - exposureOf(co.id);
+    if (t.amount > lim) t.amount = Math.max(0, Math.floor(lim / 1e6) * 1e6);
+  }
+  return t;
+}
+/* c = { ok: 承認する格付の上限, ng: 謝絶する格付の下限, deficit: 赤字補填は謝絶 } → 'ok' | 'ng' | 'hold' */
+function judgeByCriteria(a, c) {
+  if (a.kind === 'biz') {
+    const co = G.companies[a.coId];
+    if (co.fraud && co.fraud.found) return 'ng';
+    if (c.deficit && (a.purpose === 'deficit' || a.purposeRevealed)) return 'ng';
+  } else if (a.person.fraud && a.person.fraud.found) return 'ng';
+  const g = appSysGrade(a);
+  if (g <= c.ok) return 'ok';
+  if (g >= c.ng) return 'ng';
+  return 'hold';
+}
+function decideByCriteria(a, c) {
+  const j = judgeByCriteria(a, c);
+  if (j === 'ng') { decideApp(a, false); return { j: 'ng' }; }
+  if (j !== 'ok') return { j: 'hold' };
+  const t = standardTerms(a);
+  if (t.amount < 1e6 || validateTerms(a, t)) return { j: 'skip' };
+  const r = decideApp(a, true, t);
+  return { j: r.ok && r.accepted ? 'acc' : r.ok ? 'dec' : 'skip', amt: t.amount };
+}
+/* 支店長への決裁権限の委譲：期限を迎える汐見市の小口案件を、審査基準で自動的に処理する */
+function autoDelegate() {
+  const d = G.policy && G.policy.delegate;
+  if (!d || !d.on) return null;
+  const res = { acc: 0, ng: 0, amt: 0 };
+  for (const a of G.apps.filter(x => x.status === 'pending' && x.exp <= G.m)) {
+    if (a.kind === 'biz' && G.companies[a.coId] && G.companies[a.coId].big) continue;
+    if (a.amountReq > d.max) continue;
+    const r = decideByCriteria(a, d);
+    if (r.j === 'acc') { res.acc++; res.amt += r.amt; } else if (r.j === 'ng') res.ng++;
+  }
+  G.lastDelegate = res;
+  return res;
 }
 
 /* 受信箱の期限切れ処理 */
@@ -2808,17 +3103,24 @@ function totalATMs() {
   for (const k in G.atms) n += G.atms[k];
   return n;
 }
-function accountsCount() { return Math.round(deposits() / 2.5e6) + G.loans.filter(L => isActiveLoan(L) && L.kind !== 'pool').length * 2; }
+/* 汐見市の店舗が管理する口座数 */
+function cityAccounts() { return Math.round(cityDeposits() / 2.5e6) + G.loans.filter(L => isActiveLoan(L) && (L.kind === 'biz' || L.kind === 'mort' || L.kind === 'proj')).length * 2; }
+/* 全店の口座数（勘定系システムの負荷・手数料の基礎） */
+function accountsCount() {
+  let n = cityAccounts() + Math.round(natDep() / 2.5e6 + B('depFx') / 1e7);
+  for (const L of G.loans) if (L.kind === 'seg' && isActiveLoan(L)) n += Math.round(L.bal / (L.seg === 'retail' ? 2e7 : 1e8));
+  return n;
+}
 function staffTotal() { return G.staff.sales + G.staff.credit + G.staff.ops + G.staff.comp; }
 
 /* ---------- 事務・システムの余力 ---------- */
 function opsRequired() {
   let r = 0;
   for (const b of openBranches()) r += BRANCH_TYPES[b.type].ops;
-  return r + accountsCount() / (2500 * (1 + 0.15 * G.sys.digital));
+  return r + cityAccounts() / (2500 * (1 + 0.15 * G.sys.digital));
 }
 function serviceQuality() { return clamp(G.staff.ops / Math.max(1, opsRequired()), 0.3, 1.3); }
-function compRequired() { return 2 + staffTotal() * 0.06 + openBranches().length * 0.3; }
+function compRequired() { return 2 + staffTotal() * 0.06 + openBranches().length * 0.3 + netStaff() * 0.004; }
 function compRatio() { return G.staff.comp / compRequired(); }
 function coreCapacity() { return SYSTEMS.core.levels[G.sys.core].cap; }
 function coreLoad() { return (accountsCount() + G.loans.filter(isActiveLoan).length * 5) / coreCapacity(); }
@@ -2863,7 +3165,7 @@ function processDeposits() {
   const tg = depositTargets();
   const e = G.eco, r = G.rates;
   const load = coreLoad();
-  const ord = B('depOrd');
+  const ord = cityOrd();
   const mo = calMonth(G.m);
   const seas = ({ 6: 0.012, 7: -0.006, 12: 0.015, 1: -0.008, 3: -0.004, 4: 0.004 })[mo] || 0;
   let dOrd = (tg.ord - ord) * 0.05 + ord * (randn() * 0.004 + seas);
@@ -2880,7 +3182,7 @@ function processDeposits() {
   const renew = Math.round(matured * clamp(retention, 0.2, 0.97));
   const toOrd = Math.round((matured - renew) * 0.4);
   const outT = matured - renew - toOrd;
-  const DT = B('depTime');
+  const DT = cityTime();
   let newT = (tg.time - DT) * 0.07 + DT * randn() * 0.002;
   if (load > 1 && newT > 0) newT *= 0.2;
   let early = 0;
@@ -2909,10 +3211,15 @@ function processDeposits() {
 }
 
 function payDepositInterest() {
-  const oi = Math.round(B('depOrd') * G.rates.ord / 1200);
-  if (oi > 0) post('普通預金利息の元加', [['intDep', oi, 0], ['depOrd', 0, oi]]);
+  let oi = Math.round(cityOrd() * G.rates.ord / 1200);
   let ti = 0;
   for (const c of G.dep.coh) { const i = Math.round(c.bal * c.rate / 1200); c.bal += i; ti += i; }
+  if (G.net) for (const R of NATIONS) {
+    const r = G.net[R.id];
+    const io = Math.round(r.ord * G.rates.ord / 1200), it = Math.round(r.time * r.tRate / 1200);
+    r.ord += io; r.time += it; oi += io; ti += it;
+  }
+  if (oi > 0) post('普通預金利息の元加', [['intDep', oi, 0], ['depOrd', 0, oi]]);
   if (ti > 0) post('定期預金利息の元加', [['intDep', ti, 0], ['depTime', 0, ti]]);
 }
 
@@ -2928,7 +3235,7 @@ function callLimit() { return deposits() * (G.ratingIdx <= 7 ? 0.2 : 0.1); }
 function liquidityRatio() { return (B('cash') + B('boj') + B('callLoan') + B('securities')) / Math.max(1, deposits()) * 100; }
 function lcr() {
   const hqla = B('cash') + B('boj') + B('securities') * 0.98;
-  const out = B('depOrd') * 0.06 + B('depTime') * 0.04 + B('callMoney') + B('bojBorrow');
+  const out = B('depOrd') * 0.06 + B('depTime') * 0.04 + B('depFx') * 0.1 + B('callMoney') + B('bojBorrow');
   return hqla / Math.max(1, out) * 100;
 }
 
@@ -3066,7 +3373,7 @@ function processTreasuryMonthly() {
 
 /* ---------- 金庫・現金 ---------- */
 function vaultCapacity() { return VAULT_LEVELS[G.vault.lv].cap + sum(openBranches(), b => BRANCH_TYPES[b.type].vaultCap); }
-function cashRequired() { return B('depOrd') * 0.02 + sum(openBranches(), b => BRANCH_TYPES[b.type].cashBase) + totalATMs() * ATM_CASH; }
+function cashRequired() { return cityOrd() * 0.02 + sum(openBranches(), b => BRANCH_TYPES[b.type].cashBase) + totalATMs() * ATM_CASH; }
 const CASH_SEASON = { 12: 1.3, 3: 1.12, 4: 1.08, 5: 1.08, 6: 1.12, 8: 1.06 };
 function cashTarget(mNext = G.m + 1) { return Math.min(vaultCapacity(), cashRequired() * (CASH_SEASON[calMonth(mNext)] || 1) * G.vault.buffer); }
 
@@ -3297,7 +3604,7 @@ function processFeesAndExpenses() {
   payExpense(Math.round(c.guard), 'premises', '警備・現金輸送・ATM保守費');
   payExpense(Math.round(c.ad), 'premises', '広告宣伝費');
   payExpense(Math.round(c.misc), 'premises', '事務費・通信費等');
-  payExpense(Math.round(deposits() * DEP_INSURANCE_RATE / 12), 'depInsurance', '預金保険料');
+  payExpense(Math.round(domDeposits() * DEP_INSURANCE_RATE / 12), 'depInsurance', '預金保険料');
   payExpense(Math.round(totalAssets() * 0.00012 / 12 + B('tangible') * 0.0014 / 12), 'taxes', '租税公課（外形標準課税・固定資産税等）');
 }
 
@@ -3309,15 +3616,20 @@ function ttm(keys, n = 12) {
   return hs.length ? s * 12 / hs.length : 0;
 }
 function grossProfitTTM() {
-  const inc = ttm(['intLoans', 'intSec', 'intCall', 'intBoj', 'fees', 'bondGain']);
-  const exp = ttm(['intDep', 'intCallM', 'intBorrow', 'feeExp', 'bondLoss']);
+  const inc = ttm(['intLoans', 'intSec', 'intCall', 'intBoj', 'fees', 'bondGain', 'fxGain']);
+  const exp = ttm(['intDep', 'intCallM', 'intBorrow', 'fundingCost', 'feeExp', 'bondLoss', 'fxLoss']);
   return G.hist.length >= 3 ? inc - exp : G.initGP;
 }
 function generalAllowance() { return sum(G.loans.filter(L => isActiveLoan(L) && L.cls <= 2), L => L.provision || 0); }
 function rwaBreakdown() {
-  let biz = 0, mort = 0, proj = 0, def = 0;
+  let biz = 0, mort = 0, proj = 0, def = 0, seg = 0, ovs = 0;
   for (const L of G.loans) {
     if (!isActiveLoan(L) || L.bal <= 0) continue;
+    if (L.kind === 'seg') {
+      const w = L.bal * SEG[L.seg].rw;
+      if (isOvsArea(L.area)) ovs += w * (1 + 0.15 * (OVSR[L.area].risk - 1)); else seg += w;
+      continue;
+    }
     if (L.status === 'default' || L.status === 'bankrupt') { def += Math.max(0, L.bal - (L.provision || 0)) * 1.5; continue; }
     if (L.kind === 'mort' || L.kind === 'pool') { mort += L.bal * 0.35; continue; }
     if (L.kind === 'proj') { proj += L.bal; continue; }
@@ -3326,15 +3638,18 @@ function rwaBreakdown() {
   }
   const call = B('callLoan') * 0.2;
   const fixed = B('tangible') + B('otherAssets');
-  const credit = biz + mort + proj + def + call + fixed;
+  const credit = biz + mort + proj + def + seg + ovs + call + fixed;
   const op = Math.max(0, grossProfitTTM()) * 0.15 * 12.5;
-  return { biz, mort, proj, def, call, fixed, credit, op, total: credit + op };
+  // 為替リスク（ヘッジしていない外貨ポジション）
+  let fx = 0;
+  if (G.net && G.credit) for (const R of OVERSEAS) fx += (G.net[R.id].gap || 0) * (1 - G.credit.hedge);
+  return { biz, mort, proj, def, seg, ovs, call, fixed, credit, op, fx, total: credit + op + fx };
 }
 function coreCapitalParts(rwa) {
   const r = rwa || rwaBreakdown();
   const ga = Math.min(generalAllowance(), r.credit * 0.0125);
   const eq = B('capital') + B('prefCapital') + B('capSurplus') + B('retained') + curProfit();
-  return { eq, ga, intangible: B('intangible'), core: eq + ga - B('intangible') };
+  return { eq, ga, intangible: B('intangible'), goodwill: B('goodwill'), core: eq + ga - B('intangible') - B('goodwill') };
 }
 function coreCapital() { return coreCapitalParts().core; }
 function capitalRatio() {
@@ -3348,6 +3663,7 @@ function nplBreakdown() {
   for (const L of G.loans) {
     if (!isActiveLoan(L) || L.bal <= 0) continue;
     o.total += L.bal;
+    if (L.kind === 'seg') { const n = Math.min(L.bal, L.npl || 0); o.sub += n * 0.5; o.doubt += n * 0.5; o.normal += L.bal - n; continue; }
     if (L.cls >= 4) o.bk += L.bal;
     else if (L.cls === 3) o.doubt += L.bal;
     else if (L.cls === 2) o.sub += L.bal;
@@ -3381,7 +3697,7 @@ function niiSensitivity() {
   let up = B('callLoan') + Math.max(0, B('boj') - requiredReserve());
   for (const L of G.loans) {
     if (!isActiveLoan(L) || L.status === 'bankrupt') continue;
-    const isVar = L.kind === 'pool' || (L.kind === 'mort' && !(L.fixUntil && G.m < L.fixUntil)) || (L.kind === 'biz' && L.rateType === 'var');
+    const isVar = L.kind === 'pool' || L.kind === 'seg' || (L.kind === 'mort' && !(L.fixUntil && G.m < L.fixUntil)) || (L.kind === 'biz' && L.rateType === 'var');
     if (isVar) up += L.bal;
     else if (L.endM - G.m <= 12) up += L.bal * 0.5;
   }
@@ -3393,6 +3709,7 @@ function niiSensitivity() {
 /* ---------- 格付・株価 ---------- */
 function computeRatingScore() {
   const cr = capitalRatio(), npl = nplRatio();
+  const st = G.stage || 0;
   const ta = totalAssets();
   // 実績が半年に満たないうちは開業時の見込みを使う
   const n = G.hist.filter(h => h.m >= 0).length;
@@ -3403,13 +3720,17 @@ function computeRatingScore() {
   const roa = ni / Math.max(1, ta) * 100;
   const ohr = gp > 0 ? opex / gp * 100 : 200;
   let s = 0;
-  s += interp(cr, [[0, 0], [4, 4], [6, 9], [8, 14], [10, 18], [12, 21], [16, 25]]);
+  // 上位の業態ほど求められる自己資本の水準が高い
+  s += interp(cr - [0, 2.5, 4.5][st], [[0, 0], [4, 4], [6, 9], [8, 14], [10, 18], [12, 21], [16, 25]]);
   s += interp(npl, [[0, 15], [1, 15], [2, 13], [3, 11], [5, 8], [8, 4], [12, 0]]);
   s += interp(roa, [[-0.5, 0], [0, 4], [0.1, 8], [0.2, 11], [0.35, 15], [0.5, 20]]);
   s += interp(ohr, [[50, 15], [60, 13], [70, 10], [80, 7], [90, 4], [100, 2], [120, 0]]);
   s += interp(liquidityRatio(), [[5, 0], [10, 3], [15, 6], [20, 8], [25, 10]]);
   s += interp(ta, [[0, 2], [1000e8, 4], [3000e8, 6], [1e12, 8], [5e12, 10]]);
-  s += Math.max(0, 5 - G.scandalHeat / 4);
+  s += Math.max(0, 5 - G.scandalHeat / 4 * (1 + 0.5 * st));
+  if (st >= 1) s += 3; // システム上重要な銀行としての政府支援の期待
+  if (G.net && st >= 2) s -= Math.min(5, sum(OVERSEAS, R => G.net[R.id].lv * (OVSR[R.id].risk - 1)) / 6);
+  s -= G.ratingPenalty || 0;
   return { s, cr, npl, roa, ohr };
 }
 function ratingIdxOf(score) {
@@ -3418,7 +3739,10 @@ function ratingIdxOf(score) {
 }
 function updateRating() {
   const prev = G.ratingIdx;
-  G.ratingScore = computeRatingScore().s;
+  if (G.ratingPenalty) G.ratingPenalty = G.ratingPenalty > 0.5 ? G.ratingPenalty * 0.85 : 0;
+  // 格付機関は景気の一巡を見通して判断する（直近の評価を前回の評価と均す）
+  const s = computeRatingScore().s;
+  G.ratingScore = prev === undefined || G.ratingScore === undefined ? s : 0.6 * s + 0.4 * G.ratingScore;
   G.ratingIdx = ratingIdxOf(G.ratingScore);
   if (prev !== undefined && prev !== G.ratingIdx) {
     addNews('bank', `格付機関が当行の格付を${RATINGS[prev]}から${RATINGS[G.ratingIdx]}に${G.ratingIdx < prev ? '引き上げ' : '引き下げ'}`, G.ratingIdx < prev ? 'good' : 'bad');
@@ -3449,7 +3773,8 @@ function raiseCapital(amount) {
   if (G.ratingIdx >= 12) return { ok: false, msg: '格付がCCCのため、引受先が見つかりません' };
   if (amount < 1e8) return { ok: false, msg: '1億円以上で指定してください' };
   if (amount > cap * 0.5) return { ok: false, msg: `増資額は時価総額の半分（${fmtYen(cap * 0.5)}）までです` };
-  if (G.raisedM !== undefined && G.m - G.raisedM < 12) return { ok: false, msg: '前回の増資から1年以上あける必要があります' };
+  const gap = (G.stage || 0) >= 1 ? 6 : 12;
+  if (G.raisedM !== undefined && G.m - G.raisedM < gap) return { ok: false, msg: `前回の増資から${gap === 6 ? '半年' : '1年'}以上あける必要があります` };
   const price = G.stock.price * 0.92;
   const sh = Math.round(amount / price);
   const fee = Math.round(amount * 0.03);
@@ -3465,7 +3790,7 @@ function raiseCapital(amount) {
 }
 function acceptPublicFunds() {
   const r = rwaBreakdown();
-  const need = Math.max(30e8, Math.round(r.total * 0.09 - coreCapitalParts(r).core));
+  const need = Math.max(30e8, Math.round(r.total * (reqCR() + 5) / 100 - coreCapitalParts(r).core));
   post('公的資金（優先株式）の注入', [['boj', need, 0], ['prefCapital', 0, need]]);
   G.flags.publicFunds = true;
   G.flags.publicOffer = false;
@@ -3480,7 +3805,8 @@ function repayPublicFunds() {
   if (amt <= 0) return { ok: false, msg: '返済する公的資金はありません' };
   const r = rwaBreakdown();
   const after = (coreCapitalParts(r).core - amt) / r.total * 100;
-  if (after < 8) return { ok: false, msg: `返済後の自己資本比率が8%を下回ります（${fmtPct(after)}）` };
+  const floor = Math.max(8, reqCR() + 2);
+  if (after < floor) return { ok: false, msg: `返済後の自己資本比率が${fmtPct(floor, 1)}を下回ります（${fmtPct(after)}）` };
   if (B('boj') - amt < requiredReserve()) return { ok: false, msg: '資金が不足しています' };
   post('公的資金の返済（優先株式の取得・消却）', [['prefCapital', amt, 0], ['boj', 0, amt]]);
   G.flags.publicFunds = false;
@@ -3561,7 +3887,7 @@ function makeBranchReports() {
   const pres = districtPresence();
   const svc = serviceQuality();
   const tot = sum(Object.values(tg.byD), x => x.ord + x.time) || 1;
-  const dep = deposits() - tg.nat;
+  const dep = cityDeposits() - tg.nat;
   for (const b of openBranches()) {
     const T = BRANCH_TYPES[b.type];
     const sz = branchSize(b);
@@ -3622,21 +3948,21 @@ function fraudRiskScore(bid) {
 function eventsStep() {
   const load = coreLoad();
   // システム障害
-  if (chance(0.002 + Math.max(0, load - 0.85) * 0.4)) {
+  if (chance(0.002 + clamp(load - 0.85, 0, 0.5) * 0.15)) {
     systemFailure(false);
     addNews('bank', `勘定系システムで障害が発生し、ATMと振込が数時間停止（処理能力の使用率${fmtPct(load * 100, 0)}）`, 'bad');
   }
   // サイバー攻撃
   if (chance(0.003 * (1 + G.sys.digital) * [1, 0.5, 0.25, 0.1][G.sys.cyber])) {
-    const cost = Math.round(uni(0.5e8, 3e8) * Math.sqrt(accountsCount() / 20000));
+    const cost = Math.round(uni(0.5e8, 3e8) * Math.sqrt(Math.max(1, accountsCount() / 20000)));
     post('不正アクセス事案の対応費用', [['extraLoss', cost, 0], ['boj', 0, cost]]);
     G.trust = clamp(G.trust - uni(6, 12), 0, 100);
     G.scandalHeat += 6; G.stats.scandals++;
     addNews('bank', `ネットバンキングへの不正アクセスで顧客情報が流出した可能性。対応費用${fmtYen(cost)}`, 'bad');
   }
   // マネロン事案
-  if (chance(0.0025 * Math.sqrt(accountsCount() / 20000) * [1, 0.55, 0.3, 0.12][G.sys.aml])) {
-    const cost = Math.round(uni(0.3e8, 2e8));
+  if (chance(0.0025 * Math.min(4, Math.sqrt(accountsCount() / 20000)) * [1, 0.55, 0.3, 0.12][G.sys.aml])) {
+    const cost = Math.round(uni(0.3e8, 2e8) * Math.sqrt(Math.max(1, accountsCount() / 200000)));
     post('マネー・ローンダリング事案の対応費用', [['extraLoss', cost, 0], ['boj', 0, cost]]);
     G.trust = clamp(G.trust - 5, 0, 100);
     G.scandalHeat += 5; G.stats.scandals++;
@@ -3645,7 +3971,7 @@ function eventsStep() {
   }
   // 大口預金の獲得
   if (chance(0.02 * clamp(G.trust / 60, 0.3, 1.5))) {
-    const amt = roundTo(deposits() * uni(0.02, 0.06), 1e8);
+    const amt = roundTo(cityDeposits() * uni(0.02, 0.06), 1e8);
     G.flags.bigDep = (G.flags.bigDep || 0) + amt;
     addNews('bank', `地元企業から決済口座の集約を受け、約${fmtYen(amt)}の預金を獲得する見込み`, 'good');
   }
@@ -3674,7 +4000,7 @@ function eventsStep() {
   }
   // 近隣金融機関の破綻
   if ((G.eco.regime === 'recession' || G.eco.regime === 'crisis') && chance(0.004)) {
-    const inflow = G.trust >= 55 ? roundTo(deposits() * uni(0.03, 0.08), 1e8) : 0;
+    const inflow = G.trust >= 55 ? roundTo(cityDeposits() * uni(0.03, 0.08), 1e8) : 0;
     if (inflow) G.flags.bigDep = (G.flags.bigDep || 0) + inflow;
     addNews('eco', `近隣の第二地方銀行が経営破綻。${inflow ? `安全を求める預金が当行に流入（約${fmtYen(inflow)}）` : '預金者の不安が広がる'}`, inflow ? 'good' : 'bad');
     if (!inflow) G.trust = clamp(G.trust - 4, 0, 100);
@@ -3705,13 +4031,13 @@ function eventsStep() {
 
 /* ---------- 信用度 ---------- */
 function updateTrust() {
-  const cr = capitalRatio(), npl = nplRatio();
+  const cr = capitalRatio() - (reqCR() - 4), npl = nplRatio();
   let t = 60;
   t += cr >= 12 ? 8 : cr >= 8 ? 4 : cr >= 4 ? -6 : -25;
   t += npl < 2 ? 4 : npl < 5 ? 0 : npl < 10 ? -8 : -18;
   t += [7, 6, 5, 4, 3, 2, 1, 0, -2, -5, -8, -12, -20][G.ratingIdx];
   t += clamp((serviceQuality() - 1) * 20, -12, 3);
-  t += Math.min(8, sum(Object.values(districtPresence())) * 1.0 + G.adBudget / 2000e4);
+  t += Math.min(8, sum(Object.values(districtPresence())) * 1.0 + G.adBudget / 2000e4 + natLevelSum() / 6);
   t -= G.scandalHeat;
   if (coreLoad() > 1) t -= 6;
   if (G.flags.publicFunds) t -= 4;
@@ -3729,7 +4055,11 @@ function fsaStep() {
   if (G.m >= f.nextM) runInspection();
 }
 
-function amlRequired() { const d = deposits(); return d > 3000e8 ? 3 : d > 1500e8 ? 2 : d > 600e8 ? 1 : 0; }
+function amlRequired() {
+  const d = deposits();
+  const base = d > 3000e8 ? 3 : d > 1500e8 ? 2 : d > 600e8 ? 1 : 0;
+  return Math.max(base, [0, 2, 3][G.stage || 0]);
+}
 
 function runInspection() {
   const f = G.fsa;
@@ -3737,12 +4067,12 @@ function runInspection() {
   let under = 0, addProv = 0, sev3 = false;
   const knows = {};
   for (const L of G.loans) {
-    if (!isActiveLoan(L) || L.kind === 'pool') continue;
+    if (!isActiveLoan(L) || L.kind === 'pool' || L.kind === 'seg') continue;
     let k = false;
     if (L.kind === 'biz') {
       const co = G.companies[L.coId];
       if (co.fraud && co.fraud.years > 0) {
-        if (knows[co.id] === undefined) knows[co.id] = co.fraud.found || chance(0.6 * DIFFICULTY[G.difficulty].fsa);
+        if (knows[co.id] === undefined) knows[co.id] = co.fraud.found || chance(0.6 * (G.cfg || DIFFICULTY[G.difficulty]).fsa);
         k = knows[co.id];
         if (k && !co.fraud.found) { co.fraud.found = true; co.fraud.foundBy = 'fsa'; L.fraudKnown = true; }
       }
@@ -3765,12 +4095,14 @@ function runInspection() {
   if (G.sys.aml < amlRequired()) findings.push({ sev: 2, text: `マネロン・テロ資金供与対策の態勢が規模に見合っていない（必要水準 Lv${amlRequired()}）` });
   if (G.sys.digital >= 2 && G.sys.cyber < G.sys.digital - 1) findings.push({ sev: 1, text: 'デジタルチャネルの拡大に対し、サイバーセキュリティ対策が遅れている' });
   if (coreLoad() > 0.9) findings.push({ sev: 2, text: `勘定系システムの処理能力に余裕がない（使用率${fmtPct(coreLoad() * 100, 0)}）` });
-  if (compRatio() < 0.8) findings.push({ sev: 1, text: '管理・監査部門の人員が業容に比べて不足している' });
+  if (compRatio() < 0.8) findings.push({ sev: (G.stage || 0) >= 1 ? 2 : 1, text: '管理・監査部門の人員が業容に比べて不足している' });
+  if ((G.stage || 0) >= 1 && G.sys.cyber < 2) findings.push({ sev: 2, text: '全国規模の決済インフラを担う銀行として、サイバーセキュリティ対策が不十分' });
+  if ((G.stage || 0) >= 2 && G.sys.audit < 2) findings.push({ sev: 2, text: '海外拠点を含むグループ全体の内部監査態勢が整っていない' });
   for (const x of G.ifraud) {
     if (!x.detected && chance(0.5)) { detectInternalFraud(x, 'fsa'); findings.push({ sev: 3, text: '内部管理態勢の重大な欠陥：行員の不正を見逃していた' }); sev3 = true; }
   }
   const cr = capitalRatio();
-  if (cr < 6) findings.push({ sev: 2, text: `自己資本比率が${fmtPct(cr)}と低く、資本の充実が必要` });
+  if (cr < reqCR() + 2) findings.push({ sev: 2, text: `自己資本比率が${fmtPct(cr)}と低く、資本の充実が必要` });
   const ir = irrbb() / cap * 100;
   if (ir > 20) findings.push({ sev: 1, text: `金利リスク量が自己資本の${fmtPct(ir, 0)}に達し、重要性テストの基準（20%）を超過` });
   const score = sum(findings, x => x.sev);
@@ -3787,7 +4119,7 @@ function runInspection() {
   if (addProv > 0) trueUpProvisions('金融庁検査を受けた追加引当');
   const rec = { m: G.m, grade, text, findings, under, addProv };
   f.history.push(rec);
-  f.nextM = G.m + randInt(24, 36) - (grade === 'D' ? 12 : 0);
+  f.nextM = G.m + ((G.stage || 0) >= 1 ? randInt(12, 20) : randInt(24, 36)) - (grade === 'D' ? 6 : 0);
   f.special = false;
   addNews('reg', `金融庁検査が終了。結果：${text}${findings.length ? `（指摘${findings.length}件）` : ''}`, grade <= 'B' ? 'good' : 'bad');
   if (grade === 'D') addNews('reg', `金融庁が当行に業務改善命令。1年間は新規出店が制限される`, 'bad');
@@ -3798,7 +4130,7 @@ function runInspection() {
 function externalAudit() {
   let adj = 0, n = 0;
   for (const L of G.loans) {
-    if (!isActiveLoan(L) || L.kind === 'pool') continue;
+    if (!isActiveLoan(L) || L.kind === 'pool' || L.kind === 'seg') continue;
     let ac = sysClass(L);
     if (L.kind === 'biz') {
       const co = G.companies[L.coId];
@@ -3821,21 +4153,43 @@ function externalAudit() {
 
 const SAVE_VERSION = 1;
 
+/* 汐見市の店舗（カスタムスタートの店舗数に応じて先頭から開設済みにする） */
+const CITY_BRANCH_ORDER = [
+  ['chuo', 'hq', '本店', -999], ['ekimae', 'full', '駅前支店', -120], ['newtown', 'full', '北部ニュータウン支店', -96], ['denen', 'small', '田園出張所', -200],
+  ['kowan', 'full', '港湾支店', -150], ['kogyo', 'full', '臨海工業団地支店', -110], ['gakuen', 'full', '学園都市支店', -80], ['onsen', 'small', '温泉郷出張所', -180],
+];
+const SYS_PRESETS = {
+  old: { core: 1, credit: 0, digital: 0, cyber: 0, aml: 0, audit: 0 },
+  std: { core: 1, credit: 1, digital: 1, cyber: 0, aml: 0, audit: 0 },
+  new: { core: 3, credit: 2, digital: 2, cyber: 1, aml: 1, audit: 1 },
+  mega: { core: 5, credit: 2, digital: 2, cyber: 2, aml: 2, audit: 1 },
+  megaNew: { core: 5, credit: 3, digital: 3, cyber: 3, aml: 3, audit: 2 },
+  tera: { core: 6, credit: 3, digital: 3, cyber: 3, aml: 3, audit: 2 },
+};
+const DELEGATE_DEFAULT = { on: false, ok: 4, ng: 8, deficit: true, max: 3e8 };
+
 function newGame(opts = {}) {
   const seed = (opts.seed ?? Math.floor(Math.random() * 2 ** 31)) | 0;
+  const custom = opts.custom ? Object.assign({}, CUSTOM_PRESETS.standard, opts.custom) : null;
+  const cu = custom || CUSTOM_PRESETS.standard;
+  const diff = DIFFICULTY[opts.difficulty] ? opts.difficulty : 'normal';
+  const D = DIFFICULTY[diff];
+  const stage = clamp(cu.stage | 0, 0, 2);
   G = {
     version: SAVE_VERSION, seed, rs: seed, m: 0,
-    bankName: opts.bankName || DEFAULT_BANK, ceoName: opts.ceoName || '新頭取', difficulty: opts.difficulty || 'normal',
+    bankName: opts.bankName || DEFAULT_BANK, ceoName: opts.ceoName || '新頭取', difficulty: diff,
+    cfg: { fraud: custom ? FRAUD_RATE[cu.fraud] ?? D.fraud : D.fraud, crisis: D.crisis, fsa: D.fsa, capital: D.capital * (custom ? cu.capMul : 1), bubbleUntil: cu.econ === 'precrisis' ? 36 : -1 },
+    custom, termYears: custom ? cu.term : TERM_YEARS, stage, stageInfo: newStageInfo(stage),
     seq: { co: 0, p: 0, app: 0, loan: 0, inbox: 0, asset: 0, bond: 0, branch: 10, if: 0 },
-    ledger: newLedger(), news: [], inbox: [], apps: [], companies: {}, loans: [], bonds: [], assets: [],
+    ledger: newLedger(), news: [], inbox: [], apps: [], companies: {}, loans: [], bonds: [], assets: [], goodwill: [],
     rates: { ord: 0.2, time: 0.4, prime: 1.875, primeLink: true, primeMargin: 1.375, ordLink: true, ordSpread: 0, timeLink: true, timeSpread: 0, mortDisc: 1.05, mortFixSpread: 0.65 },
     dep: { coh: [] },
     staff: { sales: 7, credit: 4, ops: 21, comp: 3 }, salaryLv: 1.0, adBudget: 150e4,
-    branches: [], atms: { chuo: 2, ekimae: 1, newtown: 1 },
-    vault: { lv: 1, buffer: 1.3, sec: 0, upgrade: null },
-    sys: { core: 1, credit: 1, digital: 1, cyber: 0, aml: 0, audit: 0 }, itProjects: [],
+    branches: [], atms: {},
+    vault: { lv: stage >= 1 ? 4 : cu.sys === 'new' ? 2 : 1, buffer: 1.3, sec: stage >= 1 ? 2 : 0, upgrade: null },
+    sys: Object.assign({}, SYS_PRESETS[stage >= 2 ? 'tera' : stage >= 1 ? (cu.sys === 'new' ? 'megaNew' : 'mega') : cu.sys] || SYS_PRESETS.std), itProjects: [],
     treasury: { autoCall: false, bojBuffer: 1.3 },
-    trust: 62, scandalHeat: 0, runShock: 0, pendingInsurance: 0, pendingRecoveries: [],
+    trust: [62, 66, 68][stage], scandalHeat: 0, runShock: 0, pendingInsurance: 0, pendingRecoveries: [],
     flags: { order: -1, lendingBan: -1, publicFunds: false, publicOffer: false, designated: 0, bigDep: 0 },
     stats: {
       investigations: 0, fraudFound: 0, fraudLent: 0, fraudAvoided: 0, fraudDodged: 0, fraudLossAmt: 0,
@@ -3847,46 +4201,55 @@ function newGame(opts = {}) {
     stock: { shares: 3000e4, price: 0, lastIdx: 100 }, shareholders: { sat: 60, warn: 0, hist: [] },
     rejectedLog: [], pendingModals: [], taxLossCF: 0, pendingDividend: null, over: null, termEnded: false,
     initGP: 5.3e8, initOpex: 4.6e8, initNI: 0.3e8, depCalib: 1, ratingIdx: undefined, tutorial: 0,
+    net: null, credit: defaultCredit(), policy: { delegate: Object.assign({}, DELEGATE_DEFAULT, { on: stage >= 1 }) },
   };
   G.eco = newEconomy();
+  if (custom) initEconomy(cu.econ, cu.rate);
   G.city = newCity();
-  G.fsa.nextM = randInt(13, 18);
-  G.branches = [
-    { id: 'b1', d: 'chuo', type: 'hq', openM: -999, name: '本店' },
-    { id: 'b2', d: 'ekimae', type: 'full', openM: -120, name: '駅前支店' },
-    { id: 'b3', d: 'newtown', type: 'full', openM: -96, name: '北部ニュータウン支店' },
-    { id: 'b4', d: 'denen', type: 'small', openM: -200, name: '田園出張所' },
-  ];
-  setupOpeningBalance();
-  // 預金の目標水準を初期残高に合わせて較正
+  G.fsa.nextM = stage >= 1 ? randInt(8, 14) : randInt(13, 18);
+  const nBr = clamp(cu.branches | 0, 1, 8);
+  G.branches = CITY_BRANCH_ORDER.slice(0, nBr).map(([d, type, name, openM], i) => ({ id: 'b' + (i + 1), d, type, openM, name }));
+  for (const [d, n] of [['chuo', 2], ['ekimae', 1], ['newtown', 1]]) if (G.branches.some(b => b.d === d)) G.atms[d] = n;
+  const T = G.branches.map(b => BRANCH_TYPES[b.type]);
+  G.staff = { sales: 2 + sum(T, t => t.sales), credit: [4, 10, 16][stage], ops: 6 + sum(T, t => t.ops), comp: 2 + Math.ceil(nBr / 4) };
   applyRateLinks();
+  setupOpeningBalance(cu);
+  // 預金の目標水準を初期残高に合わせて較正
   G.depCalib = 1;
   const tg = depositTargets();
-  G.depCalib = (deposits() - tg.settle) / Math.max(1, tg.ord + tg.time - tg.settle);
+  G.depCalib = (cityDeposits() - tg.settle) / Math.max(1, tg.ord + tg.time - tg.settle);
   updateRating();
-  G.stock.price = netAssets() / G.stock.shares * 0.42;
+  G.stock.price = netAssets() / G.stock.shares * (stage >= 1 ? 0.6 : 0.42);
   G.stock.lastIdx = G.eco.stock;
-  addNews('bank', `${G.bankName}が開業。${OLD_UNION}の事業を承継し、${G.ceoName}氏が初代頭取に就任`, 'good');
-  addNews('reg', `金融庁は承継した貸出資産の自己査定に注目している。前経営陣の査定は甘かったとの指摘もある`, 'neutral');
+  if (stage === 0) {
+    addNews('bank', `${G.bankName}が開業。${OLD_UNION}の事業を承継し、${G.ceoName}氏が初代頭取に就任`, 'good');
+    addNews('reg', `金融庁は承継した貸出資産の自己査定に注目している。前経営陣の査定は甘かったとの指摘もある`, 'neutral');
+  } else {
+    addNews('bank', `${G.ceoName}氏が${G.bankName}の頭取に就任。${STAGES[stage].name}として${stage >= 2 ? '世界' : '全国'}に広がる店舗網を率いる`, 'good');
+    addNews('reg', `金融庁は${G.bankName}を${stage >= 2 ? 'グローバルな' : '国内の'}システム上重要な銀行に指定している。維持基準を割り込めば格下げとなる`, 'neutral');
+  }
+  if (cu.econ === 'precrisis') addNews('eco', '地価と株価が歴史的な高値を更新。過熱を懸念する声も出始めた', 'neutral');
   genApplications();
   G.hist.push({ m: -1, bs: bsSnapshot(), pl: {}, kpi: kpiSnapshot() });
   return G;
 }
 
-function setupOpeningBalance() {
-  const cf = DIFFICULTY[G.difficulty].capital;
+function setupOpeningBalance(cu) {
+  const cf = G.cfg.capital;
+  const dm = cu.depMul || 1;
+  const Q = { good: { fraud: 0, weak: 1, q: 0.35, late: 0 }, normal: { fraud: 2, weak: 2, q: 0.15, late: 1 }, bad: { fraud: 5, weak: 6, q: -0.2, late: 3 } }[cu.quality] || { fraud: 2, weak: 2, q: 0.15, late: 1 };
   // 承継した事業性融資
   const homeD = ['chuo', 'chuo', 'ekimae', 'ekimae', 'newtown', 'denen', 'kowan', 'kogyo'];
   let bizTotal = 0, lateN = 0, fraudN = 0, weakN = 0;
   const loans = [];
-  for (let i = 0; i < 400 && bizTotal < 150e8; i++) {
-    const co = genCompany({ district: pick(homeD), qBias: 0.15, fraudMul: 1.2, sizeMul: 2.0 });
+  for (let i = 0; i < 400 && bizTotal < 150e8 * dm; i++) {
+    const co = genCompany({ district: pick(homeD), qBias: Q.q, fraudMul: cu.quality === 'bad' ? 2 : 1.2, sizeMul: 2.0 });
     const r = latestRep(co);
     if (r.STD + r.LTD < 5e7) { G.seq.co--; continue; }
-    // 承継先の大半は健全。問題先は粉飾2先・業況悪化2先までに限定
+    // 承継先の大半は健全。問題先（粉飾・業況悪化）の数は承継資産の質で決まる
     const isFraud = co.fraud && co.fraud.years > 0;
     const weak = co.gTrue >= 8;
-    if (isFraud ? fraudN >= 2 : weak ? weakN >= 2 : false) { G.seq.co--; continue; }
+    if (isFraud ? fraudN >= Q.fraud : weak ? weakN >= Q.weak : false) { G.seq.co--; continue; }
     if (isFraud) fraudN++; else if (weak) weakN++;
     G.companies[co.id] = co;
     const capAmt = (isFraud || weak) ? 3.5e8 : 6e8;
@@ -3905,14 +4268,14 @@ function setupOpeningBalance() {
       cgc: chance(0.3) && amt <= 2.8e8 ? 0.8 : 0, personal: chance(0.6),
     };
     L.rate0 = L.rate;
-    if (rateType === 'var') { L.spread = +(L.rate - 1.875).toFixed(2); }
+    if (rateType === 'var') { L.spread = +(L.rate - G.rates.prime).toFixed(2); }
     if (co.ownsRE && chance(0.75)) L.collateral = { bank0: reNow(co, co.reEst) * (co.reLien ? 0.6 : 1), true0: reNow(co, co.reTrue) * (co.reLien ? 0.6 : 1), land0: G.city.d[co.district].land };
-    if (weak && co.gTrue >= 9 && lateN < 1 && chance(0.7)) { L.status = 'late'; L.dpd = 1; lateN++; }
+    if (weak && co.gTrue >= 9 && lateN < Q.late && chance(0.7)) { L.status = 'late'; L.dpd = 1; lateN++; }
     co.everBorrowed = true;
     bizTotal += amt;
     loans.push(L);
   }
-  const poolBal = roundTo(Math.max(80e8, 270e8 - bizTotal), 1e6);
+  const poolBal = roundTo(Math.max(80e8, 270e8 - bizTotal / dm) * dm, 1e6);
   G.initBiz = bizTotal;
   const pool = {
     id: 'POOL', kind: 'pool', name: `住宅ローン債権（${OLD_UNION}より承継）`, ind: 'mort', district: 'newtown',
@@ -3930,16 +4293,20 @@ function setupOpeningBalance() {
     { tenor: 20, face: 10e8, coupon: 0.8, buyM: -48 },
   ];
   for (const b of bonds) {
-    G.bonds.push({ id: 'B' + (++G.seq.bond), tenor: b.tenor, face: b.face, coupon: b.coupon, buyM: b.buyM, matM: b.buyM + b.tenor * 12, book: b.face, name: `利付国債（${b.tenor}年）第${{ 2: 455, 5: 160, 10: 362, 20: 180 }[b.tenor] + G.seq.bond}回` });
+    G.bonds.push({ id: 'B' + (++G.seq.bond), tenor: b.tenor, face: roundTo(b.face * dm, 1e8), coupon: b.coupon, buyM: b.buyM, matM: b.buyM + b.tenor * 12, book: roundTo(b.face * dm, 1e8), name: `利付国債（${b.tenor}年）第${{ 2: 455, 5: 160, 10: 362, 20: 180 }[b.tenor] + G.seq.bond}回` });
   }
   // 固定資産
   const fa = [
-    ['本店土地', 'tangible', 6e8, 0], ['本店建物', 'tangible', 5e8, 300], ['支店・出張所の店舗設備', 'tangible', 1.2e8, 120],
+    ['本店土地', 'tangible', 6e8, 0], ['本店建物', 'tangible', 5e8, 300], ['支店・出張所の店舗設備', 'tangible', 0.4e8 * (G.branches.length - 1), 120],
     ['ATM（承継分）', 'tangible', 0.6e8, 72], ['勘定系システム（承継）', 'intangible', 1e8, 48],
   ];
-  for (const [name, kind, cost, life] of fa) G.assets.push({ id: 'F' + (++G.seq.asset), name, kind, cost, life, m0: 0, book: cost });
+  for (const [name, kind, cost, life] of fa) if (cost > 0) G.assets.push({ id: 'F' + (++G.seq.asset), name, kind, cost, life, m0: 0, book: cost });
+  // 刷新済みのシステム（簿価は投資額の6割）
+  let sysCost = 0;
+  for (const k of SYS_KEYS) for (let lv = (k === 'core' ? 2 : 1); lv <= G.sys[k]; lv++) sysCost += SYSTEMS[k].levels[lv].cost || 0;
+  if (sysCost > 0) G.assets.push({ id: 'F' + (++G.seq.asset), name: '情報システム一式（導入済み）', kind: 'intangible', cost: Math.round(sysCost), life: 60, m0: -24, book: Math.round(sysCost * 0.6) });
   // 定期預金（1年もの）の満期構成
-  const timeTotal = 175e8;
+  const timeTotal = roundTo(175e8 * dm, 1e6);
   const ws = Array.from({ length: 12 }, () => uni(0.7, 1.3));
   const wsum = sum(ws);
   let allocated = 0;
@@ -3948,23 +4315,54 @@ function setupOpeningBalance() {
     allocated += bal;
     G.dep.coh.push({ bal, rate: +(0.25 + 0.15 * ((i + 12 - 0) % 12) / 11).toFixed(3) });
   }
-  const ordDep = 230e8;
-  const cash = 11e8;
+  const ordCity = roundTo(230e8 * dm, 1e6);
+  G.net = newNetState();
+  // メガバンク・テラバンクとして始める場合は全国（海外）の店舗網と国債の残高を用意
+  if (G.stage >= 1) {
+    setupNetworkOpening(G.stage);
+    const netDep = natDep() + sum(OVERSEAS, R => G.net[R.id].dep);
+    const ladder = [[2, 0.04, -8], [5, 0.04, -30], [10, 0.03, -50], [20, 0.01, -70]];
+    for (const [tenor, w, buyM] of ladder) {
+      const face = roundTo(netDep * w, 1e8);
+      const coupon = Math.max(0.005, +(yieldAt(tenor) - 0.1).toFixed(3));
+      G.bonds.push({ id: 'B' + (++G.seq.bond), tenor, face, coupon, buyM, matM: buyM + tenor * 12, book: face, name: `利付国債（${tenor}年）第${{ 2: 460, 5: 170, 10: 370, 20: 190 }[tenor] + G.seq.bond}回` });
+    }
+  }
+  const cash = Math.min(roundTo(11e8 * dm, 1e7), Math.round(vaultCapacity() * 0.9));
   const sec = sum(G.bonds, b => b.face);
   const loanSum = sum(G.loans, L => L.bal);
   const tang = sum(G.assets.filter(a => a.kind === 'tangible'), a => a.book);
   const intang = sum(G.assets.filter(a => a.kind === 'intangible'), a => a.book);
+  const ordAll = ordCity + natOrd(), timeAll = timeTotal + natTime();
+  const fx = sum(OVERSEAS, R => G.net[R.id].dep);
   const capital = roundTo(30e8 * cf, 1e8), surplus = 5e8, retained = 3e8;
-  const boj = ordDep + timeTotal + capital + surplus + retained - cash - sec - loanSum - tang - intang;
+  const boj = ordAll + timeAll + fx + capital + surplus + retained - cash - sec - loanSum - tang - intang;
   if (boj < 10e8) throw new Error('初期の日銀預け金が不足: ' + boj);
   post('開業時の資産・負債の承継', [
     ['cash', cash, 0], ['boj', boj, 0], ['securities', sec, 0], ['loans', loanSum, 0], ['tangible', tang, 0], ['intangible', intang, 0],
-    ['depOrd', 0, ordDep], ['depTime', 0, timeTotal], ['capital', 0, capital], ['capSurplus', 0, surplus], ['retained', 0, retained],
+    ['depOrd', 0, ordAll], ['depTime', 0, timeAll], ['depFx', 0, fx], ['capital', 0, capital], ['capSurplus', 0, surplus], ['retained', 0, retained],
   ]);
   // 承継債権の引当（前経営陣の区分のまま）
   let prov = 0;
   for (const L of G.loans) { L.provision = provisionFor(L, L.cls); prov += L.provision; }
   post('承継債権に対する貸倒引当金の計上', [['retained', prov, 0], ['allowance', 0, prov]]);
+  if (G.stage >= 1) {
+    // 開業直後の格付・オペレーショナルリスクに使う収益見込み
+    const rr = estimateRunRate();
+    G.initGP = 5.3e8 * dm + rr.gp;
+    G.initOpex = 4.6e8 + rr.opex;
+    G.initNI = (G.initGP - G.initOpex - rr.el) * 0.7;
+    // 自己資本比率が目標水準になるよう資本を積む
+    const rw = rwaBreakdown();
+    const target = Math.max(STAGES[G.stage].reqCR + 1.5, [0, 12.5, 13.5][G.stage] * cf);
+    const add = Math.round(target / 100 * rw.total - coreCapitalParts(rw).core);
+    if (add > 0) {
+      const c1 = roundTo(add * 0.3, 1e8), c2 = roundTo(add * 0.3, 1e8);
+      post('開業時の資産・負債の承継', [['boj', add, 0], ['capital', 0, c1], ['capSurplus', 0, c2], ['retained', 0, add - c1 - c2]]);
+    }
+    G.staff.comp = Math.ceil((2 + (G.staff.sales + G.staff.credit + G.staff.ops) * 0.06 + G.branches.length * 0.3 + netStaff() * 0.004) / 0.94);
+    G.stock.shares = Math.max(3000e4, roundTo(netAssets() / 2000, 1e4));
+  }
   G.ledger.mflow = {};
   closeJournalMonth(-1);
 }
@@ -3980,6 +4378,8 @@ function kpiSnapshot() {
     share: +(cs.share * 100).toFixed(2), policy: G.eco.policy, y10: +G.eco.y[10].toFixed(3), prime: G.rates.prime,
     ord: G.rates.ord, time: G.rates.time, unreal: Math.round(unrealizedGain()),
     gdp: +G.eco.gdp.toFixed(2), cpi: +G.eco.cpi.toFixed(2), unemp: +G.eco.unemp.toFixed(2), landN: +G.eco.land.toFixed(1), stockN: +G.eco.stock.toFixed(1),
+    stage: G.stage || 0, natDep: Math.round(natDep()), ovsDep: Math.round(B('depFx')), segBal: Math.round(sum(segLoans(), L => L.bal)),
+    natLv: natLevelSum(), ovsLv: ovsLevelSum(), natShare: +natShare().toFixed(3),
   };
 }
 
@@ -3987,9 +4387,9 @@ function kpiSnapshot() {
 function plSummary(pl) {
   const g = k => pl[k] || 0;
   const fundInc = g('intLoans') + g('intSec') + g('intCall') + g('intBoj');
-  const fundExp = g('intDep') + g('intCallM') + g('intBorrow');
+  const fundExp = g('intDep') + g('intCallM') + g('intBorrow') + g('fundingCost');
   const feeNet = g('fees') - g('feeExp');
-  const othNet = g('bondGain') - g('bondLoss');
+  const othNet = g('bondGain') - g('bondLoss') + g('fxGain') - g('fxLoss');
   const opex = g('personnel') + g('premises') + g('taxes') + g('depreciation') + g('depInsurance');
   const credit = g('provExp') + g('writeoff') - g('provRev') - g('recoveries');
   const ordRev = sum(REV_KEYS.filter(k => ACCT[k].grp !== 'extra'), k => g(k));
@@ -4013,8 +4413,10 @@ function advanceMonth() {
   const m = G.m;
   const before = { dep: deposits(), loans: B('loans'), ta: totalAssets(), trust: G.trust, newsLen: G.news.length };
   G.pendingModals = [];
+  autoDelegate(); // 期限を迎える汐見市の小口案件を審査基準で処理（権限委譲している場合）
   // ===== 当月末の処理 =====
   processLoans();
+  networkMonthEnd();
   processDeposits();
   payDepositInterest();
   processTreasuryMonthly();
@@ -4030,7 +4432,7 @@ function advanceMonth() {
   if (calMonth(m) === 3) { yearEndClosing(); fyClosed = true; }
   const flow = closeJournalMonth(m);
   G.hist.push({ m, bs: bsSnapshot(), pl: flow, kpi: kpiSnapshot() });
-  if ([6, 9, 12, 3].includes(calMonth(m))) { updateRating(); G.hist[G.hist.length - 1].kpi.rating = G.ratingIdx; }
+  if ([6, 9, 12, 3].includes(calMonth(m))) { updateRating(); G.hist[G.hist.length - 1].kpi.rating = G.ratingIdx; stageQuarterly(); }
   pruneState();
   // ===== 翌月 =====
   G.m = m + 1;
@@ -4043,6 +4445,8 @@ function advanceMonth() {
   expireInbox();
   borrowerMonthly();
   itProjectsStep();
+  networkNextMonth();
+  stageReviewStep();
   vaultUpgradeStep();
   for (const b of G.branches) if (b.openM === G.m) addNews('bank', `「${b.name}」が開業した`, 'good');
   staffStep();
@@ -4122,10 +4526,10 @@ function yearEndClosing() {
   G.annual.push(rep);
   closeBooks('決算振替（損益勘定を利益剰余金へ）');
   const ni = rep.pl.net;
-  const allowed = !G.flags.publicFunds && capitalRatio() >= 6 && ni > 0;
+  const allowed = !G.flags.publicFunds && capitalRatio() >= reqCR() + 2 && ni > 0;
   G.pendingDividend = { fy, ni, allowed, max: allowed ? Math.round(ni * 0.6) : 0 };
   G.pendingModals.push({ type: 'yearEnd', fy });
-  if (fy === TERM_YEARS - 1 && !G.termEnded) { G.termEnded = true; G.pendingModals.push({ type: 'term' }); }
+  if (G.termYears && fy === G.termYears - 1 && !G.termEnded) { G.termEnded = true; G.pendingModals.push({ type: 'term' }); }
 }
 
 function buildAnnualReport(fy, audit) {
@@ -4146,7 +4550,8 @@ function buildAnnualReport(fy, audit) {
     roe: pl.net / Math.max(1, (netAssets() + (prev ? prev.na : netAssets())) / 2) * 100,
     ohr: pl.gross > 0 ? pl.opex / pl.gross * 100 : 0,
     audit, rating: G.ratingIdx, trust: G.trust, price: G.stock.price, pop: cityStats().pop, vit: cityStats().vit,
-    unreal: unrealizedGain(), branches: openBranches().length, staff: staffTotal(),
+    unreal: unrealizedGain(), branches: openBranches().length + netBranches(), staff: staffTotal() + netStaff(),
+    stage: G.stage || 0, natDep: natDep(), ovsDep: B('depFx'), natLv: natLevelSum(), ovsLv: ovsLevelSum(),
   };
 }
 
@@ -4204,19 +4609,20 @@ function checkCapital() {
   const na = netAssets();
   if (na < 0) { gameOver('insolvent'); return; }
   const q = [6, 9, 12, 3].includes(calMonth(G.m));
-  if (cr < 4 && !G.flags.publicFunds && !G.flags.publicOffer && G.stats.publicFundsAmt === undefined) {
+  const req = reqCR(), S = STAGES[G.stage || 0];
+  if (cr < req && !G.flags.publicFunds && !G.flags.publicOffer && G.stats.publicFundsAmt === undefined) {
     G.flags.publicOffer = true;
     G.pendingModals.push({ type: 'publicFunds' });
   }
   if (!q) return;
   if (cr < 0) { gameOver('suspended'); return; }
-  if (cr < 2 && G.flags.pca !== 2) {
+  if (cr < req / 2 && G.flags.pca !== 2) {
     G.flags.pca = 2; G.flags.lendingBan = G.m + 3;
     addNews('reg', `自己資本比率が${fmtPct(cr)}に低下。早期是正措置（第2区分）により新規融資の抑制を命じられた`, 'bad');
-  } else if (cr < 4 && !G.flags.pca) {
+  } else if (cr < req && !G.flags.pca) {
     G.flags.pca = 1;
-    addNews('reg', `自己資本比率が${fmtPct(cr)}と国内基準の4%を下回り、早期是正措置（第1区分）として経営改善計画の提出を求められた`, 'bad');
-  } else if (cr >= 4) G.flags.pca = 0;
+    addNews('reg', `自己資本比率が${fmtPct(cr)}と${S.basis}の${fmtPct(req, 1)}を下回り、早期是正措置（第1区分）として経営改善計画の提出を求められた`, 'bad');
+  } else if (cr >= req) G.flags.pca = 0;
 }
 
 const OVER_TEXT = {
@@ -4241,11 +4647,16 @@ function finalEvaluation() {
   const s = G.stats;
   const parts = [];
   const add = (name, pts, max, note) => parts.push({ name, pts: Math.round(clamp(pts, 0, max)), max, note });
-  add('規模の拡大', Math.log2(ta / first.ta) * 12 + 5, 25, `総資産 ${fmtYen(first.ta)} → ${fmtYen(ta)}`);
-  add('収益力', cumNI / 1e8 * 0.6 + 5, 20, `累計当期純利益 ${fmtYen(cumNI)}`);
-  add('健全性', (capitalRatio() - 4) * 1.5 + (5 - nplRatio()) * 1.5, 20, `自己資本比率 ${fmtPct(capitalRatio())}、不良債権比率 ${fmtPct(nplRatio())}`);
+  const avgRoe = G.annual.length ? sum(G.annual, a => a.roe) / G.annual.length : 0;
+  const si = G.stageInfo || newStageInfo(0);
+  const downs = si.hist.filter(h => h.kind === 'down').length;
+  add('規模の拡大', Math.log2(ta / first.ta) * 10 + 4, 20, `総資産 ${fmtYen(first.ta)} → ${fmtYen(ta)}`);
+  add('収益力', 4 + avgRoe * 1.6, 15, `平均ROE ${fmtPct(avgRoe)}、累計当期純利益 ${fmtYen(cumNI)}`);
+  add('健全性', (capitalRatio() - reqCR()) * 1.5 + (5 - nplRatio()) * 1.5, 20, `自己資本比率 ${fmtPct(capitalRatio())}、不良債権比率 ${fmtPct(nplRatio())}`);
   add('審査の目', s.fraudFound * 1.2 + s.fraudDodged * 0.8 - s.fraudLent * 0.6 + 4, 15, `粉飾の発見 ${s.fraudFound}件、粉飾先への融資 ${s.fraudLent}件`);
-  add('地域の発展', (cs.vit - 100) * 0.6 + (cs.pop / first.pop - 1) * 100 + s.projectsFunded * 1.5 + 4, 15, `人口 ${fmtNum(first.pop)}人 → ${fmtNum(cs.pop)}人、地域活力 ${fmtNum(cs.vit, 1)}`);
+  add('地域の発展', (cs.vit - 100) * 0.4 + (cs.pop / first.pop - 1) * 70 + s.projectsFunded + 3, 10, `人口 ${fmtNum(first.pop)}人 → ${fmtNum(cs.pop)}人、地域活力 ${fmtNum(cs.vit, 1)}`);
+  add('業態の発展', (si.maxStage - si.startStage) * 6 + (G.stage || 0) * 3 + ((G.stage || 0) >= 2 ? ovsLevelSum() * 0.3 : natLevelSum() * 0.15) - downs * 5, 15,
+    `${STAGES[si.startStage].name}として就任 → 現在は${STAGES[G.stage || 0].name}${downs ? `（格下げ${downs}回）` : ''}`);
   add('ガバナンス', 5 - s.scandals * 1.2 - G.fsa.history.filter(h => h.grade === 'D').length * 2 - (G.flags.publicFunds || s.publicFundsAmt ? 3 : 0), 5, `不祥事 ${s.scandals}件`);
   const total = sum(parts, p => p.pts);
   const rank = total >= 85 ? 'S' : total >= 70 ? 'A' : total >= 55 ? 'B' : total >= 40 ? 'C' : 'D';
@@ -4266,7 +4677,20 @@ function deserialize(json) {
   if (!s || s.version !== SAVE_VERSION || !s.ledger) throw new Error('セーブデータの形式が違います');
   G = s;
   G.pendingModals = G.pendingModals || [];
+  migrateSave();
   return G;
+}
+/* 旧バージョンのセーブデータに新しい項目を補う */
+function migrateSave() {
+  for (const k of ACCT_KEYS) if (G.ledger.bal[k] === undefined) G.ledger.bal[k] = 0;
+  if (G.stage === undefined) G.stage = 0;
+  if (!G.stageInfo) G.stageInfo = newStageInfo(G.stage);
+  if (!G.net) G.net = newNetState();
+  if (!G.credit) G.credit = defaultCredit();
+  if (!G.goodwill) G.goodwill = [];
+  if (!G.cfg) G.cfg = Object.assign({ bubbleUntil: -1 }, DIFFICULTY[G.difficulty] || DIFFICULTY.normal);
+  if (G.termYears === undefined) G.termYears = TERM_YEARS;
+  if (!G.policy) G.policy = { delegate: Object.assign({}, DELEGATE_DEFAULT) };
 }
 
 /* 内部整合性のチェック（開発・検証用） */
@@ -4278,18 +4702,838 @@ function integrityCheck() {
   if (Math.abs(lsum - B('loans')) > 1) errs.push(`貸出金の補助元帳不一致 ${lsum} vs ${B('loans')}`);
   const bsum = sum(G.bonds, b => b.book);
   if (Math.abs(bsum - B('securities')) > 1) errs.push(`有価証券の補助元帳不一致 ${bsum} vs ${B('securities')}`);
-  const tsum = sum(G.dep.coh, c => c.bal);
+  const tsum = sum(G.dep.coh, c => c.bal) + natTime();
   if (Math.abs(tsum - B('depTime')) > 1) errs.push(`定期預金の補助元帳不一致 ${tsum} vs ${B('depTime')}`);
+  const fsum = G.net ? sum(OVERSEAS, R => G.net[R.id].dep) : 0;
+  if (Math.abs(fsum - B('depFx')) > 1) errs.push(`海外店預金の補助元帳不一致 ${fsum} vs ${B('depFx')}`);
+  const gw = sum(G.goodwill || [], g => g.book);
+  if (Math.abs(gw - B('goodwill')) > 1) errs.push(`のれんの補助元帳不一致 ${gw} vs ${B('goodwill')}`);
+  if (cityOrd() < -1) errs.push(`汐見市の普通預金がマイナス ${cityOrd()}`);
   const tg = sum(G.assets.filter(a => a.kind === 'tangible'), a => a.book);
   if (Math.abs(tg - B('tangible')) > 1) errs.push(`有形固定資産の補助元帳不一致 ${tg} vs ${B('tangible')}`);
   const ig = sum(G.assets.filter(a => a.kind === 'intangible'), a => a.book);
   if (Math.abs(ig - B('intangible')) > 1) errs.push(`無形固定資産の補助元帳不一致 ${ig} vs ${B('intangible')}`);
   const prov = sum(G.loans.filter(isActiveLoan), L => L.provision || 0);
   if (Math.abs(prov - B('allowance')) > 1) errs.push(`引当金の補助元帳不一致 ${prov} vs ${B('allowance')}`);
-  for (const k of ['cash', 'boj', 'depOrd', 'depTime']) if (B(k) < -1) errs.push(`${ACCT[k].name}がマイナス ${B(k)}`);
+  for (const k of ['cash', 'boj', 'depOrd', 'depTime', 'depFx', 'goodwill']) if (B(k) < -1) errs.push(`${ACCT[k].name}がマイナス ${B(k)}`);
   for (const k of ACCT_KEYS) if (!isFinite(B(k))) errs.push(`${k} が数値でない`);
   for (const L of G.loans) if (isActiveLoan(L) && (!isFinite(L.bal) || L.bal < 0)) errs.push(`融資残高異常 ${L.id} ${L.bal}`);
   return errs;
+}
+
+/* ---- 09_stage.js ---- */
+/* =========================================================
+ *  09_stage.js : 業態ステージ（地域銀行 → メガバンク → テラバンク）
+ *    全国・海外の店舗網、リテール・中小企業ポートフォリオ、
+ *    為替と外貨調達、地銀・現地銀行の買収、規模に応じた大型リスク、
+ *    格上げ審査・維持基準・格下げ
+ * ========================================================= */
+
+/* ---------- エリア（汐見市の地区・国内の地域・海外の地域）の共通アクセサ ---------- */
+const isCityArea = a => !!DIST[a];
+const isNatArea = a => !!NATR[a];
+const isOvsArea = a => !!OVSR[a];
+const areaDef = a => DIST[a] || NATR[a] || OVSR[a];
+const regionDef = a => NATR[a] || OVSR[a];
+function areaName(a) { const d = areaDef(a); return d ? d.name : String(a); }
+function areaMix(a) { return areaDef(a).mix; }
+function areaVit(a) {
+  if (DIST[a]) return G.city.d[a].vit;
+  const r = G.net && G.net[a];
+  return r ? r.vit : 100;
+}
+function areaLand(a) {
+  if (DIST[a]) return G.city.d[a].land;
+  const r = G.net && G.net[a];
+  return r ? r.land : 100;
+}
+const regionLevels = a => (isOvsArea(a) ? OVS_LEVELS : NAT_LEVELS);
+const LEVEL_GAP = 12; // 一つの段階が完成してから次の拡大に着手できるまでの月数
+const regionScale = a => (isOvsArea(a) ? ovsScale(OVSR[a]) : natScale(NATR[a]));
+
+/* ---------- 状態 ---------- */
+function newNetState() {
+  const net = {};
+  for (const R of NATIONS) net[R.id] = { lv: 0, build: null, since: -1, ord: 0, time: 0, tRate: 0.3, vit: 100 + randn() * 2, land: 100, pdMul: 1, pdUntil: -1, shock: null, frozenUntil: -1 };
+  for (const R of OVERSEAS) net[R.id] = { lv: 0, build: null, since: -1, dep: 0, vit: 100 + 5 * (R.growth - 2.5), land: 100, rate: R.rate0, fx: 1, lastFx: 0, basis: 0.3, basisUntil: -1, gap: 0, pdMul: 1, pdUntil: -1, shock: null, frozenUntil: -1 };
+  return net;
+}
+function newStageInfo(stage) {
+  return { since: 0, review: null, strikes: 0, warnM: -1, cooldownUntil: -1, rejectedUntil: -1, maxStage: stage, startStage: stage, lastAcqM: -999, hist: [] };
+}
+function defaultCredit() { return { nat: { app: 'std', adj: 0 }, ovs: { app: 'std', adj: 0 }, hedge: 0.8 }; }
+
+const stageOf = () => G.stage || 0;
+const reqCR = () => STAGES[stageOf()].reqCR;
+function natLevelSum() { return G.net ? sum(NATIONS, R => G.net[R.id].lv) : 0; }
+function ovsLevelSum() { return G.net ? sum(OVERSEAS, R => G.net[R.id].lv) : 0; }
+
+/* ---------- 預金の内訳 ---------- */
+function natOrd() { return G.net ? sum(NATIONS, R => G.net[R.id].ord) : 0; }
+function natTime() { return G.net ? sum(NATIONS, R => G.net[R.id].time) : 0; }
+function natDep() { return natOrd() + natTime(); }
+function cityOrd() { return B('depOrd') - natOrd(); }
+function cityTime() { return B('depTime') - natTime(); }
+function cityDeposits() { return cityOrd() + cityTime(); }
+function domDeposits() { return B('depOrd') + B('depTime'); }
+function natMarketDep() { return sum(NATIONS, R => R.dep) * 1e12; }
+/* 国内の預金シェア（%）。全国の預金市場＋汐見市 */
+function natShare() { return domDeposits() / (natMarketDep() + cityStats().depMkt) * 100; }
+
+/* ---------- 店舗網の規模 ---------- */
+function regionStaff(a) { const r = G.net[a]; return Math.round(regionLevels(a)[r.lv].staff * regionScale(a)); }
+function regionBranches(a) {
+  const r = G.net[a];
+  const n = regionLevels(a)[r.lv].br;
+  return n <= 2 ? n : Math.max(1, Math.round(n * Math.pow(regionScale(a), 0.6)));
+}
+function netStaff() { return G.net ? sum(NATIONS.concat(OVERSEAS), R => regionStaff(R.id)) : 0; }
+function netBranches() { return G.net ? sum(NATIONS.concat(OVERSEAS), R => regionBranches(R.id)) : 0; }
+function regionOpex(a) {
+  const r = G.net[a], LV = regionLevels(a), sc = regionScale(a);
+  let x = LV[r.lv].opex * sc;
+  if (r.build) x += Math.max(0, LV[r.build.to].opex - LV[r.lv].opex) * sc * 0.25; // 開設準備
+  return x;
+}
+
+/* ---------- リテール・中小企業ポートフォリオ（G.loans の kind:'seg'） ---------- */
+function segMix(a, lv) {
+  if (isOvsArea(a)) return lv >= 3 ? { retail: 0.3, sme: 0.7 } : { retail: 0, sme: 1 };
+  return { retail: SEG.retail.mix, sme: SEG.sme.mix };
+}
+const segName = (a, seg) => (isOvsArea(a) ? SEG[seg].ovsName : SEG[seg].name);
+function segLoans(a) { return G.loans.filter(L => L.kind === 'seg' && isActiveLoan(L) && (!a || L.area === a)); }
+function areaLoanBal(a) { return sum(segLoans(a), L => L.bal); }
+function findSegLoan(a, seg) { return G.loans.find(L => L.kind === 'seg' && L.area === a && L.seg === seg && L.status === 'current'); }
+function ensureSegLoan(a, seg) {
+  let L = findSegLoan(a, seg);
+  if (!L) {
+    L = {
+      id: 'L' + (++G.seq.loan), kind: 'seg', seg, area: a, district: a, name: `${areaName(a)}・${segName(a, seg)}`, ind: 'seg',
+      principal: 0, bal: 0, rate: 0, rate0: 0, termM: 0, startM: G.m, endM: G.m + 9999, repay: 'pool', status: 'current', dpd: 0, arrears: 0,
+      cls: 0, provision: 0, paidInt: 0, restructured: false, ioUntil: -1, stressUntil: -1, grade: seg === 'retail' ? 3 : 5, fraudKnown: false,
+      vr: 1, pd: SEG[seg].pd, npl: 0, lossYTD: 0,
+    };
+    G.loans.push(L);
+  }
+  return L;
+}
+function segRate(L) {
+  const S = SEG[L.seg], ovs = isOvsArea(L.area);
+  const pol = G.credit[ovs ? 'ovs' : 'nat'];
+  const base = ovs ? G.net[L.area].rate + S.ovsSpread : G.rates.prime + S.spread;
+  return Math.max(0.2, base + pol.adj);
+}
+const segLGD = L => SEG[L.seg].lgd + (isOvsArea(L.area) ? 0.1 : 0);
+function segPD(L) {
+  const S = SEG[L.seg], a = L.area, r = G.net[a];
+  let pd = S.pd * Math.pow(G.eco.defMult / 0.9, 0.7) * (L.vr || 1) * Math.exp(-(r.vit - 100) / 50);
+  if (isOvsArea(a)) pd *= COUNTRY_PD[OVSR[a].risk];
+  if (r.pdUntil >= G.m) pd *= r.pdMul;
+  return clamp(pd, 0.05, 35);
+}
+function segTarget(L) {
+  const a = L.area, r = G.net[a], ovs = isOvsArea(a), R = regionDef(a);
+  const lvd = regionLevels(a)[r.lv];
+  if (!lvd || !lvd.loan || r.frozenUntil > G.m) return 0;
+  const pol = G.credit[ovs ? 'ovs' : 'nat'];
+  const mix = segMix(a, r.lv)[L.seg];
+  const dem = ovs ? clamp(r.vit / 100, 0.6, 1.4) : clamp(G.eco.demand * r.vit / 100, 0.45, 1.5);
+  const trustF = clamp(Math.pow(G.trust / 65, 0.5), 0.6, 1.2);
+  return R.loan * 1e12 * lvd.loan * mix * APPETITE[pol.app].vol * Math.exp(-1.5 * pol.adj) * dem * trustF / (ovs ? 1 : Math.sqrt(R.compet));
+}
+/* 月次：利息・延滞と償却・約定返済・新規実行 */
+function processSegPool(L) {
+  const S = SEG[L.seg];
+  const ovs = isOvsArea(L.area);
+  L.rate = segRate(L);
+  L.pd = segPD(L);
+  const bal0 = L.bal;
+  if (L.bal > 0) {
+    const interest = Math.round(L.bal * L.rate / 1200);
+    receive(interest, 'intLoans', ovs ? '貸出金利息の受入（海外拠点）' : '貸出金利息の受入（全国の店舗網）');
+    L.paidInt += interest;
+    const pdM = 1 - Math.pow(1 - Math.min(0.9, L.pd / 100), 1 / 12);
+    const def = Math.min(L.bal, Math.round(L.bal * pdM * Math.exp(randn() * 0.15)));
+    if (def > 0) {
+      const rec = Math.round(def * (1 - segLGD(L)));
+      if (rec > 0) { post('延滞債権の回収（担保処分・保証履行）', [['boj', rec, 0], ['loans', 0, rec]]); L.bal -= rec; }
+      writeOffAmount(L, def - rec, ovs ? '貸出金の償却（海外拠点）' : '貸出金の償却（全国の店舗網）');
+      L.lossYTD = (L.lossYTD || 0) + (def - rec);
+    }
+    const rep = Math.min(L.bal, Math.round(L.bal * S.repay));
+    if (rep > 0) { post('貸出金の回収（約定返済）', [['boj', rep, 0], ['loans', 0, rep]]); L.bal -= rep; }
+  }
+  const target = segTarget(L);
+  let nw = Math.round(Math.max(0, bal0 + (target - bal0) * 0.06 - L.bal));
+  if (G.flags.lendingBan > G.m) nw = 0;
+  if (coreLoad() > 1) nw = Math.round(nw * 0.3); // システムの処理能力不足で新規の受付を絞る
+  if (nw > 0 && !ensureFunds(nw)) nw = Math.max(0, Math.min(nw, B('boj') - requiredReserve()));
+  if (nw > 0) {
+    const pol = G.credit[ovs ? 'ovs' : 'nat'];
+    const f = APPETITE[pol.app].risk * Math.exp(0.5 * pol.adj);
+    L.vr = ((L.vr || 1) * L.bal + f * nw) / (L.bal + nw);
+    post(ovs ? '融資の実行（海外拠点）' : '融資の実行（全国の店舗網）', [['loans', nw, 0], ['boj', 0, nw]]);
+    L.bal += nw; L.principal += nw;
+  }
+  // 不良債権の残高（延滞・条件変更先）。バルクセールの後は1年かけて積み上がる
+  const refill = L.nplSoldM !== undefined ? clamp((G.m - L.nplSoldM) / 12, 0, 1) : 1;
+  L.npl = Math.round(L.bal * Math.min(0.4, L.pd / 100 * 1.2) * refill);
+}
+/* 不良債権のバルクセール（全国 nat／海外 ovs の店舗網が抱える延滞債権をまとめて売る） */
+function nplBulkQuote(scope) {
+  let face = 0, price = 0;
+  for (const L of segLoans()) {
+    if ((scope === 'ovs') !== isOvsArea(L.area) || !(L.npl > 0)) continue;
+    face += L.npl;
+    price += L.npl * Math.max(0.05, 1 - segLGD(L) * 1.25);
+  }
+  return { face: Math.round(face), price: Math.round(price) };
+}
+function nplBulkSale(scope) {
+  const q = nplBulkQuote(scope);
+  if (q.face < 1e8) return { ok: false, msg: '売却できる不良債権がほとんどありません' };
+  for (const L of segLoans()) {
+    if ((scope === 'ovs') !== isOvsArea(L.area) || !(L.npl > 0)) continue;
+    const x = Math.min(L.bal, L.npl);
+    const p = Math.round(x * Math.max(0.05, 1 - segLGD(L) * 1.25));
+    post('不良債権のバルクセール（入金）', [['boj', p, 0], ['loans', 0, p]]);
+    L.bal -= p;
+    writeOffAmount(L, x - p, '不良債権のバルクセールによる売却損');
+    L.npl = 0; L.nplSoldM = G.m;
+  }
+  trueUpProvisions();
+  G.stats.nplSold++;
+  addNews('bank', `${scope === 'ovs' ? '海外拠点' : '全国の店舗網'}の不良債権${fmtYen(q.face)}を投資ファンドに一括売却（売却額${fmtYen(q.price)}）`, 'neutral');
+  return { ok: true, q };
+}
+
+/* ---------- 国内の地域：預金 ---------- */
+function natDepTarget(R) {
+  const r = G.net[R.id], lvd = NAT_LEVELS[r.lv];
+  if (!lvd.dep) return { ord: 0, time: 0 };
+  const rt = G.rates, e = G.eco;
+  const rfOrd = clamp(Math.exp(2.5 * (rt.ord - e.mktOrd)), 0.75, 1.6);
+  const rfTime = clamp(Math.exp(4.0 * (rt.time - e.mktTime)), 0.6, 2.5);
+  const trustF = clamp(Math.pow(G.trust / 65, 0.8), 0.4, 1.3);
+  const base = R.dep * 1e12 * lvd.dep * trustF * (1 + 0.05 * G.sys.digital) * clamp(r.vit / 100, 0.85, 1.15) / Math.sqrt(R.compet);
+  return { ord: base * (1 - R.time) * rfOrd, time: base * R.time * rfTime };
+}
+function natDepositStep(R) {
+  const r = G.net[R.id];
+  if (!r.lv && r.ord + r.time <= 0) return;
+  const t = natDepTarget(R);
+  let dO = (t.ord - r.ord) * 0.06 + r.ord * randn() * 0.004;
+  let dT = (t.time - r.time) * 0.05 + r.time * randn() * 0.002;
+  if (coreLoad() > 1) { if (dO > 0) dO *= 0.3; if (dT > 0) dT *= 0.3; }
+  if (G.trust < 30) { dO -= r.ord * (30 - G.trust) / 30 * 0.1; dT -= r.time * (30 - G.trust) / 30 * 0.04; }
+  if (G.runShock) { dO -= r.ord * G.runShock * 0.7; dT -= r.time * G.runShock * 0.3; }
+  dO = Math.round(Math.max(-r.ord, dO)); dT = Math.round(Math.max(-r.time, dT));
+  const inO = Math.max(0, dO), inT = Math.max(0, dT), outO = Math.max(0, -dO), outT = Math.max(0, -dT);
+  if (inO + inT > 0) post('預金の純増（全国の店舗網）', [['boj', inO + inT, 0], ['depOrd', 0, inO], ['depTime', 0, inT]]);
+  if (outO + outT > 0) { ensureFunds(outO + outT); post('預金の純減（全国の店舗網）', [['depOrd', outO, 0], ['depTime', outT, 0], ['boj', 0, outO + outT]]); }
+  r.ord += dO; r.time += dT;
+  r.tRate += (G.rates.time - r.tRate) / 12;
+}
+
+/* ---------- 海外の地域：金利・為替・預金・外貨調達 ---------- */
+function ovsDepTarget(R) {
+  const r = G.net[R.id], lvd = OVS_LEVELS[r.lv];
+  if (!lvd.dep) return 0;
+  return R.dep * 1e12 * lvd.dep * clamp(Math.pow(G.trust / 65, 0.6), 0.5, 1.2) * clamp(r.vit / 100, 0.7, 1.3);
+}
+function fxRevalue(a, dfx) {
+  const r = G.net[a];
+  const loans0 = areaLoanBal(a), dep0 = r.dep;
+  let dL = 0;
+  for (const L of segLoans(a)) { const d = Math.round(L.bal * dfx); L.bal += d; dL += d; }
+  const dD = Math.round(dep0 * dfx);
+  r.dep += dD;
+  const hs = -Math.round(Math.max(0, loans0 - dep0) * G.credit.hedge * dfx); // 為替スワップ（ヘッジ）の損益
+  const pl = dL - dD + hs;
+  const lines = [];
+  if (dL > 0) lines.push(['loans', dL, 0]); else if (dL < 0) lines.push(['loans', 0, -dL]);
+  if (dD > 0) lines.push(['depFx', 0, dD]); else if (dD < 0) lines.push(['depFx', -dD, 0]);
+  if (hs > 0) lines.push(['boj', hs, 0]); else if (hs < 0) { ensureFunds(-hs); lines.push(['boj', 0, -hs]); }
+  if (pl > 0) lines.push(['fxGain', 0, pl]); else if (pl < 0) lines.push(['fxLoss', -pl, 0]);
+  post('外貨建資産・負債の円換算（為替の変動）', lines);
+  r.fxPL = (r.fxPL || 0) + pl;
+}
+function ovsStep(R) {
+  const a = R.id, r = G.net[a], e = G.eco;
+  r.rate = clamp(r.rate + (R.rate0 + 0.5 * (e.policy - 0.5) - r.rate) * 0.04 + randn() * 0.05, 0, 40);
+  const vt = 100 + 5 * (R.growth - 2.5) + 6 * (e.gdp - 1);
+  r.vit = clamp(r.vit + (vt - r.vit) * 0.05 + randn() * 0.8, 40, 170);
+  r.land = clamp(r.land * (1 + (R.growth * 0.6 + (r.vit - 100) / 10) / 1200 + randn() * 0.003), 30, 400);
+  const dfx = clamp(R.fxVol * randn() - 0.04 * Math.log(r.fx) + (e.regime === 'crisis' ? -0.012 : 0), -0.25, 0.25);
+  r.fx *= 1 + dfx;
+  r.lastFx = dfx;
+  if (r.basisUntil < G.m) r.basis += (0.3 - r.basis) * 0.3;
+  if (areaLoanBal(a) <= 0 && r.dep <= 0 && !r.lv) return;
+  if (areaLoanBal(a) > 0 || r.dep > 0) fxRevalue(a, dfx);
+  // 現地での預金
+  let dD = (ovsDepTarget(R) - r.dep) * 0.05 + r.dep * randn() * 0.006;
+  if (G.trust < 30) dD -= r.dep * 0.05;
+  dD = Math.round(Math.max(-r.dep, dD));
+  if (dD > 0) post('海外店預金の純増', [['boj', dD, 0], ['depFx', 0, dD]]);
+  else if (dD < 0) { ensureFunds(-dD); post('海外店預金の純減', [['depFx', -dD, 0], ['boj', 0, -dD]]); }
+  r.dep += dD;
+  const di = Math.round(r.dep * r.rate * 0.6 / 1200);
+  if (di > 0) { post('海外店預金利息の元加', [['intDep', di, 0], ['depFx', 0, di]]); r.dep += di; }
+  // 貸出が現地の預金を上回る分は、円資金を為替スワップで外貨に換えて調達する
+  r.gap = Math.max(0, areaLoanBal(a) - r.dep);
+  const fc = Math.round(r.gap * G.credit.hedge * Math.max(0, r.rate - e.policy + r.basis) / 1200);
+  payOut(fc, 'fundingCost', '外貨調達費用（為替スワップ）');
+}
+/* 支払前に資金を確保して費用を計上する */
+function payOut(amount, acct, desc) {
+  amount = Math.round(amount);
+  if (amount <= 0) return;
+  ensureFunds(amount);
+  payExpense(amount, acct, desc);
+}
+
+/* ---------- 月末：ネットワーク全体の処理 ---------- */
+function networkMonthEnd() {
+  if (!G.net) return;
+  const e = G.eco;
+  for (const R of NATIONS) {
+    const r = G.net[R.id];
+    const tgt = 100 + 5 * (e.gdp - 1) + (R.dep >= 150 ? 3 : R.dep < 60 ? -3 : 0);
+    r.vit = clamp(r.vit + (tgt - r.vit) * 0.05 + randn() * 0.6, 50, 160);
+    r.land = clamp(r.land * (1 + REGIMES[e.regime].land * (R.dep >= 100 ? 1 : 0.6) / 1200 + randn() * 0.002), 30, 300);
+    natDepositStep(R);
+  }
+  for (const R of OVERSEAS) ovsStep(R);
+  for (const L of G.loans) if (L.kind === 'seg' && isActiveLoan(L)) processSegPool(L);
+  networkCosts();
+  amortizeGoodwill();
+}
+function networkCosts() {
+  let natOp = 0, ovsOp = 0;
+  for (const R of NATIONS) natOp += regionOpex(R.id);
+  for (const R of OVERSEAS) ovsOp += regionOpex(R.id);
+  payOut(natOp * 0.55, 'personnel', '全国の店舗網の人件費');
+  payOut(natOp * 0.45, 'premises', '全国の店舗網の物件費');
+  payOut(ovsOp * 0.55, 'personnel', '海外拠点の人件費');
+  payOut(ovsOp * 0.45, 'premises', '海外拠点の物件費');
+  const f = networkFees();
+  const natFee = f.nat / 12, ovsFee = f.ovs / 12;
+  receive(Math.round(natFee), 'fees', '役務取引等収益（全国の店舗網：融資関連・保険・資産運用）');
+  receive(Math.round(ovsFee), 'fees', '役務取引等収益（海外拠点：貿易金融・送金）');
+}
+/* 店舗網が生む手数料（年額）：融資関連・保険と投信の販売・資産運用・決済、海外は貿易金融・送金 */
+function networkFees() {
+  let nat = natDep() * 0.0015, ovs = 0;
+  for (const L of segLoans()) {
+    if (isOvsArea(L.area)) ovs += L.bal * 0.004; else nat += L.bal * 0.003;
+  }
+  for (const R of OVERSEAS) ovs += G.net[R.id].dep * 0.002;
+  return { nat, ovs };
+}
+function amortizeGoodwill() {
+  let t = 0;
+  for (const g of G.goodwill) {
+    const d = Math.min(g.book, Math.round(g.cost / g.life));
+    g.book -= d; t += d;
+  }
+  if (t > 0) post('のれん償却', [['otherExp', t, 0], ['goodwill', 0, t]]);
+  G.goodwill = G.goodwill.filter(g => g.book > 0);
+}
+
+/* ---------- 翌月：工事の完了・買収先の問題の発覚・大型リスク ---------- */
+function networkNextMonth() {
+  if (!G.net) return;
+  for (const R of NATIONS.concat(OVERSEAS)) {
+    const a = R.id, r = G.net[a];
+    if (r.build && G.m >= r.build.doneM) {
+      const LV = regionLevels(a);
+      r.lv = r.build.to; r.build = null; r.lvM = G.m;
+      if (r.since < 0) r.since = G.m;
+      const mix = segMix(a, r.lv);
+      if (LV[r.lv].loan > 0) for (const seg of ['retail', 'sme']) if (mix[seg] > 0) ensureSegLoan(a, seg);
+      addNews('bank', `${R.name}の「${LV[r.lv].name}」が完成（店舗${fmtNum(regionBranches(a))}・行員${fmtNum(regionStaff(a))}人）`, 'good');
+    }
+    if (r.shock && G.m >= r.shock.m) {
+      r.pdMul = r.shock.mul; r.pdUntil = G.m + 24;
+      addNews('loan', `買収した${r.shock.name}の貸出に、統合前の査定では把握できなかった不良債権が見つかった。${R.name}の貸倒れが当面増える見込み`, 'bad');
+      r.shock = null;
+    }
+  }
+  if (stageOf() >= 1) stageEventsStep();
+}
+
+/* ---------- 店舗網の拡大・撤退 ---------- */
+function buildCheck(a) {
+  const ovs = isOvsArea(a), r = G.net[a], LV = regionLevels(a);
+  const nx = LV[r.lv + 1];
+  const st = stageOf();
+  if (!ovs && st < 1) return { ok: false, msg: '全国展開はメガバンクに格上げされてから行えます' };
+  if (ovs && st < 2) return { ok: false, msg: '海外展開はテラバンクに格上げされてから行えます' };
+  if (!nx) return { ok: false, msg: 'これ以上は拡大できません' };
+  if (r.build) return { ok: false, msg: '拡大の準備中です' };
+  if (nx.acqOnly) return { ok: false, msg: 'この段階へは現地銀行の買収でのみ進めます', acq: true };
+  if (r.lv >= 1 && G.m - (r.lvM ?? -999) < LEVEL_GAP) return { ok: false, msg: `店舗網が地域に根付くまで、次の段階へは${ymLabel(r.lvM + LEVEL_GAP)}から進めます`, wait: r.lvM + LEVEL_GAP };
+  if (G.flags.order > G.m) return { ok: false, msg: '業務改善命令の期間中は拡大できません' };
+  if (r.frozenUntil > G.m) return { ok: false, msg: `${regionDef(a).name}では当局から業務の制限を受けています（${ymLabel(r.frozenUntil)}まで）` };
+  const cost = Math.round(nx.capex * regionScale(a));
+  if (B('boj') + B('callLoan') - cost < requiredReserve()) return { ok: false, msg: `資金が不足しています（必要額 ${fmtYen(cost)}）`, cost, nx };
+  return { ok: true, cost, nx };
+}
+function buildRegion(a) {
+  const c = buildCheck(a);
+  if (!c.ok) return c;
+  const r = G.net[a], R = regionDef(a);
+  ensureFunds(c.cost);
+  const as = addAsset(`${R.name}：${c.nx.name}の店舗・設備`, 'tangible', c.cost, 180);
+  as.area = a;
+  r.build = { to: c.nx.lv, doneM: G.m + c.nx.months, cost: c.cost };
+  addNews('bank', `${R.name}で「${c.nx.name}」への拡大に着手（投資額${fmtYen(c.cost)}、${ymLabel(G.m + c.nx.months)}完成予定）`, 'neutral');
+  return { ok: true };
+}
+/* 必要な資金を用意する（コール・日銀借入で足りなければ国債を売る） */
+function raiseCash(amount) {
+  if (ensureFunds(amount)) return true;
+  const bonds = G.bonds.slice().sort((x, y) => x.matM - y.matM);
+  for (const bd of bonds) { if (B('boj') >= amount) break; sellBond(bd.id, true); }
+  return ensureFunds(amount);
+}
+/* 地域からの撤退。forced=格下げに伴う売却（条件が悪い） */
+function exitRegion(a, forced) {
+  const r = G.net[a], R = regionDef(a), ovs = isOvsArea(a);
+  if (!r.lv && !r.build) return { ok: false, msg: '進出していません' };
+  const px = forced ? (ovs ? 0.95 : 0.97) : (ovs ? 0.97 : 0.985);
+  const pl0 = curProfit();
+  for (const L of segLoans(a)) {
+    const price = Math.round(L.bal * px);
+    post(ovs ? '海外の貸出債権の売却（拠点の撤退）' : '貸出債権の売却（店舗網の事業譲渡）', [['boj', price, 0], ['loans', 0, price]]);
+    L.bal -= price;
+    if (L.bal > 0) writeOffAmount(L, L.bal, '貸出債権の売却損（撤退）');
+    if (L.provision > 0) { const x = Math.min(L.provision, B('allowance')); post('貸倒引当金の戻入（撤退）', [['allowance', x, 0], ['provRev', 0, x]]); }
+    L.status = 'sold'; L.closedM = G.m; L.bal = 0; L.provision = 0;
+  }
+  if (ovs) {
+    const d = Math.round(r.dep);
+    if (d > 0) { raiseCash(d); post('海外店預金の譲渡（拠点の撤退）', [['depFx', d, 0], ['boj', 0, d]]); }
+    r.dep = 0; r.gap = 0;
+  } else {
+    const o = Math.round(r.ord), t = Math.round(r.time);
+    if (o + t > 0) { raiseCash(o + t); post('預金の譲渡（店舗網の事業譲渡）', [['depOrd', o, 0], ['depTime', t, 0], ['boj', 0, o + t]]); }
+    r.ord = 0; r.time = 0;
+  }
+  for (const as of G.assets.filter(x => x.area === a)) {
+    const rec = Math.round(as.book * (forced ? 0.5 : 0.6));
+    post('店舗・設備の売却（撤退）', [['boj', rec, 0], ['extraLoss', as.book - rec, 0], ['tangible', 0, as.book]]);
+    G.assets = G.assets.filter(x => x !== as);
+  }
+  for (const g of G.goodwill.filter(x => x.area === a)) {
+    if (g.book > 0) post('のれんの減損（撤退）', [['extraLoss', g.book, 0], ['goodwill', 0, g.book]]);
+    G.goodwill = G.goodwill.filter(x => x !== g);
+  }
+  r.lv = 0; r.build = null; r.since = -1; r.shock = null; r.lvM = -999;
+  const loss = pl0 - curProfit();
+  addNews('bank', `${R.name}${ovs ? 'の拠点' : 'の店舗網'}を${forced ? '格下げに伴い売却' : '他行に譲渡'}し、撤退した（損失${fmtYen(Math.max(0, loss))}）`, forced ? 'bad' : 'neutral');
+  return { ok: true, loss };
+}
+
+/* ---------- 買収（国内：地方銀行、海外：現地の有力銀行） ---------- */
+const NAT_BANK_PRE = { 'n-shutoken': '武蔵野', 'n-kansai': '浪速', 'n-chubu': '尾張', 'n-kitakanto': '上毛', 'n-hokuriku': '越州', 'n-tohoku': 'みちのく', 'n-hokkaido': '蝦夷', 'n-chushikoku': '瀬戸内', 'n-kyushu': '筑紫' };
+const OVS_BANK_NAME = { 'o-na': 'ハドソン・ナショナル銀行', 'o-eu': 'ラインラント商業銀行', 'o-cn': '東亜聯合銀行', 'o-sea': 'マラッカ・ユナイテッド銀行', 'o-in': 'デカン・フィナンシャル', 'o-me': 'ガルフ・コマーシャル銀行', 'o-latam': 'バンコ・ソル・アメリカーノ', 'o-oc': 'サザンクロス銀行' };
+function acqQuote(a) {
+  const r = G.net[a], R = regionDef(a), ovs = isOvsArea(a), LV = regionLevels(a);
+  const to = ovs ? 4 : 3;
+  if (r.lv >= to) return null;
+  if (!r.quote || G.m - r.quote.m >= 6) {
+    r.quote = { m: G.m, prem: +(uni(1.15, 1.5) * Math.sqrt(clamp(G.eco.stock / 100, 0.6, 1.6))).toFixed(2) };
+  }
+  const d = Math.round(R.dep * 1e12 * (LV[to].dep - LV[r.lv].dep));
+  const l = Math.round(R.loan * 1e12 * (LV[to].loan - LV[r.lv].loan));
+  const na = Math.round(d * (ovs ? 0.08 : 0.05));
+  const price = Math.round(na * r.quote.prem);
+  const name = ovs ? OVS_BANK_NAME[a] : `${NAT_BANK_PRE[a]}銀行`;
+  const rw = isOvsArea(a) ? (0.3 * SEG.retail.rw + 0.7 * SEG.sme.rw) * (1 + 0.15 * (OVSR[a].risk - 1)) : SEG.retail.mix * SEG.retail.rw + SEG.sme.mix * SEG.sme.rw;
+  return { to, d, l, na, price, goodwill: price - na, prem: r.quote.prem, name, addRWA: l * rw + (l * 0.012 + d * 0.002) * 1.875 };
+}
+function proFormaCR(addCore, addRWA) {
+  const rw = rwaBreakdown();
+  return (coreCapitalParts(rw).core + addCore) / (rw.total + addRWA) * 100;
+}
+function marketCap() { return G.stock.price * G.stock.shares; }
+function acqCheck(a, method) {
+  const r = G.net[a], ovs = isOvsArea(a), st = stageOf();
+  if (!ovs && st < 1) return { ok: false, msg: '地方銀行の買収はメガバンクに格上げされてから行えます' };
+  if (ovs && st < 2) return { ok: false, msg: '海外の銀行の買収はテラバンクに格上げされてから行えます' };
+  if (!ovs && r.lv > 2) return { ok: false, msg: 'すでに地域全域に店舗網があります' };
+  if (ovs && (r.lv < 1 || r.lv > 3)) return { ok: false, msg: r.lv < 1 ? 'まず駐在員事務所を開いて現地を調べる必要があります' : 'すでに現地の有力銀行を傘下に持っています' };
+  if (r.build) return { ok: false, msg: '拡大の準備中は買収できません' };
+  if (G.flags.order > G.m) return { ok: false, msg: '業務改善命令の期間中は買収できません' };
+  if (r.frozenUntil > G.m) return { ok: false, msg: '当局から業務の制限を受けています' };
+  if (G.m - G.stageInfo.lastAcqM < 12) return { ok: false, msg: `買収は1年に1件までです（次は${ymLabel(G.stageInfo.lastAcqM + 12)}から）` };
+  const q = acqQuote(a);
+  if (method === 'stock' && q.price > marketCap()) return { ok: false, msg: `株式交換で発行できる株式は時価総額（${fmtYen(marketCap())}）までです`, q };
+  const net = q.d + q.na - q.l - (method === 'cash' ? q.price : 0); // 買収で手元に入る資金（マイナスなら持ち出し）
+  if (net < 0 && !canFund(-net)) return { ok: false, msg: `買収に必要な資金（${fmtYen(-net)}）が足りません`, q };
+  const cr = proFormaCR((method === 'stock' ? q.price : 0) - q.goodwill, q.addRWA);
+  if (cr < reqCR() + 1) return { ok: false, msg: `買収後の自己資本比率が${fmtPct(cr)}となり、当局の認可が下りません（${fmtPct(reqCR() + 1)}以上が必要）`, q, cr };
+  return { ok: true, q, cr };
+}
+function acquireRegion(a, method) {
+  const c = acqCheck(a, method);
+  if (!c.ok) return c;
+  const q = c.q, r = G.net[a], R = regionDef(a), ovs = isOvsArea(a);
+  const mix = segMix(a, q.to);
+  let lsum = 0;
+  const parts = [];
+  for (const seg of ['retail', 'sme']) {
+    const x = Math.round(q.l * mix[seg]);
+    if (x > 0) { parts.push([seg, x]); lsum += x; }
+  }
+  const cashIn = q.d + q.na - lsum; // 買収先の手元資金（預け金・有価証券）
+  const depLines = [];
+  let dOrd = 0, dTime = 0;
+  if (ovs) depLines.push(['depFx', 0, q.d]);
+  else { dTime = Math.round(q.d * R.time); dOrd = q.d - dTime; depLines.push(['depOrd', 0, dOrd], ['depTime', 0, dTime]); }
+  if (method === 'stock') {
+    const half = Math.round(q.price / 2);
+    if (cashIn < 0) ensureFunds(-cashIn);
+    post(`${q.name}の買収（株式交換）`, [['loans', lsum, 0], cashIn >= 0 ? ['boj', cashIn, 0] : ['boj', 0, -cashIn], ['goodwill', q.goodwill, 0], ...depLines, ['capital', 0, half], ['capSurplus', 0, q.price - half]]);
+    const sh = Math.round(q.price / (G.stock.price * 0.97));
+    G.shareholders.dilution = (G.shareholders.dilution || 0) + q.price / marketCap() * 0.4;
+    G.stock.shares += sh;
+  } else {
+    const net = cashIn - q.price;
+    if (net < 0) ensureFunds(-net);
+    post(`${q.name}の買収（現金）`, [['loans', lsum, 0], net >= 0 ? ['boj', net, 0] : ['boj', 0, -net], ['goodwill', q.goodwill, 0], ...depLines]);
+  }
+  for (const [seg, x] of parts) {
+    const L = ensureSegLoan(a, seg);
+    L.vr = ((L.vr || 1) * L.bal + 1.1 * x) / (L.bal + x);
+    L.bal += x; L.principal += x;
+  }
+  if (ovs) r.dep += q.d; else { r.ord += dOrd; r.time += dTime; r.tRate = G.rates.time; }
+  G.goodwill.push({ id: 'W' + (++G.seq.asset), area: a, name: q.name, cost: q.goodwill, book: q.goodwill, m0: G.m, life: 240 });
+  r.lv = q.to; r.build = null; r.quote = null; r.lvM = G.m;
+  if (r.since < 0) r.since = G.m;
+  if (chance(ovs ? 0.45 : 0.35)) r.shock = { m: G.m + randInt(3, 9), mul: +uni(1.8, 2.6).toFixed(2), name: q.name };
+  payOut(q.na * 0.04, 'extraLoss', '経営統合費用（システム統合・店舗の再編）');
+  G.stageInfo.lastAcqM = G.m;
+  G.trust = clamp(G.trust + 1, 0, 100);
+  addNews('bank', `${q.name}を${method === 'stock' ? '株式交換で' : ''}買収（買収額${fmtYen(q.price)}、のれん${fmtYen(q.goodwill)}）。${R.name}の預金${fmtYen(q.d)}・貸出${fmtYen(lsum)}を引き継いだ`, 'good');
+  return { ok: true, q };
+}
+
+/* ---------- 格上げの条件・審査 ---------- */
+function stageRequirements(to) {
+  const cr = capitalRatio(), npl = nplRatio(), ta = totalAssets();
+  const o = [];
+  const add = (name, need, cur, ok) => o.push({ name, need, cur, ok: !!ok });
+  if (to === 1) {
+    add('総資産', '800億円以上', fmtYen(ta), ta >= 800e8);
+    const sh = cityStats().share * 100;
+    add(`${CITY_NAME}での預金シェア`, '2.5%以上', fmtPct(sh), sh >= 2.5);
+    add('自己資本比率', '10%以上', fmtPct(cr), cr >= 10);
+    add('格付', 'A−以上', RATINGS[G.ratingIdx], G.ratingIdx <= 5);
+    add('不良債権比率', '3%以下', fmtPct(npl), npl <= 3);
+    add('勘定系システム', 'Lv2以上', 'Lv' + G.sys.core, G.sys.core >= 2);
+    add('マネロン・不正取引検知', 'Lv2以上', 'Lv' + G.sys.aml, G.sys.aml >= 2);
+    add('行政処分', '業務改善命令の期間外', G.flags.order > G.m ? '命令の期間中' : 'なし', G.flags.order <= G.m);
+  } else if (to === 2) {
+    const ns = natShare();
+    add('国内の預金シェア', '2%以上（全国の店舗網の上限は5%）', fmtPct(ns), ns >= 2);
+    add('自己資本比率', '12%以上', fmtPct(cr), cr >= 12);
+    add('格付', 'A以上', RATINGS[G.ratingIdx], G.ratingIdx <= 4);
+    add('不良債権比率', '2.5%以下', fmtPct(npl), npl <= 2.5);
+    add('勘定系システム', 'Lv5以上', 'Lv' + G.sys.core, G.sys.core >= 5);
+    add('マネロン・不正取引検知', 'Lv3', 'Lv' + G.sys.aml, G.sys.aml >= 3);
+    add('サイバーセキュリティ', 'Lv3', 'Lv' + G.sys.cyber, G.sys.cyber >= 3);
+    const recentD = G.fsa.history.some(h => h.grade === 'D' && G.m - h.m < 36);
+    add('行政処分', '直近3年に業務改善命令なし', recentD || G.flags.order > G.m ? 'あり' : 'なし', !recentD && G.flags.order <= G.m);
+  }
+  return o;
+}
+function canApplyUpgrade() {
+  const st = stageOf(), si = G.stageInfo;
+  if (st >= 2) return { ok: false, msg: 'すでに最上位の業態です' };
+  const req = stageRequirements(st + 1);
+  if (si.review) return { ok: false, msg: `審査中です（${ymLabel(si.review.doneM)}に結論）`, req };
+  if (si.cooldownUntil > G.m) return { ok: false, msg: `格下げから3年間は再申請できません（${ymLabel(si.cooldownUntil)}から申請可）`, req };
+  if (si.rejectedUntil > G.m) return { ok: false, msg: `前回の否認から半年間は再申請できません（${ymLabel(si.rejectedUntil)}から申請可）`, req };
+  const ng = req.filter(x => !x.ok);
+  if (ng.length) return { ok: false, msg: `条件を満たしていません：${ng.map(x => x.name).join('、')}`, req };
+  return { ok: true, req };
+}
+const REVIEW_COST = [0, 2e8, 30e8];
+function applyUpgrade() {
+  const c = canApplyUpgrade();
+  if (!c.ok) return c;
+  const to = stageOf() + 1;
+  const months = to === 1 ? 3 : 6;
+  G.stageInfo.review = { to, startM: G.m, doneM: G.m + months };
+  payOut(REVIEW_COST[to], 'otherExp', '格上げ審査への対応費用（態勢整備・外部専門家）');
+  addNews('reg', `${STAGES[to].name}への格上げ（${to === 1 ? '全国展開' : '海外展開'}の認可）を金融庁に申請。${months}か月間の審査に入る`, 'neutral');
+  return { ok: true, months };
+}
+function stageReviewStep() {
+  const si = G.stageInfo, rv = si && si.review;
+  if (!rv || G.m < rv.doneM) return;
+  si.review = null;
+  const ng = stageRequirements(rv.to).filter(x => !x.ok);
+  if (!ng.length) { promote(rv.to); return; }
+  si.rejectedUntil = G.m + 6;
+  addNews('reg', `${STAGES[rv.to].name}への格上げ申請は否認された。審査期間中に条件を満たさなくなった（${ng.map(x => x.name).join('、')}）`, 'bad');
+  G.pendingModals.push({ type: 'stage', kind: 'rejected', to: rv.to, ng: ng.map(x => `${x.name}（${x.cur}／基準 ${x.need}）`) });
+}
+/* メガバンクの誕生：全国の地方銀行2行と経営統合（株式交換・対等の条件） */
+function promotionMerger() {
+  const big = pick(['n-kansai', 'n-chubu', 'n-kyushu']);
+  const small = pick(['n-chushikoku', 'n-hokuriku', 'n-tohoku', 'n-hokkaido', 'n-kitakanto']);
+  const names = [];
+  let D = 0, Ls = 0, NA = 0;
+  for (const a of [big, small]) {
+    const q = acqQuote(a);
+    if (!q) continue;
+    const R = NATR[a], r = G.net[a];
+    const tang = Math.round((NAT_LEVELS[1].capex + NAT_LEVELS[2].capex + NAT_LEVELS[3].capex) * natScale(R) * 0.5);
+    const mix = segMix(a, 3);
+    const parts = [];
+    let lsum = 0;
+    for (const seg of ['retail', 'sme']) { const x = Math.round(q.l * mix[seg]); parts.push([seg, x]); lsum += x; }
+    const dTime = Math.round(q.d * R.time), dOrd = q.d - dTime;
+    const cashIn = q.d + q.na - lsum - tang;
+    const half = Math.round(q.na / 2);
+    const bps = netAssets() / G.stock.shares;
+    if (cashIn < 0) ensureFunds(-cashIn);
+    post('経営統合（株式交換）による資産・負債の承継', [['loans', lsum, 0], ['tangible', tang, 0], cashIn >= 0 ? ['boj', cashIn, 0] : ['boj', 0, -cashIn],
+      ['depOrd', 0, dOrd], ['depTime', 0, dTime], ['capital', 0, half], ['capSurplus', 0, q.na - half]]);
+    G.assets.push({ id: 'F' + (++G.seq.asset), name: `${q.name}の店舗・設備（経営統合）`, kind: 'tangible', cost: tang * 2, life: 180, m0: G.m - 90, book: tang, area: a });
+    for (const [seg, x] of parts) { const L = ensureSegLoan(a, seg); L.bal += x; L.principal += x; L.pd = segPD(L); L.rate = L.rate0 = segRate(L); }
+    r.ord += dOrd; r.time += dTime; r.tRate = G.rates.time;
+    r.lv = 3; r.lvM = G.m; r.since = G.m; r.build = null; r.quote = null;
+    G.stock.shares += Math.round(q.na / bps);
+    names.push(`${q.name}（${R.name}）`);
+    D += q.d; Ls += lsum; NA += q.na;
+  }
+  // 統合後の勘定系は、統合相手の大規模なシステムに一本化する
+  if (G.sys.core < 4) {
+    const v = 30e8;
+    post('経営統合（株式交換）による資産・負債の承継', [['intangible', v, 0], ['boj', 0, v]]);
+    G.assets.push({ id: 'F' + (++G.seq.asset), name: `勘定系システム（${SYSTEMS.core.levels[4].name}・統合相手から承継）`, kind: 'intangible', cost: 45e8, life: 60, m0: G.m - 20, book: v });
+    G.sys.core = 4;
+    G.itProjects = G.itProjects.filter(p => p.sys !== 'core');
+  }
+  return { names, D, L: Ls, NA };
+}
+
+function promote(to) {
+  const si = G.stageInfo;
+  G.stage = to;
+  if (to === 1) {
+    const mg = promotionMerger();
+    si.merger = mg;
+    addNews('bank', `${G.bankName}は${mg.names.join('・')}と経営統合し、メガバンク・グループが誕生。預金${fmtYen(mg.D)}・貸出${fmtYen(mg.L)}を引き継いだ`, 'good');
+  }
+  si.since = G.m; si.strikes = 0; si.maxStage = Math.max(si.maxStage, to);
+  si.hist.push({ m: G.m, from: to - 1, to, kind: 'up' });
+  G.trust = clamp(G.trust + 6, 0, 100);
+  G.stock.price *= 1.15;
+  if (G.fsa.nextM > G.m + 12) G.fsa.nextM = G.m + randInt(8, 12);
+  addNews('bank', to === 1
+    ? `${G.bankName}がメガバンクに格上げ。全国展開の認可を受け、日本各地に店舗網を広げられるようになった`
+    : `${G.bankName}がテラバンクに格上げ。グローバルなシステム上重要な銀行として、海外への展開を認められた`, 'good');
+  G.pendingModals.push({ type: 'stage', kind: 'up', to, merger: to === 1 ? si.merger : null });
+}
+
+/* ---------- 維持基準と格下げ ---------- */
+function maintChecks(st) {
+  const S = STAGES[st];
+  const cr = capitalRatio(), npl = nplRatio(), l = lcr();
+  const o = [
+    { name: '自己資本比率', need: `${S.reqCR}%以上`, cur: fmtPct(cr), ok: cr >= S.reqCR },
+    { name: '格付', need: `${RATINGS[S.minRating]}以上`, cur: RATINGS[G.ratingIdx], ok: G.ratingIdx <= S.minRating },
+    { name: '不良債権比率', need: `${S.maxNpl}%以下`, cur: fmtPct(npl), ok: npl <= S.maxNpl },
+    { name: '流動性カバレッジ比率', need: '100%以上', cur: fmtPct(l, 0), ok: l >= 100 },
+  ];
+  if (st >= 2) o.push({ name: 'マネロン・不正取引検知', need: 'Lv3', cur: 'Lv' + G.sys.aml, ok: G.sys.aml >= 3 });
+  return o;
+}
+function stageQuarterly() {
+  const st = stageOf();
+  if (st < 1 || G.over) return;
+  const S = STAGES[st], si = G.stageInfo;
+  const cr = capitalRatio();
+  if (cr < S.reqCR * 0.6) { demote(`自己資本比率が${fmtPct(cr)}まで低下し、${S.name}の最低基準（${fmtPct(S.reqCR)}）を大きく下回った`); return; }
+  const ng = maintChecks(st).filter(x => !x.ok);
+  if (!ng.length) {
+    if (si.strikes) addNews('reg', `${S.name}の維持基準を回復。格下げは回避された`, 'good');
+    si.strikes = 0;
+    return;
+  }
+  si.strikes++;
+  if (si.strikes >= 2) { demote(`${ng.map(x => x.name).join('・')}が2四半期続けて${S.name}の維持基準を満たさなかった`); return; }
+  si.warnM = G.m;
+  addNews('reg', `【格下げ警告】${S.name}の維持基準を満たしていない（${ng.map(x => `${x.name} ${x.cur}`).join('、')}）。次の四半期も未達なら${STAGES[st - 1].name}へ格下げされる`, 'bad');
+  G.pendingModals.push({ type: 'stage', kind: 'warn', ng: ng.map(x => `${x.name}：${x.cur}（基準 ${x.need}）`) });
+}
+function demote(reason) {
+  const from = stageOf(), to = from - 1;
+  if (from < 1) return;
+  const pl0 = curProfit();
+  const exits = (from === 2 ? OVERSEAS : NATIONS).filter(R => G.net[R.id].lv > 0 || G.net[R.id].build);
+  for (const R of exits) exitRegion(R.id, true);
+  const loss = pl0 - curProfit();
+  const si = G.stageInfo;
+  G.stage = to;
+  si.since = G.m; si.strikes = 0; si.review = null; si.cooldownUntil = G.m + 36;
+  si.hist.push({ m: G.m, from, to, kind: 'down', reason });
+  G.trust = clamp(G.trust - (from === 2 ? 20 : 15), 0, 100);
+  G.scandalHeat += 10;
+  G.stock.price *= 0.65;
+  G.ratingPenalty = (G.ratingPenalty || 0) + 10;
+  updateRating();
+  addNews('reg', `【格下げ】${G.bankName}は${STAGES[from].name}から${STAGES[to].name}に格下げされた。${reason}。${from === 2 ? '海外の拠点' : '全国の店舗網'}を売却し、損失${fmtYen(Math.max(0, loss))}を計上`, 'bad');
+  G.pendingModals.push({ type: 'stage', kind: 'down', from, to, reason, loss: Math.max(0, loss), n: exits.length });
+}
+
+/* ---------- 規模が大きいほど大きくなるリスク ---------- */
+function stageEventsStep() {
+  const st = stageOf();
+  const ta = totalAssets();
+  const acc = accountsCount();
+  // 全国規模のシステム障害
+  if (chance(0.003 + clamp(coreLoad() - 0.9, 0, 0.6) * 0.1)) {
+    const cost = Math.round(acc * uni(150, 450));
+    payOut(cost, 'extraLoss', '大規模システム障害の補償・対応費用');
+    G.trust = clamp(G.trust - uni(8, 14), 0, 100);
+    G.scandalHeat += 8; G.stats.sysFailures++; G.fsa.special = true;
+    const again = G.lastBigOutage !== undefined && G.m - G.lastBigOutage < 24;
+    G.lastBigOutage = G.m;
+    addNews('bank', `全国のATMとネットバンキングが終日停止する大規模システム障害が発生。補償と対応の費用は${fmtYen(cost)}${again ? '。度重なる障害に金融庁が業務改善命令を発出' : ''}`, 'bad');
+    if (again) { G.flags.order = G.m + 12; G.stock.price *= 0.9; }
+  }
+  // 不正販売・顧客情報の流出などの不祥事
+  if (chance(0.003 * (1 + 0.5 * st) * clamp(1.6 - compRatio(), 0.4, 1.6))) {
+    const cost = Math.round(ta * uni(0.0002, 0.0008));
+    payOut(cost, 'extraLoss', '不祥事に伴う顧客への補償・制裁金');
+    G.trust = clamp(G.trust - uni(6, 10), 0, 100);
+    G.scandalHeat += 8; G.stats.scandals++;
+    addNews('bank', `${pick(['投資信託の不適切な販売', '顧客情報の大量流出', '高齢者への仕組債の不適切な勧誘', '営業ノルマに起因する不正契約'])}が全国の店舗で発覚。補償など${fmtYen(cost)}`, 'bad');
+  }
+  // 金融危機時の市場部門の損失
+  if (G.eco.regime === 'crisis' && chance(0.08)) {
+    const loss = Math.round(ta * uni(0.0003, 0.0015));
+    payOut(loss, 'bondLoss', '市場部門の損失（保有有価証券の減損・トレーディング）');
+    addNews('bank', `金融市場の混乱で市場部門が${fmtYen(loss)}の損失`, 'bad');
+  }
+  // 国内の地域での大災害
+  for (const R of NATIONS) {
+    const r = G.net[R.id];
+    if (r.lv >= 1 && chance(0.0015)) {
+      r.pdMul = 1.6; r.pdUntil = G.m + 12; r.vit = clamp(r.vit - 10, 50, 160);
+      const dmg = Math.round(sum(G.assets.filter(x => x.area === R.id), x => x.book) * 0.03);
+      if (dmg > 0) payOut(dmg, 'extraLoss', '災害による店舗の復旧費用');
+      addNews('city', `${pick(['大地震', '記録的な豪雨', '大型台風'])}が${R.name}を襲う。地元企業や個人の返済に影響が出る見込み`, 'bad');
+    }
+  }
+  if (st < 2) return;
+  const ovsLoans = sum(OVERSEAS, R => areaLoanBal(R.id));
+  const pres = OVERSEAS.filter(R => G.net[R.id].lv >= 1);
+  // 各国の通貨危機・金融危機
+  for (const R of pres) {
+    const r = G.net[R.id];
+    if (chance(0.0015 * R.risk * (G.eco.regime === 'crisis' ? 3 : 1))) {
+      const drop = 0.08 + 0.05 * R.risk * uni(0.7, 1.3);
+      r.fx *= 1 - drop;
+      if (areaLoanBal(R.id) > 0 || r.dep > 0) fxRevalue(R.id, -drop);
+      r.pdMul = 1.5 + 0.5 * R.risk; r.pdUntil = G.m + 12;
+      r.vit = clamp(r.vit - 15, 40, 170);
+      const out = Math.round(r.dep * 0.15);
+      if (out > 0) { ensureFunds(out); post('海外店預金の流出（現地の危機）', [['depFx', out, 0], ['boj', 0, out]]); r.dep -= out; }
+      addNews('eco', `${R.name}で通貨危機。現地通貨が約${fmtNum(drop * 100, 0)}%下落し、企業の倒産が急増している`, 'bad');
+    }
+    // 地政学リスク（資産凍結・規制強化）
+    if (R.geo && r.lv >= 2 && chance(0.002)) {
+      const ls = segLoans(R.id);
+      const w = uni(0.05, 0.15);
+      let tot = 0;
+      for (const L of ls) { const x = Math.round(L.bal * w); writeOffAmount(L, x, '地政学リスクによる貸出債権の減損'); tot += x; }
+      r.pdMul = 2.2; r.pdUntil = G.m + 18; r.frozenUntil = G.m + 12;
+      addNews('eco', `${R.name}で地政学的な緊張が高まり、外資系銀行への規制が強化された。当行は${fmtYen(tot)}の減損を計上し、新規業務を1年間停止`, 'bad');
+    }
+  }
+  // マネロン・制裁違反の制裁金（海外当局）
+  if (pres.length && chance(0.003 * ovsLevelSum() / 8 * [3, 2, 1.2, 0.5][G.sys.aml])) {
+    const R = wpick(pres, pres.map(x => x.reg));
+    const fine = Math.round(uni(300e8, 3000e8) * clamp(ovsLoans / 5e12, 0.2, 2));
+    payOut(fine, 'extraLoss', '海外当局への制裁金（マネロン・経済制裁違反）');
+    G.net[R.id].frozenUntil = G.m + 24;
+    G.trust = clamp(G.trust - 8, 0, 100); G.scandalHeat += 10; G.stats.scandals++;
+    addNews('reg', `${R.name}の当局が、マネロン対策と経済制裁の違反で当行に${fmtYen(fine)}の制裁金を科した。現地での新規業務は2年間制限される`, 'bad');
+  }
+  // 外貨調達の逼迫（ドル資金市場の混乱）
+  const gap = sum(OVERSEAS, R => G.net[R.id].gap || 0);
+  if (gap > 0.5e12 && chance(G.eco.regime === 'crisis' ? 0.06 : 0.004)) {
+    for (const R of pres) { const r = G.net[R.id]; r.basis = 1.8; r.basisUntil = G.m + 6; }
+    G.trust = clamp(G.trust - 3, 0, 100);
+    addNews('eco', 'ドル資金市場が逼迫し、為替スワップによる外貨調達のコストが急上昇。外貨の貸出が大きい邦銀に重荷', 'bad');
+  }
+  // 市場部門の不正取引（ローグトレーダー）
+  if (chance(0.0012 * [1.6, 1, 0.6][G.sys.audit] * clamp(1.5 - compRatio(), 0.5, 1.5))) {
+    const loss = Math.round(uni(300e8, 2000e8) * clamp(ta / 30e12, 0.3, 2));
+    payOut(loss, 'extraLoss', '市場部門の不正取引による損失');
+    G.trust = clamp(G.trust - 10, 0, 100); G.scandalHeat += 10; G.stats.scandals++; G.fsa.special = true;
+    addNews('bank', `${pick(['ロンドン', 'ニューヨーク', 'シンガポール'])}拠点のトレーダーが損失を隠して無断取引を重ねていたことが発覚。損失は${fmtYen(loss)}`, 'bad');
+  }
+}
+
+/* ---------- 開業時の店舗網（カスタムスタート） ---------- */
+const MEGA_START = { 'n-shutoken': 4, 'n-kansai': 3, 'n-chubu': 3 };
+const TERA_START_NAT = { 'n-shutoken': 5, 'n-kansai': 4, 'n-chubu': 4 };
+const TERA_START_OVS = { 'o-na': 3, 'o-eu': 3, 'o-sea': 2, 'o-cn': 2, 'o-oc': 1 };
+function setRegionMature(a, lv) {
+  const r = G.net[a];
+  r.lv = lv;
+  if (!lv) return;
+  r.since = -randInt(24, 120);
+  r.lvM = -24;
+  if (isNatArea(a)) { const t = natDepTarget(NATR[a]); r.ord = Math.round(t.ord); r.time = Math.round(t.time); r.tRate = G.rates.time; }
+  else r.dep = Math.round(ovsDepTarget(OVSR[a]));
+  const mix = segMix(a, lv);
+  if (regionLevels(a)[lv].loan > 0) {
+    for (const seg of ['retail', 'sme']) {
+      if (!(mix[seg] > 0)) continue;
+      const L = ensureSegLoan(a, seg);
+      L.startM = -60;
+      L.bal = Math.round(segTarget(L));
+      L.principal = L.bal;
+      L.pd = segPD(L);
+      L.rate = L.rate0 = segRate(L);
+    }
+  }
+  const LV = regionLevels(a);
+  let capex = 0;
+  for (let i = 1; i <= lv; i++) capex += (LV[i].capex || 0) * regionScale(a);
+  if (capex > 0) G.assets.push({ id: 'F' + (++G.seq.asset), name: `${regionDef(a).name}の店舗・設備`, kind: 'tangible', cost: Math.round(capex), life: 180, m0: -60, book: Math.round(capex * 0.55), area: a });
+}
+function setupNetworkOpening(stage) {
+  for (const R of NATIONS) setRegionMature(R.id, stage >= 2 ? (TERA_START_NAT[R.id] || 3) : (MEGA_START[R.id] || 2));
+  if (stage >= 2) for (const R of OVERSEAS) setRegionMature(R.id, TERA_START_OVS[R.id] || 0);
+}
+/* 開業直後の格付に使う年間の収益見込み */
+function estimateRunRate() {
+  let nii = 0, el = 0, opex = 0;
+  for (const L of segLoans()) {
+    const ovs = isOvsArea(L.area);
+    nii += L.bal * (segRate(L) - (ovs ? G.net[L.area].rate * 0.6 : G.eco.policy)) / 100;
+    el += L.bal * segPD(L) / 100 * segLGD(L);
+  }
+  const depRate = G.rates.ord * 0.58 + G.rates.time * 0.42;
+  nii += natDep() * Math.max(0, G.eco.policy - depRate) / 100;
+  const nf = networkFees();
+  const fees = accountsCount() * 95 * 12 + nf.nat + nf.ovs;
+  for (const R of NATIONS.concat(OVERSEAS)) opex += regionOpex(R.id) * 12;
+  for (const k of SYS_KEYS) opex += (SYSTEMS[k].levels[G.sys[k]].maint || 0) * 12;
+  opex += sum(G.assets, x => x.life ? x.cost / x.life * 12 : 0);
+  return { gp: nii + fees, opex, el };
 }
 
 /* ---- 10_ui_core.js ---- */
@@ -4307,7 +5551,7 @@ const UI = {
 const ACTIONS = {}, CHANGES = {}, INPUTS = {}, SCREENS = {}, MODALS = {};
 
 const TABS = [
-  ['dash', '頭取室'], ['loans', '融資審査'], ['portfolio', '与信管理'], ['city', CITY_NAME],
+  ['dash', '頭取室'], ['strategy', '経営戦略'], ['loans', '融資審査'], ['portfolio', '与信管理'], ['city', CITY_NAME],
   ['rates', '金利・預金'], ['market', '市場運用'], ['facility', '店舗・金庫'], ['system', 'システム'],
   ['hr', '人事・営業'], ['finance', '決算・財務'], ['audit', '監査・検査'], ['news', '経済・ニュース'],
 ];
@@ -4366,11 +5610,12 @@ function afterRender() {
 function renderMast() {
   const { y, mo } = ymOf(G.m);
   const fy = fyOf(G.m);
-  const yearsLeft = TERM_YEARS - fy;
+  const yearsLeft = (G.termYears || 0) - fy;
   const over = !!G.over;
+  const st = G.stage || 0;
   return `<header class="mast">
-    <div class="mast-brand">${SEAL_SVG}<div style="min-width:0"><div class="bank-name">${esc(G.bankName)}</div><div class="bank-sub">頭取 ${esc(G.ceoName)}<span class="hide-m">　${bankClass().name}</span></div></div></div>
-    <div class="mast-date"><div class="wareki">${warekiLabel(G.m)}</div><div class="sub">${y}年${mo}月　${fyLabel(fy)}${yearsLeft > 0 ? `・任期あと${yearsLeft}年` : '・任期満了後'}</div></div>
+    <div class="mast-brand">${SEAL_SVG}<div style="min-width:0"><div class="bank-name">${esc(G.bankName)}${st ? `<span class="stage-badge s${st}">${STAGES[st].name}</span>` : ''}</div><div class="bank-sub">頭取 ${esc(G.ceoName)}<span class="hide-m">　${st ? STAGES[st].area + 'で営業' : bankClass().name}</span></div></div></div>
+    <div class="mast-date"><div class="wareki">${warekiLabel(G.m)}</div><div class="sub">${y}年${mo}月　${fyLabel(fy)}${!G.termYears ? '' : yearsLeft > 0 ? `・任期あと${yearsLeft}年` : '・任期満了後'}</div></div>
     <div class="mast-actions"><button type="button" class="mbtn" data-act="menu">メニュー</button><button type="button" class="mbtn" data-act="help">遊び方</button>
     <button type="button" class="btn-advance" data-act="advance"${over ? ' disabled' : ''}>月末を締めて翌月へ</button></div>
   </header>`;
@@ -4385,7 +5630,7 @@ function renderStrip() {
     ['総資産', fmtYen(totalAssets()), prev ? deltaTxt(totalAssets() - prev.ta) : ''],
     ['預金', fmtYen(deposits()), prev ? deltaTxt(deposits() - prev.dep) : ''],
     ['貸出金', fmtYen(B('loans')), prev ? deltaTxt(B('loans') - prev.loans) : ''],
-    ['自己資本比率', `<span class="${cr < 4 ? 'neg' : ''}">${fmtPct(cr)}</span>`, `<span class="muted">国内基準4%</span>`],
+    ['自己資本比率', `<span class="${cr < reqCR() ? 'neg' : ''}">${fmtPct(cr)}</span>`, `<span class="muted">${STAGES[G.stage || 0].basis.replace('＋G-SIBバッファー', '')}${fmtNum(reqCR(), 1)}%</span>`],
     ['当期純利益（累計）', `<span class="${ytd < 0 ? 'neg' : ''}">${fmtYen(ytd)}</span>`, `<span class="muted">${fyLabel(fy)}</span>`],
     ['信用度', `${fmtNum(G.trust, 0)}<span class="unit"> /100</span>`, prev ? deltaTxt(G.trust - prev.trust, v => fmtNum(v, 1)) : ''],
     ['格付', RATINGS[G.ratingIdx], `<span class="muted">株価 ${fmtNum(G.stock.price, 0)}円</span>`],
@@ -4403,6 +5648,12 @@ function tabBadge(id) {
     }
     case 'city': return PROJECTS.some(P => G.city.projects[P.id]?.status === 'offered') ? '<span class="badge">1</span>' : '';
     case 'audit': return G.inbox.some(x => x.type === 'fsaNotice') ? '<span class="badge alert">!</span>' : '';
+    case 'strategy': {
+      const si = G.stageInfo;
+      if (si && si.strikes) return '<span class="badge alert">!</span>';
+      if (si && !si.review && (G.stage || 0) < 2 && canApplyUpgrade().ok) return '<span class="badge">↑</span>';
+      return '';
+    }
     default: return '';
   }
 }
@@ -4921,15 +6172,18 @@ const RATIO_ROWS = [
   ['粉飾チェックの視点', null], ['売上高の伸び', r => r.salesG, '%'], ['売上債権の伸び', r => r.arG, '%'], ['営業CF÷当期純利益', r => r.ocfNi, '倍'],
   ['減価償却率', r => r.depRate, '%', 'depRate'], ['税負担率（法人税等÷税引前利益）', r => r.taxRate, '%', 'taxRate'], ['その他流動資産÷売上高', r => r.ocaS, '%'], ['支払利息÷有利子負債', r => r.impliedInt, '%'],
 ];
+let FS_BIG = false; // 大企業の決算書は百万円単位で表示する
+const fmtFS = v => (FS_BIG ? fmtM(v) : fmtK(v));
 function fmtRatio(v, unit) {
   if (v === undefined || v === null || isNaN(v)) return '―';
   if (!isFinite(v)) return unit === '年' ? '返済不能' : '―';
-  if (unit === '千円') return fmtK(v);
+  if (unit === '千円') return fmtFS(v);
   const d = unit === '回' || unit === '倍' || unit === '年' || unit === 'か月' ? 1 : unit === '日' ? 0 : 1;
   return (v < 0 ? '△' : '') + fmtNum(Math.abs(v), d) + (unit === '%' ? '%' : unit === '千円' ? '' : unit);
 }
 
 function companyFS(co, view, showTrue, n = 3) {
+  FS_BIG = !!co.big;
   const years = co.years.slice(-(n + 1));
   const disp = years.slice(1);
   const found = co.fraud && co.fraud.found;
@@ -4944,7 +6198,7 @@ function companyFS(co, view, showTrue, n = 3) {
       const cells = rs.map(r => `<td>${fmtRatio(f(r), unit)}</td>`).join('');
       return `<tr class="i1"><td>${name}</td>${cells}<td class="muted">${avgKey && avg[avgKey] !== undefined ? fmtRatio(avg[avgKey], unit) : '―'}</td></tr>`;
     }).join('');
-    return `<div class="tbl-wrap"><table class="fs"><thead><tr><th>指標${showTrue ? '（実態）' : ''}</th>${heads}<th>業界平均</th></tr></thead><tbody>${body}</tbody></table></div><p class="note">業界平均は中小企業の目安。決算書は千円単位。</p>`;
+    return `<div class="tbl-wrap"><table class="fs"><thead><tr><th>指標${showTrue ? '（実態）' : ''}</th>${heads}<th>業界平均</th></tr></thead><tbody>${body}</tbody></table></div><p class="note">業界平均は中小企業の目安。金額は${FS_BIG ? '百万円' : '千円'}単位。</p>`;
   }
   const rows = FS_ROWS[view];
   const body = rows.map(([name, f, cls]) => {
@@ -4954,18 +6208,19 @@ function companyFS(co, view, showTrue, n = 3) {
       const c = view === 'cf' ? cfOf(s, pick(years[i])) : null;
       return f(s, c);
     });
-    const cells = vals.map(v => `<td class="${v < 0 ? 'neg' : ''}">${fmtK(v)}</td>`).join('');
+    const cells = vals.map(v => `<td class="${v < 0 ? 'neg' : ''}">${fmtFS(v)}</td>`).join('');
     let diff = '';
     if (found) {
       const last = disp[disp.length - 1], prevY = years[years.length - 2];
       const tv = f(last.T, view === 'cf' ? cfOf(last.T, prevY.T) : null);
       const rv = f(repOf(last), view === 'cf' ? cfOf(repOf(last), repOf(prevY)) : null);
       const d = tv - rv;
-      diff = `<td class="${Math.abs(d) >= 1000 ? 'diff' : 'muted'}">${Math.abs(d) >= 1000 ? fmtK(d) : '―'}</td>`;
+      const th = FS_BIG ? 1e6 : 1000;
+      diff = `<td class="${Math.abs(d) >= th ? 'diff' : 'muted'}">${Math.abs(d) >= th ? fmtFS(d) : '―'}</td>`;
     }
     return `<tr class="${cls || ''}"><td>${name}</td>${cells}${diff}</tr>`;
   }).join('');
-  return `<div class="tbl-wrap"><table class="fs"><thead><tr><th>（単位：千円）${showTrue ? '<span class="true">実態</span>' : ''}</th>${heads}${diffHead}</tr></thead><tbody>${body}</tbody></table></div>`;
+  return `<div class="tbl-wrap"><table class="fs"><thead><tr><th>（単位：${FS_BIG ? '百万円' : '千円'}）${showTrue ? '<span class="true">実態</span>' : ''}</th>${heads}${diffHead}</tr></thead><tbody>${body}</tbody></table></div>`;
 }
 
 /* ---------- 頭取室 ---------- */
@@ -5012,6 +6267,20 @@ function inboxItems() {
   return items;
 }
 
+/* 頭取室の「業態」欄：次の格上げまでの進み具合 */
+function dashStagePanel(cls, nextCls) {
+  const st = stageOf();
+  const si = G.stageInfo;
+  let body = `<p style="margin:0 0 6px"><b>${STAGES[st].name}</b>・${cls.name}（総資産 ${fmtYen(totalAssets())}）</p>`;
+  if (si.strikes) body += `<p class="callout bad small" style="margin:0 0 6px">格下げ警告を受けています。次の四半期末までに維持基準を回復させてください。</p>`;
+  if (si.review) body += `<p class="small" style="margin:0 0 6px">${STAGES[si.review.to].name}への格上げを審査中（${ymLabel(si.review.doneM)}に結論）</p>`;
+  else if (st < 2) {
+    const req = stageRequirements(st + 1);
+    const ok = req.filter(x => x.ok).length;
+    body += `<div class="small" style="margin:0 0 4px">${STAGES[st + 1].name}への条件 ${ok}/${req.length}</div>${meter(ok, req.length, 'ok')}`;
+  } else if (nextCls) body += `${meter(totalAssets() - cls.min, nextCls.min - cls.min, 'ok')}<p class="note">次は「${nextCls.name}」（総資産${fmtYen(nextCls.min)}）</p>`;
+  return `<section class="panel"><div class="ph"><h2>業態</h2><button type="button" class="btn ghost sm" data-act="tab" data-tab="strategy">経営戦略へ</button></div><div class="pb">${body}</div></section>`;
+}
 SCREENS.dash = () => {
   const items = inboxItems();
   const hs = G.hist.slice(-37).filter(h => h.m >= 0);
@@ -5052,7 +6321,7 @@ SCREENS.dash = () => {
       ${panel('経済指標', `<table class="t compact"><tbody>${ecoRows.map(([k, v]) => `<tr><td>${k}</td><td class="n">${v}</td></tr>`).join('')}</tbody></table>`, { flush: true })}
       <section class="panel"><div class="ph"><h2>ニュース</h2><button type="button" class="btn ghost sm" data-act="tab" data-tab="news">すべて</button></div>
         <ul class="newslist">${news.map(n => `<li class="${n.tone}"><span class="when">${ymShort(n.m)}</span><span class="what">${esc(n.text)}</span></li>`).join('')}</ul></section>
-      ${panel('銀行の格', `<p style="margin:0 0 6px"><b>${cls.name}</b>（総資産 ${fmtYen(totalAssets())}）</p>${nextCls ? `${meter(totalAssets() - cls.min, nextCls.min - cls.min, 'ok')}<p class="note">次は「${nextCls.name}」（総資産${fmtYen(nextCls.min)}）</p>` : ''}`)}
+      ${dashStagePanel(cls, nextCls)}
     </div>
   </div>`;
 };
@@ -5071,7 +6340,7 @@ function invDots(a) {
   return `<span class="dots" aria-label="調査の実施状況">${Object.keys(defs).map(k => `<i class="${a.inv[k] ? (a.inv[k].status === 'ok' ? 'ok' : a.inv[k].status) : ''}"></i>`).join('')}</span>`;
 }
 function appCard(a) {
-  const sub = a.kind === 'biz' ? `${IND[G.companies[a.coId].ind].name}・${DIST[a.district].name}` : `${OCC[a.person.occ].name}・${DIST[a.district].name}`;
+  const sub = a.kind === 'biz' ? `${IND[G.companies[a.coId].ind].name}・${areaName(a.district)}${G.companies[a.coId].big ? '・大企業' : ''}` : `${OCC[a.person.occ].name}・${DIST[a.district].name}`;
   const g = G.sys.credit >= 1 ? gradeBadge(appSysGrade(a)) : '';
   const due = a.exp <= G.m ? tag('今月末まで', 'warn') : tag('来月末まで');
   return `<button type="button" class="appcard" data-act="pickApp" data-id="${a.id}" aria-current="${UI.appId === a.id}">
@@ -5081,13 +6350,15 @@ function appCard(a) {
 }
 
 SCREENS.loans = () => {
-  const pend = G.apps.filter(a => a.status === 'pending' && (UI.appFilter === 'all' || a.kind === UI.appFilter));
+  const isBigApp = a => a.kind === 'biz' && !!(G.companies[a.coId] && G.companies[a.coId].big);
+  const pend = G.apps.filter(a => a.status === 'pending' && (UI.appFilter === 'all' || (UI.appFilter === 'big' ? isBigApp(a) : a.kind === UI.appFilter && !(UI.appFilter === 'biz' && isBigApp(a) && stageOf() >= 1))))
+    .sort((a, b) => (isBigApp(b) - isBigApp(a)) || (a.exp - b.exp));
   const done = G.apps.filter(a => a.status !== 'pending' && a.decidedM === G.m);
   if (!UI.appId || !G.apps.some(a => a.id === UI.appId)) UI.appId = pend[0]?.id || done[0]?.id || null;
   const app = G.apps.find(a => a.id === UI.appId);
   const capL = creditCapLeft(), capT = creditCapacity();
   const list = `<div class="stack">
-    <div class="seg" role="group" aria-label="種類で絞り込む">${[['all', 'すべて'], ['biz', '事業性'], ['mort', '住宅ローン']].map(([k, l]) => `<button type="button" data-act="appFilter" data-v="${k}" aria-pressed="${UI.appFilter === k}">${l}</button>`).join('')}</div>
+    <div class="seg" role="group" aria-label="種類で絞り込む">${[['all', 'すべて']].concat(stageOf() >= 1 ? [['big', '大企業']] : [], [['biz', stageOf() >= 1 ? '地元企業' : '事業性'], ['mort', '住宅ローン']]).map(([k, l]) => `<button type="button" data-act="appFilter" data-v="${k}" aria-pressed="${UI.appFilter === k}">${l}</button>`).join('')}</div>
     <div class="panel"><div class="pb"><div class="row between small"><span>審査部の余力</span><b class="num">${fmtNum(capL, 1)} / ${fmtNum(capT, 0)}人日</b></div>${meter(capT - capL, capT)}<p class="note" style="margin:6px 0 0">調査には審査担当の人日を使います。毎月1日に回復します。</p></div></div>
     ${pend.length > 1 && G.sys.credit >= 1 ? btn('審査基準で一括処理', 'bulkOpen', {}, 'sm') : ''}
     <div class="applist">${pend.length ? pend.map(appCard).join('') : '<div class="empty">審査待ちの申込はありません</div>'}</div>
@@ -5119,7 +6390,7 @@ function ringi(app) {
       <p class="ringi-title">融資稟議書</p>
       <div class="ringi-no">稟議第${G.m + 1}-${seed}号　起案 ${warekiLabel(app.m)}　${branch ? esc(branch.name) : '本店営業部'}</div>
       <div class="ringi-name">${esc(appTitle(app))}</div>
-      <div class="row" style="margin-top:6px">${isBiz ? tag(IND[co.ind].name) + tag(DIST[co.district].name) + (app.existing ? tag('既存取引先', 'brass') : tag('新規')) : tag(OCC[app.person.occ].name) + tag(DIST[app.district].name)}${decided ? tag({ approved: '融資実行済み', rejected: '謝絶', declined: '先方辞退', expired: '期限切れ' }[app.status], app.status === 'approved' ? 'ok' : 'bad') : ''}</div>
+      <div class="row" style="margin-top:6px">${isBiz ? tag(IND[co.ind].name) + tag(areaName(co.district)) + (co.big ? tag(isOvsArea(co.district) ? '海外企業' : '大企業', 'brass') : '') + (app.existing ? tag('既存取引先', 'brass') : tag('新規')) : tag(OCC[app.person.occ].name) + tag(DIST[app.district].name)}${decided ? tag({ approved: '融資実行済み', rejected: '謝絶', declined: '先方辞退', expired: '期限切れ' }[app.status], app.status === 'approved' ? 'ok' : 'bad') : ''}</div>
     </div>
     <div class="stamps" aria-label="決裁欄">
       <div><div class="lab">担当</div><div class="box"><span class="seal-sm">${staffName(seed, 1)}</span></div></div>
@@ -5243,7 +6514,7 @@ function termsBiz(app) {
     <label class="field"><span>期間</span><span class="row"><input type="number" step="${t.repay === 'bullet' ? 1 : 12}" min="3" max="240" value="${t.termM}" data-in="term" data-k="termM" style="width:90px"><span class="unit">か月</span></span></label>
     <div class="field"><span>返済方法</span><div class="seg">${[['equal', '元金均等'], ['bullet', '期日一括']].map(([k, l]) => `<button type="button" data-act="termSet" data-k="repay" data-v="${k}" aria-pressed="${t.repay === k}">${l}</button>`).join('')}</div></div>
     <div class="field"><span>担保</span>${co.ownsRE ? `<label class="inline"><input type="checkbox" data-ch="termChk" data-k="collateral" ${t.collateral ? 'checked' : ''}> 不動産に抵当権を設定</label>` : '<span class="muted small">提供できる不動産なし</span>'}</div>
-    <label class="field"><span>保証</span><select data-ch="termSel" data-k="guarantee">${[['none', 'なし'], ['personal', '代表者の個人保証'], ['cgc', '信用保証協会（80%保証）']].map(([k, l]) => `<option value="${k}"${t.guarantee === k ? ' selected' : ''}>${l}</option>`).join('')}</select></label>
+    <label class="field"><span>保証</span><select data-ch="termSel" data-k="guarantee">${(G.companies[app.coId].big ? [['none', 'なし'], ['personal', '代表者の個人保証（大企業は応じない）']] : [['none', 'なし'], ['personal', '代表者の個人保証'], ['cgc', '信用保証協会（80%保証）']]).map(([k, l]) => `<option value="${k}"${t.guarantee === k ? ' selected' : ''}>${l}</option>`).join('')}</select></label>
   </div>
   <p class="note">同一先への与信上限（大口信用供与規制）：${fmtYen(largeExposureLimit())}。信用保証協会の保証付き融資はリスクウェイトが10%に下がり、代位弁済で損失を抑えられますが、保証料の負担で先方は嫌がります。</p>`;
 }
@@ -5370,7 +6641,11 @@ Object.assign(CHANGES, {
 });
 
 /* ---------- 与信管理 ---------- */
-function loanKindLabel(L) { return { biz: '事業性', mort: '住宅ローン', proj: 'プロジェクト', pool: '住宅ローン（承継）' }[L.kind]; }
+function loanKindLabel(L) {
+  if (L.kind === 'seg') return isOvsArea(L.area) ? '海外拠点の小口融資' : '全国の店舗網の小口融資';
+  if (L.kind === 'biz' && G.companies[L.coId] && G.companies[L.coId].big) return isOvsArea(L.district) ? '海外企業' : '大企業';
+  return { biz: '事業性', mort: '住宅ローン', proj: 'プロジェクト', pool: '住宅ローン（承継）' }[L.kind];
+}
 function loanStatusTag(L) {
   const m = { current: ['正常返済', ''], late: [`延滞${L.dpd}か月`, 'warn'], default: [`延滞${L.dpd}か月`, 'bad'], bankrupt: ['破綻・回収中', 'bad'] }[L.status] || ['完了', ''];
   return tag(m[0], m[1]) + (L.restructured ? tag('条件変更', 'warn') : '') + (L.fraudKnown ? tag('粉飾判明', 'bad') : '');
@@ -5382,6 +6657,7 @@ function pfLoans() {
     case 'mort': return act.filter(L => L.kind === 'mort' || L.kind === 'pool');
     case 'watch': return act.filter(L => L.cls >= 1 || L.status !== 'current' || sysClass(L) > L.cls);
     case 'gap': return act.filter(L => sysClass(L) > L.cls);
+    case 'net': return act.filter(L => L.kind === 'seg' || (L.kind === 'biz' && G.companies[L.coId] && G.companies[L.coId].big));
     default: return act;
   }
 }
@@ -5395,7 +6671,8 @@ SCREENS.portfolio = () => {
   const summary = `<div class="grid g3" style="margin-bottom:12px">
     <div>${kv([['貸出金残高', `<b>${fmtYen(tot)}</b>`], ['融資先数', `${act.length}件`], ['平均利回り', fmtRate(yieldAvg)]])}</div>
     <div>${kv([['貸倒引当金', fmtYen(B('allowance'))], ['不良債権比率', `<b class="${npl.ratio > 5 ? 'neg' : ''}">${fmtPct(npl.ratio)}</b>`], ['区分ずれ（判定より甘い）', `${act.filter(L => sysClass(L) > L.cls).length}件`]])}</div>
-    <div>${kv([['預貸率', fmtPct(B('loans') / Math.max(1, deposits()) * 100, 1)], ['事業性融資', fmtYen(sum(act.filter(L => L.kind === 'biz' || L.kind === 'proj'), L => L.bal))], ['住宅ローン', fmtYen(sum(act.filter(L => L.kind === 'mort' || L.kind === 'pool'), L => L.bal))]])}</div></div>
+    <div>${kv([['預貸率', fmtPct(B('loans') / Math.max(1, deposits()) * 100, 1)], ['事業性融資', fmtYen(sum(act.filter(L => L.kind === 'biz' || L.kind === 'proj'), L => L.bal))], ['住宅ローン', fmtYen(sum(act.filter(L => L.kind === 'mort' || L.kind === 'pool'), L => L.bal))],
+      act.some(L => L.kind === 'seg') ? ['全国・海外の小口融資', fmtYen(sum(act.filter(L => L.kind === 'seg'), L => L.bal))] : null])}</div></div>
     <div class="small" style="margin-bottom:4px">債務者区分ごとの残高</div>${segBar(CLS.map((c, i) => ({ name: c.name, v: byCls[i], color: colors[i] })))}`;
   const reviews = G.inbox.filter(x => x.type === 'review');
   const queue = reviews.length ? `<div class="row" style="padding:8px 10px;justify-content:space-between"><span class="small muted">変化のあった先と大口先だけが回ってきます。それ以外は担当者が確認済みです。</span>${btn('すべて判定どおり確定', 'reviewAll', {}, 'sm')}</div><table class="t"><thead><tr><th>融資先</th><th>理由</th><th>受領</th><th class="n">残高</th><th>格付</th><th>現区分</th><th>システム判定</th><th></th></tr></thead><tbody>${reviews.map(it => {
@@ -5411,15 +6688,15 @@ SCREENS.portfolio = () => {
   const rows = list.slice(UI.pfPage * per, UI.pfPage * per + per).map(L => {
     const sc = sysClass(L);
     return `<tr class="click" data-act="loanOpen" data-id="${L.id}"><td><div>${esc(L.name)}</div><div class="small muted">${loanKindLabel(L)}${L.ind && IND[L.ind] ? '・' + IND[L.ind].name : ''}</div></td>
-      <td class="n">${fmtYen(L.bal)}</td><td class="n">${fmtRate(L.rate)}</td><td class="nowrap">${L.kind === 'pool' ? '―' : ymShort(L.endM)}</td><td>${loanStatusTag(L)}</td>
+      <td class="n">${fmtYen(L.bal)}</td><td class="n">${fmtRate(L.rate)}</td><td class="nowrap">${L.kind === 'pool' || L.kind === 'seg' ? '―' : ymShort(L.endM)}</td><td>${loanStatusTag(L)}</td>
       <td>${clsTag(L.cls)}</td><td>${sc > L.cls ? tag(CLS[sc].short + 'へ', 'bad') : '<span class="muted small">一致</span>'}</td><td class="n">${fmtYen(L.provision || 0)}</td></tr>`;
   }).join('');
-  const table = `<div class="row between" style="margin-bottom:8px"><div class="seg">${[['all', 'すべて'], ['biz', '事業性'], ['mort', '住宅ローン'], ['watch', '要注意以下・延滞'], ['gap', '区分ずれ']].map(([k, l]) => `<button type="button" data-act="pfFilter" data-v="${k}" aria-pressed="${UI.pfFilter === k}">${l}</button>`).join('')}</div>
+  const table = `<div class="row between" style="margin-bottom:8px"><div class="seg">${[['all', 'すべて'], ['biz', '事業性'], ['mort', '住宅ローン'], ['watch', '要注意以下・延滞'], ['gap', '区分ずれ']].concat(stageOf() >= 1 ? [['net', '全国・海外']] : []).map(([k, l]) => `<button type="button" data-act="pfFilter" data-v="${k}" aria-pressed="${UI.pfFilter === k}">${l}</button>`).join('')}</div>
     <div class="row">${act.some(L => sysClass(L) > L.cls) ? btn('区分ずれを一括修正', 'clsFixAll', {}, 'sm') : ''}</div></div>
     <div class="tbl-wrap"><table class="t"><thead><tr><th>融資先</th><th class="n">残高</th><th class="n">金利</th><th>期日</th><th>状態</th><th>債務者区分</th><th>システム判定</th><th class="n">引当金</th></tr></thead><tbody>${rows || '<tr><td colspan="8" class="empty">該当なし</td></tr>'}</tbody></table></div>
     ${pages > 1 ? `<div class="row" style="justify-content:center;margin-top:8px">${btn('前へ', 'pfPage', { v: UI.pfPage - 1 }, 'sm', { disabled: UI.pfPage === 0 })}<span class="small">${UI.pfPage + 1} / ${pages}</span>${btn('次へ', 'pfPage', { v: UI.pfPage + 1 }, 'sm', { disabled: UI.pfPage >= pages - 1 })}</div>` : ''}`;
   const byInd = {};
-  for (const L of act) { const k = L.kind === 'biz' ? IND[L.ind].name : L.kind === 'proj' ? 'プロジェクト' : '住宅ローン'; byInd[k] = (byInd[k] || 0) + L.bal; }
+  for (const L of act) { const k = L.kind === 'biz' ? IND[L.ind].name : L.kind === 'proj' ? 'プロジェクト' : L.kind === 'seg' ? (L.seg === 'retail' ? '個人向けローン（全国・海外）' : '中小企業・現地法人（全国・海外）') : '住宅ローン'; byInd[k] = (byInd[k] || 0) + L.bal; }
   const indRows = Object.entries(byInd).sort((a, b) => b[1] - a[1]);
   const maxV = indRows.length ? indRows[0][1] : 1;
   const conc = indRows.map(([k, v]) => `<tr><td>${k}</td><td style="width:50%">${meter(v, maxV, 'ok')}</td><td class="n">${fmtYen(v)}</td><td class="n">${fmtPct(v / tot * 100, 1)}</td></tr>`).join('');
@@ -5502,14 +6779,14 @@ MODALS.loan = a => {
   const colNow = collateralBank(L);
   const rows = [
     ['種類', loanKindLabel(L)], ['状態', loanStatusTag(L)], ['当初融資額', fmtYen(L.principal)], ['残高', `<b>${fmtYen(L.bal)}</b>`],
-    ['金利', `${fmtRate(L.rate)}（${L.kind === 'pool' ? '変動' : L.rateType === 'var' ? '変動' : L.rateType === 'fix10' ? '10年固定' : '固定'}）`],
-    ['実行', L.startM < 0 ? `${OLD_UNION}から承継` : ymLabel(L.startM)], ['期日', L.kind === 'pool' ? '―' : ymLabel(L.endM)],
+    ['金利', `${fmtRate(L.rate)}（${L.kind === 'pool' || L.kind === 'seg' ? '変動' : L.rateType === 'var' ? '変動' : L.rateType === 'fix10' ? '10年固定' : '固定'}）`],
+    ['実行', L.kind === 'seg' ? '毎月少しずつ実行' : L.startM < 0 ? `${OLD_UNION}から承継` : ymLabel(L.startM)], ['期日', L.kind === 'pool' || L.kind === 'seg' ? '―' : ymLabel(L.endM)],
     ['担保', L.collateral ? `不動産（現在の評価 ${fmtYen(colNow)}）` : 'なし'],
     ['保証', L.cgc ? '信用保証協会（80%）' : L.mortGuar ? '保証会社' + (L.guarVoid ? '（免責）' : '') : L.personal ? '代表者保証' : 'なし'],
     ['受取利息（累計）', fmtYen(L.paidInt || 0)], ['貸倒引当金', fmtYen(L.provision || 0)],
   ];
   let body = `<div class="grid g2"><div>${kv(rows)}</div><div>`;
-  if (active && L.kind !== 'pool') {
+  if (active && L.kind !== 'pool' && L.kind !== 'seg') {
     body += `<div class="field" style="margin-bottom:10px"><span>債務者区分（自己査定）</span><select data-ch="loanCls" data-id="${L.id}">${CLS.map((c, i) => `<option value="${i}"${L.cls === i ? ' selected' : ''}>${c.name}（引当 ${fmtYen(provisionFor(L, i))}）</option>`).join('')}</select></div>
       <p class="small">システム判定：${clsTag(sc)} ${sc > L.cls ? '<span class="neg small">現在の区分は甘い可能性があります</span>' : ''}</p>`;
     const acts = [];
@@ -5535,6 +6812,9 @@ MODALS.loan = a => {
   } else if (L.kind === 'mort') {
     const p = L.person;
     body += `<hr class="sep">${kv([['債務者', `${esc(p.name)}（${p.age}歳）`], ['職業', `${OCC[p.occ].name}／${esc(p.employer)}`], ['年収（申告）', fmtYen(p.repIncome)], ['物件', `${esc(p.ptype)}・${DIST[p.district].name}`], ['返済負担率（現在）', fmtPct(mortDTI(p, L.bal, L.rate, Math.max(1, (L.endM - G.m) / 12), false) * 100, 1)]])}`;
+  } else if (L.kind === 'seg') {
+    body += `<hr class="sep">${kv([['地域', esc(areaName(L.area))], ['種類', esc(segName(L.area, L.seg))], ['年間の延滞・倒産率', fmtPct(L.pd, 2)], ['損失率（担保・保証で回収できない割合）', fmtPct(segLGD(L) * 100, 0)], ['不良債権', fmtYen(L.npl || 0)], ['今年度の償却', fmtYen(L.lossYTD || 0)]])}
+      <p class="note">多数の小口融資をまとめた勘定です。量と質は経営戦略の「融資方針」で調整します。</p>`;
   } else if (L.kind === 'proj') {
     const P = PROJ[L.projId];
     const st = G.city.projects[L.projId];
@@ -5556,32 +6836,9 @@ function monitorPanel(co) {
   return `<div class="inv-grid">${cards}</div>`;
 }
 
-/* ---------- 審査基準による一括処理 ---------- */
-function standardTerms(app) {
-  const t = defaultTerms(app);
-  if (app.kind === 'biz') {
-    const g = appSysGrade(app);
-    const co = G.companies[app.coId];
-    t.collateral = !!co.ownsRE;
-    if (g >= 6 && t.amount <= 2.8e8 && latestRep(co).S <= 300e8) t.guarantee = 'cgc';
-    const lim = largeExposureLimit() - exposureOf(co.id);
-    if (t.amount > lim) t.amount = Math.max(0, Math.floor(lim / 1e6) * 1e6);
-  }
-  return t;
-}
+/* ---------- 審査基準による一括処理（判定は 06_loans.js の judgeByCriteria） ---------- */
 UI.bulk = { kind: 'mort', ok: 4, ng: 8, deficit: true };
-function bulkJudge(a) {
-  const b = UI.bulk;
-  if (a.kind === 'biz') {
-    const co = G.companies[a.coId];
-    if (co.fraud && co.fraud.found) return 'ng';
-    if (b.deficit && (a.purpose === 'deficit' || a.purposeRevealed)) return 'ng';
-  } else if (a.person.fraud && a.person.fraud.found) return 'ng';
-  const g = appSysGrade(a);
-  if (g <= b.ok) return 'ok';
-  if (g >= b.ng) return 'ng';
-  return 'hold';
-}
+const bulkJudge = a => judgeByCriteria(a, UI.bulk);
 MODALS.bulk = () => {
   const b = UI.bulk;
   const pend = G.apps.filter(a => a.status === 'pending' && (b.kind === 'all' || a.kind === b.kind));
@@ -5794,7 +7051,7 @@ SCREENS.market = () => {
     <label class="inline small" style="margin-top:8px"><input type="checkbox" data-ch="autoCall" ${G.treasury.autoCall ? 'checked' : ''}> 月末に余った資金を自動でコール運用する</label>`;
   const buy = `<div class="row" style="gap:12px;align-items:end">
       <label class="field"><span>年限</span><select id="bondTenor">${[2, 5, 10, 20].map(k => `<option value="${k}">${k}年（利回り ${fmtRate(G.eco.y[k])}）</option>`).join('')}</select></label>
-      <label class="field"><span>額面</span><span class="row"><input type="number" id="bondAmt" step="1" min="1" value="10" style="width:90px"><span class="unit">億円</span></span></label>
+      <label class="field"><span>額面</span><span class="row"><input type="number" id="bondAmt" step="1" min="1" value="${Math.max(10, roundTo(Math.max(0, B('boj') - req) * 0.1 / 1e8, 10))}" style="width:110px"><span class="unit">億円</span></span></label>
       ${btn('購入する', 'bondBuy', {}, 'primary')}</div>
     <p class="note">利付国債を額面（利回り＝表面利率）で購入します。金利が上がると時価が下がり含み損になります。満期まで持てば額面で償還されます。</p>`;
   const rows = G.bonds.slice().sort((a, b) => a.matM - b.matM).map(bd => {
@@ -5840,7 +7097,7 @@ SCREENS.facility = () => {
   const cap = vaultCapacity(), req = cashRequired();
   const sec = SECURITY_LEVELS[v.sec], snx = SECURITY_LEVELS[v.sec + 1];
   const peak = req * 1.3 * v.buffer;
-  const vault = `<div class="row between"><div><div class="small muted">本店金庫</div><div style="font-size:18px;font-weight:700;font-family:var(--f-doc)">${VL.name}</div></div>${v.upgrade ? tag(`${ymLabel(v.upgrade.doneM)}に拡張完了`, 'warn') : ''}</div>
+  const vault = `${scene('vault', { cls: 'panel-art', alt: '本店の金庫' })}<div class="row between"><div><div class="small muted">本店金庫</div><div style="font-size:18px;font-weight:700;font-family:var(--f-doc)">${VL.name}</div></div>${v.upgrade ? tag(`${ymLabel(v.upgrade.doneM)}に拡張完了`, 'warn') : ''}</div>
     <table class="t compact" style="margin-top:8px"><tbody>
       <tr><td>収容能力（本店＋各店）</td><td class="n">${fmtYen(cap)}</td></tr>
       <tr><td>現金在高</td><td class="n">${fmtYen(B('cash'))}</td></tr>
@@ -5921,12 +7178,12 @@ SCREENS.hr = () => {
     comp: `必要人員 ${fmtNum(compRequired(), 1)}人（充足率 ${fmtPct(compRatio() * 100, 0)}）・臨時監査 月${auditSlots()}件`,
   };
   const rows = Object.entries(STAFF_ROLES).map(([k, r]) => `<tr><td><b>${r.name}</b><div class="small muted">${r.desc}</div></td><td class="n" style="font-size:16px;font-weight:700">${s[k]}人</td><td class="small">${ind[k]}</td>
-    <td class="n nowrap">${btn('＋1', 'hire', { k, n: 1 }, 'sm')} ${btn('＋5', 'hire', { k, n: 5 }, 'sm')} ${btn('−1', 'hire', { k, n: -1 }, 'sm danger')}</td></tr>`).join('');
+    <td class="n nowrap">${btn('＋1', 'hire', { k, n: 1 }, 'sm')} ${btn('＋5', 'hire', { k, n: 5 }, 'sm')}${stageOf() >= 1 ? ' ' + btn('＋20', 'hire', { k, n: 20 }, 'sm') : ''} ${btn('−1', 'hire', { k, n: -1 }, 'sm danger')}</td></tr>`).join('');
   const c = monthlyCosts();
   const pay = staffTotal() * BASE_SALARY * G.salaryLv;
   return `<h1 class="h1">人事・営業</h1>
   <p class="lead">行員は銀行の能力そのものです。採用は1人60万円、早期退職には割増退職金がかかります。給与水準を下げると人件費は減りますが、離職と不正のリスクが上がります。</p>
-  <div class="stack">${panel(`人員（合計 ${staffTotal()}人）`, `<div class="tbl-wrap"><table class="t"><thead><tr><th>部門</th><th class="n">人数</th><th>状況</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`, { flush: true })}
+  <div class="stack">${panel(`本部と${CITY_NAME}の人員（合計 ${staffTotal()}人）`, `<div class="tbl-wrap"><table class="t"><thead><tr><th>部門</th><th class="n">人数</th><th>状況</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>${netStaff() ? `<p class="note" style="padding:0 12px 10px">このほか全国・海外の店舗網に${fmtNum(netStaff())}人（人件費は店舗網の経費に含む）。管理・監査部門の必要人員には、店舗網の規模も含まれます。</p>` : ''}`, { flush: true })}
   <div class="grid g2">${panel('給与水準', `<label class="field"><span>市場水準に対して ${fmtNum(G.salaryLv * 100, 0)}%</span><input type="range" min="85" max="130" step="5" value="${Math.round(G.salaryLv * 100)}" data-ch="salary"${G.flags.publicFunds ? ' disabled' : ''}></label>
     ${kv([['年間人件費（見込み）', fmtYen(pay)], ['1人あたり', fmtYen(BASE_SALARY * G.salaryLv)], ['今月の人件費', fmtYen(c.pay)]])}${G.flags.publicFunds ? '<p class="callout bad small" style="margin-top:8px">公的資金の注入中は給与水準を90%以下に抑える必要があります。</p>' : ''}`)}
   ${panel('広告宣伝', `<label class="field"><span>月額 ${fmtYen(G.adBudget)}</span><input type="range" min="0" max="5000" step="50" value="${Math.round(G.adBudget / 1e4)}" data-ch="adBudget"></label><p class="note">知名度が上がり預金が集まりやすくなります（効果は逓減）。</p>`)}</div></div>`;
@@ -5947,14 +7204,14 @@ Object.assign(CHANGES, {
 function bankBSRows(s) {
   const g = k => s[k] || 0;
   const cp = s.curProfit || 0;
-  const assets = g('cash') + g('boj') + g('callLoan') + g('securities') + g('loans') + g('tangible') + g('intangible') + g('otherAssets') - g('allowance');
-  const liab = g('depOrd') + g('depTime') + g('callMoney') + g('bojBorrow') + g('taxPayable') + g('divPayable') + g('otherLiab');
+  const assets = g('cash') + g('boj') + g('callLoan') + g('securities') + g('loans') + g('tangible') + g('intangible') + g('goodwill') + g('otherAssets') - g('allowance');
+  const liab = g('depOrd') + g('depTime') + g('depFx') + g('callMoney') + g('bojBorrow') + g('taxPayable') + g('divPayable') + g('otherLiab');
   const eq = g('capital') + g('prefCapital') + g('capSurplus') + g('retained') + cp;
   return [
     ['資産の部', null, 'head'], ['現金預け金', g('cash') + g('boj'), 'i1'], ['うち現金', g('cash'), 'i2'], ['うち日銀預け金', g('boj'), 'i2'],
     ['コールローン', g('callLoan'), 'i1'], ['有価証券（国債）', g('securities'), 'i1'], ['貸出金', g('loans'), 'i1'], ['有形固定資産', g('tangible'), 'i1'],
-    ['無形固定資産', g('intangible'), 'i1'], ['その他資産', g('otherAssets'), 'i1'], ['貸倒引当金', -g('allowance'), 'i1'], ['資産の部合計', assets, 'grand'],
-    ['負債の部', null, 'head'], ['預金', g('depOrd') + g('depTime'), 'i1'], ['うち普通預金', g('depOrd'), 'i2'], ['うち定期預金', g('depTime'), 'i2'],
+    ['無形固定資産', g('intangible'), 'i1'], ['のれん', g('goodwill'), 'i1'], ['その他資産', g('otherAssets'), 'i1'], ['貸倒引当金', -g('allowance'), 'i1'], ['資産の部合計', assets, 'grand'],
+    ['負債の部', null, 'head'], ['預金', g('depOrd') + g('depTime') + g('depFx'), 'i1'], ['うち普通預金', g('depOrd'), 'i2'], ['うち定期預金', g('depTime'), 'i2'], ['うち海外店預金', g('depFx'), 'i2'],
     ['コールマネー', g('callMoney'), 'i1'], ['借用金', g('bojBorrow'), 'i1'], ['未払法人税等', g('taxPayable'), 'i1'], ['未払配当金', g('divPayable'), 'i1'],
     ['その他負債', g('otherLiab'), 'i1'], ['負債の部合計', liab, 'sum'],
     ['純資産の部', null, 'head'], ['資本金', g('capital') + g('prefCapital'), 'i1'], ['うち優先株式（公的資金）', g('prefCapital'), 'i2'], ['資本剰余金', g('capSurplus'), 'i1'],
@@ -5966,10 +7223,10 @@ function bankPLRows(pl) {
   const s = plSummary(pl);
   return [
     ['経常収益', s.ordRev, 'sum'], ['資金運用収益', g('intLoans') + g('intSec') + g('intCall') + g('intBoj'), 'i1'], ['貸出金利息', g('intLoans'), 'i2'], ['有価証券利息配当金', g('intSec'), 'i2'],
-    ['コールローン利息', g('intCall'), 'i2'], ['預け金利息', g('intBoj'), 'i2'], ['役務取引等収益', g('fees'), 'i1'], ['その他業務収益（国債等債券売却益）', g('bondGain'), 'i1'],
+    ['コールローン利息', g('intCall'), 'i2'], ['預け金利息', g('intBoj'), 'i2'], ['役務取引等収益', g('fees'), 'i1'], ['その他業務収益', g('bondGain') + g('fxGain'), 'i1'], ['国債等債券売却益', g('bondGain'), 'i2'], ['外国為替売買益', g('fxGain'), 'i2'],
     ['その他経常収益', g('recoveries') + g('provRev') + g('otherInc'), 'i1'], ['償却債権取立益・貸倒引当金戻入益', g('recoveries') + g('provRev'), 'i2'],
-    ['経常費用', s.ordExp, 'sum'], ['資金調達費用', g('intDep') + g('intCallM') + g('intBorrow'), 'i1'], ['預金利息', g('intDep'), 'i2'], ['コールマネー利息・借用金利息', g('intCallM') + g('intBorrow'), 'i2'],
-    ['役務取引等費用', g('feeExp'), 'i1'], ['その他業務費用（国債等債券売却損）', g('bondLoss'), 'i1'], ['営業経費', s.opex, 'i1'], ['人件費', g('personnel'), 'i2'], ['物件費', g('premises'), 'i2'],
+    ['経常費用', s.ordExp, 'sum'], ['資金調達費用', g('intDep') + g('intCallM') + g('intBorrow') + g('fundingCost'), 'i1'], ['預金利息', g('intDep'), 'i2'], ['コールマネー利息・借用金利息', g('intCallM') + g('intBorrow'), 'i2'], ['外貨調達費用（為替スワップ）', g('fundingCost'), 'i2'],
+    ['役務取引等費用', g('feeExp'), 'i1'], ['その他業務費用', g('bondLoss') + g('fxLoss'), 'i1'], ['国債等債券売却損', g('bondLoss'), 'i2'], ['外国為替売買損', g('fxLoss'), 'i2'], ['営業経費', s.opex, 'i1'], ['人件費', g('personnel'), 'i2'], ['物件費', g('premises'), 'i2'],
     ['税金', g('taxes'), 'i2'], ['減価償却費', g('depreciation'), 'i2'], ['預金保険料', g('depInsurance'), 'i2'],
     ['その他経常費用', g('provExp') + g('writeoff') + g('otherExp'), 'i1'], ['貸倒引当金繰入額', g('provExp'), 'i2'], ['貸出金償却', g('writeoff'), 'i2'], ['その他', g('otherExp'), 'i2'],
     ['経常利益', s.ordinary, 'sum'], ['特別利益', g('extraGain'), 'i1'], ['特別損失', g('extraLoss'), 'i1'], ['税引前当期純利益', s.pretax, 'sum'], ['法人税、住民税及び事業税', s.tax, 'i1'], ['当期純利益', s.net, 'grand'],
@@ -6036,24 +7293,28 @@ SCREENS.finance = () => {
         <tr><td>資本金・剰余金・当期利益</td><td class="n">${fmtYen(p.eq)}</td></tr>
         <tr><td>一般貸倒引当金（算入上限あり）</td><td class="n">${fmtYen(p.ga)}</td></tr>
         <tr><td>無形固定資産（ソフトウェア）の控除</td><td class="n neg">${MINUS}${fmtYen(p.intangible)}</td></tr>
+        ${p.goodwill ? `<tr><td>のれんの控除</td><td class="n neg">${MINUS}${fmtYen(p.goodwill)}</td></tr>` : ''}
         <tr class="total"><td>コア資本の額</td><td class="n">${fmtYen(p.core)}</td></tr>
         <tr class="sec"><td colspan="2">リスク・アセット</td></tr>
         <tr><td>事業性融資（1億円以下は75%、保証協会付きは10%）</td><td class="n">${fmtYen(r.biz)}</td></tr>
         <tr><td>住宅ローン（35%）</td><td class="n">${fmtYen(r.mort)}</td></tr>
         <tr><td>プロジェクトファイナンス（100%）</td><td class="n">${fmtYen(r.proj)}</td></tr>
+        ${r.seg ? `<tr><td>全国の店舗網の小口融資（個人35%・中小企業75%）</td><td class="n">${fmtYen(r.seg)}</td></tr>` : ''}
+        ${r.ovs ? `<tr><td>海外の小口融資（カントリーリスクで加算）</td><td class="n">${fmtYen(r.ovs)}</td></tr>` : ''}
         <tr><td>延滞・破綻債権（引当後150%）</td><td class="n">${fmtYen(r.def)}</td></tr>
         <tr><td>コールローン（20%）・固定資産等（100%）</td><td class="n">${fmtYen(r.call + r.fixed)}</td></tr>
         <tr><td>オペレーショナル・リスク相当額</td><td class="n">${fmtYen(r.op)}</td></tr>
+        ${r.fx ? `<tr><td>為替リスク相当額（ヘッジしていない外貨）</td><td class="n">${fmtYen(r.fx)}</td></tr>` : ''}
         <tr class="total"><td>リスク・アセット合計</td><td class="n">${fmtYen(r.total)}</td></tr>
-        <tr class="grand"><td>自己資本比率</td><td class="n ${cr < 4 ? 'neg' : ''}">${fmtPct(cr)}</td></tr></tbody></table>
-        <p class="note">現金・日銀預け金・国債のリスクウェイトは0%。国内基準行は4%以上が必要です。</p></div>
+        <tr class="grand"><td>自己資本比率</td><td class="n ${cr < reqCR() ? 'neg' : ''}">${fmtPct(cr)}</td></tr></tbody></table>
+        <p class="note">現金・日銀預け金・国債のリスクウェイトは0%。${STAGES[stageOf()].name}は${STAGES[stageOf()].basis}で${fmtPct(reqCR(), 1)}以上が必要です。</p></div>
         <div class="stack"><div class="panel"><div class="pb"><b>早期是正措置の区分</b><table class="t compact" style="margin-top:6px"><tbody>
-          <tr class="${cr >= 4 ? 'sel' : ''}"><td>4%以上</td><td>対象外</td></tr><tr class="${cr < 4 && cr >= 2 ? 'sel' : ''}"><td>2%以上4%未満</td><td>第1区分：経営改善計画の提出</td></tr>
-          <tr class="${cr < 2 && cr >= 0 ? 'sel' : ''}"><td>0%以上2%未満</td><td>第2区分：新規融資の抑制など</td></tr><tr class="${cr < 0 ? 'sel' : ''}"><td>0%未満</td><td>第3区分：業務停止命令</td></tr></tbody></table></div></div>
+          <tr class="${cr >= reqCR() ? 'sel' : ''}"><td>${fmtPct(reqCR(), 1)}以上</td><td>対象外</td></tr><tr class="${cr < reqCR() && cr >= reqCR() / 2 ? 'sel' : ''}"><td>${fmtPct(reqCR() / 2, 2)}以上${fmtPct(reqCR(), 1)}未満</td><td>第1区分：経営改善計画の提出</td></tr>
+          <tr class="${cr < reqCR() / 2 && cr >= 0 ? 'sel' : ''}"><td>0%以上${fmtPct(reqCR() / 2, 2)}未満</td><td>第2区分：新規融資の抑制など</td></tr><tr class="${cr < 0 ? 'sel' : ''}"><td>0%未満</td><td>第3区分：業務停止命令</td></tr></tbody></table></div></div>
         <div class="panel"><div class="pb"><b>増資（第三者割当）</b><p class="small muted" style="margin:4px 0 8px">株価 ${fmtNum(G.stock.price, 0)}円・時価総額 ${fmtYen(cap)}。発行価格は株価の92%。既存株主の持分は薄まります。</p>
           <div class="row"><input type="number" id="raiseAmt" min="1" step="1" value="${Math.max(1, Math.round(cap * 0.1 / 1e8))}" style="width:90px"><span class="unit">億円</span>${btn('増資する', 'raiseAsk', {}, 'primary')}</div></div></div>
-        ${G.flags.publicFunds ? `<div class="panel"><div class="pb"><b>公的資金</b><p class="small">優先株式 ${fmtYen(B('prefCapital'))}。返済後も自己資本比率8%以上を保てる場合に返済できます。</p>${btn('公的資金を返済する', 'repayPF', {}, 'sm')}</div></div>` : ''}
-        ${G.flags.publicOffer && !G.flags.publicFunds ? `<div class="panel"><div class="pb"><b>公的資金の申請</b><p class="small">自己資本比率が4%を下回ったため、公的資金の注入を申請できます。</p>${btn('申請を検討する', 'publicFundsShow', {}, 'sm danger')}</div></div>` : ''}</div></div>`;
+        ${G.flags.publicFunds ? `<div class="panel"><div class="pb"><b>公的資金</b><p class="small">優先株式 ${fmtYen(B('prefCapital'))}。返済後も自己資本比率${fmtPct(Math.max(8, reqCR() + 2), 1)}以上を保てる場合に返済できます。</p>${btn('公的資金を返済する', 'repayPF', {}, 'sm')}</div></div>` : ''}
+        ${G.flags.publicOffer && !G.flags.publicFunds ? `<div class="panel"><div class="pb"><b>公的資金の申請</b><p class="small">自己資本比率が${fmtPct(reqCR(), 1)}を下回ったため、公的資金の注入を申請できます。</p>${btn('申請を検討する', 'publicFundsShow', {}, 'sm danger')}</div></div>` : ''}</div></div>`;
       break;
     }
     case 'npl': {
@@ -6217,7 +7478,7 @@ MODALS.yearEnd = a => {
   const pl = rep.pl;
   let divHtml;
   if (d && d.fy === a.fy) {
-    if (!d.allowed) divHtml = `<p class="callout bad">${G.flags.publicFunds ? '公的資金の注入中のため' : pl.net <= 0 ? '当期純損失のため' : '自己資本比率が6%未満のため'}、今期は無配とします。</p>`;
+    if (!d.allowed) divHtml = `<p class="callout bad">${G.flags.publicFunds ? '公的資金の注入中のため' : pl.net <= 0 ? '当期純損失のため' : `自己資本比率が${fmtPct(reqCR() + 2, 1)}未満のため`}、今期は無配とします。</p>`;
     else {
       const opts = [0, 0.1, 0.2, 0.3, 0.4, 0.5];
       const cur = UI.divSel ?? 0.3;
@@ -6257,18 +7518,18 @@ MODALS.fsa = a => {
     ${h.findings.length ? `<table class="t"><thead><tr><th>指摘事項</th><th>重要度</th></tr></thead><tbody>${h.findings.map(f => `<tr><td>${esc(f.text)}</td><td>${tag(['', '軽微', '重要', '重大'][f.sev], f.sev >= 3 ? 'bad' : f.sev === 2 ? 'warn' : '')}</td></tr>`).join('')}</tbody></table>` : '<p>指摘事項はありませんでした。日頃の管理態勢が評価されました。</p>'}
     ${h.addProv > 0 ? `<p class="callout bad" style="margin-top:10px">債務者区分の修正により、貸倒引当金を${fmtYen(h.addProv)}積み増しました。</p>` : ''}
     ${h.grade === 'D' ? '<p class="callout bad" style="margin-top:10px">業務改善命令を受けました。1年間は新規出店ができず、信用度が大きく低下します。</p>' : ''}`;
-  return modalFrame('金融庁検査の結果', body, btn('閉じる', 'closeModal', {}, 'primary'));
+  return modalFrame('金融庁検査の結果', scene('fsa', { cls: 'modal-art', alt: '' }) + body, btn('閉じる', 'closeModal', {}, 'primary'));
 };
 MODALS.agm = a => {
   const body = `<p style="margin:0 0 8px">頭取の再任議案の賛成率：<b style="font-size:20px" class="${a.approval < 60 ? 'neg' : ''}">${fmtNum(a.approval, 1)}%</b></p>${meter(a.approval, 100, a.approval < 60 ? 'bad' : a.approval < 75 ? 'warn' : '')}
     <p class="small" style="margin-top:10px">株主満足度 ${fmtNum(a.sat, 0)}／100。ROE、配当、株価の動き、不祥事が評価されます。</p>
     ${a.warn ? '<p class="callout bad">株主の不満は限界に近づいています。来年も業績が振るわなければ、再任議案は否決されるでしょう。</p>' : a.sat < 30 ? '<p class="callout bad">経営陣への厳しい質問が相次ぎました。</p>' : '<p class="callout ok">総会は円満に終了しました。</p>'}`;
-  return modalFrame('定時株主総会', body, btn('閉じる', 'closeModal', {}, 'primary'), { size: 'narrow' });
+  return modalFrame('定時株主総会', scene('agm', { cls: 'modal-art', alt: '' }) + body, btn('閉じる', 'closeModal', {}, 'primary'));
 };
 MODALS.publicFunds = () => {
   const r = rwaBreakdown();
-  const need = Math.max(30e8, Math.round(r.total * 0.09 - coreCapitalParts(r).core));
-  const body = `<p>自己資本比率が国内基準の4%を下回りました。このままでは業務停止命令を受けるおそれがあります。</p>
+  const need = Math.max(30e8, Math.round(r.total * (reqCR() + 5) / 100 - coreCapitalParts(r).core));
+  const body = `<p>自己資本比率が${STAGES[stageOf()].basis}の${fmtPct(reqCR(), 1)}を下回りました。このままでは業務停止命令を受けるおそれがあります。</p>
     <p>預金保険機構を通じて、優先株式の形で公的資金<b>${fmtYen(need)}</b>の注入を申請できます。</p>
     <ul class="small"><li>経営健全化計画の提出が義務付けられ、信用度が下がります</li><li>完済まで配当はできず、給与水準は90%以下に抑えられます</li><li>経営評価で減点されます</li></ul>`;
   return modalFrame('公的資金の注入', body, btn('申請しない', 'closeModal') + btn('申請する', 'pfAccept', {}, 'danger'), { size: 'narrow' });
@@ -6282,10 +7543,10 @@ function evalHtml() {
 }
 MODALS.gameover = () => {
   const o = OVER_TEXT[G.over.kind];
-  const body = `<p style="font-size:17px;margin:0 0 6px;font-family:var(--f-doc)"><b class="neg">${o.title}</b>（${ymLabel(G.over.m)}）</p><p>${o.text}</p><hr class="sep"><h3 style="font-size:14px;margin:0 0 8px">在任中の経営評価</h3>${evalHtml()}`;
+  const body = `${scene('crisis', { cls: 'modal-art', alt: '' })}<p style="font-size:17px;margin:0 0 6px;font-family:var(--f-doc)"><b class="neg">${o.title}</b>（${ymLabel(G.over.m)}）</p><p>${o.text}</p><hr class="sep"><h3 style="font-size:14px;margin:0 0 8px">在任中の経営評価</h3>${evalHtml()}`;
   return modalFrame('経営の終わり', body, btn('セーブから再開', 'menu') + btn('新しいゲーム', 'newGameGo', {}, 'primary'), { noClose: false });
 };
-MODALS.term = () => modalFrame('任期満了', `<p>就任から10年。${esc(G.bankName)}頭取としての任期を全うしました。</p>${evalHtml()}<p class="note" style="margin-top:10px">このまま続投して経営を続けることもできます。</p>`, btn('続投する', 'closeModal', {}, 'primary'), { size: 'wide' });
+MODALS.term = () => modalFrame('任期満了', `<p>就任から${G.termYears}年。${esc(G.bankName)}頭取としての任期を全うしました。</p>${evalHtml()}<p class="note" style="margin-top:10px">このまま続投して経営を続けることもできます。</p>`, btn('続投する', 'closeModal', {}, 'primary'), { size: 'wide' });
 
 MODALS.menu = () => {
   const slot = i => {
@@ -6306,8 +7567,9 @@ MODALS.menu = () => {
 };
 
 const HELP = [
-  ['ゲームの目的', `<p>あなたは、経営破綻した${OLD_UNION}の事業を引き継いで生まれた<b>${DEFAULT_BANK}</b>（名前は変更可）の初代頭取です。任期は10年。地域の企業と家計にお金を回して${CITY_NAME}を育てながら、健全で利益の出る銀行に成長させてください。</p>
-    <p>次のどれかで経営は終わります：<b>債務超過</b>、<b>自己資本比率がマイナス</b>（業務停止命令）、<b>資金繰りの破綻</b>、<b>株主総会での解任</b>。10年後には経営評価（S〜D）が出ます。</p>`],
+  ['ゲームの目的', `<p>あなたは、経営破綻した${OLD_UNION}の事業を引き継いで生まれた<b>${DEFAULT_BANK}</b>（名前は変更可）の初代頭取です。任期は10年（カスタムスタートでは20年・30年・無期限も選べます）。地域の企業と家計にお金を回して${CITY_NAME}を育てながら、健全で利益の出る銀行に成長させてください。</p>
+    <p>力をつければ<b>メガバンク</b>に格上げして全国へ、さらに<b>テラバンク</b>として世界へ打って出られます（「メガバンク・テラバンク」の項を参照）。</p>
+    <p>次のどれかで経営は終わります：<b>債務超過</b>、<b>自己資本比率がマイナス</b>（業務停止命令）、<b>資金繰りの破綻</b>、<b>株主総会での解任</b>。任期の終わりには経営評価（S〜D）が出ます。</p>`],
   ['1か月の流れ', `<ol><li><b>融資審査</b>：新しい申込に調査を指示し、条件を決めて承認か謝絶。回答期限は翌月末。</li><li><b>与信管理</b>：届いた決算書を検証し、債務者区分（自己査定）を見直す。返済猶予の申し出に回答。</li><li><b>経営判断</b>：金利、国債運用、店舗・金庫・システム・人員への投資、開発案件への参加。</li><li><b>月末を締めて翌月へ</b>：利息の受払い、預金の増減、返済と延滞、経費、引当金、資金繰りが自動で処理され、月次報告が出ます。</li></ol>
     <p>3月末は決算。監査法人の監査、税金の計上、配当の決定があります。6月は株主総会です。</p>`],
   ['融資審査のコツ', `<p>稟議書には直近3期の損益計算書・貸借対照表・キャッシュ・フロー計算書と財務分析が載っています。</p>
@@ -6344,44 +7606,365 @@ MODALS.help = a => {
   const nav = `<div class="subtabs">${HELP.map(([t], k) => `<button type="button" data-act="helpSec" data-sec="${k}" aria-pressed="${k === i}">${t}</button>`).join('')}</div>`;
   return modalFrame('遊び方', `${nav}<div style="max-width:90ch">${HELP[i][1]}</div>`, (i > 0 ? btn('前へ', 'helpSec', { sec: i - 1 }) : '') + (i < HELP.length - 1 ? btn('次へ', 'helpSec', { sec: i + 1 }, 'primary') : btn('閉じる', 'closeModal', {}, 'primary')), { size: 'wide' });
 };
-MODALS.intro = () => modalFrame(`${esc(G.bankName)}へようこそ`, `<p>${ymLabel(0)}、${esc(G.ceoName)}頭取の任期が始まりました。手始めに次のことをしてみましょう。</p>
+MODALS.intro = () => (G.stage || 0) >= 1 ? modalFrame(`${esc(G.bankName)}へようこそ`, `${scene(STAGE_ART[G.stage], { cls: 'modal-art', alt: '' })}<p>${ymLabel(0)}、${esc(G.ceoName)}頭取の任期が始まりました。${STAGES[G.stage].name}として、まず次のことを確かめましょう。</p>
+  <ol><li><b>経営戦略</b>で、全国${G.stage >= 2 ? 'と海外' : ''}の店舗網と維持基準（自己資本比率${fmtPct(reqCR(), 1)}など）を確かめる。</li>
+  <li><b>融資審査</b>で、大企業からの大口の申込を審査する。大企業でも粉飾はあります。</li>
+  <li>汐見市の小口の申込は、経営戦略の「融資方針・権限」で支店長に任せられます（最初から委譲済み）。</li>
+  <li>決裁が済んだら右上の<b>「月末を締めて翌月へ」</b>。</li></ol>
+  <p class="note">遊び方はいつでも右上の「遊び方」から読めます。進行はこのブラウザに自動保存されます。</p>`, btn('遊び方を読む', 'helpSec', { sec: 0 }) + btn('始める', 'closeModal', {}, 'primary')) : modalFrame(`${esc(G.bankName)}へようこそ`, `<p>${ymLabel(0)}、${esc(G.ceoName)}頭取の任期が始まりました。手始めに次のことをしてみましょう。</p>
   <ol><li><b>融資審査</b>で届いている申込を開き、決算書を読む。気になる点があれば調査を指示し、承認か謝絶を決める。</li>
   <li><b>与信管理</b>で承継した融資先を確認する。「システム判定」より区分が甘い先がないか。気になる先は期中モニタリングの調査で実態を確かめる。</li>
   <li><b>${CITY_NAME}</b>の地図で、どの地区に店舗を出すと良さそうか眺める。</li>
   <li>決裁が済んだら右上の<b>「月末を締めて翌月へ」</b>。</li></ol>
   <p class="note">遊び方はいつでも右上の「遊び方」から読めます。進行はこのブラウザに自動保存されます。</p>`, btn('遊び方を読む', 'helpSec', { sec: 0 }) + btn('始める', 'closeModal', {}, 'primary'));
 
-/* ---------- 開始画面（辞令） ---------- */
-UI.start = { ceo: '', bank: DEFAULT_BANK, diff: 'normal' };
+/* ---------- 開始画面（辞令・カスタムスタート） ---------- */
+UI.start = { ceo: '', bank: DEFAULT_BANK, diff: 'normal', preset: 'standard', custom: Object.assign({}, CUSTOM_PRESETS.standard), open: false, seed: '' };
+const CUSTOM_FIELDS = [
+  ['stage', '開始する業態'], ['capMul', '資本'], ['depMul', '預金の規模'], ['quality', '承継する貸出の質'], ['branches', `${CITY_NAME}の店舗`],
+  ['sys', 'システム'], ['econ', '景気'], ['rate', '金利の水準'], ['fraud', '粉飾企業の多さ'], ['term', '任期'],
+];
+function startStoreInputs() {
+  const s = UI.start;
+  s.ceo = $('#stCeo')?.value ?? s.ceo;
+  s.bank = $('#stBank')?.value ?? s.bank;
+  s.seed = $('#stSeed')?.value ?? s.seed;
+}
 function renderStart() {
   let meta = null;
   try { meta = JSON.parse(lsGet(LS.meta('a')) || 'null'); } catch (e) { meta = null; }
-  const s = UI.start;
-  return `<div class="appoint">
-    <h1>辞令</h1><div class="gametitle">頭取 ― 地方銀行経営シミュレーション</div>
+  const s = UI.start, cu = s.custom;
+  const st = cu.stage | 0;
+  const term = cu.term ? `${['', '', '', '', '', '', '', '', '', '', '十', '', '', '', '', '', '', '', '', '', '二十', '', '', '', '', '', '', '', '', '', '三十'][cu.term] || cu.term}年とする` : '定めない';
+  const mission = st === 0 ? `経営破綻した${OLD_UNION}の事業を承継し、${CITY_NAME}の地域経済を支える銀行として健全に成長させること。`
+    : st === 1 ? `${CITY_NAME}を発祥とするメガバンク・グループを率い、全国に広がる店舗網と大企業との取引を通じて、日本経済を支えること。`
+      : `世界に拠点を持つテラバンクを率い、国内外の預金と貸出、為替と各国の危機を乗りこなし、グループを健全に成長させること。`;
+  const presets = Object.entries(CUSTOM_PRESETS).map(([k, P]) => `<button type="button" class="preset${s.preset === k ? ' on' : ''}" data-act="stPreset" data-v="${k}" aria-pressed="${s.preset === k}"><b>${P.name}</b><span>${esc(P.desc)}</span></button>`).join('')
+    + `<button type="button" class="preset${s.preset === 'custom' ? ' on' : ''}" data-act="stOpen" aria-pressed="${s.preset === 'custom'}"><b>カスタム</b><span>開始の条件を一つずつ決める。</span></button>`;
+  const fields = CUSTOM_FIELDS.map(([k, label]) => `<label class="field"><span>${label}</span><select data-ch="stCustom" data-k="${k}">${CUSTOM_OPTS[k].map(([v, l]) => `<option value="${v}"${String(cu[k]) === String(v) ? ' selected' : ''}>${l}</option>`).join('')}</select></label>`).join('');
+  return `${scene('hero', { cls: 'hero', alt: '夜明けの港町と、時計塔のある銀行の本店' })}<div class="appoint${artSrc('hero') ? ' with-hero' : ''}">
+    <h1>辞令</h1><div class="gametitle">頭取 ― 銀行経営シミュレーション</div>
     <div class="body-text"><label><input type="text" id="stCeo" value="${esc(s.ceo)}" placeholder="氏名" maxlength="12" aria-label="あなたの氏名"></label>　殿<br>
     貴殿を <label><input type="text" id="stBank" value="${esc(s.bank)}" maxlength="14" aria-label="銀行の名前" style="width:10em"></label> の代表取締役頭取に任命する。<br>
-    経営破綻した${OLD_UNION}の事業を承継し、${CITY_NAME}の地域経済を支える銀行として健全に成長させること。<br>
-    任期は${warekiYear(START_YEAR)}${START_MONTH}月から十年とする。</div>
+    ${mission}<br>
+    任期は${warekiYear(START_YEAR)}${START_MONTH}月から${term}。</div>
     <div class="issuer">${warekiYear(START_YEAR)}${START_MONTH}月1日<br>取締役会</div>
     <div class="opts"><div class="field"><span>難易度</span><div class="seg" role="radiogroup">${Object.entries(DIFFICULTY).map(([k, d]) => `<button type="button" data-act="stDiff" data-v="${k}" aria-pressed="${s.diff === k}">${d.name}</button>`).join('')}</div>
-    <span class="small muted">${{ easy: '粉飾企業が少なく、金融危機も起きにくい。資本に余裕がある。', normal: '標準的な難しさ。', hard: '粉飾企業が多く、景気の波も荒い。資本が薄い。' }[s.diff]}</span></div></div>
+    <span class="small muted">${{ easy: '金融危機が起きにくく、資本に余裕がある。', normal: '標準的な難しさ。', hard: '景気の波が荒く、金融庁も厳しい。資本が薄い。' }[s.diff]}</span></div>
+    <div class="field"><span>始め方</span><div class="presets">${presets}</div></div>
+    ${s.open || s.preset === 'custom' ? `<div class="custom-grid">${fields}<label class="field"><span>シード（同じ数字なら同じ展開）</span><input type="text" id="stSeed" value="${esc(s.seed)}" placeholder="空欄でランダム" inputmode="numeric" style="width:10em"></label></div>` : `<button type="button" class="linkish small" data-act="stOpen">条件を細かく決める</button>`}</div>
     <div class="start">${btn('就任する', 'startGame', {}, 'primary')}${meta && !meta.over ? btn(`続きから（${esc(meta.bank)}・${ymLabel(meta.m)}）`, 'loadAuto') : ''}${btn('ファイルから読み込む', 'importSave')}${btn('遊び方', 'help')}</div>
   </div>`;
 }
 Object.assign(ACTIONS, {
-  stDiff: d => { UI.start.ceo = $('#stCeo')?.value || ''; UI.start.bank = $('#stBank')?.value || DEFAULT_BANK; UI.start.diff = d.v; render(); },
+  stDiff: d => { startStoreInputs(); UI.start.diff = d.v; render(); },
+  stPreset: d => { startStoreInputs(); UI.start.preset = d.v; UI.start.custom = Object.assign({}, CUSTOM_PRESETS[d.v]); render(); },
+  stOpen: () => { startStoreInputs(); UI.start.open = true; UI.start.preset = 'custom'; render(); },
   startGame: () => {
-    const ceo = ($('#stCeo')?.value || '').trim() || '汐見 太郎';
-    let bank = ($('#stBank')?.value || '').trim() || DEFAULT_BANK;
-    if (!/銀行$/.test(bank)) bank += '銀行';
-    newGame({ ceoName: ceo, bankName: bank, difficulty: UI.start.diff });
-    UI.tab = 'dash'; UI.appId = null;
+    startStoreInputs();
+    const s = UI.start;
+    const ceo = (s.ceo || '').trim() || '汐見 太郎';
+    let bank = (s.bank || '').trim() || DEFAULT_BANK;
+    if (!/銀行$|グループ$|フィナンシャル/.test(bank)) bank += '銀行';
+    const seedN = parseInt(String(s.seed).replace(/[^0-9]/g, ''), 10);
+    const opts = { ceoName: ceo, bankName: bank, difficulty: s.diff };
+    if (Number.isFinite(seedN)) opts.seed = seedN;
+    if (s.preset !== 'standard' || s.open) opts.custom = Object.assign({}, s.custom);
+    newGame(opts);
+    UI.tab = 'dash'; UI.appId = null; UI.netSel = null; UI.netView = G.stage >= 2 ? 'ovs' : 'nat';
     render();
     autosave();
     showModal('intro');
   },
 });
+Object.assign(CHANGES, {
+  stCustom: el => {
+    startStoreInputs();
+    const k = el.dataset.k;
+    const opt = CUSTOM_OPTS[k].find(([v]) => String(v) === el.value);
+    UI.start.custom[k] = opt ? opt[0] : el.value;
+    UI.start.preset = 'custom';
+    render();
+  },
+});
+
+/* ---- 14_ui_stage.js ---- */
+/* =========================================================
+ *  14_ui_stage.js : 経営戦略（業態ステージ・全国と海外の店舗網・融資方針）、
+ *                   場面の画像、格上げ・格下げの演出
+ * ========================================================= */
+
+/* ---------- 場面の画像（img/ にある画像を build.js が ART_FILES に登録する） ---------- */
+function artSrc(k) {
+  if (typeof ART_FILES === 'undefined') return '';
+  return ART_FILES[k] || '';
+}
+function scene(k, opt = {}) {
+  const src = artSrc(k);
+  if (!src) return opt.fallback ? `<div class="scene ph ${opt.cls || ''}" aria-hidden="true"></div>` : '';
+  return `<figure class="scene ${opt.cls || ''}"><img src="${src}" alt="${esc(opt.alt || '')}" loading="lazy" decoding="async">${opt.caption ? `<figcaption>${opt.caption}</figcaption>` : ''}</figure>`;
+}
+const STAGE_ART = ['stage0', 'stage1', 'stage2'];
+const STAGE_DESC = [
+  `${CITY_NAME}を地盤とする地域銀行。融資の目利きと街の成長で力をつけ、全国展開（メガバンクへの格上げ）を目指す。`,
+  '日本全国に店舗網を広げるメガバンク。地方銀行の買収や大企業との取引で兆円単位のお金を動かす。国際統一基準の8%が最低ライン。',
+  '世界に拠点を持つテラバンク。為替・カントリーリスク・外貨調達・海外当局の制裁と隣り合わせ。資本の基準はさらに厳しい。',
+];
+
+/* ---------- 経営戦略の画面 ---------- */
+UI.netSel = null;
+UI.netView = 'nat';
+SCREENS.strategy = () => {
+  const st = stageOf();
+  const si = G.stageInfo;
+  const S = STAGES[st];
+  const cr = capitalRatio();
+  const steps = STAGES.map((x, i) => `<li class="${i < st ? 'done' : i === st ? 'now' : ''}"><span class="n">${i + 1}</span><span>${x.name}</span></li>`).join('');
+  const kpis = [
+    ['総資産', fmtYen(totalAssets())],
+    ['自己資本比率', `<b class="${cr < S.reqCR ? 'neg' : ''}">${fmtPct(cr)}</b><span class="small muted">　基準 ${fmtPct(S.reqCR, 1)}</span>`],
+    ['格付', `${RATINGS[G.ratingIdx]}${st ? `<span class="small muted">　基準 ${RATINGS[S.minRating]}以上</span>` : ''}`],
+    ['国内の預金シェア', fmtPct(natShare())],
+    ['行員・店舗', `${fmtNum(staffTotal() + netStaff())}人・${fmtNum(openBranches().length + netBranches())}店`],
+  ];
+  const head = `<div class="stagecard">${scene(STAGE_ART[st], { cls: 'stage-art', alt: S.name, fallback: true })}
+    <div class="stage-body"><ol class="stage-steps">${steps}</ol>
+    <h2 class="stage-name">${S.name}<span class="small muted">　${esc(S.area)}・${S.basis}</span></h2>
+    <p class="small" style="margin:0 0 8px">${STAGE_DESC[st]}</p>${kv(kpis)}</div></div>`;
+  // 格上げ
+  let up = '';
+  if (st < 2) {
+    const c = canApplyUpgrade();
+    const req = c.req || stageRequirements(st + 1);
+    const rows = req.map(x => `<tr><td>${x.name}</td><td>${esc(x.need)}</td><td class="n">${esc(x.cur)}</td><td>${x.ok ? tag('達成', 'ok') : tag('未達', 'bad')}</td></tr>`).join('');
+    const status = si.review ? `<p class="callout">金融庁で審査中です。${ymLabel(si.review.doneM)}に結論が出ます。審査の終わりにも条件を満たしている必要があります。</p>`
+      : c.ok ? `<p class="callout ok">すべての条件を満たしています。申請すると${st === 0 ? '3' : '6'}か月の審査に入ります（審査対応費用 ${fmtYen(REVIEW_COST[st + 1])}）。</p>`
+        : `<p class="small muted">${esc(c.msg)}</p>`;
+    const note = st === 0 ? `<p class="note">認可されると、全国の地方銀行2行と経営統合してメガバンク・グループになり、日本各地に店舗網を広げられるようになります。</p>`
+      : `<p class="note">認可されると海外に拠点を出せます。全国の店舗網を育てて国内の預金シェアを伸ばすのが近道です（全国の上限は5%）。</p>`;
+    up = panel(`${STAGES[st + 1].name}への格上げ`, `<div class="tbl-wrap"><table class="t compact"><thead><tr><th>条件</th><th>基準</th><th class="n">現在</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>
+      ${status}${note}<div class="row" style="margin-top:8px">${btn('格上げを申請する', 'upgradeAsk', {}, 'primary', { disabled: !c.ok })}</div>`);
+  } else up = panel('最上位の業態', '<p class="small" style="margin:0">テラバンクは最上位の業態です。海外の拠点を育てながら、厳しい維持基準を守り続けてください。</p>');
+  // 維持基準
+  let keep = '';
+  if (st >= 1) {
+    const chk = maintChecks(st);
+    keep = panel(`${S.name}の維持基準（四半期ごとに判定）`, `<div class="tbl-wrap"><table class="t compact"><thead><tr><th>基準</th><th>必要な水準</th><th class="n">現在</th><th></th></tr></thead><tbody>${chk.map(x => `<tr><td>${x.name}</td><td>${esc(x.need)}</td><td class="n">${esc(x.cur)}</td><td>${x.ok ? tag('クリア', 'ok') : tag('未達', 'bad')}</td></tr>`).join('')}</tbody></table></div>
+      ${si.strikes ? `<p class="callout bad">格下げ警告を受けています。次の四半期末（${ymLabel(nextQuarterEnd())}）にも未達なら${STAGES[st - 1].name}へ格下げされ、${st === 2 ? '海外の拠点' : '全国の店舗網'}をすべて売却することになります。</p>`
+        : '<p class="small muted" style="margin:6px 0 0">2四半期続けて未達だと格下げです。自己資本比率が基準の6割を下回ると即座に格下げされます。規模が大きいほど、格下げで手放す事業も大きくなります。</p>'}`);
+  }
+  const hist = si.hist.length ? panel('業態の履歴', `<ul class="newslist">${si.hist.slice().reverse().map(h => `<li class="${h.kind === 'up' ? 'good' : 'bad'}"><span class="when">${ymShort(h.m)}</span><span class="what">${STAGES[h.from].name}から${STAGES[h.to].name}へ${h.kind === 'up' ? '格上げ' : '格下げ'}${h.reason ? `（${esc(h.reason)}）` : ''}</span></li>`).join('')}</ul>`, { flush: true }) : '';
+  const views = [['nat', '全国の店舗網'], ['ovs', '海外の拠点'], ['credit', '融資方針・権限']];
+  const sub = `<div class="subtabs">${views.map(([k, l]) => `<button type="button" data-act="netView" data-v="${k}" aria-pressed="${UI.netView === k}">${l}</button>`).join('')}</div>`;
+  const body = UI.netView === 'credit' ? creditPolicyPanel() : networkPanel(UI.netView);
+  return `<h1 class="h1">経営戦略</h1>
+  <p class="lead">業態の格上げを目指し、全国・海外の店舗網を広げます。大きくなるほど動かすお金は増えますが、維持基準は厳しくなり、失敗したときの格下げの痛手も大きくなります。</p>
+  <div class="stack">${head}<div class="grid g2">${up}${keep || hist}</div>${keep ? hist : ''}${sub}${body}</div>`;
+};
+function nextQuarterEnd() { let m = G.m; while (![6, 9, 12, 3].includes(calMonth(m))) m++; return m; }
+
+/* ---------- 地域の地図（タイル） ---------- */
+function tileMap(defs, scope) {
+  const cw = 92, ch = 64, gap = 6;
+  const cols = Math.max(...defs.map(R => R.tile[0])) + 1, rows = Math.max(...defs.map(R => R.tile[1])) + 1;
+  const W = cols * (cw + gap) + gap, H = rows * (ch + gap) + gap;
+  const sel = UI.netSel && defs.some(R => R.id === UI.netSel) ? UI.netSel : null;
+  const home = scope === 'ovs' ? `<g><rect x="${gap + 6 * (cw + gap)}" y="${gap + 1 * (ch + gap)}" width="${cw}" height="${ch}" rx="6" class="tile home"/><text x="${gap + 6 * (cw + gap) + cw / 2}" y="${gap + 1 * (ch + gap) + ch / 2 + 5}" text-anchor="middle" class="tile-t">日本</text></g>` : '';
+  const tiles = defs.map(R => {
+    const r = G.net[R.id];
+    const x = gap + R.tile[0] * (cw + gap), y = gap + R.tile[1] * (ch + gap);
+    const lv = r.lv;
+    const cls = `tile lv${lv}${r.build ? ' building' : ''}${sel === R.id ? ' sel' : ''}${r.frozenUntil > G.m ? ' frozen' : ''}`;
+    const dots = Array.from({ length: 5 }, (_, i) => `<circle cx="${x + cw / 2 - 20 + i * 10}" cy="${y + ch - 13}" r="3" class="${i < lv ? 'on' : r.build && i === lv ? 'bd' : 'off'}"/>`).join('');
+    return `<g data-act="netSel" data-a="${R.id}" role="button" tabindex="0" aria-label="${R.name} Lv${lv}"><rect x="${x}" y="${y}" width="${cw}" height="${ch}" rx="6" class="${cls}"/>
+      <text x="${x + cw / 2}" y="${y + 24}" text-anchor="middle" class="tile-t ${lv >= 3 ? 'inv' : ''}">${R.name}</text>${dots}</g>`;
+  }).join('');
+  return `<svg class="tilemap" viewBox="0 0 ${W} ${H}" role="img" aria-label="${scope === 'ovs' ? '海外の拠点' : '全国の店舗網'}の地図">${home}${tiles}</svg>`;
+}
+
+function networkPanel(scope) {
+  const st = stageOf();
+  const ovs = scope === 'ovs';
+  const defs = ovs ? OVERSEAS : NATIONS;
+  const locked = ovs ? st < 2 : st < 1;
+  if (!UI.netSel || !defs.some(R => R.id === UI.netSel)) UI.netSel = (defs.find(R => G.net[R.id].lv > 0) || defs[0]).id;
+  const rows = defs.map(R => {
+    const r = G.net[R.id];
+    const LV = regionLevels(R.id);
+    const dep = ovs ? r.dep : r.ord + r.time;
+    const loans = areaLoanBal(R.id);
+    const state = r.build ? tag(`拡大中→Lv${r.build.to}（${ymShort(r.build.doneM)}）`, 'warn') : r.frozenUntil > G.m ? tag('業務制限', 'bad') : r.pdUntil >= G.m && r.pdMul > 1 ? tag('貸倒れ増加', 'bad') : '';
+    return `<tr class="click${UI.netSel === R.id ? ' sel' : ''}" data-act="netSel" data-a="${R.id}"><td>${R.name}<div class="small muted">${esc(ovs ? R.city : R.sub)}</div></td><td>Lv${r.lv} ${esc(LV[r.lv].name)}</td>
+      <td class="n">${dep ? fmtYen(dep) : '―'}</td><td class="n">${loans ? fmtYen(loans) : '―'}</td><td class="n">${r.lv || r.build ? fmtYen(regionOpex(R.id)) : '―'}</td><td>${state}</td></tr>`;
+  }).join('');
+  const totDep = ovs ? B('depFx') : natDep();
+  const totLoans = sum(defs, R => areaLoanBal(R.id));
+  const lockMsg = locked ? `<p class="callout">${ovs ? '海外への展開はテラバンクに格上げされてから行えます。' : '全国への展開はメガバンクに格上げされてから行えます。'}地図と市場の規模は今のうちに確かめておけます。</p>` : '';
+  const summary = kv([[ovs ? '海外店預金' : '全国の店舗網の預金', fmtYen(totDep)], [ovs ? '海外の貸出' : '全国の店舗網の貸出', fmtYen(totLoans)],
+    ['店舗・行員', `${fmtNum(sum(defs, R => regionBranches(R.id)))}店・${fmtNum(sum(defs, R => regionStaff(R.id)))}人`], ['月間の経費', fmtYen(sum(defs, R => regionOpex(R.id)))],
+    ovs ? ['外貨の調達ギャップ', fmtYen(sum(OVERSEAS, R => G.net[R.id].gap || 0))] : ['国内の預金シェア', `${fmtPct(natShare())}（上限5%）`]]);
+  return `${lockMsg}<div class="grid g-side"><div class="stack">${panel(ovs ? '海外の拠点' : '全国の店舗網', `${tileMap(defs, scope)}<p class="note">マスをクリックすると地域の詳細が出ます。点の数が店舗網の段階（最大5）。</p>`)}
+    ${panel('地域の一覧', `<div class="tbl-wrap"><table class="t"><thead><tr><th>地域</th><th>段階</th><th class="n">預金</th><th class="n">貸出</th><th class="n">月間経費</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`, { flush: true })}</div>
+    <div class="stack">${panel('合計', summary)}${regionDetail(UI.netSel, locked)}</div></div>`;
+}
+
+function regionDetail(a, locked) {
+  const R = regionDef(a), r = G.net[a], ovs = isOvsArea(a);
+  const LV = regionLevels(a), sc = regionScale(a);
+  const cur = LV[r.lv], nx = LV[r.lv + 1];
+  const dep = ovs ? r.dep : r.ord + r.time;
+  const segs = segLoans(a);
+  const rows = [
+    ['市場の規模', `預金 ${fmtNum(R.dep)}兆円・貸出 ${fmtNum(R.loan)}兆円`],
+    ovs ? ['現地の金利・為替', `政策金利 ${fmtPct(r.rate, 2)}・通貨 ${r.fx >= 1 ? '+' : MINUS}${fmtNum(Math.abs(r.fx - 1) * 100, 1)}%（進出の基準比）`] : ['競争の激しさ', R.compet >= 1.2 ? '激しい' : R.compet >= 1 ? '普通' : 'ゆるやか'],
+    ovs ? ['カントリーリスク・規制', `${'★'.repeat(R.risk)}${'☆'.repeat(5 - R.risk)}・規制${R.reg >= 2.5 ? '厳しい' : R.reg >= 2 ? '普通' : 'ゆるやか'}${R.geo ? '・地政学リスク' : ''}`] : null,
+    ['現在の段階', `Lv${r.lv} ${esc(cur.name)}（店舗${fmtNum(regionBranches(a))}・行員${fmtNum(regionStaff(a))}人）`],
+    ['預金', dep ? fmtYen(dep) : '―'],
+    ...segs.map(L => [esc(segName(a, L.seg)), `${fmtYen(L.bal)}（金利${fmtRate(L.rate)}・延滞率${fmtPct(L.pd, 2)}）`]),
+    ['月間の経費', fmtYen(regionOpex(a))],
+    ovs && r.gap ? ['外貨の調達ギャップ', `${fmtYen(r.gap)}（ヘッジ ${fmtNum(G.credit.hedge * 100, 0)}%）`] : null,
+  ];
+  let act = '';
+  if (!locked) {
+    const b = buildCheck(a);
+    const acq = acqQuote(a);
+    const parts = [];
+    if (nx && !nx.acqOnly) parts.push(`<div class="nextlv"><b>次の段階：Lv${nx.lv} ${esc(nx.name)}</b><div class="small muted">投資 ${fmtYen(nx.capex * sc)}・完成まで${nx.months}か月・月間経費 ${fmtYen(nx.opex * sc)}・預金シェアの目安 ${fmtPct(nx.dep * 100, 2)}</div>
+      <div class="row" style="margin-top:6px">${btn('拡大する', 'regionBuildAsk', { a }, 'primary sm', { disabled: !b.ok })}${b.ok ? '' : `<span class="small muted">${esc(b.msg)}</span>`}</div></div>`);
+    if (acq && (ovs ? r.lv >= 1 : true)) {
+      const c = acqCheck(a, 'stock');
+      parts.push(`<div class="nextlv"><b>${ovs ? '現地の有力銀行' : '地方銀行'}を買収：${esc(acq.name)}</b><div class="small muted">Lv${acq.to}へ一気に拡大。預金 ${fmtYen(acq.d)}・貸出 ${fmtYen(acq.l)}・買収額 ${fmtYen(acq.price)}（のれん ${fmtYen(acq.goodwill)}）</div>
+        <div class="row" style="margin-top:6px">${btn('買収を検討する', 'acqOpen', { a }, 'sm')}${c.ok || c.q ? '' : `<span class="small muted">${esc(c.msg)}</span>`}</div></div>`);
+    }
+    if (r.lv || r.build) parts.push(`<div class="row" style="margin-top:8px">${btn('この地域から撤退する', 'regionExitAsk', { a }, 'sm danger')}</div>`);
+    act = parts.join('');
+  }
+  return panel(`${R.name}`, `${kv(rows.filter(Boolean))}${act}`, { aside: ovs ? esc(R.city) : esc(R.sub) });
+}
+
+/* ---------- 融資方針・権限 ---------- */
+function creditPolicyPanel() {
+  const st = stageOf();
+  const polRow = (scope, label) => {
+    const p = G.credit[scope];
+    const ls = segLoans().filter(L => (scope === 'ovs') === isOvsArea(L.area));
+    const bal = sum(ls, L => L.bal);
+    const el = sum(ls, L => L.bal * L.pd / 100 * segLGD(L));
+    const npl = sum(ls, L => L.npl || 0);
+    const adjOpts = [-0.3, -0.15, 0, 0.15, 0.3, 0.6].map(v => `<option value="${v}"${Math.abs(p.adj - v) < 1e-9 ? ' selected' : ''}>${v > 0 ? '+' : v < 0 ? MINUS : '±'}${fmtNum(Math.abs(v), 2)}%</option>`).join('');
+    const q = nplBulkQuote(scope);
+    return `<div class="policy"><h3>${label}</h3>
+      <div class="field"><span>新規融資の姿勢</span><div class="seg">${Object.entries(APPETITE).map(([k, A]) => `<button type="button" data-act="creditSet" data-scope="${scope}" data-v="${k}" aria-pressed="${p.app === k}">${A.name}</button>`).join('')}</div></div>
+      <label class="field" style="margin-top:8px"><span>金利の上乗せ（店頭の標準金利に対して）</span><select data-ch="creditAdj" data-scope="${scope}">${adjOpts}</select></label>
+      <p class="small muted" style="margin:6px 0 0">積極にすると量は増えますが、審査が甘くなり延滞が増えます。金利を上げると量は減り、借り手の質も下がります（逆選択）。変更は新しく貸す分から効いてきます。</p>
+      ${kv([['残高', fmtYen(bal)], ['年間の予想損失', fmtYen(el)], ['不良債権', `${fmtYen(npl)}（${fmtPct(bal ? npl / bal * 100 : 0)}）`]])}
+      ${q.face >= 1e8 ? `<div class="row" style="margin-top:6px">${btn(`不良債権を一括売却（${fmtYen(q.face)} → ${fmtYen(q.price)}）`, 'nplSaleAsk', { scope }, 'sm danger')}</div>` : ''}</div>`;
+  };
+  const d = G.policy.delegate;
+  const gopt = (sel, from, to) => Array.from({ length: to - from + 1 }, (_, i) => from + i).map(g => `<option value="${g}"${g === sel ? ' selected' : ''}>格付${g}</option>`).join('');
+  const amtOpt = [1e8, 3e8, 10e8, 30e8].map(v => `<option value="${v}"${d.max === v ? ' selected' : ''}>${fmtYen(v)}以下</option>`).join('');
+  const deleg = panel('決裁権限の委譲（支店長決裁）', `<p class="small" style="margin:0 0 8px">回答期限を迎えた${CITY_NAME}の小口の申込を、月末に審査基準で自動的に処理します（調査はしないため粉飾は見抜けません）。大企業・海外企業の案件は常に頭取決裁です。</p>
+    <label class="inline"><input type="checkbox" data-ch="delegOn" ${d.on ? 'checked' : ''}> 委譲する</label>
+    <div class="row" style="gap:12px;margin-top:8px;flex-wrap:wrap"><label class="field"><span>承認：格付</span><select data-ch="delegSel" data-k="ok">${gopt(d.ok, 1, 9)}</select></label>
+    <label class="field"><span>謝絶：格付</span><select data-ch="delegSel" data-k="ng">${gopt(d.ng, 2, 10)}</select></label>
+    <label class="field"><span>対象の金額</span><select data-ch="delegMax">${amtOpt}</select></label></div>
+    ${G.lastDelegate ? `<p class="small muted" style="margin:8px 0 0">前回：承認${G.lastDelegate.acc}件（${fmtYen(G.lastDelegate.amt)}）・謝絶${G.lastDelegate.ng}件</p>` : ''}`);
+  const hedge = [0, 0.5, 0.8, 1].map(v => `<button type="button" data-act="hedgeSet" data-v="${v}" aria-pressed="${Math.abs(G.credit.hedge - v) < 1e-9}">${fmtNum(v * 100, 0)}%</button>`).join('');
+  const fx = st >= 2 ? panel('為替ヘッジ（外貨調達）', `<p class="small" style="margin:0 0 8px">海外の貸出が現地の預金を上回る分は、円を為替スワップで外貨に換えて賄います。ヘッジすると現地との金利差ぶんの調達コストがかかり、ヘッジしない分は為替の変動がそのまま損益に出ます（自己資本比率の計算でも為替リスクとして加算）。</p>
+    <div class="field"><span>ヘッジ比率</span><div class="seg">${hedge}</div></div>`) : '';
+  return `<div class="grid g2">${panel('リテール・中小企業向け融資の方針', `${polRow('nat', '全国の店舗網')}${st >= 2 ? '<hr class="sep">' + polRow('ovs', '海外の拠点') : ''}`)}<div class="stack">${deleg}${fx}</div></div>`;
+}
+
+Object.assign(ACTIONS, {
+  netView: d => { UI.netView = d.v; render(); },
+  netSel: d => { UI.netSel = d.a; render(); },
+  upgradeAsk: () => {
+    const to = stageOf() + 1;
+    confirmBox(`${STAGES[to].name}への格上げを申請`, `金融庁に${to === 1 ? '全国展開' : '海外展開'}の認可を申請します。審査は${to === 1 ? 3 : 6}か月で、審査の終わりにも条件を満たしている必要があります。対応費用として${fmtYen(REVIEW_COST[to])}がかかります。`, '申請する', 'upgradeGo');
+  },
+  upgradeGo: () => { const r = applyUpgrade(); toast(r.ok ? `格上げを申請しました（${r.months}か月の審査）` : r.msg, r.ok ? '' : 'bad'); closeModal(true); },
+  regionBuildAsk: d => {
+    const c = buildCheck(d.a);
+    if (!c.ok) { toast(c.msg, 'bad'); return; }
+    const R = regionDef(d.a), sc = regionScale(d.a);
+    confirmBox(`${R.name}：${c.nx.name}へ拡大`, `投資額 ${fmtYen(c.cost)}（15年で償却）。完成まで${c.nx.months}か月、完成後の月間経費は ${fmtYen(c.nx.opex * sc)}。完成すると預金と貸出が少しずつ集まり始めます。`, '拡大する', 'regionBuildGo', { a: d.a });
+  },
+  regionBuildGo: d => { const r = buildRegion(d.a); toast(r.ok ? '拡大に着手しました' : r.msg, r.ok ? '' : 'bad'); closeModal(true); },
+  regionExitAsk: d => {
+    const R = regionDef(d.a), ovs = isOvsArea(d.a);
+    confirmBox(`${R.name}から撤退`, `貸出債権を${ovs ? '5' : '1.5'}%引きで売却し、預金は他行に引き継ぎます。店舗・設備は簿価の6割で売却し、のれんは全額償却します。撤退後も地域の大企業との取引は続きます。`, '撤退する', 'regionExitGo', { a: d.a }, true);
+  },
+  regionExitGo: d => { const r = exitRegion(d.a, false); toast(r.ok ? `撤退しました（損失 ${fmtYen(Math.max(0, r.loss))}）` : r.msg, r.ok ? '' : 'bad'); trueUpProvisionsSilent(); closeModal(true); },
+  acqOpen: d => showModal('acq', { a: d.a, method: 'stock' }),
+  acqMethod: d => { UI.modal.args.method = d.v; drawModal(); },
+  acqGo: d => { const r = acquireRegion(d.a, d.m); toast(r.ok ? `${r.q.name}を買収しました` : r.msg, r.ok ? '' : 'bad'); if (r.ok) closeModal(true); else drawModal(); },
+  creditSet: d => { G.credit[d.scope].app = d.v; render(); },
+  hedgeSet: d => { G.credit.hedge = +d.v; render(); },
+  nplSaleAsk: d => {
+    const q = nplBulkQuote(d.scope);
+    confirmBox('不良債権の一括売却', `延滞・条件変更先の債権 ${fmtYen(q.face)} を投資ファンドに ${fmtYen(q.price)} で売却します。差額は売却損になりますが、不良債権比率はすぐに下がります（1年ほどかけて再び積み上がります）。`, '売却する', 'nplSaleGo', { scope: d.scope }, true);
+  },
+  nplSaleGo: d => { const r = nplBulkSale(d.scope); toast(r.ok ? '不良債権を売却しました' : r.msg, r.ok ? '' : 'bad'); closeModal(true); },
+});
+Object.assign(CHANGES, {
+  creditAdj: el => { G.credit[el.dataset.scope].adj = +el.value; render(); },
+  delegOn: el => { G.policy.delegate.on = el.checked; render(); },
+  delegSel: el => { G.policy.delegate[el.dataset.k] = +el.value; render(); },
+  delegMax: el => { G.policy.delegate.max = +el.value; render(); },
+});
+
+/* ---------- 買収 ---------- */
+MODALS.acq = a => {
+  const R = regionDef(a.a), ovs = isOvsArea(a.a);
+  const q = acqQuote(a.a);
+  if (!q) return modalFrame('買収', '<p>買収できる銀行はありません。</p>', btn('閉じる', 'closeModal'));
+  const m = a.method;
+  const c = acqCheck(a.a, m);
+  const cap = marketCap();
+  const body = `<p style="margin:0 0 10px">${R.name}の${ovs ? '有力銀行' : '地方銀行'}「<b>${esc(q.name)}</b>」が買収に応じる意向です。買収すると${R.name}の店舗網は一気に<b>Lv${q.to}</b>になります。</p>
+    <div class="grid g2"><div>${kv([['引き継ぐ預金', fmtYen(q.d)], ['引き継ぐ貸出', fmtYen(q.l)], ['相手の純資産', fmtYen(q.na)], ['買収額（純資産の' + fmtNum(q.prem, 2) + '倍）', `<b>${fmtYen(q.price)}</b>`], ['のれん（20年で償却・資本から控除）', fmtYen(q.goodwill)], ['経営統合の費用', fmtYen(q.na * 0.04)]])}</div>
+    <div><div class="field"><span>支払方法</span><div class="seg"><button type="button" data-act="acqMethod" data-v="stock" aria-pressed="${m === 'stock'}">株式交換</button><button type="button" data-act="acqMethod" data-v="cash" aria-pressed="${m === 'cash'}">現金</button></div></div>
+    <p class="small" style="margin:8px 0">${m === 'stock' ? `新しい株式を発行して支払います。資本が増えるので自己資本比率は保ちやすい一方、既存株主の持分が薄まります（時価総額 ${fmtYen(cap)}）。` : '手元の資金で支払います。株主の持分は薄まりませんが、のれんと引き継ぐ貸出の分だけ自己資本比率が下がります。'}</p>
+    ${kv([['買収後の自己資本比率（見込み）', c.cr !== undefined ? `<b class="${c.cr < reqCR() + 1 ? 'neg' : ''}">${fmtPct(c.cr)}</b>` : '―']])}</div></div>
+    <p class="callout${c.ok ? '' : ' bad'}" style="margin-top:10px">${c.ok ? '買収のあとで、統合前の査定では見えなかった不良債権が見つかることがあります（貸倒れが当面増えます）。買収は1年に1件までです。' : esc(c.msg)}</p>`;
+  return modalFrame(`${esc(q.name)}の買収`, body, btn('見送る', 'closeModal') + btn('買収する', 'acqGo', { a: a.a, m }, 'primary', { disabled: !c.ok }), { sub: R.name });
+};
+
+/* ---------- 格上げ・格下げの演出 ---------- */
+MODALS.stage = a => {
+  if (a.kind === 'up') {
+    const S = STAGES[a.to];
+    const mg = a.merger;
+    const body = `${scene(STAGE_ART[a.to], { cls: 'modal-art', alt: S.name })}
+      <p style="font-family:var(--f-doc);font-size:19px;margin:0 0 8px"><b>${esc(G.bankName)}は${S.name}になりました</b></p>
+      ${mg ? `<p>${mg.names.map(esc).join('と')}との経営統合が完了し、メガバンク・グループが誕生しました。引き継いだ預金は${fmtYen(mg.D)}、貸出は${fmtYen(mg.L)}です。</p>` : ''}
+      <ul class="small">${a.to === 1 ? '<li><b>経営戦略</b>の画面から、日本各地に店舗網を広げられます（地方銀行の買収も可能）。</li><li>全国の大企業から、大口の融資の申込が届くようになります。</li><li>自己資本比率の最低基準は国際統一基準の<b>8%</b>に上がります。格付BBB以上・不良債権比率6%以下なども守る必要があります。</li><li>汐見市の小口の申込は、<b>決裁権限の委譲</b>で支店長に任せられます。</li>'
+        : '<li><b>経営戦略</b>の画面から、海外に拠点を出せます（駐在員事務所→支店→現地法人→現地銀行の買収→地域統括本部）。</li><li>為替の変動、各国の危機、外貨調達、海外当局の制裁といった新しいリスクを抱えます。</li><li>自己資本比率の最低基準は<b>10.5%</b>、格付A−以上、不良債権比率4%以下、マネロン対策Lv3が求められます。</li>'}</ul>`;
+    return modalFrame(`${S.name}への格上げ`, body, btn('経営戦略を開く', 'go', { tab: 'strategy' }) + btn('閉じる', 'closeModal', {}, 'primary'), { size: 'wide' });
+  }
+  if (a.kind === 'warn') {
+    const body = `<p style="margin:0 0 8px">${STAGES[stageOf()].name}の維持基準を満たしていません。<b>次の四半期末も未達なら格下げ</b>です。</p><ul>${a.ng.map(x => `<li>${esc(x)}</li>`).join('')}</ul>
+      <p class="small">増資で資本を厚くする、不良債権を売却する、リスクの高い地域から撤退する、融資方針を慎重にする、などで立て直してください。</p>`;
+    return modalFrame('格下げ警告', body, btn('経営戦略を開く', 'go', { tab: 'strategy' }) + btn('閉じる', 'closeModal', {}, 'primary'), { size: 'narrow' });
+  }
+  if (a.kind === 'down') {
+    const body = `${scene('crisis', { cls: 'modal-art', alt: '' })}<p style="font-family:var(--f-doc);font-size:18px;margin:0 0 8px"><b class="neg">${STAGES[a.from].name}から${STAGES[a.to].name}へ格下げ</b></p>
+      <p>${esc(a.reason)}。</p><p>${a.from === 2 ? '海外の拠点' : '全国の店舗網'}（${a.n}地域）を売却し、損失${fmtYen(a.loss)}を計上しました。信用度と株価は大きく下がり、格付も引き下げられます。再び格上げを申請できるのは3年後です。</p>`;
+    return modalFrame('格下げ', body, btn('閉じる', 'closeModal', {}, 'primary'), { size: 'wide' });
+  }
+  const body = `<p style="margin:0 0 8px">${STAGES[a.to].name}への格上げは認められませんでした。審査期間中に次の条件を満たさなくなりました。</p><ul>${a.ng.map(x => `<li>${esc(x)}</li>`).join('')}</ul><p class="small">半年後から再び申請できます。</p>`;
+  return modalFrame('格上げの否認', body, btn('閉じる', 'closeModal', {}, 'primary'), { size: 'narrow' });
+};
+
+HELP.push(['メガバンク・テラバンク', `<p>銀行の業態は<b>地域銀行 → メガバンク → テラバンク</b>と格上げできます。<b>経営戦略</b>の画面で条件を確かめ、金融庁に申請します。</p>
+  <table class="t compact"><tbody>
+  <tr><td><b>メガバンク</b></td><td>総資産800億円・${CITY_NAME}の預金シェア2.5%・自己資本比率10%・格付A−・不良債権比率3%以下・勘定系Lv2・マネロン対策Lv2</td><td>全国の地方銀行2行と経営統合し、9つの地域に店舗網を広げられる。大企業の大口案件が届く</td></tr>
+  <tr><td><b>テラバンク</b></td><td>国内の預金シェア2%・自己資本比率12%・格付A・不良債権比率2.5%以下・勘定系Lv5・マネロン対策とサイバー対策Lv3・3年間行政処分なし</td><td>北米・欧州・アジアなど8つの地域に拠点を出せる。為替・カントリーリスク・外貨調達を抱える</td></tr></tbody></table>
+  <ul><li><b>店舗網</b>：地域ごとに段階（Lv1〜5）があり、拡大には投資と時間がかかります。完成すると預金と、個人・中小企業向けの小口融資が少しずつ積み上がります。1つの段階が完成してから1年は次へ進めません。</li>
+  <li><b>買収</b>：地方銀行（海外では現地の有力銀行）を買えば一気に大きくなれます。株式交換なら資本も増えますが、のれんは資本から差し引かれ、隠れた不良債権が出てくることもあります。</li>
+  <li><b>融資方針</b>：小口融資の量と質は、新規融資の姿勢と金利の上乗せで決まります。海外では為替ヘッジの比率も決めます。</li>
+  <li><b>維持基準と格下げ</b>：上の業態ほど基準が厳しく（自己資本比率 メガバンク8%・テラバンク10.5%など）、2四半期続けて未達だと格下げです。格下げされると上位の業態で築いた店舗網をすべて安値で売ることになり、規模が大きいほど損失も大きくなります。</li>
+  <li><b>大型のリスク</b>：全国規模のシステム障害、不正販売、金融危機での市場損失、各国の通貨危機、地政学リスク、海外当局の制裁金、外貨調達の逼迫、不正なトレーダー。どれも規模に比例して大きくなります。</li></ul>`]);
 
 /* ---- 15_main.js ---- */
 /* =========================================================

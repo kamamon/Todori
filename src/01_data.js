@@ -21,10 +21,12 @@ const ACCT = {
   loans:       { code: '1200', name: '貸出金', type: 'A' },
   tangible:    { code: '1300', name: '有形固定資産', type: 'A' },
   intangible:  { code: '1310', name: '無形固定資産', type: 'A' },
+  goodwill:    { code: '1320', name: 'のれん', type: 'A' },
   otherAssets: { code: '1400', name: 'その他資産', type: 'A' },
   allowance:   { code: '1900', name: '貸倒引当金', type: 'CA' },
   depOrd:      { code: '2000', name: '普通預金', type: 'L' },
   depTime:     { code: '2010', name: '定期預金', type: 'L' },
+  depFx:       { code: '2020', name: '海外店預金', type: 'L' },
   callMoney:   { code: '2100', name: 'コールマネー', type: 'L' },
   bojBorrow:   { code: '2110', name: '借用金（日銀借入）', type: 'L' },
   taxPayable:  { code: '2200', name: '未払法人税等', type: 'L' },
@@ -40,6 +42,7 @@ const ACCT = {
   intBoj:      { code: '4030', name: '預け金利息', type: 'R', grp: 'fund' },
   fees:        { code: '4100', name: '役務取引等収益', type: 'R', grp: 'fee' },
   bondGain:    { code: '4200', name: '国債等債券売却益', type: 'R', grp: 'oth' },
+  fxGain:      { code: '4210', name: '外国為替売買益', type: 'R', grp: 'oth' },
   recoveries:  { code: '4300', name: '償却債権取立益', type: 'R', grp: 'ordOth' },
   provRev:     { code: '4310', name: '貸倒引当金戻入益', type: 'R', grp: 'ordOth' },
   otherInc:    { code: '4400', name: 'その他の経常収益', type: 'R', grp: 'ordOth' },
@@ -47,8 +50,10 @@ const ACCT = {
   intDep:      { code: '5000', name: '預金利息', type: 'X', grp: 'fund' },
   intCallM:    { code: '5010', name: 'コールマネー利息', type: 'X', grp: 'fund' },
   intBorrow:   { code: '5020', name: '借用金利息', type: 'X', grp: 'fund' },
+  fundingCost: { code: '5030', name: '外貨調達費用', type: 'X', grp: 'fund' },
   feeExp:      { code: '5100', name: '役務取引等費用', type: 'X', grp: 'fee' },
   bondLoss:    { code: '5200', name: '国債等債券売却損', type: 'X', grp: 'oth' },
+  fxLoss:      { code: '5210', name: '外国為替売買損', type: 'X', grp: 'oth' },
   personnel:   { code: '5300', name: '人件費', type: 'X', grp: 'opex' },
   premises:    { code: '5310', name: '物件費', type: 'X', grp: 'opex' },
   taxes:       { code: '5320', name: '税金', type: 'X', grp: 'opex' },
@@ -182,6 +187,8 @@ const SYSTEMS = {
     { name: '第3次オンラインシステム', cap: 150000, cost: 6e8, months: 6, maint: 500e4 },
     { name: 'オープン勘定系システム', cap: 500000, cost: 18e8, months: 9, maint: 1000e4 },
     { name: 'クラウドネイティブ勘定系', cap: 2000000, cost: 45e8, months: 12, maint: 1800e4 },
+    { name: 'メガバンク統合基盤', cap: 25000000, cost: 600e8, months: 18, maint: 10e8 },
+    { name: 'グローバル勘定系プラットフォーム', cap: 150000000, cost: 2500e8, months: 24, maint: 35e8 },
   ] },
   credit: { name: '融資審査システム', desc: '決算書のスコアリング、粉飾の兆候検知、AI審査を提供する。', levels: [
     { name: '導入なし（手計算）', maint: 0 },
@@ -276,6 +283,7 @@ const PURPOSES = {
   capex:   { name: '設備資金', term: [60, 144], repay: 'equal', mult: [0, 0] },
   refi:    { name: '借換資金（他行肩代わり）', term: [48, 96], repay: 'equal', mult: [0, 0] },
   deficit: { name: '赤字補填資金', term: [24, 60], repay: 'equal', mult: [0.5, 1.5] },
+  mna:     { name: '買収資金（M&Aファイナンス）', term: [60, 96], repay: 'equal', mult: [0, 0] },
 };
 
 /* ---------- 景気局面 ---------- */
@@ -312,3 +320,109 @@ const BANK_CLASSES = [
 ];
 const RATINGS = ['AA+', 'AA', 'AA−', 'A+', 'A', 'A−', 'BBB+', 'BBB', 'BBB−', 'BB+', 'BB', 'B', 'CCC'];
 const RATING_SCORE = [90, 85, 80, 75, 70, 65, 60, 55, 50, 45, 40, 32];
+
+/* =========================================================
+ *  業態ステージ：地域銀行 → メガバンク → テラバンク
+ * ========================================================= */
+const STAGES = [
+  { id: 0, name: '地域銀行', area: CITY_NAME, reqCR: 4, basis: '国内基準' },
+  { id: 1, name: 'メガバンク', area: '日本全国', reqCR: 8, minRating: 7, maxNpl: 6, aml: 2, basis: '国際統一基準' },
+  { id: 2, name: 'テラバンク', area: '世界', reqCR: 10.5, minRating: 5, maxNpl: 4, aml: 3, basis: '国際統一基準＋G-SIBバッファー' },
+];
+
+/* 国内の主要地域（メガバンク）。dep/loan は市場規模（兆円） */
+const NATIONS = [
+  { id: 'n-shutoken', name: '首都圏', sub: '東京・神奈川・埼玉・千葉', dep: 450, loan: 320, time: 0.38, compet: 1.35, tile: [5, 3], mix: { it: 3, whl: 3, re: 3, mfg: 2, med: 1, ret: 1 } },
+  { id: 'n-kansai', name: '関西', sub: '大阪・京都・兵庫', dep: 150, loan: 100, time: 0.42, compet: 1.15, tile: [3, 3], mix: { mfg: 3, whl: 3, re: 2, ret: 1, med: 1 } },
+  { id: 'n-chubu', name: '中部', sub: '愛知・静岡・岐阜', dep: 100, loan: 72, time: 0.45, compet: 1.05, tile: [4, 3], mix: { mfg: 6, trn: 2, whl: 1, con: 1 } },
+  { id: 'n-kitakanto', name: '北関東', sub: '茨城・栃木・群馬', dep: 45, loan: 28, time: 0.48, compet: 0.95, tile: [5, 2], mix: { mfg: 4, agr: 2, con: 2, trn: 1 } },
+  { id: 'n-hokuriku', name: '北陸・甲信越', sub: '新潟・長野・石川・富山', dep: 55, loan: 35, time: 0.5, compet: 0.95, tile: [4, 2], mix: { mfg: 3, con: 2, htl: 2, agr: 1 } },
+  { id: 'n-tohoku', name: '東北', sub: '宮城・福島・岩手ほか', dep: 50, loan: 30, time: 0.5, compet: 0.95, tile: [5, 1], mix: { agr: 2, con: 3, mfg: 2, med: 1 } },
+  { id: 'n-hokkaido', name: '北海道', sub: '札幌・旭川・函館ほか', dep: 35, loan: 22, time: 0.5, compet: 0.9, tile: [6, 0], mix: { agr: 3, htl: 2, ret: 2, con: 1 } },
+  { id: 'n-chushikoku', name: '中国・四国', sub: '広島・岡山・香川ほか', dep: 70, loan: 45, time: 0.48, compet: 1.0, tile: [2, 3], mix: { mfg: 3, trn: 2, whl: 2, con: 1 } },
+  { id: 'n-kyushu', name: '九州・沖縄', sub: '福岡・熊本・鹿児島・沖縄', dep: 75, loan: 55, time: 0.45, compet: 1.0, tile: [1, 4], mix: { mfg: 2, ret: 2, htl: 2, agr: 2, con: 1 } },
+];
+/* 海外の地域（テラバンク）。rate0=現地の政策金利 risk=カントリーリスク(1-5) reg=規制の厳しさ fxVol=為替の月次変動 */
+const OVERSEAS = [
+  { id: 'o-na', name: '北米', city: 'ニューヨーク', dep: 1800, loan: 1600, rate0: 4.0, risk: 1, reg: 3, fxVol: 0.025, growth: 2.0, tile: [0, 1], mix: { it: 3, re: 2, med: 2, whl: 2, mfg: 1 } },
+  { id: 'o-eu', name: '欧州', city: 'ロンドン・フランクフルト', dep: 1500, loan: 1300, rate0: 2.5, risk: 1, reg: 2.5, fxVol: 0.022, growth: 1.2, tile: [2, 0], mix: { mfg: 3, whl: 2, it: 2, med: 1, re: 1 } },
+  { id: 'o-cn', name: '中華圏', city: '香港・上海', dep: 1200, loan: 1000, rate0: 2.2, risk: 3, reg: 2, fxVol: 0.02, growth: 4.0, geo: true, tile: [5, 1], mix: { mfg: 4, re: 3, whl: 2, it: 1 } },
+  { id: 'o-sea', name: '東南アジア', city: 'シンガポール・バンコク', dep: 300, loan: 280, rate0: 3.2, risk: 3, reg: 1.5, fxVol: 0.025, growth: 4.5, tile: [5, 2], mix: { mfg: 3, trn: 2, ret: 2, re: 1, htl: 1 } },
+  { id: 'o-in', name: 'インド', city: 'ムンバイ', dep: 200, loan: 180, rate0: 6.0, risk: 4, reg: 2, fxVol: 0.03, growth: 6.0, tile: [4, 2], mix: { it: 3, mfg: 3, whl: 2, con: 1 } },
+  { id: 'o-me', name: '中東', city: 'ドバイ', dep: 150, loan: 130, rate0: 4.5, risk: 3, reg: 1.5, fxVol: 0.008, growth: 3.0, geo: true, tile: [3, 1], mix: { con: 3, trn: 2, re: 2, htl: 1 } },
+  { id: 'o-latam', name: '中南米', city: 'サンパウロ・メキシコシティ', dep: 250, loan: 230, rate0: 9.5, risk: 5, reg: 1.5, fxVol: 0.045, growth: 2.5, tile: [0, 3], mix: { agr: 3, mfg: 2, trn: 2, ret: 1 } },
+  { id: 'o-oc', name: 'オセアニア', city: 'シドニー', dep: 180, loan: 170, rate0: 3.8, risk: 1, reg: 2, fxVol: 0.028, growth: 2.2, tile: [6, 3], mix: { re: 2, agr: 2, med: 2, whl: 1 } },
+];
+const NATR = Object.fromEntries(NATIONS.map(r => [r.id, r]));
+const OVSR = Object.fromEntries(OVERSEAS.map(r => [r.id, r]));
+const COUNTRY_PD = [1, 1, 1.25, 1.6, 2.2, 3.0];
+
+/* 国内ネットワークの段階。dep/loan=地域市場に占めるシェア、capex=その段階へ上げる投資額（億円・規模1あたり）、
+ * opex=段階ごとの月間経費（人件費・物件費込み）、staff=行員数、br=店舗数（いずれも規模1あたり） */
+const NAT_LEVELS = [
+  { lv: 0, name: '未進出', dep: 0, loan: 0, capex: 0, opex: 0, staff: 0, br: 0, months: 0 },
+  { lv: 1, name: '拠点支店', dep: 0.0005, loan: 0.0005, capex: 8e8, opex: 0.4e8, staff: 40, br: 1, months: 3 },
+  { lv: 2, name: '主要都市の支店網', dep: 0.0025, loan: 0.0025, capex: 35e8, opex: 1.5e8, staff: 180, br: 6, months: 6 },
+  { lv: 3, name: '地域全域の支店網', dep: 0.01, loan: 0.01, capex: 120e8, opex: 5e8, staff: 700, br: 25, months: 9 },
+  { lv: 4, name: '地域トップクラスの店舗網', dep: 0.025, loan: 0.025, capex: 300e8, opex: 11e8, staff: 1800, br: 60, months: 12 },
+  { lv: 5, name: '圧倒的な地盤', dep: 0.05, loan: 0.05, capex: 600e8, opex: 20e8, staff: 3500, br: 120, months: 18 },
+];
+/* 海外拠点の段階（Lv4は現地銀行の買収でのみ到達できる） */
+const OVS_LEVELS = [
+  { lv: 0, name: '未進出', dep: 0, loan: 0, capex: 0, opex: 0, staff: 0, br: 0, months: 0 },
+  { lv: 1, name: '駐在員事務所', dep: 0, loan: 0, capex: 5e8, opex: 0.3e8, staff: 10, br: 1, months: 6 },
+  { lv: 2, name: '支店', dep: 0.00005, loan: 0.0002, capex: 50e8, opex: 2e8, staff: 120, br: 2, months: 9 },
+  { lv: 3, name: '現地法人（銀行子会社）', dep: 0.0005, loan: 0.001, capex: 300e8, opex: 9e8, staff: 800, br: 12, months: 12 },
+  { lv: 4, name: '現地有力銀行（買収）', dep: 0.003, loan: 0.0035, capex: 0, opex: 38e8, staff: 5000, br: 150, months: 0, acqOnly: true },
+  { lv: 5, name: '地域統括本部', dep: 0.006, loan: 0.0075, capex: 1200e8, opex: 65e8, staff: 8000, br: 250, months: 18 },
+];
+const natScale = R => R.dep / 100;
+const ovsScale = R => R.loan / 1000;
+
+/* リテール・中小企業向けポートフォリオ（全国・海外の店舗網が積み上げる小口融資） */
+const SEG = {
+  retail: { name: '個人向けローン', ovsName: '個人向けローン', mix: 0.45, repay: 0.006, pd: 0.35, lgd: 0.25, rw: 0.35, spread: -0.9, ovsSpread: 1.5 },
+  sme: { name: '中小企業向け融資', ovsName: '現地法人向け融資', mix: 0.55, repay: 0.025, pd: 1.0, lgd: 0.4, rw: 0.75, spread: 0.35, ovsSpread: 1.8 },
+};
+const APPETITE = {
+  stop: { name: '新規停止', vol: 0, risk: 1 },
+  careful: { name: '慎重', vol: 0.7, risk: 0.8 },
+  std: { name: '標準', vol: 1, risk: 1 },
+  bold: { name: '積極', vol: 1.35, risk: 1.45 },
+};
+
+/* 大企業・海外企業の名前 */
+const BIG_PREFIX = ['日東', '東亜', '大日本', '中央', '太平洋', '日本', '新日本', '帝都', '東洋', '関東', '西日本', '北日本', '全日本', '昭栄', '丸紅葉', '三和', '住吉', '富岳', '旭光', '瑞穂', '扶桑', '敷島', '大八洲', '桜花'];
+const BIG_CORE = {
+  mfg: ['重工業', '電機', '製鉄', '化学工業', '精機', '自動車工業'], con: ['建設', '総合建設', 'エンジニアリング'], whl: ['商事', '物産', '通商'],
+  ret: ['リテイリング', '百貨店', 'ストアーズ'], food: ['フードサービス', '外食ホールディングス'], trn: ['海運', '陸運', 'エアライン', 'ロジスティクス'],
+  re: ['不動産', '地所', 'リアルティ'], it: ['通信', 'システムズ', 'デジタル'], med: ['製薬', 'メディカル', 'ヘルスケア'], htl: ['ホテルズ', 'リゾーツ'], agr: ['食品', 'アグリ'],
+};
+const OVS_PREFIX = ['アトラス', 'ノースブリッジ', 'パシフィカ', 'ブライトン', 'クレストウッド', 'オリオン', 'ゼニス', 'メリディアン', 'ハーバーライト', 'オーロラ', 'ノヴァテック', 'ペガサス', 'ミネルヴァ', 'セレスト', 'アルカディア', 'コーラルベイ', 'エメラルド', 'サンストーン', 'ルミナ', 'ヴェルダント'];
+const OVS_CORE = {
+  mfg: ['インダストリーズ', 'マニュファクチャリング'], con: ['コンストラクション', 'インフラストラクチャー'], whl: ['トレーディング', 'ディストリビューション'],
+  ret: ['リテール', 'マーケッツ'], food: ['フーズ', 'レストラン・グループ'], trn: ['ロジスティクス', 'シッピング'], re: ['プロパティーズ', 'リアルエステート'],
+  it: ['テクノロジーズ', 'ネットワークス'], med: ['ヘルスケア', 'ファーマ'], htl: ['ホスピタリティ', 'リゾーツ'], agr: ['アグリビジネス', 'ファームズ'],
+};
+
+/* カスタムスタートの選択肢 */
+const CUSTOM_PRESETS = {
+  standard: { name: '標準', desc: `${OLD_UNION}を承継した地域銀行から。`, stage: 0, capMul: 1, depMul: 1, quality: 'normal', branches: 4, sys: 'std', econ: 'expansion', rate: 'std', fraud: 'normal', term: 10 },
+  easy: { name: '資本に余裕', desc: '資本が厚く景気も良い。初めての人向け。', stage: 0, capMul: 2, depMul: 1, quality: 'good', branches: 4, sys: 'std', econ: 'boom', rate: 'std', fraud: 'low', term: 10 },
+  hard: { name: '不良債権の山', desc: '問題債権だらけの承継。バブル崩壊前夜。', stage: 0, capMul: 0.8, depMul: 1, quality: 'bad', branches: 3, sys: 'old', econ: 'precrisis', rate: 'std', fraud: 'high', term: 10 },
+  mega: { name: 'メガバンクから', desc: '全国に支店網を持つメガバンクの頭取として就任。', stage: 1, capMul: 1, depMul: 1, quality: 'normal', branches: 6, sys: 'new', econ: 'expansion', rate: 'std', fraud: 'normal', term: 20 },
+  tera: { name: 'テラバンクから', desc: '世界に拠点を持つ巨大銀行グループの頭取として就任。', stage: 2, capMul: 1, depMul: 1, quality: 'normal', branches: 8, sys: 'new', econ: 'expansion', rate: 'std', fraud: 'normal', term: 20 },
+};
+const CUSTOM_OPTS = {
+  stage: [[0, '地域銀行'], [1, 'メガバンク'], [2, 'テラバンク']],
+  capMul: [[0.6, '少ない（×0.6）'], [1, '標準'], [1.5, '多い（×1.5）'], [2.5, 'とても多い（×2.5）']],
+  depMul: [[0.6, '少ない（×0.6）'], [1, '標準'], [1.6, '多い（×1.6）']],
+  quality: [['good', '良好'], ['normal', '標準'], ['bad', '問題先が多い']],
+  branches: [[1, '本店のみ'], [3, '3店'], [4, '4店（標準）'], [6, '6店'], [8, '全8地区']],
+  sys: [['old', '旧式'], ['std', '標準'], ['new', '最新']],
+  econ: [['boom', '好況'], ['expansion', '回復・拡大'], ['slowdown', '減速'], ['recession', '景気後退'], ['precrisis', 'バブル崩壊前夜']],
+  rate: [['low', '超低金利（0.10%）'], ['std', '標準（0.50%）'], ['high', '高金利（1.50%）']],
+  fraud: [['low', '少ない'], ['normal', '普通'], ['high', '多い']],
+  term: [[10, '10年'], [20, '20年'], [30, '30年'], [0, '無期限']],
+};
+const FRAUD_RATE = { low: 0.08, normal: 0.16, high: 0.26 };

@@ -27,6 +27,8 @@ function genApplications() {
     }
     G.apps.push(makeBizApp(co));
   }
+  // 大企業・海外企業との取引（メガバンク以上）
+  if (stageOf() >= 1 && G.net) genBigApplications(trustF);
   // 住宅ローン
   const ourVar = mortVarRate();
   const comp = Math.exp(-4 * (ourVar - G.eco.mortVar));
@@ -40,11 +42,35 @@ function genApplications() {
   }
 }
 
+function genBigApplications(trustF) {
+  const areas = [], w = [];
+  for (const R of NATIONS) { const r = G.net[R.id]; if (r.lv >= 1) { areas.push(R.id); w.push(R.loan * (0.5 + r.lv)); } }
+  if (stageOf() >= 2) for (const R of OVERSEAS) { const r = G.net[R.id]; if (r.lv >= 1 && r.frozenUntil <= G.m) { areas.push(R.id); w.push(R.loan * 0.2 * (0.5 + r.lv)); } }
+  if (!areas.length) return;
+  const lam = (0.5 + 0.06 * natLevelSum() + 0.12 * ovsLevelSum()) * G.eco.demand * trustF;
+  const n = Math.min(4, poisson(lam));
+  const existing = [...new Set(G.loans.filter(L => L.kind === 'biz' && L.status === 'current' && L.coId && G.companies[L.coId] && G.companies[L.coId].big && G.m - L.startM > 8).map(L => L.coId))];
+  for (let i = 0; i < n; i++) {
+    let co;
+    if (existing.length && chance(0.2)) {
+      co = G.companies[pick(existing)];
+      if (!co || G.apps.some(a => a.coId === co.id)) continue;
+    } else {
+      const a = wpick(areas, w);
+      co = genCompany({ district: a, big: true, sizeMul: isOvsArea(a) ? 1.8 : 1 });
+      G.companies[co.id] = co;
+    }
+    G.apps.push(makeBizApp(co));
+  }
+}
+
 function makeBizApp(co) {
   const Lr = latestRep(co), Lt = latestTrue(co);
   const existing = G.loans.some(L => L.coId === co.id && isActiveLoan(L));
   const losing = Lt.ORD < 0 || (co.fraud && co.q < -0.8);
-  const purpose = wpick(Object.keys(PURPOSES), [30, 12, 30, existing ? 4 : 15, losing ? 18 : 2]);
+  const purpose = co.big
+    ? wpick(Object.keys(PURPOSES), [22, 6, 30, existing ? 4 : 12, losing ? 10 : 1, 18])
+    : wpick(Object.keys(PURPOSES), [30, 12, 30, existing ? 4 : 15, losing ? 18 : 2, 0]);
   const P = PURPOSES[purpose];
   let amt;
   switch (purpose) {
@@ -52,9 +78,11 @@ function makeBizApp(co) {
     case 'season': amt = Lr.S / 12 * uni(0.5, 1.2); break;
     case 'capex': amt = Lr.S * uni(0.08, 0.4); break;
     case 'refi': amt = (Lr.STD + Lr.LTD) * uni(0.3, 0.7); break;
+    case 'mna': amt = Lr.S * uni(0.1, 0.5); break;
     default: amt = Lr.S / 12 * uni(0.5, 1.5);
   }
-  amt = niceAmount(clamp(amt, 5e6, 60e8));
+  if (co.big) amt = niceAmount(clamp(Math.min(amt, Math.max(5e8, largeExposureLimit() * uni(0.35, 1.15))), 5e8, 2e12));
+  else amt = niceAmount(clamp(amt, 5e6, 60e8));
   let termM = randInt(P.term[0], P.term[1]);
   termM = purpose === 'season' ? termM : Math.max(12, Math.round(termM / 12) * 12);
   const hiddenPurpose = losing && purpose !== 'deficit' && chance(0.6);
@@ -70,6 +98,7 @@ function makeBizApp(co) {
     trn: ['トラック10台の入替', '物流センターの新設'], re: ['賃貸マンションの建設', '収益ビルの取得'], it: ['データセンター設備の増強', '本社移転・開発環境の整備'],
     med: ['介護施設の新設', '医療機器の更新'], htl: ['客室の全面改装', '露天風呂付き客室の新設'], agr: ['ハウス栽培施設の建設', '農業機械の購入'],
   }[co.ind]);
+  if (purpose === 'mna') app.capexItem = pick(['同業他社の買収', '海外企業の買収', '事業部門の買収（カーブアウト）', '上場子会社の完全子会社化']);
   app.terms = defaultTerms(app);
   return app;
 }
@@ -131,7 +160,7 @@ function acceptProb(app, t, mode = 'true') {
     x -= 0.6 * Math.max(0, (app.termReqM - t.termM) / app.termReqM);
     if (t.collateral && app.hasRE) x -= 0.35;
     if (t.guarantee === 'cgc') x -= 0.45;
-    if (t.guarantee === 'personal') x -= 0.3;
+    if (t.guarantee === 'personal') x -= co.big ? 2.5 : 0.3;
     if (app.existing) x += 0.5;
     if (app.purpose === 'refi' && app.otherRate) x += 3 * (app.otherRate - rate) * 0.5;
   } else {
@@ -218,7 +247,7 @@ const HINT_TEXT = {
 };
 
 /* 不動産の現在価値（地区の地価で補正） */
-function reNow(co, v) { return v * G.city.d[co.district].land / (co.reLand0 || G.city.d[co.district].land); }
+function reNow(co, v) { const land = areaLand(co.district); return v * land / (co.reLand0 || land); }
 
 function fraudAmountOf(co) {
   const f = co.fraud;
@@ -350,7 +379,7 @@ function validateTerms(app, t) {
   if (app.kind === 'biz') {
     const co = G.companies[app.coId];
     if (exposureOf(co.id) + t.amount > largeExposureLimit()) return `大口信用供与規制：同一先への与信は自己資本の25%（${fmtYen(largeExposureLimit())}）までです`;
-    if (t.guarantee === 'cgc' && (t.amount > 2.8e8 || latestRep(co).S > 300e8)) return '信用保証協会の保証は中小企業向け2億8,000万円までです';
+    if (t.guarantee === 'cgc' && (co.big || t.amount > 2.8e8 || latestRep(co).S > 300e8)) return '信用保証協会の保証は中小企業向け2億8,000万円までです';
     if (t.rateType === 'fixed' && !(t.rate > 0)) return '金利を入力してください';
   }
   if (G.flags.lendingBan > G.m) return '早期是正措置により新規融資が制限されています';
@@ -405,7 +434,7 @@ function bookLoan(app, t) {
     L.cgc = t.guarantee === 'cgc' ? 0.8 : 0;
     L.personal = t.guarantee === 'personal';
     if (t.collateral && co.ownsRE) {
-      const land = G.city.d[co.district].land;
+      const land = areaLand(co.district);
       const bankVal = co.reAppraised || reNow(co, co.reEst);
       L.collateral = { bank0: bankVal * (co.reLien ? 0.6 : 1), true0: reNow(co, co.reTrue) * (co.reLien ? 0.6 : 1), land0: land };
     }
@@ -482,7 +511,10 @@ function loanPD(L) {
   if (L.kind === 'biz') {
     const co = G.companies[L.coId];
     pd = GRADE_PD[co.gTrue] * Math.exp(-0.6 * (co.q - co.qStmt)) * (e.defMult / 0.9)
-      * Math.exp(-0.7 * indCond(co.ind)) * Math.exp(-(G.city.d[co.district].vit - 100) / 60);
+      * Math.exp(-0.7 * indCond(co.ind)) * Math.exp(-(areaVit(co.district) - 100) / 60);
+    if (isOvsArea(co.district)) pd *= COUNTRY_PD[OVSR[co.district].risk];
+    if (!isCityArea(co.district) && G.net[co.district].pdUntil >= G.m) pd *= Math.sqrt(G.net[co.district].pdMul);
+    if (L.purpose === 'mna') pd *= 1.3;
     if (co.fraud && !co.fraud.exposed && co.fraud.years > 0) pd *= 1.3;
     if (L.personal) pd *= 0.9;
     if (L.rateType === 'var') pd *= 1 + Math.max(0, L.rate - (L.rate0 || L.rate)) * 0.15;
@@ -502,6 +534,7 @@ function processLoans() {
   for (const L of G.loans) {
     if (!isActiveLoan(L)) continue;
     if (L.kind === 'pool') { processPool(L); continue; }
+    if (L.kind === 'seg') continue; // 全国・海外のポートフォリオは networkMonthEnd で処理
     if (L.startM === G.m) continue; // 実行月は返済なし
     L.rate = currentRate(L);
     if (L.status === 'bankrupt') { processWorkout(L); continue; }
@@ -542,7 +575,7 @@ function processLoans() {
   }
   // 期日一括返済の到来・期限前返済
   for (const L of G.loans) {
-    if (L.status !== 'current' || L.kind === 'pool' || L.startM === G.m) continue;
+    if (L.status !== 'current' || L.kind === 'pool' || L.kind === 'seg' || L.startM === G.m) continue;
     if (L.bal <= 0) { L.status = 'closed'; L.closedM = G.m; continue; }
     prepaymentCheck(L);
   }
@@ -631,8 +664,7 @@ function goBankrupt(L, how) {
   G.stats.defaultAmt += L.bal;
   if (L.kind === 'biz') {
     const co = G.companies[L.coId];
-    const D = G.city.d[co.district];
-    D.failPen += Math.min(6, 1 + co.emp / 60);
+    if (isCityArea(co.district)) G.city.d[co.district].failPen += Math.min(6, 1 + co.emp / 60);
     addNews('loan', `融資先「${L.name}」が${how}。従業員${co.emp}人。当行の債権残高${fmtYen(L.bal)}`, 'bad', { loanId: L.id });
   } else if (L.kind === 'proj') {
     projectLoanFailed(L);
@@ -652,16 +684,16 @@ function exposeFraud(co) {
     goBankrupt(L, '粉飾発覚により民事再生法の適用を申請');
     G.stats.fraudLossAmt += L.bal;
   }
-  if (!loans.length) G.city.d[co.district].failPen += 2;
+  if (!loans.length && isCityArea(co.district)) G.city.d[co.district].failPen += 2;
 }
 
 function collateralBank(L) {
   if (!L.collateral) return 0;
-  return L.collateral.bank0 * G.city.d[L.district].land / L.collateral.land0;
+  return L.collateral.bank0 * areaLand(L.district) / L.collateral.land0;
 }
 function collateralTrue(L) {
   if (!L.collateral) return 0;
-  return L.collateral.true0 * G.city.d[L.district].land / L.collateral.land0;
+  return L.collateral.true0 * areaLand(L.district) / L.collateral.land0;
 }
 
 function processWorkout(L) {
@@ -748,7 +780,7 @@ function callLoan(L) {
 /* システムの判定（銀行が観測できる情報のみ） */
 function sysClass(L) {
   if (L.status === 'bankrupt') return 5;
-  if (L.kind === 'pool') return 0;
+  if (L.kind === 'pool' || L.kind === 'seg') return 0;
   if (L.status === 'default') return L.dpd >= 6 ? 4 : 3;
   let c = 0;
   if (L.kind === 'biz') {
@@ -768,7 +800,7 @@ function sysClass(L) {
 /* 金融庁の見立て（実態ベース） */
 function fsaClass(L, knowsFraud) {
   if (L.status === 'bankrupt') return 5;
-  if (L.kind === 'pool') return 0;
+  if (L.kind === 'pool' || L.kind === 'seg') return 0;
   if (L.status === 'default') return L.dpd >= 6 ? 4 : 3;
   let c = 0;
   if (L.kind === 'biz') {
@@ -790,6 +822,7 @@ function fsaClass(L, knowsFraud) {
 function provisionFor(L, cls) {
   if (!isActiveLoan(L) || L.bal <= 0) return 0;
   if (L.kind === 'pool') return Math.round(L.bal * 0.0025);
+  if (L.kind === 'seg') return Math.round(L.bal * (L.pd ?? SEG[L.seg].pd) / 100 * segLGD(L) * 1.2);
   const bal = L.bal;
   const cover = L.kind === 'mort' ? (L.mortGuar && !L.guarVoid ? 0.9 : 0) : (L.cgc || 0);
   if (cls <= 2) return Math.round(bal * (1 - cover) * CLS[cls].rate);
@@ -841,6 +874,56 @@ function borrowerMonthly() {
       G.inbox.push({ id: 'I' + (++G.seq.inbox), type: 'resched', coId: co.id, loanId: L.id, m: G.m, exp: G.m });
     }
   }
+}
+
+/* ---------- 審査基準による一括処理・決裁権限の委譲 ---------- */
+/* 標準条件：市場の目安金利、不動産があれば担保、格付6以下の中小企業は信用保証協会付き */
+function standardTerms(app) {
+  const t = defaultTerms(app);
+  if (app.kind === 'biz') {
+    const g = appSysGrade(app);
+    const co = G.companies[app.coId];
+    t.collateral = !!co.ownsRE;
+    if (!co.big && g >= 6 && t.amount <= 2.8e8 && latestRep(co).S <= 300e8) t.guarantee = 'cgc';
+    const lim = largeExposureLimit() - exposureOf(co.id);
+    if (t.amount > lim) t.amount = Math.max(0, Math.floor(lim / 1e6) * 1e6);
+  }
+  return t;
+}
+/* c = { ok: 承認する格付の上限, ng: 謝絶する格付の下限, deficit: 赤字補填は謝絶 } → 'ok' | 'ng' | 'hold' */
+function judgeByCriteria(a, c) {
+  if (a.kind === 'biz') {
+    const co = G.companies[a.coId];
+    if (co.fraud && co.fraud.found) return 'ng';
+    if (c.deficit && (a.purpose === 'deficit' || a.purposeRevealed)) return 'ng';
+  } else if (a.person.fraud && a.person.fraud.found) return 'ng';
+  const g = appSysGrade(a);
+  if (g <= c.ok) return 'ok';
+  if (g >= c.ng) return 'ng';
+  return 'hold';
+}
+function decideByCriteria(a, c) {
+  const j = judgeByCriteria(a, c);
+  if (j === 'ng') { decideApp(a, false); return { j: 'ng' }; }
+  if (j !== 'ok') return { j: 'hold' };
+  const t = standardTerms(a);
+  if (t.amount < 1e6 || validateTerms(a, t)) return { j: 'skip' };
+  const r = decideApp(a, true, t);
+  return { j: r.ok && r.accepted ? 'acc' : r.ok ? 'dec' : 'skip', amt: t.amount };
+}
+/* 支店長への決裁権限の委譲：期限を迎える汐見市の小口案件を、審査基準で自動的に処理する */
+function autoDelegate() {
+  const d = G.policy && G.policy.delegate;
+  if (!d || !d.on) return null;
+  const res = { acc: 0, ng: 0, amt: 0 };
+  for (const a of G.apps.filter(x => x.status === 'pending' && x.exp <= G.m)) {
+    if (a.kind === 'biz' && G.companies[a.coId] && G.companies[a.coId].big) continue;
+    if (a.amountReq > d.max) continue;
+    const r = decideByCriteria(a, d);
+    if (r.j === 'acc') { res.acc++; res.amt += r.amt; } else if (r.j === 'ng') res.ng++;
+  }
+  G.lastDelegate = res;
+  return res;
 }
 
 /* 受信箱の期限切れ処理 */
