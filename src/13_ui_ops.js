@@ -168,7 +168,7 @@ SCREENS.market = () => {
     <label class="inline small" style="margin-top:8px"><input type="checkbox" data-ch="autoCall" ${G.treasury.autoCall ? 'checked' : ''}> 月末に余った資金を自動でコール運用する</label>`;
   const buy = `<div class="row" style="gap:12px;align-items:end">
       <label class="field"><span>年限</span><select id="bondTenor">${[2, 5, 10, 20].map(k => `<option value="${k}">${k}年（利回り ${fmtRate(G.eco.y[k])}）</option>`).join('')}</select></label>
-      <label class="field"><span>額面</span><span class="row"><input type="number" id="bondAmt" step="1" min="1" value="10" style="width:90px"><span class="unit">億円</span></span></label>
+      <label class="field"><span>額面</span><span class="row"><input type="number" id="bondAmt" step="1" min="1" value="${Math.max(10, roundTo(Math.max(0, B('boj') - req) * 0.1 / 1e8, 10))}" style="width:110px"><span class="unit">億円</span></span></label>
       ${btn('購入する', 'bondBuy', {}, 'primary')}</div>
     <p class="note">利付国債を額面（利回り＝表面利率）で購入します。金利が上がると時価が下がり含み損になります。満期まで持てば額面で償還されます。</p>`;
   const rows = G.bonds.slice().sort((a, b) => a.matM - b.matM).map(bd => {
@@ -214,7 +214,7 @@ SCREENS.facility = () => {
   const cap = vaultCapacity(), req = cashRequired();
   const sec = SECURITY_LEVELS[v.sec], snx = SECURITY_LEVELS[v.sec + 1];
   const peak = req * 1.3 * v.buffer;
-  const vault = `<div class="row between"><div><div class="small muted">本店金庫</div><div style="font-size:18px;font-weight:700;font-family:var(--f-doc)">${VL.name}</div></div>${v.upgrade ? tag(`${ymLabel(v.upgrade.doneM)}に拡張完了`, 'warn') : ''}</div>
+  const vault = `${scene('vault', { cls: 'panel-art', alt: '本店の金庫' })}<div class="row between"><div><div class="small muted">本店金庫</div><div style="font-size:18px;font-weight:700;font-family:var(--f-doc)">${VL.name}</div></div>${v.upgrade ? tag(`${ymLabel(v.upgrade.doneM)}に拡張完了`, 'warn') : ''}</div>
     <table class="t compact" style="margin-top:8px"><tbody>
       <tr><td>収容能力（本店＋各店）</td><td class="n">${fmtYen(cap)}</td></tr>
       <tr><td>現金在高</td><td class="n">${fmtYen(B('cash'))}</td></tr>
@@ -295,12 +295,12 @@ SCREENS.hr = () => {
     comp: `必要人員 ${fmtNum(compRequired(), 1)}人（充足率 ${fmtPct(compRatio() * 100, 0)}）・臨時監査 月${auditSlots()}件`,
   };
   const rows = Object.entries(STAFF_ROLES).map(([k, r]) => `<tr><td><b>${r.name}</b><div class="small muted">${r.desc}</div></td><td class="n" style="font-size:16px;font-weight:700">${s[k]}人</td><td class="small">${ind[k]}</td>
-    <td class="n nowrap">${btn('＋1', 'hire', { k, n: 1 }, 'sm')} ${btn('＋5', 'hire', { k, n: 5 }, 'sm')} ${btn('−1', 'hire', { k, n: -1 }, 'sm danger')}</td></tr>`).join('');
+    <td class="n nowrap">${btn('＋1', 'hire', { k, n: 1 }, 'sm')} ${btn('＋5', 'hire', { k, n: 5 }, 'sm')}${stageOf() >= 1 ? ' ' + btn('＋20', 'hire', { k, n: 20 }, 'sm') : ''} ${btn('−1', 'hire', { k, n: -1 }, 'sm danger')}</td></tr>`).join('');
   const c = monthlyCosts();
   const pay = staffTotal() * BASE_SALARY * G.salaryLv;
   return `<h1 class="h1">人事・営業</h1>
   <p class="lead">行員は銀行の能力そのものです。採用は1人60万円、早期退職には割増退職金がかかります。給与水準を下げると人件費は減りますが、離職と不正のリスクが上がります。</p>
-  <div class="stack">${panel(`人員（合計 ${staffTotal()}人）`, `<div class="tbl-wrap"><table class="t"><thead><tr><th>部門</th><th class="n">人数</th><th>状況</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`, { flush: true })}
+  <div class="stack">${panel(`本部と${CITY_NAME}の人員（合計 ${staffTotal()}人）`, `<div class="tbl-wrap"><table class="t"><thead><tr><th>部門</th><th class="n">人数</th><th>状況</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>${netStaff() ? `<p class="note" style="padding:0 12px 10px">このほか全国・海外の店舗網に${fmtNum(netStaff())}人（人件費は店舗網の経費に含む）。管理・監査部門の必要人員には、店舗網の規模も含まれます。</p>` : ''}`, { flush: true })}
   <div class="grid g2">${panel('給与水準', `<label class="field"><span>市場水準に対して ${fmtNum(G.salaryLv * 100, 0)}%</span><input type="range" min="85" max="130" step="5" value="${Math.round(G.salaryLv * 100)}" data-ch="salary"${G.flags.publicFunds ? ' disabled' : ''}></label>
     ${kv([['年間人件費（見込み）', fmtYen(pay)], ['1人あたり', fmtYen(BASE_SALARY * G.salaryLv)], ['今月の人件費', fmtYen(c.pay)]])}${G.flags.publicFunds ? '<p class="callout bad small" style="margin-top:8px">公的資金の注入中は給与水準を90%以下に抑える必要があります。</p>' : ''}`)}
   ${panel('広告宣伝', `<label class="field"><span>月額 ${fmtYen(G.adBudget)}</span><input type="range" min="0" max="5000" step="50" value="${Math.round(G.adBudget / 1e4)}" data-ch="adBudget"></label><p class="note">知名度が上がり預金が集まりやすくなります（効果は逓減）。</p>`)}</div></div>`;

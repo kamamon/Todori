@@ -37,6 +37,28 @@ function marketLoanRate(grade, termM) {
   return Math.max(0.3, base + termPrem);
 }
 
+/* 開始時の景気と金利（カスタムスタート） */
+const RATE_START = { low: 0.1, std: 0.5, high: 1.5 };
+function initEconomy(econ, rateKey) {
+  const e = G.eco;
+  const regime = econ === 'precrisis' ? 'boom' : (REGIMES[econ] ? econ : 'expansion');
+  const R = REGIMES[regime];
+  e.regime = regime; e.age = 6;
+  e.gdp = R.gdp; e.cpi = R.cpi; e.unemp = R.unemp; e.defMult = R.def; e.demand = R.demand;
+  if (econ === 'precrisis') { e.land = 135; e.stock = 140; }
+  else if (econ === 'recession') { e.land = 92; e.stock = 80; }
+  e.policy = RATE_START[rateKey] ?? 0.5;
+  const ex = 0.45 * (e.cpi - 2.0) + 0.25 * (e.gdp - 1.0);
+  e.y = { 2: e.policy + 0.12 + 0.3 * ex, 5: e.policy + 0.42 + 0.45 * ex, 10: e.policy + 1.05 + 0.45 * ex, 20: e.policy + 1.85 + 0.35 * ex };
+  for (const k of [2, 5, 10, 20]) e.y[k] = Math.max(k <= 5 ? -0.1 : 0.05, +e.y[k].toFixed(3));
+  e.call = Math.max(0, e.policy - 0.02);
+  e.mktOrd = Math.max(0.001, 0.35 * e.policy);
+  e.mktTime = Math.max(0.002, 0.55 * e.policy + 0.04);
+  e.mktPrime = e.policy + 1.375;
+  e.mortVar = Math.max(0.3, e.policy + 0.35);
+  e.mortFix = e.y[10] + 0.65;
+}
+
 const REGIME_NEWS = {
   boom: '内閣府、景気判断を「拡大」に上方修正。企業の設備投資が活発に',
   expansion: '景気は緩やかに回復。月例経済報告で「持ち直し」との判断',
@@ -46,12 +68,13 @@ const REGIME_NEWS = {
 };
 
 function ecoStep() {
-  const e = G.eco, diff = DIFFICULTY[G.difficulty];
+  const e = G.eco, cfg = G.cfg || DIFFICULTY[G.difficulty];
   // 景気局面の遷移
   const tr = REGIME_TRANS[e.regime];
   const items = tr.map(t => t[0]);
+  const bubble = (cfg.bubbleUntil ?? -1) > G.m;
   const w = tr.map(t => {
-    if (t[0] === 'crisis' && e.regime !== 'crisis') return G.m < 18 ? 0 : t[1] * diff.crisis;
+    if (t[0] === 'crisis' && e.regime !== 'crisis') return G.m < (bubble ? 6 : 18) ? 0 : t[1] * cfg.crisis * (bubble ? 5 : 1);
     return t[1];
   });
   const next = wpick(items, w);

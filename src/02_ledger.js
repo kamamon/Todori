@@ -67,14 +67,15 @@ function curProfit() {
   return r;
 }
 function totalAssets() {
-  return B('cash') + B('boj') + B('callLoan') + B('securities') + B('loans') + B('tangible') + B('intangible') + B('otherAssets') - B('allowance');
+  return B('cash') + B('boj') + B('callLoan') + B('securities') + B('loans') + B('tangible') + B('intangible') + B('goodwill') + B('otherAssets') - B('allowance');
 }
 function totalLiab() {
-  return B('depOrd') + B('depTime') + B('callMoney') + B('bojBorrow') + B('taxPayable') + B('divPayable') + B('otherLiab');
+  return B('depOrd') + B('depTime') + B('depFx') + B('callMoney') + B('bojBorrow') + B('taxPayable') + B('divPayable') + B('otherLiab');
 }
 function netAssets() { return B('capital') + B('prefCapital') + B('capSurplus') + B('retained') + curProfit(); }
 function ledgerDiff() { return totalAssets() - totalLiab() - netAssets(); }
-function deposits() { return B('depOrd') + B('depTime'); }
+/* 預金の合計（国内の普通・定期＋海外店預金） */
+function deposits() { return B('depOrd') + B('depTime') + B('depFx'); }
 
 /* 月末の元帳スナップショット（BS科目＋当月PL） */
 function bsSnapshot() {

@@ -49,6 +49,7 @@ function finalize(s) {
 }
 
 function capitalFor(S) {
+  if (S >= 300e8) return K(S * uni(0.008, 0.03));
   if (S < 3e8) return pick([3e6, 10e6, 10e6]);
   if (S < 10e8) return pick([10e6, 20e6, 30e6]);
   if (S < 50e8) return pick([30e6, 50e6]);
@@ -169,6 +170,12 @@ function newCompanyName(indId) {
   return `有限会社${pre}${core}`;
 }
 const personName = () => pick(FAMILY_NAMES) + ' ' + pick(GIVEN_NAMES);
+/* 大企業・海外企業の社名 */
+function bigCompanyName(indId, overseas) {
+  if (overseas) return `${pick(OVS_PREFIX)}・${pick(OVS_CORE[indId])}`;
+  const core = pick(BIG_CORE[indId]);
+  return rand() < 0.5 ? `${pick(BIG_PREFIX)}${core}株式会社` : `株式会社${pick(BIG_PREFIX)}${core}`;
+}
 
 /* 最新の決算期末（現在月より2か月以上前） */
 function lastFiscalEnd(fyEnd, m) {
@@ -179,12 +186,13 @@ function lastFiscalEnd(fyEnd, m) {
 
 function genCompany(opts) {
   const did = opts.district;
-  const D = DIST[did];
-  const indId = opts.ind || wpick(Object.keys(D.mix), Object.values(D.mix));
+  const mix = areaMix(did);
+  const big = !!opts.big;
+  const indId = opts.ind || wpick(Object.keys(mix), Object.values(mix));
   const ind = IND[indId];
-  let q = clamp(randn() * 0.9 + (opts.qBias || 0), -3, 3);
-  const df = DIFFICULTY[G.difficulty];
-  const fp = df.fraud * (q < -0.7 ? 2.2 : q < 0 ? 1.2 : 0.35) * (opts.fraudMul ?? 1);
+  let q = clamp(randn() * 0.9 + (opts.qBias || 0) + (big ? 0.25 : 0), -3, 3);
+  const fraudBase = (G.cfg || DIFFICULTY[G.difficulty]).fraud;
+  const fp = fraudBase * (q < -0.7 ? 2.2 : q < 0 ? 1.2 : 0.35) * (opts.fraudMul ?? 1) * (big ? 0.55 : 1);
   let fraud = null;
   if (chance(fp)) {
     const type = pickFraudType(indId);
@@ -193,13 +201,14 @@ function genCompany(opts) {
   }
   const drift = fraud ? -0.12 : randn() * 0.06;
   const co = {
-    id: 'c' + (++G.seq.co), name: newCompanyName(indId), rep: personName(), ind: indId, district: did,
+    id: 'c' + (++G.seq.co), name: big ? bigCompanyName(indId, isOvsArea(did)) : newCompanyName(indId), rep: personName(), ind: indId, district: did, big,
     founded: ymOf(G.m).y - randInt(3, 62), fyEnd: wpick([3, 6, 9, 12, 5, 8, 11, 2], [40, 8, 10, 14, 6, 6, 6, 6]),
     q, qStmt: q, mq: clamp(0.5 * q + randn() * 0.85, -2.5, 2.5), drift,
     arBase: ind.ar * Math.exp(randn() * 0.15), invBase: ind.inv * Math.exp(randn() * 0.18), apBase: ind.ap * Math.exp(randn() * 0.15),
     ocaR: uni(0.008, 0.025), ownsRE: chance(ind.re), fraud, years: [], decoy: null, mon: {}, pendingLoan: 0, pendingCapex: 0,
   };
-  co.S0 = clamp(ind.size * Math.exp(randn() * 0.75) * (opts.sizeMul || 1), 0.4e8, 300e8);
+  co.S0 = big ? clamp(ind.size * 120 * Math.exp(randn() * 0.8) * (opts.sizeMul || 1), 100e8, 3e12)
+    : clamp(ind.size * Math.exp(randn() * 0.75) * (opts.sizeMul || 1), 0.4e8, 300e8);
   // 正直な企業にも紛らわしい変化を混ぜる（調査すれば説明がつく）
   if (!fraud && chance(0.14)) {
     co.decoy = chance(0.6)
@@ -219,7 +228,7 @@ function genCompany(opts) {
       if (co.decoy.type === 'ar') co.arBase *= co.decoy.mult; else co.invBase *= co.decoy.mult;
     }
     const ctx = {
-      q: qh, gdp: G.eco.gdp + randn() * 0.8, cond: indCond(indId) * 0.5 + randn() * 0.2, vit: G.city.d[did].vit,
+      q: qh, gdp: G.eco.gdp + randn() * 0.8, cond: indCond(indId) * 0.5 + randn() * 0.2, vit: areaVit(did),
       policy: G.eco.policy, fraudActive, fy: fraud ? fraud.years : 0,
     };
     const { T, hidden } = genYear(co, Tp, ctx);
@@ -231,8 +240,8 @@ function genCompany(opts) {
   const last = co.years[co.years.length - 1];
   co.emp = Math.max(3, Math.round(last.T.S / ind.spe * uni(0.8, 1.2)));
   if (co.ownsRE) {
-    co.reTrue = (last.T.LAND * uni(1.0, 1.6) + (last.T.PPE - last.T.LAND) * 0.3) * (G.city.d[did].land / 100);
-    co.reLand0 = G.city.d[did].land;
+    co.reTrue = (last.T.LAND * uni(1.0, 1.6) + (last.T.PPE - last.T.LAND) * 0.3) * (areaLand(did) / 100);
+    co.reLand0 = areaLand(did);
     co.reEst = co.reTrue * uni(0.78, 1.3);
     co.reLien = chance(0.3); // 他行の先順位抵当
   }
@@ -252,7 +261,7 @@ function advanceCompanyYear(co) {
   const fraudActive = !!f && !f.exposed;
   if (fraudActive) f.years++;
   const ctx = {
-    q: co.q, gdp: G.eco.gdp, cond: indCond(co.ind), vit: G.city.d[co.district].vit, policy: G.eco.policy,
+    q: co.q, gdp: G.eco.gdp, cond: indCond(co.ind), vit: areaVit(co.district), policy: G.eco.policy,
     fraudActive, fy: f ? f.years : 0, newLTD: co.pendingLoan * 0.9, plannedCapex: co.pendingCapex,
   };
   co.pendingLoan = 0; co.pendingCapex = 0;
@@ -414,7 +423,7 @@ function genPerson(did) {
   const termY = clamp(maxTerm - (chance(0.3) ? randInt(0, 10) : 0), 10, 35);
   const otherDebt = chance(0.35) ? roundTo(uni(12e4, 60e4), 1e4) : 0;
   let fraud = null;
-  if (chance(DIFFICULTY[G.difficulty].fraud * 0.6)) fraud = { type: wpick(['income', 'hiddenDebt', 'investment'], [4, 4, 2]), found: false };
+  if (chance((G.cfg || DIFFICULTY[G.difficulty]).fraud * 0.6)) fraud = { type: wpick(['income', 'hiddenDebt', 'investment'], [4, 4, 2]), found: false };
   const repIncome = fraud && fraud.type === 'income' ? roundTo(income * uni(1.25, 1.6), 10e4) : income;
   const hiddenDebt = fraud && fraud.type === 'hiddenDebt' ? roundTo(uni(60e4, 200e4), 1e4) : 0;
   const valueTrue = price * (ptype.startsWith('新築') || ptype === '注文住宅' ? uni(0.82, 0.95) : uni(0.85, 1.05)) * (fraud && fraud.type === 'investment' ? 0.85 : 1);

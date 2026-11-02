@@ -11,5 +11,5 @@
   inp.setAttribute('data-ch', 'importFile');
   document.body.appendChild(inp);
   render();
-  window.Toudori = { get G() { return G; }, render, advance: runAdvance, check: () => integrityCheck() };
+  window.Toudori = { get G() { return G; }, render, advance: runAdvance, check: () => integrityCheck(), show: (name, args) => showModal(name, args || {}) };
 })();

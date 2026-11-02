@@ -8,14 +8,14 @@
 function bankBSRows(s) {
   const g = k => s[k] || 0;
   const cp = s.curProfit || 0;
-  const assets = g('cash') + g('boj') + g('callLoan') + g('securities') + g('loans') + g('tangible') + g('intangible') + g('otherAssets') - g('allowance');
-  const liab = g('depOrd') + g('depTime') + g('callMoney') + g('bojBorrow') + g('taxPayable') + g('divPayable') + g('otherLiab');
+  const assets = g('cash') + g('boj') + g('callLoan') + g('securities') + g('loans') + g('tangible') + g('intangible') + g('goodwill') + g('otherAssets') - g('allowance');
+  const liab = g('depOrd') + g('depTime') + g('depFx') + g('callMoney') + g('bojBorrow') + g('taxPayable') + g('divPayable') + g('otherLiab');
   const eq = g('capital') + g('prefCapital') + g('capSurplus') + g('retained') + cp;
   return [
     ['資産の部', null, 'head'], ['現金預け金', g('cash') + g('boj'), 'i1'], ['うち現金', g('cash'), 'i2'], ['うち日銀預け金', g('boj'), 'i2'],
     ['コールローン', g('callLoan'), 'i1'], ['有価証券（国債）', g('securities'), 'i1'], ['貸出金', g('loans'), 'i1'], ['有形固定資産', g('tangible'), 'i1'],
-    ['無形固定資産', g('intangible'), 'i1'], ['その他資産', g('otherAssets'), 'i1'], ['貸倒引当金', -g('allowance'), 'i1'], ['資産の部合計', assets, 'grand'],
-    ['負債の部', null, 'head'], ['預金', g('depOrd') + g('depTime'), 'i1'], ['うち普通預金', g('depOrd'), 'i2'], ['うち定期預金', g('depTime'), 'i2'],
+    ['無形固定資産', g('intangible'), 'i1'], ['のれん', g('goodwill'), 'i1'], ['その他資産', g('otherAssets'), 'i1'], ['貸倒引当金', -g('allowance'), 'i1'], ['資産の部合計', assets, 'grand'],
+    ['負債の部', null, 'head'], ['預金', g('depOrd') + g('depTime') + g('depFx'), 'i1'], ['うち普通預金', g('depOrd'), 'i2'], ['うち定期預金', g('depTime'), 'i2'], ['うち海外店預金', g('depFx'), 'i2'],
     ['コールマネー', g('callMoney'), 'i1'], ['借用金', g('bojBorrow'), 'i1'], ['未払法人税等', g('taxPayable'), 'i1'], ['未払配当金', g('divPayable'), 'i1'],
     ['その他負債', g('otherLiab'), 'i1'], ['負債の部合計', liab, 'sum'],
     ['純資産の部', null, 'head'], ['資本金', g('capital') + g('prefCapital'), 'i1'], ['うち優先株式（公的資金）', g('prefCapital'), 'i2'], ['資本剰余金', g('capSurplus'), 'i1'],
@@ -27,10 +27,10 @@ function bankPLRows(pl) {
   const s = plSummary(pl);
   return [
     ['経常収益', s.ordRev, 'sum'], ['資金運用収益', g('intLoans') + g('intSec') + g('intCall') + g('intBoj'), 'i1'], ['貸出金利息', g('intLoans'), 'i2'], ['有価証券利息配当金', g('intSec'), 'i2'],
-    ['コールローン利息', g('intCall'), 'i2'], ['預け金利息', g('intBoj'), 'i2'], ['役務取引等収益', g('fees'), 'i1'], ['その他業務収益（国債等債券売却益）', g('bondGain'), 'i1'],
+    ['コールローン利息', g('intCall'), 'i2'], ['預け金利息', g('intBoj'), 'i2'], ['役務取引等収益', g('fees'), 'i1'], ['その他業務収益', g('bondGain') + g('fxGain'), 'i1'], ['国債等債券売却益', g('bondGain'), 'i2'], ['外国為替売買益', g('fxGain'), 'i2'],
     ['その他経常収益', g('recoveries') + g('provRev') + g('otherInc'), 'i1'], ['償却債権取立益・貸倒引当金戻入益', g('recoveries') + g('provRev'), 'i2'],
-    ['経常費用', s.ordExp, 'sum'], ['資金調達費用', g('intDep') + g('intCallM') + g('intBorrow'), 'i1'], ['預金利息', g('intDep'), 'i2'], ['コールマネー利息・借用金利息', g('intCallM') + g('intBorrow'), 'i2'],
-    ['役務取引等費用', g('feeExp'), 'i1'], ['その他業務費用（国債等債券売却損）', g('bondLoss'), 'i1'], ['営業経費', s.opex, 'i1'], ['人件費', g('personnel'), 'i2'], ['物件費', g('premises'), 'i2'],
+    ['経常費用', s.ordExp, 'sum'], ['資金調達費用', g('intDep') + g('intCallM') + g('intBorrow') + g('fundingCost'), 'i1'], ['預金利息', g('intDep'), 'i2'], ['コールマネー利息・借用金利息', g('intCallM') + g('intBorrow'), 'i2'], ['外貨調達費用（為替スワップ）', g('fundingCost'), 'i2'],
+    ['役務取引等費用', g('feeExp'), 'i1'], ['その他業務費用', g('bondLoss') + g('fxLoss'), 'i1'], ['国債等債券売却損', g('bondLoss'), 'i2'], ['外国為替売買損', g('fxLoss'), 'i2'], ['営業経費', s.opex, 'i1'], ['人件費', g('personnel'), 'i2'], ['物件費', g('premises'), 'i2'],
     ['税金', g('taxes'), 'i2'], ['減価償却費', g('depreciation'), 'i2'], ['預金保険料', g('depInsurance'), 'i2'],
     ['その他経常費用', g('provExp') + g('writeoff') + g('otherExp'), 'i1'], ['貸倒引当金繰入額', g('provExp'), 'i2'], ['貸出金償却', g('writeoff'), 'i2'], ['その他', g('otherExp'), 'i2'],
     ['経常利益', s.ordinary, 'sum'], ['特別利益', g('extraGain'), 'i1'], ['特別損失', g('extraLoss'), 'i1'], ['税引前当期純利益', s.pretax, 'sum'], ['法人税、住民税及び事業税', s.tax, 'i1'], ['当期純利益', s.net, 'grand'],
@@ -97,24 +97,28 @@ SCREENS.finance = () => {
         <tr><td>資本金・剰余金・当期利益</td><td class="n">${fmtYen(p.eq)}</td></tr>
         <tr><td>一般貸倒引当金（算入上限あり）</td><td class="n">${fmtYen(p.ga)}</td></tr>
         <tr><td>無形固定資産（ソフトウェア）の控除</td><td class="n neg">${MINUS}${fmtYen(p.intangible)}</td></tr>
+        ${p.goodwill ? `<tr><td>のれんの控除</td><td class="n neg">${MINUS}${fmtYen(p.goodwill)}</td></tr>` : ''}
         <tr class="total"><td>コア資本の額</td><td class="n">${fmtYen(p.core)}</td></tr>
         <tr class="sec"><td colspan="2">リスク・アセット</td></tr>
         <tr><td>事業性融資（1億円以下は75%、保証協会付きは10%）</td><td class="n">${fmtYen(r.biz)}</td></tr>
         <tr><td>住宅ローン（35%）</td><td class="n">${fmtYen(r.mort)}</td></tr>
         <tr><td>プロジェクトファイナンス（100%）</td><td class="n">${fmtYen(r.proj)}</td></tr>
+        ${r.seg ? `<tr><td>全国の店舗網の小口融資（個人35%・中小企業75%）</td><td class="n">${fmtYen(r.seg)}</td></tr>` : ''}
+        ${r.ovs ? `<tr><td>海外の小口融資（カントリーリスクで加算）</td><td class="n">${fmtYen(r.ovs)}</td></tr>` : ''}
         <tr><td>延滞・破綻債権（引当後150%）</td><td class="n">${fmtYen(r.def)}</td></tr>
         <tr><td>コールローン（20%）・固定資産等（100%）</td><td class="n">${fmtYen(r.call + r.fixed)}</td></tr>
         <tr><td>オペレーショナル・リスク相当額</td><td class="n">${fmtYen(r.op)}</td></tr>
+        ${r.fx ? `<tr><td>為替リスク相当額（ヘッジしていない外貨）</td><td class="n">${fmtYen(r.fx)}</td></tr>` : ''}
         <tr class="total"><td>リスク・アセット合計</td><td class="n">${fmtYen(r.total)}</td></tr>
-        <tr class="grand"><td>自己資本比率</td><td class="n ${cr < 4 ? 'neg' : ''}">${fmtPct(cr)}</td></tr></tbody></table>
-        <p class="note">現金・日銀預け金・国債のリスクウェイトは0%。国内基準行は4%以上が必要です。</p></div>
+        <tr class="grand"><td>自己資本比率</td><td class="n ${cr < reqCR() ? 'neg' : ''}">${fmtPct(cr)}</td></tr></tbody></table>
+        <p class="note">現金・日銀預け金・国債のリスクウェイトは0%。${STAGES[stageOf()].name}は${STAGES[stageOf()].basis}で${fmtPct(reqCR(), 1)}以上が必要です。</p></div>
         <div class="stack"><div class="panel"><div class="pb"><b>早期是正措置の区分</b><table class="t compact" style="margin-top:6px"><tbody>
-          <tr class="${cr >= 4 ? 'sel' : ''}"><td>4%以上</td><td>対象外</td></tr><tr class="${cr < 4 && cr >= 2 ? 'sel' : ''}"><td>2%以上4%未満</td><td>第1区分：経営改善計画の提出</td></tr>
-          <tr class="${cr < 2 && cr >= 0 ? 'sel' : ''}"><td>0%以上2%未満</td><td>第2区分：新規融資の抑制など</td></tr><tr class="${cr < 0 ? 'sel' : ''}"><td>0%未満</td><td>第3区分：業務停止命令</td></tr></tbody></table></div></div>
+          <tr class="${cr >= reqCR() ? 'sel' : ''}"><td>${fmtPct(reqCR(), 1)}以上</td><td>対象外</td></tr><tr class="${cr < reqCR() && cr >= reqCR() / 2 ? 'sel' : ''}"><td>${fmtPct(reqCR() / 2, 2)}以上${fmtPct(reqCR(), 1)}未満</td><td>第1区分：経営改善計画の提出</td></tr>
+          <tr class="${cr < reqCR() / 2 && cr >= 0 ? 'sel' : ''}"><td>0%以上${fmtPct(reqCR() / 2, 2)}未満</td><td>第2区分：新規融資の抑制など</td></tr><tr class="${cr < 0 ? 'sel' : ''}"><td>0%未満</td><td>第3区分：業務停止命令</td></tr></tbody></table></div></div>
         <div class="panel"><div class="pb"><b>増資（第三者割当）</b><p class="small muted" style="margin:4px 0 8px">株価 ${fmtNum(G.stock.price, 0)}円・時価総額 ${fmtYen(cap)}。発行価格は株価の92%。既存株主の持分は薄まります。</p>
           <div class="row"><input type="number" id="raiseAmt" min="1" step="1" value="${Math.max(1, Math.round(cap * 0.1 / 1e8))}" style="width:90px"><span class="unit">億円</span>${btn('増資する', 'raiseAsk', {}, 'primary')}</div></div></div>
-        ${G.flags.publicFunds ? `<div class="panel"><div class="pb"><b>公的資金</b><p class="small">優先株式 ${fmtYen(B('prefCapital'))}。返済後も自己資本比率8%以上を保てる場合に返済できます。</p>${btn('公的資金を返済する', 'repayPF', {}, 'sm')}</div></div>` : ''}
-        ${G.flags.publicOffer && !G.flags.publicFunds ? `<div class="panel"><div class="pb"><b>公的資金の申請</b><p class="small">自己資本比率が4%を下回ったため、公的資金の注入を申請できます。</p>${btn('申請を検討する', 'publicFundsShow', {}, 'sm danger')}</div></div>` : ''}</div></div>`;
+        ${G.flags.publicFunds ? `<div class="panel"><div class="pb"><b>公的資金</b><p class="small">優先株式 ${fmtYen(B('prefCapital'))}。返済後も自己資本比率${fmtPct(Math.max(8, reqCR() + 2), 1)}以上を保てる場合に返済できます。</p>${btn('公的資金を返済する', 'repayPF', {}, 'sm')}</div></div>` : ''}
+        ${G.flags.publicOffer && !G.flags.publicFunds ? `<div class="panel"><div class="pb"><b>公的資金の申請</b><p class="small">自己資本比率が${fmtPct(reqCR(), 1)}を下回ったため、公的資金の注入を申請できます。</p>${btn('申請を検討する', 'publicFundsShow', {}, 'sm danger')}</div></div>` : ''}</div></div>`;
       break;
     }
     case 'npl': {
@@ -278,7 +282,7 @@ MODALS.yearEnd = a => {
   const pl = rep.pl;
   let divHtml;
   if (d && d.fy === a.fy) {
-    if (!d.allowed) divHtml = `<p class="callout bad">${G.flags.publicFunds ? '公的資金の注入中のため' : pl.net <= 0 ? '当期純損失のため' : '自己資本比率が6%未満のため'}、今期は無配とします。</p>`;
+    if (!d.allowed) divHtml = `<p class="callout bad">${G.flags.publicFunds ? '公的資金の注入中のため' : pl.net <= 0 ? '当期純損失のため' : `自己資本比率が${fmtPct(reqCR() + 2, 1)}未満のため`}、今期は無配とします。</p>`;
     else {
       const opts = [0, 0.1, 0.2, 0.3, 0.4, 0.5];
       const cur = UI.divSel ?? 0.3;
@@ -318,18 +322,18 @@ MODALS.fsa = a => {
     ${h.findings.length ? `<table class="t"><thead><tr><th>指摘事項</th><th>重要度</th></tr></thead><tbody>${h.findings.map(f => `<tr><td>${esc(f.text)}</td><td>${tag(['', '軽微', '重要', '重大'][f.sev], f.sev >= 3 ? 'bad' : f.sev === 2 ? 'warn' : '')}</td></tr>`).join('')}</tbody></table>` : '<p>指摘事項はありませんでした。日頃の管理態勢が評価されました。</p>'}
     ${h.addProv > 0 ? `<p class="callout bad" style="margin-top:10px">債務者区分の修正により、貸倒引当金を${fmtYen(h.addProv)}積み増しました。</p>` : ''}
     ${h.grade === 'D' ? '<p class="callout bad" style="margin-top:10px">業務改善命令を受けました。1年間は新規出店ができず、信用度が大きく低下します。</p>' : ''}`;
-  return modalFrame('金融庁検査の結果', body, btn('閉じる', 'closeModal', {}, 'primary'));
+  return modalFrame('金融庁検査の結果', scene('fsa', { cls: 'modal-art', alt: '' }) + body, btn('閉じる', 'closeModal', {}, 'primary'));
 };
 MODALS.agm = a => {
   const body = `<p style="margin:0 0 8px">頭取の再任議案の賛成率：<b style="font-size:20px" class="${a.approval < 60 ? 'neg' : ''}">${fmtNum(a.approval, 1)}%</b></p>${meter(a.approval, 100, a.approval < 60 ? 'bad' : a.approval < 75 ? 'warn' : '')}
     <p class="small" style="margin-top:10px">株主満足度 ${fmtNum(a.sat, 0)}／100。ROE、配当、株価の動き、不祥事が評価されます。</p>
     ${a.warn ? '<p class="callout bad">株主の不満は限界に近づいています。来年も業績が振るわなければ、再任議案は否決されるでしょう。</p>' : a.sat < 30 ? '<p class="callout bad">経営陣への厳しい質問が相次ぎました。</p>' : '<p class="callout ok">総会は円満に終了しました。</p>'}`;
-  return modalFrame('定時株主総会', body, btn('閉じる', 'closeModal', {}, 'primary'), { size: 'narrow' });
+  return modalFrame('定時株主総会', scene('agm', { cls: 'modal-art', alt: '' }) + body, btn('閉じる', 'closeModal', {}, 'primary'));
 };
 MODALS.publicFunds = () => {
   const r = rwaBreakdown();
-  const need = Math.max(30e8, Math.round(r.total * 0.09 - coreCapitalParts(r).core));
-  const body = `<p>自己資本比率が国内基準の4%を下回りました。このままでは業務停止命令を受けるおそれがあります。</p>
+  const need = Math.max(30e8, Math.round(r.total * (reqCR() + 5) / 100 - coreCapitalParts(r).core));
+  const body = `<p>自己資本比率が${STAGES[stageOf()].basis}の${fmtPct(reqCR(), 1)}を下回りました。このままでは業務停止命令を受けるおそれがあります。</p>
     <p>預金保険機構を通じて、優先株式の形で公的資金<b>${fmtYen(need)}</b>の注入を申請できます。</p>
     <ul class="small"><li>経営健全化計画の提出が義務付けられ、信用度が下がります</li><li>完済まで配当はできず、給与水準は90%以下に抑えられます</li><li>経営評価で減点されます</li></ul>`;
   return modalFrame('公的資金の注入', body, btn('申請しない', 'closeModal') + btn('申請する', 'pfAccept', {}, 'danger'), { size: 'narrow' });
@@ -343,10 +347,10 @@ function evalHtml() {
 }
 MODALS.gameover = () => {
   const o = OVER_TEXT[G.over.kind];
-  const body = `<p style="font-size:17px;margin:0 0 6px;font-family:var(--f-doc)"><b class="neg">${o.title}</b>（${ymLabel(G.over.m)}）</p><p>${o.text}</p><hr class="sep"><h3 style="font-size:14px;margin:0 0 8px">在任中の経営評価</h3>${evalHtml()}`;
+  const body = `${scene('crisis', { cls: 'modal-art', alt: '' })}<p style="font-size:17px;margin:0 0 6px;font-family:var(--f-doc)"><b class="neg">${o.title}</b>（${ymLabel(G.over.m)}）</p><p>${o.text}</p><hr class="sep"><h3 style="font-size:14px;margin:0 0 8px">在任中の経営評価</h3>${evalHtml()}`;
   return modalFrame('経営の終わり', body, btn('セーブから再開', 'menu') + btn('新しいゲーム', 'newGameGo', {}, 'primary'), { noClose: false });
 };
-MODALS.term = () => modalFrame('任期満了', `<p>就任から10年。${esc(G.bankName)}頭取としての任期を全うしました。</p>${evalHtml()}<p class="note" style="margin-top:10px">このまま続投して経営を続けることもできます。</p>`, btn('続投する', 'closeModal', {}, 'primary'), { size: 'wide' });
+MODALS.term = () => modalFrame('任期満了', `${scene(STAGE_ART[G.stage || 0], { cls: 'modal-art', alt: '' })}<p>就任から${G.termYears}年。${esc(G.bankName)}頭取としての任期を全うしました。</p>${evalHtml()}<p class="note" style="margin-top:10px">このまま続投して経営を続けることもできます。</p>`, btn('続投する', 'closeModal', {}, 'primary'), { size: 'wide' });
 
 MODALS.menu = () => {
   const slot = i => {
@@ -367,8 +371,9 @@ MODALS.menu = () => {
 };
 
 const HELP = [
-  ['ゲームの目的', `<p>あなたは、経営破綻した${OLD_UNION}の事業を引き継いで生まれた<b>${DEFAULT_BANK}</b>（名前は変更可）の初代頭取です。任期は10年。地域の企業と家計にお金を回して${CITY_NAME}を育てながら、健全で利益の出る銀行に成長させてください。</p>
-    <p>次のどれかで経営は終わります：<b>債務超過</b>、<b>自己資本比率がマイナス</b>（業務停止命令）、<b>資金繰りの破綻</b>、<b>株主総会での解任</b>。10年後には経営評価（S〜D）が出ます。</p>`],
+  ['ゲームの目的', `<p>あなたは、経営破綻した${OLD_UNION}の事業を引き継いで生まれた<b>${DEFAULT_BANK}</b>（名前は変更可）の初代頭取です。任期は10年（カスタムスタートでは20年・30年・無期限も選べます）。地域の企業と家計にお金を回して${CITY_NAME}を育てながら、健全で利益の出る銀行に成長させてください。</p>
+    <p>力をつければ<b>メガバンク</b>に格上げして全国へ、さらに<b>テラバンク</b>として世界へ打って出られます（「メガバンク・テラバンク」の項を参照）。</p>
+    <p>次のどれかで経営は終わります：<b>債務超過</b>、<b>自己資本比率がマイナス</b>（業務停止命令）、<b>資金繰りの破綻</b>、<b>株主総会での解任</b>。任期の終わりには経営評価（S〜D）が出ます。</p>`],
   ['1か月の流れ', `<ol><li><b>融資審査</b>：新しい申込に調査を指示し、条件を決めて承認か謝絶。回答期限は翌月末。</li><li><b>与信管理</b>：届いた決算書を検証し、債務者区分（自己査定）を見直す。返済猶予の申し出に回答。</li><li><b>経営判断</b>：金利、国債運用、店舗・金庫・システム・人員への投資、開発案件への参加。</li><li><b>月末を締めて翌月へ</b>：利息の受払い、預金の増減、返済と延滞、経費、引当金、資金繰りが自動で処理され、月次報告が出ます。</li></ol>
     <p>3月末は決算。監査法人の監査、税金の計上、配当の決定があります。6月は株主総会です。</p>`],
   ['融資審査のコツ', `<p>稟議書には直近3期の損益計算書・貸借対照表・キャッシュ・フロー計算書と財務分析が載っています。</p>
@@ -405,41 +410,84 @@ MODALS.help = a => {
   const nav = `<div class="subtabs">${HELP.map(([t], k) => `<button type="button" data-act="helpSec" data-sec="${k}" aria-pressed="${k === i}">${t}</button>`).join('')}</div>`;
   return modalFrame('遊び方', `${nav}<div style="max-width:90ch">${HELP[i][1]}</div>`, (i > 0 ? btn('前へ', 'helpSec', { sec: i - 1 }) : '') + (i < HELP.length - 1 ? btn('次へ', 'helpSec', { sec: i + 1 }, 'primary') : btn('閉じる', 'closeModal', {}, 'primary')), { size: 'wide' });
 };
-MODALS.intro = () => modalFrame(`${esc(G.bankName)}へようこそ`, `<p>${ymLabel(0)}、${esc(G.ceoName)}頭取の任期が始まりました。手始めに次のことをしてみましょう。</p>
+MODALS.intro = () => (G.stage || 0) >= 1 ? modalFrame(`${esc(G.bankName)}へようこそ`, `${scene(STAGE_ART[G.stage], { cls: 'modal-art', alt: '' })}<p>${ymLabel(0)}、${esc(G.ceoName)}頭取の任期が始まりました。${STAGES[G.stage].name}として、まず次のことを確かめましょう。</p>
+  <ol><li><b>経営戦略</b>で、全国${G.stage >= 2 ? 'と海外' : ''}の店舗網と維持基準（自己資本比率${fmtPct(reqCR(), 1)}など）を確かめる。</li>
+  <li><b>融資審査</b>で、大企業からの大口の申込を審査する。大企業でも粉飾はあります。</li>
+  <li>汐見市の小口の申込は、経営戦略の「融資方針・権限」で支店長に任せられます（最初から委譲済み）。</li>
+  <li>決裁が済んだら右上の<b>「月末を締めて翌月へ」</b>。</li></ol>
+  <p class="note">遊び方はいつでも右上の「遊び方」から読めます。進行はこのブラウザに自動保存されます。</p>`, btn('遊び方を読む', 'helpSec', { sec: 0 }) + btn('始める', 'closeModal', {}, 'primary')) : modalFrame(`${esc(G.bankName)}へようこそ`, `${scene('stage0', { cls: 'modal-art', alt: '' })}<p>${ymLabel(0)}、${esc(G.ceoName)}頭取の任期が始まりました。手始めに次のことをしてみましょう。</p>
   <ol><li><b>融資審査</b>で届いている申込を開き、決算書を読む。気になる点があれば調査を指示し、承認か謝絶を決める。</li>
   <li><b>与信管理</b>で承継した融資先を確認する。「システム判定」より区分が甘い先がないか。気になる先は期中モニタリングの調査で実態を確かめる。</li>
   <li><b>${CITY_NAME}</b>の地図で、どの地区に店舗を出すと良さそうか眺める。</li>
   <li>決裁が済んだら右上の<b>「月末を締めて翌月へ」</b>。</li></ol>
   <p class="note">遊び方はいつでも右上の「遊び方」から読めます。進行はこのブラウザに自動保存されます。</p>`, btn('遊び方を読む', 'helpSec', { sec: 0 }) + btn('始める', 'closeModal', {}, 'primary'));
 
-/* ---------- 開始画面（辞令） ---------- */
-UI.start = { ceo: '', bank: DEFAULT_BANK, diff: 'normal' };
+/* ---------- 開始画面（辞令・カスタムスタート） ---------- */
+UI.start = { ceo: '', bank: DEFAULT_BANK, diff: 'normal', preset: 'standard', custom: Object.assign({}, CUSTOM_PRESETS.standard), open: false, seed: '' };
+const CUSTOM_FIELDS = [
+  ['stage', '開始する業態'], ['capMul', '資本'], ['depMul', '預金の規模'], ['quality', '承継する貸出の質'], ['branches', `${CITY_NAME}の店舗`],
+  ['sys', 'システム'], ['econ', '景気'], ['rate', '金利の水準'], ['fraud', '粉飾企業の多さ'], ['term', '任期'],
+];
+function startStoreInputs() {
+  const s = UI.start;
+  s.ceo = $('#stCeo')?.value ?? s.ceo;
+  s.bank = $('#stBank')?.value ?? s.bank;
+  s.seed = $('#stSeed')?.value ?? s.seed;
+}
 function renderStart() {
   let meta = null;
   try { meta = JSON.parse(lsGet(LS.meta('a')) || 'null'); } catch (e) { meta = null; }
-  const s = UI.start;
-  return `<div class="appoint">
-    <h1>辞令</h1><div class="gametitle">頭取 ― 地方銀行経営シミュレーション</div>
+  const s = UI.start, cu = s.custom;
+  const st = cu.stage | 0;
+  const term = cu.term ? `${['', '', '', '', '', '', '', '', '', '', '十', '', '', '', '', '', '', '', '', '', '二十', '', '', '', '', '', '', '', '', '', '三十'][cu.term] || cu.term}年とする` : '定めない';
+  const mission = st === 0 ? `経営破綻した${OLD_UNION}の事業を承継し、${CITY_NAME}の地域経済を支える銀行として健全に成長させること。`
+    : st === 1 ? `${CITY_NAME}を発祥とするメガバンク・グループを率い、全国に広がる店舗網と大企業との取引を通じて、日本経済を支えること。`
+      : `世界に拠点を持つテラバンクを率い、国内外の預金と貸出、為替と各国の危機を乗りこなし、グループを健全に成長させること。`;
+  const presets = Object.entries(CUSTOM_PRESETS).map(([k, P]) => `<button type="button" class="preset${s.preset === k ? ' on' : ''}" data-act="stPreset" data-v="${k}" aria-pressed="${s.preset === k}"><b>${P.name}</b><span>${esc(P.desc)}</span></button>`).join('')
+    + `<button type="button" class="preset${s.preset === 'custom' ? ' on' : ''}" data-act="stOpen" aria-pressed="${s.preset === 'custom'}"><b>カスタム</b><span>開始の条件を一つずつ決める。</span></button>`;
+  const fields = CUSTOM_FIELDS.map(([k, label]) => `<label class="field"><span>${label}</span><select data-ch="stCustom" data-k="${k}">${CUSTOM_OPTS[k].map(([v, l]) => `<option value="${v}"${String(cu[k]) === String(v) ? ' selected' : ''}>${l}</option>`).join('')}</select></label>`).join('');
+  return `${scene('hero', { cls: 'hero', alt: '夜明けの港町と、時計塔のある銀行の本店' })}<div class="appoint${artSrc('hero') ? ' with-hero' : ''}">
+    <h1>辞令</h1><div class="gametitle">頭取 ― 銀行経営シミュレーション</div>
     <div class="body-text"><label><input type="text" id="stCeo" value="${esc(s.ceo)}" placeholder="氏名" maxlength="12" aria-label="あなたの氏名"></label>　殿<br>
     貴殿を <label><input type="text" id="stBank" value="${esc(s.bank)}" maxlength="14" aria-label="銀行の名前" style="width:10em"></label> の代表取締役頭取に任命する。<br>
-    経営破綻した${OLD_UNION}の事業を承継し、${CITY_NAME}の地域経済を支える銀行として健全に成長させること。<br>
-    任期は${warekiYear(START_YEAR)}${START_MONTH}月から十年とする。</div>
+    ${mission}<br>
+    任期は${warekiYear(START_YEAR)}${START_MONTH}月から${term}。</div>
     <div class="issuer">${warekiYear(START_YEAR)}${START_MONTH}月1日<br>取締役会</div>
     <div class="opts"><div class="field"><span>難易度</span><div class="seg" role="radiogroup">${Object.entries(DIFFICULTY).map(([k, d]) => `<button type="button" data-act="stDiff" data-v="${k}" aria-pressed="${s.diff === k}">${d.name}</button>`).join('')}</div>
-    <span class="small muted">${{ easy: '粉飾企業が少なく、金融危機も起きにくい。資本に余裕がある。', normal: '標準的な難しさ。', hard: '粉飾企業が多く、景気の波も荒い。資本が薄い。' }[s.diff]}</span></div></div>
+    <span class="small muted">${{ easy: '金融危機が起きにくく、資本に余裕がある。', normal: '標準的な難しさ。', hard: '景気の波が荒く、金融庁も厳しい。資本が薄い。' }[s.diff]}</span></div>
+    <div class="field"><span>始め方</span><div class="presets">${presets}</div></div>
+    ${s.open || s.preset === 'custom' ? `<div class="custom-grid">${fields}<label class="field"><span>シード（同じ数字なら同じ展開）</span><input type="text" id="stSeed" value="${esc(s.seed)}" placeholder="空欄でランダム" inputmode="numeric" style="width:10em"></label></div>` : `<button type="button" class="linkish small" data-act="stOpen">条件を細かく決める</button>`}</div>
     <div class="start">${btn('就任する', 'startGame', {}, 'primary')}${meta && !meta.over ? btn(`続きから（${esc(meta.bank)}・${ymLabel(meta.m)}）`, 'loadAuto') : ''}${btn('ファイルから読み込む', 'importSave')}${btn('遊び方', 'help')}</div>
   </div>`;
 }
 Object.assign(ACTIONS, {
-  stDiff: d => { UI.start.ceo = $('#stCeo')?.value || ''; UI.start.bank = $('#stBank')?.value || DEFAULT_BANK; UI.start.diff = d.v; render(); },
+  stDiff: d => { startStoreInputs(); UI.start.diff = d.v; render(); },
+  stPreset: d => { startStoreInputs(); UI.start.preset = d.v; UI.start.custom = Object.assign({}, CUSTOM_PRESETS[d.v]); render(); },
+  stOpen: () => { startStoreInputs(); UI.start.open = true; UI.start.preset = 'custom'; render(); },
   startGame: () => {
-    const ceo = ($('#stCeo')?.value || '').trim() || '汐見 太郎';
-    let bank = ($('#stBank')?.value || '').trim() || DEFAULT_BANK;
-    if (!/銀行$/.test(bank)) bank += '銀行';
-    newGame({ ceoName: ceo, bankName: bank, difficulty: UI.start.diff });
-    UI.tab = 'dash'; UI.appId = null;
+    startStoreInputs();
+    const s = UI.start;
+    const ceo = (s.ceo || '').trim() || '汐見 太郎';
+    let bank = (s.bank || '').trim() || DEFAULT_BANK;
+    if (!/銀行$|グループ$|フィナンシャル/.test(bank)) bank += '銀行';
+    const seedN = parseInt(String(s.seed).replace(/[^0-9]/g, ''), 10);
+    const opts = { ceoName: ceo, bankName: bank, difficulty: s.diff };
+    if (Number.isFinite(seedN)) opts.seed = seedN;
+    if (s.preset !== 'standard' || s.open) opts.custom = Object.assign({}, s.custom);
+    newGame(opts);
+    UI.tab = 'dash'; UI.appId = null; UI.netSel = null; UI.netView = G.stage >= 2 ? 'ovs' : 'nat';
     render();
     autosave();
     showModal('intro');
+  },
+});
+Object.assign(CHANGES, {
+  stCustom: el => {
+    startStoreInputs();
+    const k = el.dataset.k;
+    const opt = CUSTOM_OPTS[k].find(([v]) => String(v) === el.value);
+    UI.start.custom[k] = opt ? opt[0] : el.value;
+    UI.start.preset = 'custom';
+    render();
   },
 });

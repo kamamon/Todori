@@ -2,7 +2,7 @@
 const { chromium } = require('playwright');
 const path = require('path');
 const url = 'file://' + path.join(__dirname, '..', 'index.html');
-const months = +(process.argv[2] || 36), seed = +(process.argv[3] || 1);
+const months = +(process.argv[2] || 36), seed = +(process.argv[3] || 1), preset = process.argv[4] || 'standard';
 (async () => {
   const browser = await chromium.launch();
   const page = await (await browser.newContext({ viewport: { width: 1280, height: 900 } })).newPage();
@@ -11,11 +11,12 @@ const months = +(process.argv[2] || 36), seed = +(process.argv[3] || 1);
   page.on('console', m => { if (m.type() === 'error' && !/fonts|ERR_|net::/.test(m.text())) errors.push('console: ' + m.text()); });
   await page.route('**/fonts.g*/**', r => r.abort());
   await page.goto(url);
+  if (preset !== 'standard') await page.click(`[data-act="stPreset"][data-v="${preset}"]`);
   await page.click('[data-act="startGame"]');
   const res = await page.evaluate(async ({ months, seed }) => {
     let s = seed;
     const rnd = () => ((s = (s * 1103515245 + 12345) % 2147483648) / 2147483648);
-    const skip = /^(newGameGo|newGameConfirm|importSave|exportSave|loadAuto|loadSlot|theme|advance|advanceNow|scrim)$/;
+    const skip = /^(newGameGo|newGameConfirm|importSave|exportSave|loadAuto|loadSlot|theme|advance|advanceNow|scrim|go)$/;
     const T = window.Toudori;
     let clicks = 0;
     const integ = [];
@@ -57,7 +58,7 @@ const months = +(process.argv[2] || 36), seed = +(process.argv[3] || 1);
     }
     return { clicks, m: T.G.m, over: T.G.over && T.G.over.kind, integ };
   }, { months, seed });
-  console.log('fuzz2 seed', seed, JSON.stringify(res), 'errors', errors.length);
+  console.log('fuzz2', preset, 'seed', seed, JSON.stringify(res), 'errors', errors.length);
   errors.slice(0, 8).forEach(e => console.log(' -', e));
   await browser.close();
 })();

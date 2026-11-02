@@ -13,7 +13,7 @@ const UI = {
 const ACTIONS = {}, CHANGES = {}, INPUTS = {}, SCREENS = {}, MODALS = {};
 
 const TABS = [
-  ['dash', '頭取室'], ['loans', '融資審査'], ['portfolio', '与信管理'], ['city', CITY_NAME],
+  ['dash', '頭取室'], ['strategy', '経営戦略'], ['loans', '融資審査'], ['portfolio', '与信管理'], ['city', CITY_NAME],
   ['rates', '金利・預金'], ['market', '市場運用'], ['facility', '店舗・金庫'], ['system', 'システム'],
   ['hr', '人事・営業'], ['finance', '決算・財務'], ['audit', '監査・検査'], ['news', '経済・ニュース'],
 ];
@@ -72,11 +72,12 @@ function afterRender() {
 function renderMast() {
   const { y, mo } = ymOf(G.m);
   const fy = fyOf(G.m);
-  const yearsLeft = TERM_YEARS - fy;
+  const yearsLeft = (G.termYears || 0) - fy;
   const over = !!G.over;
+  const st = G.stage || 0;
   return `<header class="mast">
-    <div class="mast-brand">${SEAL_SVG}<div style="min-width:0"><div class="bank-name">${esc(G.bankName)}</div><div class="bank-sub">頭取 ${esc(G.ceoName)}<span class="hide-m">　${bankClass().name}</span></div></div></div>
-    <div class="mast-date"><div class="wareki">${warekiLabel(G.m)}</div><div class="sub">${y}年${mo}月　${fyLabel(fy)}${yearsLeft > 0 ? `・任期あと${yearsLeft}年` : '・任期満了後'}</div></div>
+    <div class="mast-brand">${SEAL_SVG}<div style="min-width:0"><div class="bank-name">${esc(G.bankName)}${st ? `<span class="stage-badge s${st}">${STAGES[st].name}</span>` : ''}</div><div class="bank-sub">頭取 ${esc(G.ceoName)}<span class="hide-m">　${st ? STAGES[st].area + 'で営業' : bankClass().name}</span></div></div></div>
+    <div class="mast-date"><div class="wareki">${warekiLabel(G.m)}</div><div class="sub">${y}年${mo}月　${fyLabel(fy)}${!G.termYears ? '' : yearsLeft > 0 ? `・任期あと${yearsLeft}年` : '・任期満了後'}</div></div>
     <div class="mast-actions"><button type="button" class="mbtn" data-act="menu">メニュー</button><button type="button" class="mbtn" data-act="help">遊び方</button>
     <button type="button" class="btn-advance" data-act="advance"${over ? ' disabled' : ''}>月末を締めて翌月へ</button></div>
   </header>`;
@@ -91,7 +92,7 @@ function renderStrip() {
     ['総資産', fmtYen(totalAssets()), prev ? deltaTxt(totalAssets() - prev.ta) : ''],
     ['預金', fmtYen(deposits()), prev ? deltaTxt(deposits() - prev.dep) : ''],
     ['貸出金', fmtYen(B('loans')), prev ? deltaTxt(B('loans') - prev.loans) : ''],
-    ['自己資本比率', `<span class="${cr < 4 ? 'neg' : ''}">${fmtPct(cr)}</span>`, `<span class="muted">国内基準4%</span>`],
+    ['自己資本比率', `<span class="${cr < reqCR() ? 'neg' : ''}">${fmtPct(cr)}</span>`, `<span class="muted">${STAGES[G.stage || 0].basis.replace('＋G-SIBバッファー', '')}${fmtNum(reqCR(), 1)}%</span>`],
     ['当期純利益（累計）', `<span class="${ytd < 0 ? 'neg' : ''}">${fmtYen(ytd)}</span>`, `<span class="muted">${fyLabel(fy)}</span>`],
     ['信用度', `${fmtNum(G.trust, 0)}<span class="unit"> /100</span>`, prev ? deltaTxt(G.trust - prev.trust, v => fmtNum(v, 1)) : ''],
     ['格付', RATINGS[G.ratingIdx], `<span class="muted">株価 ${fmtNum(G.stock.price, 0)}円</span>`],
@@ -109,6 +110,12 @@ function tabBadge(id) {
     }
     case 'city': return PROJECTS.some(P => G.city.projects[P.id]?.status === 'offered') ? '<span class="badge">1</span>' : '';
     case 'audit': return G.inbox.some(x => x.type === 'fsaNotice') ? '<span class="badge alert">!</span>' : '';
+    case 'strategy': {
+      const si = G.stageInfo;
+      if (si && si.strikes) return '<span class="badge alert">!</span>';
+      if (si && !si.review && (G.stage || 0) < 2 && canApplyUpgrade().ok) return '<span class="badge">↑</span>';
+      return '';
+    }
     default: return '';
   }
 }
@@ -268,7 +275,9 @@ function applyTheme(t) {
 function requestAdvance() {
   if (!G || G.over) return;
   if (G.pendingDividend) { showModal('yearEnd', { fy: G.pendingDividend.fy }); return; }
-  const expiring = G.apps.filter(a => a.status === 'pending' && a.exp <= G.m).length;
+  const d = G.policy && G.policy.delegate;
+  const delegated = a => d && d.on && a.amountReq <= d.max && !(a.kind === 'biz' && G.companies[a.coId] && G.companies[a.coId].big);
+  const expiring = G.apps.filter(a => a.status === 'pending' && a.exp <= G.m && !delegated(a)).length;
   const urgent = G.inbox.filter(x => x.type === 'resched' || x.type === 'refi').length;
   if (UI.settings.confirmAdvance && (expiring || urgent)) {
     const parts = [];

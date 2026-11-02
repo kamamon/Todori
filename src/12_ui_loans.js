@@ -37,15 +37,18 @@ const RATIO_ROWS = [
   ['粉飾チェックの視点', null], ['売上高の伸び', r => r.salesG, '%'], ['売上債権の伸び', r => r.arG, '%'], ['営業CF÷当期純利益', r => r.ocfNi, '倍'],
   ['減価償却率', r => r.depRate, '%', 'depRate'], ['税負担率（法人税等÷税引前利益）', r => r.taxRate, '%', 'taxRate'], ['その他流動資産÷売上高', r => r.ocaS, '%'], ['支払利息÷有利子負債', r => r.impliedInt, '%'],
 ];
+let FS_BIG = false; // 大企業の決算書は百万円単位で表示する
+const fmtFS = v => (FS_BIG ? fmtM(v) : fmtK(v));
 function fmtRatio(v, unit) {
   if (v === undefined || v === null || isNaN(v)) return '―';
   if (!isFinite(v)) return unit === '年' ? '返済不能' : '―';
-  if (unit === '千円') return fmtK(v);
+  if (unit === '千円') return fmtFS(v);
   const d = unit === '回' || unit === '倍' || unit === '年' || unit === 'か月' ? 1 : unit === '日' ? 0 : 1;
   return (v < 0 ? '△' : '') + fmtNum(Math.abs(v), d) + (unit === '%' ? '%' : unit === '千円' ? '' : unit);
 }
 
 function companyFS(co, view, showTrue, n = 3) {
+  FS_BIG = !!co.big;
   const years = co.years.slice(-(n + 1));
   const disp = years.slice(1);
   const found = co.fraud && co.fraud.found;
@@ -60,7 +63,7 @@ function companyFS(co, view, showTrue, n = 3) {
       const cells = rs.map(r => `<td>${fmtRatio(f(r), unit)}</td>`).join('');
       return `<tr class="i1"><td>${name}</td>${cells}<td class="muted">${avgKey && avg[avgKey] !== undefined ? fmtRatio(avg[avgKey], unit) : '―'}</td></tr>`;
     }).join('');
-    return `<div class="tbl-wrap"><table class="fs"><thead><tr><th>指標${showTrue ? '（実態）' : ''}</th>${heads}<th>業界平均</th></tr></thead><tbody>${body}</tbody></table></div><p class="note">業界平均は中小企業の目安。決算書は千円単位。</p>`;
+    return `<div class="tbl-wrap"><table class="fs"><thead><tr><th>指標${showTrue ? '（実態）' : ''}</th>${heads}<th>業界平均</th></tr></thead><tbody>${body}</tbody></table></div><p class="note">業界平均は中小企業の目安。金額は${FS_BIG ? '百万円' : '千円'}単位。</p>`;
   }
   const rows = FS_ROWS[view];
   const body = rows.map(([name, f, cls]) => {
@@ -70,18 +73,19 @@ function companyFS(co, view, showTrue, n = 3) {
       const c = view === 'cf' ? cfOf(s, pick(years[i])) : null;
       return f(s, c);
     });
-    const cells = vals.map(v => `<td class="${v < 0 ? 'neg' : ''}">${fmtK(v)}</td>`).join('');
+    const cells = vals.map(v => `<td class="${v < 0 ? 'neg' : ''}">${fmtFS(v)}</td>`).join('');
     let diff = '';
     if (found) {
       const last = disp[disp.length - 1], prevY = years[years.length - 2];
       const tv = f(last.T, view === 'cf' ? cfOf(last.T, prevY.T) : null);
       const rv = f(repOf(last), view === 'cf' ? cfOf(repOf(last), repOf(prevY)) : null);
       const d = tv - rv;
-      diff = `<td class="${Math.abs(d) >= 1000 ? 'diff' : 'muted'}">${Math.abs(d) >= 1000 ? fmtK(d) : '―'}</td>`;
+      const th = FS_BIG ? 1e6 : 1000;
+      diff = `<td class="${Math.abs(d) >= th ? 'diff' : 'muted'}">${Math.abs(d) >= th ? fmtFS(d) : '―'}</td>`;
     }
     return `<tr class="${cls || ''}"><td>${name}</td>${cells}${diff}</tr>`;
   }).join('');
-  return `<div class="tbl-wrap"><table class="fs"><thead><tr><th>（単位：千円）${showTrue ? '<span class="true">実態</span>' : ''}</th>${heads}${diffHead}</tr></thead><tbody>${body}</tbody></table></div>`;
+  return `<div class="tbl-wrap"><table class="fs"><thead><tr><th>（単位：${FS_BIG ? '百万円' : '千円'}）${showTrue ? '<span class="true">実態</span>' : ''}</th>${heads}${diffHead}</tr></thead><tbody>${body}</tbody></table></div>`;
 }
 
 /* ---------- 頭取室 ---------- */
@@ -128,6 +132,20 @@ function inboxItems() {
   return items;
 }
 
+/* 頭取室の「業態」欄：次の格上げまでの進み具合 */
+function dashStagePanel(cls, nextCls) {
+  const st = stageOf();
+  const si = G.stageInfo;
+  let body = `<p style="margin:0 0 6px"><b>${STAGES[st].name}</b>・${cls.name}（総資産 ${fmtYen(totalAssets())}）</p>`;
+  if (si.strikes) body += `<p class="callout bad small" style="margin:0 0 6px">格下げ警告を受けています。次の四半期末までに維持基準を回復させてください。</p>`;
+  if (si.review) body += `<p class="small" style="margin:0 0 6px">${STAGES[si.review.to].name}への格上げを審査中（${ymLabel(si.review.doneM)}に結論）</p>`;
+  else if (st < 2) {
+    const req = stageRequirements(st + 1);
+    const ok = req.filter(x => x.ok).length;
+    body += `<div class="small" style="margin:0 0 4px">${STAGES[st + 1].name}への条件 ${ok}/${req.length}</div>${meter(ok, req.length, 'ok')}`;
+  } else if (nextCls) body += `${meter(totalAssets() - cls.min, nextCls.min - cls.min, 'ok')}<p class="note">次は「${nextCls.name}」（総資産${fmtYen(nextCls.min)}）</p>`;
+  return `<section class="panel"><div class="ph"><h2>業態</h2><button type="button" class="btn ghost sm" data-act="tab" data-tab="strategy">経営戦略へ</button></div><div class="pb">${body}</div></section>`;
+}
 SCREENS.dash = () => {
   const items = inboxItems();
   const hs = G.hist.slice(-37).filter(h => h.m >= 0);
@@ -168,7 +186,7 @@ SCREENS.dash = () => {
       ${panel('経済指標', `<table class="t compact"><tbody>${ecoRows.map(([k, v]) => `<tr><td>${k}</td><td class="n">${v}</td></tr>`).join('')}</tbody></table>`, { flush: true })}
       <section class="panel"><div class="ph"><h2>ニュース</h2><button type="button" class="btn ghost sm" data-act="tab" data-tab="news">すべて</button></div>
         <ul class="newslist">${news.map(n => `<li class="${n.tone}"><span class="when">${ymShort(n.m)}</span><span class="what">${esc(n.text)}</span></li>`).join('')}</ul></section>
-      ${panel('銀行の格', `<p style="margin:0 0 6px"><b>${cls.name}</b>（総資産 ${fmtYen(totalAssets())}）</p>${nextCls ? `${meter(totalAssets() - cls.min, nextCls.min - cls.min, 'ok')}<p class="note">次は「${nextCls.name}」（総資産${fmtYen(nextCls.min)}）</p>` : ''}`)}
+      ${dashStagePanel(cls, nextCls)}
     </div>
   </div>`;
 };
@@ -187,7 +205,7 @@ function invDots(a) {
   return `<span class="dots" aria-label="調査の実施状況">${Object.keys(defs).map(k => `<i class="${a.inv[k] ? (a.inv[k].status === 'ok' ? 'ok' : a.inv[k].status) : ''}"></i>`).join('')}</span>`;
 }
 function appCard(a) {
-  const sub = a.kind === 'biz' ? `${IND[G.companies[a.coId].ind].name}・${DIST[a.district].name}` : `${OCC[a.person.occ].name}・${DIST[a.district].name}`;
+  const sub = a.kind === 'biz' ? `${IND[G.companies[a.coId].ind].name}・${areaName(a.district)}${G.companies[a.coId].big ? '・大企業' : ''}` : `${OCC[a.person.occ].name}・${DIST[a.district].name}`;
   const g = G.sys.credit >= 1 ? gradeBadge(appSysGrade(a)) : '';
   const due = a.exp <= G.m ? tag('今月末まで', 'warn') : tag('来月末まで');
   return `<button type="button" class="appcard" data-act="pickApp" data-id="${a.id}" aria-current="${UI.appId === a.id}">
@@ -197,13 +215,15 @@ function appCard(a) {
 }
 
 SCREENS.loans = () => {
-  const pend = G.apps.filter(a => a.status === 'pending' && (UI.appFilter === 'all' || a.kind === UI.appFilter));
+  const isBigApp = a => a.kind === 'biz' && !!(G.companies[a.coId] && G.companies[a.coId].big);
+  const pend = G.apps.filter(a => a.status === 'pending' && (UI.appFilter === 'all' || (UI.appFilter === 'big' ? isBigApp(a) : a.kind === UI.appFilter && !(UI.appFilter === 'biz' && isBigApp(a) && stageOf() >= 1))))
+    .sort((a, b) => (isBigApp(b) - isBigApp(a)) || (a.exp - b.exp));
   const done = G.apps.filter(a => a.status !== 'pending' && a.decidedM === G.m);
   if (!UI.appId || !G.apps.some(a => a.id === UI.appId)) UI.appId = pend[0]?.id || done[0]?.id || null;
   const app = G.apps.find(a => a.id === UI.appId);
   const capL = creditCapLeft(), capT = creditCapacity();
   const list = `<div class="stack">
-    <div class="seg" role="group" aria-label="種類で絞り込む">${[['all', 'すべて'], ['biz', '事業性'], ['mort', '住宅ローン']].map(([k, l]) => `<button type="button" data-act="appFilter" data-v="${k}" aria-pressed="${UI.appFilter === k}">${l}</button>`).join('')}</div>
+    <div class="seg" role="group" aria-label="種類で絞り込む">${[['all', 'すべて']].concat(stageOf() >= 1 ? [['big', '大企業']] : [], [['biz', stageOf() >= 1 ? '地元企業' : '事業性'], ['mort', '住宅ローン']]).map(([k, l]) => `<button type="button" data-act="appFilter" data-v="${k}" aria-pressed="${UI.appFilter === k}">${l}</button>`).join('')}</div>
     <div class="panel"><div class="pb"><div class="row between small"><span>審査部の余力</span><b class="num">${fmtNum(capL, 1)} / ${fmtNum(capT, 0)}人日</b></div>${meter(capT - capL, capT)}<p class="note" style="margin:6px 0 0">調査には審査担当の人日を使います。毎月1日に回復します。</p></div></div>
     ${pend.length > 1 && G.sys.credit >= 1 ? btn('審査基準で一括処理', 'bulkOpen', {}, 'sm') : ''}
     <div class="applist">${pend.length ? pend.map(appCard).join('') : '<div class="empty">審査待ちの申込はありません</div>'}</div>
@@ -235,7 +255,7 @@ function ringi(app) {
       <p class="ringi-title">融資稟議書</p>
       <div class="ringi-no">稟議第${G.m + 1}-${seed}号　起案 ${warekiLabel(app.m)}　${branch ? esc(branch.name) : '本店営業部'}</div>
       <div class="ringi-name">${esc(appTitle(app))}</div>
-      <div class="row" style="margin-top:6px">${isBiz ? tag(IND[co.ind].name) + tag(DIST[co.district].name) + (app.existing ? tag('既存取引先', 'brass') : tag('新規')) : tag(OCC[app.person.occ].name) + tag(DIST[app.district].name)}${decided ? tag({ approved: '融資実行済み', rejected: '謝絶', declined: '先方辞退', expired: '期限切れ' }[app.status], app.status === 'approved' ? 'ok' : 'bad') : ''}</div>
+      <div class="row" style="margin-top:6px">${isBiz ? tag(IND[co.ind].name) + tag(areaName(co.district)) + (co.big ? tag(isOvsArea(co.district) ? '海外企業' : '大企業', 'brass') : '') + (app.existing ? tag('既存取引先', 'brass') : tag('新規')) : tag(OCC[app.person.occ].name) + tag(DIST[app.district].name)}${decided ? tag({ approved: '融資実行済み', rejected: '謝絶', declined: '先方辞退', expired: '期限切れ' }[app.status], app.status === 'approved' ? 'ok' : 'bad') : ''}</div>
     </div>
     <div class="stamps" aria-label="決裁欄">
       <div><div class="lab">担当</div><div class="box"><span class="seal-sm">${staffName(seed, 1)}</span></div></div>
@@ -359,7 +379,7 @@ function termsBiz(app) {
     <label class="field"><span>期間</span><span class="row"><input type="number" step="${t.repay === 'bullet' ? 1 : 12}" min="3" max="240" value="${t.termM}" data-in="term" data-k="termM" style="width:90px"><span class="unit">か月</span></span></label>
     <div class="field"><span>返済方法</span><div class="seg">${[['equal', '元金均等'], ['bullet', '期日一括']].map(([k, l]) => `<button type="button" data-act="termSet" data-k="repay" data-v="${k}" aria-pressed="${t.repay === k}">${l}</button>`).join('')}</div></div>
     <div class="field"><span>担保</span>${co.ownsRE ? `<label class="inline"><input type="checkbox" data-ch="termChk" data-k="collateral" ${t.collateral ? 'checked' : ''}> 不動産に抵当権を設定</label>` : '<span class="muted small">提供できる不動産なし</span>'}</div>
-    <label class="field"><span>保証</span><select data-ch="termSel" data-k="guarantee">${[['none', 'なし'], ['personal', '代表者の個人保証'], ['cgc', '信用保証協会（80%保証）']].map(([k, l]) => `<option value="${k}"${t.guarantee === k ? ' selected' : ''}>${l}</option>`).join('')}</select></label>
+    <label class="field"><span>保証</span><select data-ch="termSel" data-k="guarantee">${(G.companies[app.coId].big ? [['none', 'なし'], ['personal', '代表者の個人保証（大企業は応じない）']] : [['none', 'なし'], ['personal', '代表者の個人保証'], ['cgc', '信用保証協会（80%保証）']]).map(([k, l]) => `<option value="${k}"${t.guarantee === k ? ' selected' : ''}>${l}</option>`).join('')}</select></label>
   </div>
   <p class="note">同一先への与信上限（大口信用供与規制）：${fmtYen(largeExposureLimit())}。信用保証協会の保証付き融資はリスクウェイトが10%に下がり、代位弁済で損失を抑えられますが、保証料の負担で先方は嫌がります。</p>`;
 }
@@ -486,7 +506,11 @@ Object.assign(CHANGES, {
 });
 
 /* ---------- 与信管理 ---------- */
-function loanKindLabel(L) { return { biz: '事業性', mort: '住宅ローン', proj: 'プロジェクト', pool: '住宅ローン（承継）' }[L.kind]; }
+function loanKindLabel(L) {
+  if (L.kind === 'seg') return isOvsArea(L.area) ? '海外拠点の小口融資' : '全国の店舗網の小口融資';
+  if (L.kind === 'biz' && G.companies[L.coId] && G.companies[L.coId].big) return isOvsArea(L.district) ? '海外企業' : '大企業';
+  return { biz: '事業性', mort: '住宅ローン', proj: 'プロジェクト', pool: '住宅ローン（承継）' }[L.kind];
+}
 function loanStatusTag(L) {
   const m = { current: ['正常返済', ''], late: [`延滞${L.dpd}か月`, 'warn'], default: [`延滞${L.dpd}か月`, 'bad'], bankrupt: ['破綻・回収中', 'bad'] }[L.status] || ['完了', ''];
   return tag(m[0], m[1]) + (L.restructured ? tag('条件変更', 'warn') : '') + (L.fraudKnown ? tag('粉飾判明', 'bad') : '');
@@ -498,6 +522,7 @@ function pfLoans() {
     case 'mort': return act.filter(L => L.kind === 'mort' || L.kind === 'pool');
     case 'watch': return act.filter(L => L.cls >= 1 || L.status !== 'current' || sysClass(L) > L.cls);
     case 'gap': return act.filter(L => sysClass(L) > L.cls);
+    case 'net': return act.filter(L => L.kind === 'seg' || (L.kind === 'biz' && G.companies[L.coId] && G.companies[L.coId].big));
     default: return act;
   }
 }
@@ -511,7 +536,8 @@ SCREENS.portfolio = () => {
   const summary = `<div class="grid g3" style="margin-bottom:12px">
     <div>${kv([['貸出金残高', `<b>${fmtYen(tot)}</b>`], ['融資先数', `${act.length}件`], ['平均利回り', fmtRate(yieldAvg)]])}</div>
     <div>${kv([['貸倒引当金', fmtYen(B('allowance'))], ['不良債権比率', `<b class="${npl.ratio > 5 ? 'neg' : ''}">${fmtPct(npl.ratio)}</b>`], ['区分ずれ（判定より甘い）', `${act.filter(L => sysClass(L) > L.cls).length}件`]])}</div>
-    <div>${kv([['預貸率', fmtPct(B('loans') / Math.max(1, deposits()) * 100, 1)], ['事業性融資', fmtYen(sum(act.filter(L => L.kind === 'biz' || L.kind === 'proj'), L => L.bal))], ['住宅ローン', fmtYen(sum(act.filter(L => L.kind === 'mort' || L.kind === 'pool'), L => L.bal))]])}</div></div>
+    <div>${kv([['預貸率', fmtPct(B('loans') / Math.max(1, deposits()) * 100, 1)], ['事業性融資', fmtYen(sum(act.filter(L => L.kind === 'biz' || L.kind === 'proj'), L => L.bal))], ['住宅ローン', fmtYen(sum(act.filter(L => L.kind === 'mort' || L.kind === 'pool'), L => L.bal))],
+      act.some(L => L.kind === 'seg') ? ['全国・海外の小口融資', fmtYen(sum(act.filter(L => L.kind === 'seg'), L => L.bal))] : null])}</div></div>
     <div class="small" style="margin-bottom:4px">債務者区分ごとの残高</div>${segBar(CLS.map((c, i) => ({ name: c.name, v: byCls[i], color: colors[i] })))}`;
   const reviews = G.inbox.filter(x => x.type === 'review');
   const queue = reviews.length ? `<div class="row" style="padding:8px 10px;justify-content:space-between"><span class="small muted">変化のあった先と大口先だけが回ってきます。それ以外は担当者が確認済みです。</span>${btn('すべて判定どおり確定', 'reviewAll', {}, 'sm')}</div><table class="t"><thead><tr><th>融資先</th><th>理由</th><th>受領</th><th class="n">残高</th><th>格付</th><th>現区分</th><th>システム判定</th><th></th></tr></thead><tbody>${reviews.map(it => {
@@ -527,15 +553,15 @@ SCREENS.portfolio = () => {
   const rows = list.slice(UI.pfPage * per, UI.pfPage * per + per).map(L => {
     const sc = sysClass(L);
     return `<tr class="click" data-act="loanOpen" data-id="${L.id}"><td><div>${esc(L.name)}</div><div class="small muted">${loanKindLabel(L)}${L.ind && IND[L.ind] ? '・' + IND[L.ind].name : ''}</div></td>
-      <td class="n">${fmtYen(L.bal)}</td><td class="n">${fmtRate(L.rate)}</td><td class="nowrap">${L.kind === 'pool' ? '―' : ymShort(L.endM)}</td><td>${loanStatusTag(L)}</td>
+      <td class="n">${fmtYen(L.bal)}</td><td class="n">${fmtRate(L.rate)}</td><td class="nowrap">${L.kind === 'pool' || L.kind === 'seg' ? '―' : ymShort(L.endM)}</td><td>${loanStatusTag(L)}</td>
       <td>${clsTag(L.cls)}</td><td>${sc > L.cls ? tag(CLS[sc].short + 'へ', 'bad') : '<span class="muted small">一致</span>'}</td><td class="n">${fmtYen(L.provision || 0)}</td></tr>`;
   }).join('');
-  const table = `<div class="row between" style="margin-bottom:8px"><div class="seg">${[['all', 'すべて'], ['biz', '事業性'], ['mort', '住宅ローン'], ['watch', '要注意以下・延滞'], ['gap', '区分ずれ']].map(([k, l]) => `<button type="button" data-act="pfFilter" data-v="${k}" aria-pressed="${UI.pfFilter === k}">${l}</button>`).join('')}</div>
+  const table = `<div class="row between" style="margin-bottom:8px"><div class="seg">${[['all', 'すべて'], ['biz', '事業性'], ['mort', '住宅ローン'], ['watch', '要注意以下・延滞'], ['gap', '区分ずれ']].concat(stageOf() >= 1 ? [['net', '全国・海外']] : []).map(([k, l]) => `<button type="button" data-act="pfFilter" data-v="${k}" aria-pressed="${UI.pfFilter === k}">${l}</button>`).join('')}</div>
     <div class="row">${act.some(L => sysClass(L) > L.cls) ? btn('区分ずれを一括修正', 'clsFixAll', {}, 'sm') : ''}</div></div>
     <div class="tbl-wrap"><table class="t"><thead><tr><th>融資先</th><th class="n">残高</th><th class="n">金利</th><th>期日</th><th>状態</th><th>債務者区分</th><th>システム判定</th><th class="n">引当金</th></tr></thead><tbody>${rows || '<tr><td colspan="8" class="empty">該当なし</td></tr>'}</tbody></table></div>
     ${pages > 1 ? `<div class="row" style="justify-content:center;margin-top:8px">${btn('前へ', 'pfPage', { v: UI.pfPage - 1 }, 'sm', { disabled: UI.pfPage === 0 })}<span class="small">${UI.pfPage + 1} / ${pages}</span>${btn('次へ', 'pfPage', { v: UI.pfPage + 1 }, 'sm', { disabled: UI.pfPage >= pages - 1 })}</div>` : ''}`;
   const byInd = {};
-  for (const L of act) { const k = L.kind === 'biz' ? IND[L.ind].name : L.kind === 'proj' ? 'プロジェクト' : '住宅ローン'; byInd[k] = (byInd[k] || 0) + L.bal; }
+  for (const L of act) { const k = L.kind === 'biz' ? IND[L.ind].name : L.kind === 'proj' ? 'プロジェクト' : L.kind === 'seg' ? (L.seg === 'retail' ? '個人向けローン（全国・海外）' : '中小企業・現地法人（全国・海外）') : '住宅ローン'; byInd[k] = (byInd[k] || 0) + L.bal; }
   const indRows = Object.entries(byInd).sort((a, b) => b[1] - a[1]);
   const maxV = indRows.length ? indRows[0][1] : 1;
   const conc = indRows.map(([k, v]) => `<tr><td>${k}</td><td style="width:50%">${meter(v, maxV, 'ok')}</td><td class="n">${fmtYen(v)}</td><td class="n">${fmtPct(v / tot * 100, 1)}</td></tr>`).join('');
@@ -618,14 +644,14 @@ MODALS.loan = a => {
   const colNow = collateralBank(L);
   const rows = [
     ['種類', loanKindLabel(L)], ['状態', loanStatusTag(L)], ['当初融資額', fmtYen(L.principal)], ['残高', `<b>${fmtYen(L.bal)}</b>`],
-    ['金利', `${fmtRate(L.rate)}（${L.kind === 'pool' ? '変動' : L.rateType === 'var' ? '変動' : L.rateType === 'fix10' ? '10年固定' : '固定'}）`],
-    ['実行', L.startM < 0 ? `${OLD_UNION}から承継` : ymLabel(L.startM)], ['期日', L.kind === 'pool' ? '―' : ymLabel(L.endM)],
+    ['金利', `${fmtRate(L.rate)}（${L.kind === 'pool' || L.kind === 'seg' ? '変動' : L.rateType === 'var' ? '変動' : L.rateType === 'fix10' ? '10年固定' : '固定'}）`],
+    ['実行', L.kind === 'seg' ? '毎月少しずつ実行' : L.startM < 0 ? `${OLD_UNION}から承継` : ymLabel(L.startM)], ['期日', L.kind === 'pool' || L.kind === 'seg' ? '―' : ymLabel(L.endM)],
     ['担保', L.collateral ? `不動産（現在の評価 ${fmtYen(colNow)}）` : 'なし'],
     ['保証', L.cgc ? '信用保証協会（80%）' : L.mortGuar ? '保証会社' + (L.guarVoid ? '（免責）' : '') : L.personal ? '代表者保証' : 'なし'],
     ['受取利息（累計）', fmtYen(L.paidInt || 0)], ['貸倒引当金', fmtYen(L.provision || 0)],
   ];
   let body = `<div class="grid g2"><div>${kv(rows)}</div><div>`;
-  if (active && L.kind !== 'pool') {
+  if (active && L.kind !== 'pool' && L.kind !== 'seg') {
     body += `<div class="field" style="margin-bottom:10px"><span>債務者区分（自己査定）</span><select data-ch="loanCls" data-id="${L.id}">${CLS.map((c, i) => `<option value="${i}"${L.cls === i ? ' selected' : ''}>${c.name}（引当 ${fmtYen(provisionFor(L, i))}）</option>`).join('')}</select></div>
       <p class="small">システム判定：${clsTag(sc)} ${sc > L.cls ? '<span class="neg small">現在の区分は甘い可能性があります</span>' : ''}</p>`;
     const acts = [];
@@ -651,6 +677,9 @@ MODALS.loan = a => {
   } else if (L.kind === 'mort') {
     const p = L.person;
     body += `<hr class="sep">${kv([['債務者', `${esc(p.name)}（${p.age}歳）`], ['職業', `${OCC[p.occ].name}／${esc(p.employer)}`], ['年収（申告）', fmtYen(p.repIncome)], ['物件', `${esc(p.ptype)}・${DIST[p.district].name}`], ['返済負担率（現在）', fmtPct(mortDTI(p, L.bal, L.rate, Math.max(1, (L.endM - G.m) / 12), false) * 100, 1)]])}`;
+  } else if (L.kind === 'seg') {
+    body += `<hr class="sep">${kv([['地域', esc(areaName(L.area))], ['種類', esc(segName(L.area, L.seg))], ['年間の延滞・倒産率', fmtPct(L.pd, 2)], ['損失率（担保・保証で回収できない割合）', fmtPct(segLGD(L) * 100, 0)], ['不良債権', fmtYen(L.npl || 0)], ['今年度の償却', fmtYen(L.lossYTD || 0)]])}
+      <p class="note">多数の小口融資をまとめた勘定です。量と質は経営戦略の「融資方針」で調整します。</p>`;
   } else if (L.kind === 'proj') {
     const P = PROJ[L.projId];
     const st = G.city.projects[L.projId];
@@ -672,32 +701,9 @@ function monitorPanel(co) {
   return `<div class="inv-grid">${cards}</div>`;
 }
 
-/* ---------- 審査基準による一括処理 ---------- */
-function standardTerms(app) {
-  const t = defaultTerms(app);
-  if (app.kind === 'biz') {
-    const g = appSysGrade(app);
-    const co = G.companies[app.coId];
-    t.collateral = !!co.ownsRE;
-    if (g >= 6 && t.amount <= 2.8e8 && latestRep(co).S <= 300e8) t.guarantee = 'cgc';
-    const lim = largeExposureLimit() - exposureOf(co.id);
-    if (t.amount > lim) t.amount = Math.max(0, Math.floor(lim / 1e6) * 1e6);
-  }
-  return t;
-}
+/* ---------- 審査基準による一括処理（判定は 06_loans.js の judgeByCriteria） ---------- */
 UI.bulk = { kind: 'mort', ok: 4, ng: 8, deficit: true };
-function bulkJudge(a) {
-  const b = UI.bulk;
-  if (a.kind === 'biz') {
-    const co = G.companies[a.coId];
-    if (co.fraud && co.fraud.found) return 'ng';
-    if (b.deficit && (a.purpose === 'deficit' || a.purposeRevealed)) return 'ng';
-  } else if (a.person.fraud && a.person.fraud.found) return 'ng';
-  const g = appSysGrade(a);
-  if (g <= b.ok) return 'ok';
-  if (g >= b.ng) return 'ng';
-  return 'hold';
-}
+const bulkJudge = a => judgeByCriteria(a, UI.bulk);
 MODALS.bulk = () => {
   const b = UI.bulk;
   const pend = G.apps.filter(a => a.status === 'pending' && (b.kind === 'all' || a.kind === b.kind));

@@ -70,7 +70,7 @@ function makeBranchReports() {
   const pres = districtPresence();
   const svc = serviceQuality();
   const tot = sum(Object.values(tg.byD), x => x.ord + x.time) || 1;
-  const dep = deposits() - tg.nat;
+  const dep = cityDeposits() - tg.nat;
   for (const b of openBranches()) {
     const T = BRANCH_TYPES[b.type];
     const sz = branchSize(b);
@@ -131,21 +131,21 @@ function fraudRiskScore(bid) {
 function eventsStep() {
   const load = coreLoad();
   // システム障害
-  if (chance(0.002 + Math.max(0, load - 0.85) * 0.4)) {
+  if (chance(0.002 + clamp(load - 0.85, 0, 0.5) * 0.15)) {
     systemFailure(false);
     addNews('bank', `勘定系システムで障害が発生し、ATMと振込が数時間停止（処理能力の使用率${fmtPct(load * 100, 0)}）`, 'bad');
   }
   // サイバー攻撃
   if (chance(0.003 * (1 + G.sys.digital) * [1, 0.5, 0.25, 0.1][G.sys.cyber])) {
-    const cost = Math.round(uni(0.5e8, 3e8) * Math.sqrt(accountsCount() / 20000));
+    const cost = Math.round(uni(0.5e8, 3e8) * Math.sqrt(Math.max(1, accountsCount() / 20000)));
     post('不正アクセス事案の対応費用', [['extraLoss', cost, 0], ['boj', 0, cost]]);
     G.trust = clamp(G.trust - uni(6, 12), 0, 100);
     G.scandalHeat += 6; G.stats.scandals++;
     addNews('bank', `ネットバンキングへの不正アクセスで顧客情報が流出した可能性。対応費用${fmtYen(cost)}`, 'bad');
   }
   // マネロン事案
-  if (chance(0.0025 * Math.sqrt(accountsCount() / 20000) * [1, 0.55, 0.3, 0.12][G.sys.aml])) {
-    const cost = Math.round(uni(0.3e8, 2e8));
+  if (chance(0.0025 * Math.min(4, Math.sqrt(accountsCount() / 20000)) * [1, 0.55, 0.3, 0.12][G.sys.aml])) {
+    const cost = Math.round(uni(0.3e8, 2e8) * Math.sqrt(Math.max(1, accountsCount() / 200000)));
     post('マネー・ローンダリング事案の対応費用', [['extraLoss', cost, 0], ['boj', 0, cost]]);
     G.trust = clamp(G.trust - 5, 0, 100);
     G.scandalHeat += 5; G.stats.scandals++;
@@ -154,7 +154,7 @@ function eventsStep() {
   }
   // 大口預金の獲得
   if (chance(0.02 * clamp(G.trust / 60, 0.3, 1.5))) {
-    const amt = roundTo(deposits() * uni(0.02, 0.06), 1e8);
+    const amt = roundTo(cityDeposits() * uni(0.02, 0.06), 1e8);
     G.flags.bigDep = (G.flags.bigDep || 0) + amt;
     addNews('bank', `地元企業から決済口座の集約を受け、約${fmtYen(amt)}の預金を獲得する見込み`, 'good');
   }
@@ -183,7 +183,7 @@ function eventsStep() {
   }
   // 近隣金融機関の破綻
   if ((G.eco.regime === 'recession' || G.eco.regime === 'crisis') && chance(0.004)) {
-    const inflow = G.trust >= 55 ? roundTo(deposits() * uni(0.03, 0.08), 1e8) : 0;
+    const inflow = G.trust >= 55 ? roundTo(cityDeposits() * uni(0.03, 0.08), 1e8) : 0;
     if (inflow) G.flags.bigDep = (G.flags.bigDep || 0) + inflow;
     addNews('eco', `近隣の第二地方銀行が経営破綻。${inflow ? `安全を求める預金が当行に流入（約${fmtYen(inflow)}）` : '預金者の不安が広がる'}`, inflow ? 'good' : 'bad');
     if (!inflow) G.trust = clamp(G.trust - 4, 0, 100);
@@ -214,13 +214,13 @@ function eventsStep() {
 
 /* ---------- 信用度 ---------- */
 function updateTrust() {
-  const cr = capitalRatio(), npl = nplRatio();
+  const cr = capitalRatio() - (reqCR() - 4), npl = nplRatio();
   let t = 60;
   t += cr >= 12 ? 8 : cr >= 8 ? 4 : cr >= 4 ? -6 : -25;
   t += npl < 2 ? 4 : npl < 5 ? 0 : npl < 10 ? -8 : -18;
   t += [7, 6, 5, 4, 3, 2, 1, 0, -2, -5, -8, -12, -20][G.ratingIdx];
   t += clamp((serviceQuality() - 1) * 20, -12, 3);
-  t += Math.min(8, sum(Object.values(districtPresence())) * 1.0 + G.adBudget / 2000e4);
+  t += Math.min(8, sum(Object.values(districtPresence())) * 1.0 + G.adBudget / 2000e4 + natLevelSum() / 6);
   t -= G.scandalHeat;
   if (coreLoad() > 1) t -= 6;
   if (G.flags.publicFunds) t -= 4;
@@ -238,7 +238,11 @@ function fsaStep() {
   if (G.m >= f.nextM) runInspection();
 }
 
-function amlRequired() { const d = deposits(); return d > 3000e8 ? 3 : d > 1500e8 ? 2 : d > 600e8 ? 1 : 0; }
+function amlRequired() {
+  const d = deposits();
+  const base = d > 3000e8 ? 3 : d > 1500e8 ? 2 : d > 600e8 ? 1 : 0;
+  return Math.max(base, [0, 2, 3][G.stage || 0]);
+}
 
 function runInspection() {
   const f = G.fsa;
@@ -246,12 +250,12 @@ function runInspection() {
   let under = 0, addProv = 0, sev3 = false;
   const knows = {};
   for (const L of G.loans) {
-    if (!isActiveLoan(L) || L.kind === 'pool') continue;
+    if (!isActiveLoan(L) || L.kind === 'pool' || L.kind === 'seg') continue;
     let k = false;
     if (L.kind === 'biz') {
       const co = G.companies[L.coId];
       if (co.fraud && co.fraud.years > 0) {
-        if (knows[co.id] === undefined) knows[co.id] = co.fraud.found || chance(0.6 * DIFFICULTY[G.difficulty].fsa);
+        if (knows[co.id] === undefined) knows[co.id] = co.fraud.found || chance(0.6 * (G.cfg || DIFFICULTY[G.difficulty]).fsa);
         k = knows[co.id];
         if (k && !co.fraud.found) { co.fraud.found = true; co.fraud.foundBy = 'fsa'; L.fraudKnown = true; }
       }
@@ -274,12 +278,14 @@ function runInspection() {
   if (G.sys.aml < amlRequired()) findings.push({ sev: 2, text: `マネロン・テロ資金供与対策の態勢が規模に見合っていない（必要水準 Lv${amlRequired()}）` });
   if (G.sys.digital >= 2 && G.sys.cyber < G.sys.digital - 1) findings.push({ sev: 1, text: 'デジタルチャネルの拡大に対し、サイバーセキュリティ対策が遅れている' });
   if (coreLoad() > 0.9) findings.push({ sev: 2, text: `勘定系システムの処理能力に余裕がない（使用率${fmtPct(coreLoad() * 100, 0)}）` });
-  if (compRatio() < 0.8) findings.push({ sev: 1, text: '管理・監査部門の人員が業容に比べて不足している' });
+  if (compRatio() < 0.8) findings.push({ sev: (G.stage || 0) >= 1 ? 2 : 1, text: '管理・監査部門の人員が業容に比べて不足している' });
+  if ((G.stage || 0) >= 1 && G.sys.cyber < 2) findings.push({ sev: 2, text: '全国規模の決済インフラを担う銀行として、サイバーセキュリティ対策が不十分' });
+  if ((G.stage || 0) >= 2 && G.sys.audit < 2) findings.push({ sev: 2, text: '海外拠点を含むグループ全体の内部監査態勢が整っていない' });
   for (const x of G.ifraud) {
     if (!x.detected && chance(0.5)) { detectInternalFraud(x, 'fsa'); findings.push({ sev: 3, text: '内部管理態勢の重大な欠陥：行員の不正を見逃していた' }); sev3 = true; }
   }
   const cr = capitalRatio();
-  if (cr < 6) findings.push({ sev: 2, text: `自己資本比率が${fmtPct(cr)}と低く、資本の充実が必要` });
+  if (cr < reqCR() + 2) findings.push({ sev: 2, text: `自己資本比率が${fmtPct(cr)}と低く、資本の充実が必要` });
   const ir = irrbb() / cap * 100;
   if (ir > 20) findings.push({ sev: 1, text: `金利リスク量が自己資本の${fmtPct(ir, 0)}に達し、重要性テストの基準（20%）を超過` });
   const score = sum(findings, x => x.sev);
@@ -296,7 +302,7 @@ function runInspection() {
   if (addProv > 0) trueUpProvisions('金融庁検査を受けた追加引当');
   const rec = { m: G.m, grade, text, findings, under, addProv };
   f.history.push(rec);
-  f.nextM = G.m + randInt(24, 36) - (grade === 'D' ? 12 : 0);
+  f.nextM = G.m + ((G.stage || 0) >= 1 ? randInt(12, 20) : randInt(24, 36)) - (grade === 'D' ? 6 : 0);
   f.special = false;
   addNews('reg', `金融庁検査が終了。結果：${text}${findings.length ? `（指摘${findings.length}件）` : ''}`, grade <= 'B' ? 'good' : 'bad');
   if (grade === 'D') addNews('reg', `金融庁が当行に業務改善命令。1年間は新規出店が制限される`, 'bad');
@@ -307,7 +313,7 @@ function runInspection() {
 function externalAudit() {
   let adj = 0, n = 0;
   for (const L of G.loans) {
-    if (!isActiveLoan(L) || L.kind === 'pool') continue;
+    if (!isActiveLoan(L) || L.kind === 'pool' || L.kind === 'seg') continue;
     let ac = sysClass(L);
     if (L.kind === 'biz') {
       const co = G.companies[L.coId];

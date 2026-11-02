@@ -27,17 +27,24 @@ function totalATMs() {
   for (const k in G.atms) n += G.atms[k];
   return n;
 }
-function accountsCount() { return Math.round(deposits() / 2.5e6) + G.loans.filter(L => isActiveLoan(L) && L.kind !== 'pool').length * 2; }
+/* 汐見市の店舗が管理する口座数 */
+function cityAccounts() { return Math.round(cityDeposits() / 2.5e6) + G.loans.filter(L => isActiveLoan(L) && (L.kind === 'biz' || L.kind === 'mort' || L.kind === 'proj')).length * 2; }
+/* 全店の口座数（勘定系システムの負荷・手数料の基礎） */
+function accountsCount() {
+  let n = cityAccounts() + Math.round(natDep() / 2.5e6 + B('depFx') / 1e7);
+  for (const L of G.loans) if (L.kind === 'seg' && isActiveLoan(L)) n += Math.round(L.bal / (L.seg === 'retail' ? 2e7 : 1e8));
+  return n;
+}
 function staffTotal() { return G.staff.sales + G.staff.credit + G.staff.ops + G.staff.comp; }
 
 /* ---------- 事務・システムの余力 ---------- */
 function opsRequired() {
   let r = 0;
   for (const b of openBranches()) r += BRANCH_TYPES[b.type].ops;
-  return r + accountsCount() / (2500 * (1 + 0.15 * G.sys.digital));
+  return r + cityAccounts() / (2500 * (1 + 0.15 * G.sys.digital));
 }
 function serviceQuality() { return clamp(G.staff.ops / Math.max(1, opsRequired()), 0.3, 1.3); }
-function compRequired() { return 2 + staffTotal() * 0.06 + openBranches().length * 0.3; }
+function compRequired() { return 2 + staffTotal() * 0.06 + openBranches().length * 0.3 + netStaff() * 0.004; }
 function compRatio() { return G.staff.comp / compRequired(); }
 function coreCapacity() { return SYSTEMS.core.levels[G.sys.core].cap; }
 function coreLoad() { return (accountsCount() + G.loans.filter(isActiveLoan).length * 5) / coreCapacity(); }
@@ -82,7 +89,7 @@ function processDeposits() {
   const tg = depositTargets();
   const e = G.eco, r = G.rates;
   const load = coreLoad();
-  const ord = B('depOrd');
+  const ord = cityOrd();
   const mo = calMonth(G.m);
   const seas = ({ 6: 0.012, 7: -0.006, 12: 0.015, 1: -0.008, 3: -0.004, 4: 0.004 })[mo] || 0;
   let dOrd = (tg.ord - ord) * 0.05 + ord * (randn() * 0.004 + seas);
@@ -99,7 +106,7 @@ function processDeposits() {
   const renew = Math.round(matured * clamp(retention, 0.2, 0.97));
   const toOrd = Math.round((matured - renew) * 0.4);
   const outT = matured - renew - toOrd;
-  const DT = B('depTime');
+  const DT = cityTime();
   let newT = (tg.time - DT) * 0.07 + DT * randn() * 0.002;
   if (load > 1 && newT > 0) newT *= 0.2;
   let early = 0;
@@ -128,10 +135,15 @@ function processDeposits() {
 }
 
 function payDepositInterest() {
-  const oi = Math.round(B('depOrd') * G.rates.ord / 1200);
-  if (oi > 0) post('普通預金利息の元加', [['intDep', oi, 0], ['depOrd', 0, oi]]);
+  let oi = Math.round(cityOrd() * G.rates.ord / 1200);
   let ti = 0;
   for (const c of G.dep.coh) { const i = Math.round(c.bal * c.rate / 1200); c.bal += i; ti += i; }
+  if (G.net) for (const R of NATIONS) {
+    const r = G.net[R.id];
+    const io = Math.round(r.ord * G.rates.ord / 1200), it = Math.round(r.time * r.tRate / 1200);
+    r.ord += io; r.time += it; oi += io; ti += it;
+  }
+  if (oi > 0) post('普通預金利息の元加', [['intDep', oi, 0], ['depOrd', 0, oi]]);
   if (ti > 0) post('定期預金利息の元加', [['intDep', ti, 0], ['depTime', 0, ti]]);
 }
 
@@ -147,7 +159,7 @@ function callLimit() { return deposits() * (G.ratingIdx <= 7 ? 0.2 : 0.1); }
 function liquidityRatio() { return (B('cash') + B('boj') + B('callLoan') + B('securities')) / Math.max(1, deposits()) * 100; }
 function lcr() {
   const hqla = B('cash') + B('boj') + B('securities') * 0.98;
-  const out = B('depOrd') * 0.06 + B('depTime') * 0.04 + B('callMoney') + B('bojBorrow');
+  const out = B('depOrd') * 0.06 + B('depTime') * 0.04 + B('depFx') * 0.1 + B('callMoney') + B('bojBorrow');
   return hqla / Math.max(1, out) * 100;
 }
 
@@ -285,7 +297,7 @@ function processTreasuryMonthly() {
 
 /* ---------- 金庫・現金 ---------- */
 function vaultCapacity() { return VAULT_LEVELS[G.vault.lv].cap + sum(openBranches(), b => BRANCH_TYPES[b.type].vaultCap); }
-function cashRequired() { return B('depOrd') * 0.02 + sum(openBranches(), b => BRANCH_TYPES[b.type].cashBase) + totalATMs() * ATM_CASH; }
+function cashRequired() { return cityOrd() * 0.02 + sum(openBranches(), b => BRANCH_TYPES[b.type].cashBase) + totalATMs() * ATM_CASH; }
 const CASH_SEASON = { 12: 1.3, 3: 1.12, 4: 1.08, 5: 1.08, 6: 1.12, 8: 1.06 };
 function cashTarget(mNext = G.m + 1) { return Math.min(vaultCapacity(), cashRequired() * (CASH_SEASON[calMonth(mNext)] || 1) * G.vault.buffer); }
 
@@ -516,7 +528,7 @@ function processFeesAndExpenses() {
   payExpense(Math.round(c.guard), 'premises', '警備・現金輸送・ATM保守費');
   payExpense(Math.round(c.ad), 'premises', '広告宣伝費');
   payExpense(Math.round(c.misc), 'premises', '事務費・通信費等');
-  payExpense(Math.round(deposits() * DEP_INSURANCE_RATE / 12), 'depInsurance', '預金保険料');
+  payExpense(Math.round(domDeposits() * DEP_INSURANCE_RATE / 12), 'depInsurance', '預金保険料');
   payExpense(Math.round(totalAssets() * 0.00012 / 12 + B('tangible') * 0.0014 / 12), 'taxes', '租税公課（外形標準課税・固定資産税等）');
 }
 
@@ -528,15 +540,20 @@ function ttm(keys, n = 12) {
   return hs.length ? s * 12 / hs.length : 0;
 }
 function grossProfitTTM() {
-  const inc = ttm(['intLoans', 'intSec', 'intCall', 'intBoj', 'fees', 'bondGain']);
-  const exp = ttm(['intDep', 'intCallM', 'intBorrow', 'feeExp', 'bondLoss']);
+  const inc = ttm(['intLoans', 'intSec', 'intCall', 'intBoj', 'fees', 'bondGain', 'fxGain']);
+  const exp = ttm(['intDep', 'intCallM', 'intBorrow', 'fundingCost', 'feeExp', 'bondLoss', 'fxLoss']);
   return G.hist.length >= 3 ? inc - exp : G.initGP;
 }
 function generalAllowance() { return sum(G.loans.filter(L => isActiveLoan(L) && L.cls <= 2), L => L.provision || 0); }
 function rwaBreakdown() {
-  let biz = 0, mort = 0, proj = 0, def = 0;
+  let biz = 0, mort = 0, proj = 0, def = 0, seg = 0, ovs = 0;
   for (const L of G.loans) {
     if (!isActiveLoan(L) || L.bal <= 0) continue;
+    if (L.kind === 'seg') {
+      const w = L.bal * SEG[L.seg].rw;
+      if (isOvsArea(L.area)) ovs += w * (1 + 0.15 * (OVSR[L.area].risk - 1)); else seg += w;
+      continue;
+    }
     if (L.status === 'default' || L.status === 'bankrupt') { def += Math.max(0, L.bal - (L.provision || 0)) * 1.5; continue; }
     if (L.kind === 'mort' || L.kind === 'pool') { mort += L.bal * 0.35; continue; }
     if (L.kind === 'proj') { proj += L.bal; continue; }
@@ -545,15 +562,18 @@ function rwaBreakdown() {
   }
   const call = B('callLoan') * 0.2;
   const fixed = B('tangible') + B('otherAssets');
-  const credit = biz + mort + proj + def + call + fixed;
+  const credit = biz + mort + proj + def + seg + ovs + call + fixed;
   const op = Math.max(0, grossProfitTTM()) * 0.15 * 12.5;
-  return { biz, mort, proj, def, call, fixed, credit, op, total: credit + op };
+  // 為替リスク（ヘッジしていない外貨ポジション）
+  let fx = 0;
+  if (G.net && G.credit) for (const R of OVERSEAS) fx += (G.net[R.id].gap || 0) * (1 - G.credit.hedge);
+  return { biz, mort, proj, def, seg, ovs, call, fixed, credit, op, fx, total: credit + op + fx };
 }
 function coreCapitalParts(rwa) {
   const r = rwa || rwaBreakdown();
   const ga = Math.min(generalAllowance(), r.credit * 0.0125);
   const eq = B('capital') + B('prefCapital') + B('capSurplus') + B('retained') + curProfit();
-  return { eq, ga, intangible: B('intangible'), core: eq + ga - B('intangible') };
+  return { eq, ga, intangible: B('intangible'), goodwill: B('goodwill'), core: eq + ga - B('intangible') - B('goodwill') };
 }
 function coreCapital() { return coreCapitalParts().core; }
 function capitalRatio() {
@@ -567,6 +587,7 @@ function nplBreakdown() {
   for (const L of G.loans) {
     if (!isActiveLoan(L) || L.bal <= 0) continue;
     o.total += L.bal;
+    if (L.kind === 'seg') { const n = Math.min(L.bal, L.npl || 0); o.sub += n * 0.5; o.doubt += n * 0.5; o.normal += L.bal - n; continue; }
     if (L.cls >= 4) o.bk += L.bal;
     else if (L.cls === 3) o.doubt += L.bal;
     else if (L.cls === 2) o.sub += L.bal;
@@ -600,7 +621,7 @@ function niiSensitivity() {
   let up = B('callLoan') + Math.max(0, B('boj') - requiredReserve());
   for (const L of G.loans) {
     if (!isActiveLoan(L) || L.status === 'bankrupt') continue;
-    const isVar = L.kind === 'pool' || (L.kind === 'mort' && !(L.fixUntil && G.m < L.fixUntil)) || (L.kind === 'biz' && L.rateType === 'var');
+    const isVar = L.kind === 'pool' || L.kind === 'seg' || (L.kind === 'mort' && !(L.fixUntil && G.m < L.fixUntil)) || (L.kind === 'biz' && L.rateType === 'var');
     if (isVar) up += L.bal;
     else if (L.endM - G.m <= 12) up += L.bal * 0.5;
   }
@@ -612,6 +633,7 @@ function niiSensitivity() {
 /* ---------- 格付・株価 ---------- */
 function computeRatingScore() {
   const cr = capitalRatio(), npl = nplRatio();
+  const st = G.stage || 0;
   const ta = totalAssets();
   // 実績が半年に満たないうちは開業時の見込みを使う
   const n = G.hist.filter(h => h.m >= 0).length;
@@ -622,13 +644,17 @@ function computeRatingScore() {
   const roa = ni / Math.max(1, ta) * 100;
   const ohr = gp > 0 ? opex / gp * 100 : 200;
   let s = 0;
-  s += interp(cr, [[0, 0], [4, 4], [6, 9], [8, 14], [10, 18], [12, 21], [16, 25]]);
+  // 上位の業態ほど求められる自己資本の水準が高い
+  s += interp(cr - [0, 2.5, 4.5][st], [[0, 0], [4, 4], [6, 9], [8, 14], [10, 18], [12, 21], [16, 25]]);
   s += interp(npl, [[0, 15], [1, 15], [2, 13], [3, 11], [5, 8], [8, 4], [12, 0]]);
   s += interp(roa, [[-0.5, 0], [0, 4], [0.1, 8], [0.2, 11], [0.35, 15], [0.5, 20]]);
   s += interp(ohr, [[50, 15], [60, 13], [70, 10], [80, 7], [90, 4], [100, 2], [120, 0]]);
   s += interp(liquidityRatio(), [[5, 0], [10, 3], [15, 6], [20, 8], [25, 10]]);
   s += interp(ta, [[0, 2], [1000e8, 4], [3000e8, 6], [1e12, 8], [5e12, 10]]);
-  s += Math.max(0, 5 - G.scandalHeat / 4);
+  s += Math.max(0, 5 - G.scandalHeat / 4 * (1 + 0.5 * st));
+  if (st >= 1) s += 3; // システム上重要な銀行としての政府支援の期待
+  if (G.net && st >= 2) s -= Math.min(5, sum(OVERSEAS, R => G.net[R.id].lv * (OVSR[R.id].risk - 1)) / 6);
+  s -= G.ratingPenalty || 0;
   return { s, cr, npl, roa, ohr };
 }
 function ratingIdxOf(score) {
@@ -637,7 +663,10 @@ function ratingIdxOf(score) {
 }
 function updateRating() {
   const prev = G.ratingIdx;
-  G.ratingScore = computeRatingScore().s;
+  if (G.ratingPenalty) G.ratingPenalty = G.ratingPenalty > 0.5 ? G.ratingPenalty * 0.85 : 0;
+  // 格付機関は景気の一巡を見通して判断する（直近の評価を前回の評価と均す）
+  const s = computeRatingScore().s;
+  G.ratingScore = prev === undefined || G.ratingScore === undefined ? s : 0.6 * s + 0.4 * G.ratingScore;
   G.ratingIdx = ratingIdxOf(G.ratingScore);
   if (prev !== undefined && prev !== G.ratingIdx) {
     addNews('bank', `格付機関が当行の格付を${RATINGS[prev]}から${RATINGS[G.ratingIdx]}に${G.ratingIdx < prev ? '引き上げ' : '引き下げ'}`, G.ratingIdx < prev ? 'good' : 'bad');
@@ -668,7 +697,8 @@ function raiseCapital(amount) {
   if (G.ratingIdx >= 12) return { ok: false, msg: '格付がCCCのため、引受先が見つかりません' };
   if (amount < 1e8) return { ok: false, msg: '1億円以上で指定してください' };
   if (amount > cap * 0.5) return { ok: false, msg: `増資額は時価総額の半分（${fmtYen(cap * 0.5)}）までです` };
-  if (G.raisedM !== undefined && G.m - G.raisedM < 12) return { ok: false, msg: '前回の増資から1年以上あける必要があります' };
+  const gap = (G.stage || 0) >= 1 ? 6 : 12;
+  if (G.raisedM !== undefined && G.m - G.raisedM < gap) return { ok: false, msg: `前回の増資から${gap === 6 ? '半年' : '1年'}以上あける必要があります` };
   const price = G.stock.price * 0.92;
   const sh = Math.round(amount / price);
   const fee = Math.round(amount * 0.03);
@@ -684,7 +714,7 @@ function raiseCapital(amount) {
 }
 function acceptPublicFunds() {
   const r = rwaBreakdown();
-  const need = Math.max(30e8, Math.round(r.total * 0.09 - coreCapitalParts(r).core));
+  const need = Math.max(30e8, Math.round(r.total * (reqCR() + 5) / 100 - coreCapitalParts(r).core));
   post('公的資金（優先株式）の注入', [['boj', need, 0], ['prefCapital', 0, need]]);
   G.flags.publicFunds = true;
   G.flags.publicOffer = false;
@@ -699,7 +729,8 @@ function repayPublicFunds() {
   if (amt <= 0) return { ok: false, msg: '返済する公的資金はありません' };
   const r = rwaBreakdown();
   const after = (coreCapitalParts(r).core - amt) / r.total * 100;
-  if (after < 8) return { ok: false, msg: `返済後の自己資本比率が8%を下回ります（${fmtPct(after)}）` };
+  const floor = Math.max(8, reqCR() + 2);
+  if (after < floor) return { ok: false, msg: `返済後の自己資本比率が${fmtPct(floor, 1)}を下回ります（${fmtPct(after)}）` };
   if (B('boj') - amt < requiredReserve()) return { ok: false, msg: '資金が不足しています' };
   post('公的資金の返済（優先株式の取得・消却）', [['prefCapital', amt, 0], ['boj', 0, amt]]);
   G.flags.publicFunds = false;
