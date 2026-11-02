@@ -350,7 +350,7 @@ MODALS.gameover = () => {
   const body = `${scene('crisis', { cls: 'modal-art', alt: '' })}<p style="font-size:17px;margin:0 0 6px;font-family:var(--f-doc)"><b class="neg">${o.title}</b>（${ymLabel(G.over.m)}）</p><p>${o.text}</p><hr class="sep"><h3 style="font-size:14px;margin:0 0 8px">在任中の経営評価</h3>${evalHtml()}`;
   return modalFrame('経営の終わり', body, btn('セーブから再開', 'menu') + btn('新しいゲーム', 'newGameGo', {}, 'primary'), { noClose: false });
 };
-MODALS.term = () => modalFrame('任期満了', `<p>就任から${G.termYears}年。${esc(G.bankName)}頭取としての任期を全うしました。</p>${evalHtml()}<p class="note" style="margin-top:10px">このまま続投して経営を続けることもできます。</p>`, btn('続投する', 'closeModal', {}, 'primary'), { size: 'wide' });
+MODALS.term = () => modalFrame('任期満了', `${scene(STAGE_ART[G.stage || 0], { cls: 'modal-art', alt: '' })}<p>就任から${G.termYears}年。${esc(G.bankName)}頭取としての任期を全うしました。</p>${evalHtml()}<p class="note" style="margin-top:10px">このまま続投して経営を続けることもできます。</p>`, btn('続投する', 'closeModal', {}, 'primary'), { size: 'wide' });
 
 MODALS.menu = () => {
   const slot = i => {
@@ -415,7 +415,7 @@ MODALS.intro = () => (G.stage || 0) >= 1 ? modalFrame(`${esc(G.bankName)}へよ�
   <li><b>融資審査</b>で、大企業からの大口の申込を審査する。大企業でも粉飾はあります。</li>
   <li>汐見市の小口の申込は、経営戦略の「融資方針・権限」で支店長に任せられます（最初から委譲済み）。</li>
   <li>決裁が済んだら右上の<b>「月末を締めて翌月へ」</b>。</li></ol>
-  <p class="note">遊び方はいつでも右上の「遊び方」から読めます。進行はこのブラウザに自動保存されます。</p>`, btn('遊び方を読む', 'helpSec', { sec: 0 }) + btn('始める', 'closeModal', {}, 'primary')) : modalFrame(`${esc(G.bankName)}へようこそ`, `<p>${ymLabel(0)}、${esc(G.ceoName)}頭取の任期が始まりました。手始めに次のことをしてみましょう。</p>
+  <p class="note">遊び方はいつでも右上の「遊び方」から読めます。進行はこのブラウザに自動保存されます。</p>`, btn('遊び方を読む', 'helpSec', { sec: 0 }) + btn('始める', 'closeModal', {}, 'primary')) : modalFrame(`${esc(G.bankName)}へようこそ`, `${scene('stage0', { cls: 'modal-art', alt: '' })}<p>${ymLabel(0)}、${esc(G.ceoName)}頭取の任期が始まりました。手始めに次のことをしてみましょう。</p>
   <ol><li><b>融資審査</b>で届いている申込を開き、決算書を読む。気になる点があれば調査を指示し、承認か謝絶を決める。</li>
   <li><b>与信管理</b>で承継した融資先を確認する。「システム判定」より区分が甘い先がないか。気になる先は期中モニタリングの調査で実態を確かめる。</li>
   <li><b>${CITY_NAME}</b>の地図で、どの地区に店舗を出すと良さそうか眺める。</li>
