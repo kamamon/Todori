@@ -275,7 +275,9 @@ function applyTheme(t) {
 function requestAdvance() {
   if (!G || G.over) return;
   if (G.pendingDividend) { showModal('yearEnd', { fy: G.pendingDividend.fy }); return; }
-  const expiring = G.apps.filter(a => a.status === 'pending' && a.exp <= G.m).length;
+  const d = G.policy && G.policy.delegate;
+  const delegated = a => d && d.on && a.amountReq <= d.max && !(a.kind === 'biz' && G.companies[a.coId] && G.companies[a.coId].big);
+  const expiring = G.apps.filter(a => a.status === 'pending' && a.exp <= G.m && !delegated(a)).length;
   const urgent = G.inbox.filter(x => x.type === 'resched' || x.type === 'refi').length;
   if (UI.settings.confirmAdvance && (expiring || urgent)) {
     const parts = [];

@@ -595,7 +595,7 @@ table.t { width: 100%; border-collapse: collapse; font-size: 13px; }
 <script>
 'use strict';
 (function () {
-const ART_FILES = {};
+const ART_FILES = {"hero":"img/hero.webp","stage0":"img/stage0.webp","stage1":"img/stage1.webp","stage2":"img/stage2.webp"};
 /* ---- 00_util.js ---- */
 /* =========================================================
  *  頭取 ― 地方銀行経営シミュレーション
@@ -5813,7 +5813,9 @@ function applyTheme(t) {
 function requestAdvance() {
   if (!G || G.over) return;
   if (G.pendingDividend) { showModal('yearEnd', { fy: G.pendingDividend.fy }); return; }
-  const expiring = G.apps.filter(a => a.status === 'pending' && a.exp <= G.m).length;
+  const d = G.policy && G.policy.delegate;
+  const delegated = a => d && d.on && a.amountReq <= d.max && !(a.kind === 'biz' && G.companies[a.coId] && G.companies[a.coId].big);
+  const expiring = G.apps.filter(a => a.status === 'pending' && a.exp <= G.m && !delegated(a)).length;
   const urgent = G.inbox.filter(x => x.type === 'resched' || x.type === 'refi').length;
   if (UI.settings.confirmAdvance && (expiring || urgent)) {
     const parts = [];
