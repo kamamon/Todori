@@ -76,7 +76,7 @@ function renderMast() {
   const over = !!G.over;
   const st = G.stage || 0;
   return `<header class="mast">
-    <div class="mast-brand">${SEAL_SVG}<div style="min-width:0"><div class="bank-name">${esc(G.bankName)}${st ? `<span class="stage-badge s${st}">${STAGES[st].name}</span>` : ''}</div><div class="bank-sub">頭取 ${esc(G.ceoName)}<span class="hide-m">　${st ? STAGES[st].area + 'で営業' : bankClass().name}</span></div></div></div>
+    <div class="mast-brand">${SEAL_SVG}<div style="min-width:0"><div class="bank-name"><span class="bn">${esc(G.bankName)}</span>${st ? `<span class="stage-badge s${st} hide-m">${STAGES[st].name}</span>` : ''}</div><div class="bank-sub">頭取 ${esc(G.ceoName)}${st ? `<span class="stage-badge s${st} show-m">${STAGES[st].name}</span>` : ''}<span class="hide-m">　${st ? STAGES[st].area + 'で営業' : bankClass().name}</span></div></div></div>
     <div class="mast-date"><div class="wareki">${warekiLabel(G.m)}</div><div class="sub">${y}年${mo}月　${fyLabel(fy)}${!G.termYears ? '' : yearsLeft > 0 ? `・任期あと${yearsLeft}年` : '・任期満了後'}</div></div>
     <div class="mast-actions"><button type="button" class="mbtn" data-act="menu">メニュー</button><button type="button" class="mbtn" data-act="help">遊び方</button>
     <button type="button" class="btn-advance" data-act="advance"${over ? ' disabled' : ''}>月末を締めて翌月へ</button></div>
@@ -233,7 +233,7 @@ async function loadFrom(key) {
     if (!raw) { toast('セーブデータがありません', 'bad'); return false; }
     deserialize(raw);
     UI.tab = 'dash'; UI.appId = null; UI.modal = null; UI.queue = [];
-    drawModal(); render();
+    drawModal(); render(); window.scrollTo({ top: 0 });
     toast(`${G.bankName}（${ymLabel(G.m)}）を読み込みました`);
     if (G.pendingDividend) showModal('yearEnd', { fy: G.pendingDividend.fy });
     return true;
@@ -259,7 +259,7 @@ function importSave(file) {
     try {
       deserialize(String(r.result));
       UI.tab = 'dash'; UI.modal = null; UI.queue = [];
-      drawModal(); render(); autosave();
+      drawModal(); render(); window.scrollTo({ top: 0 }); autosave();
       toast('セーブファイルを読み込みました');
       if (G.pendingDividend) showModal('yearEnd', { fy: G.pendingDividend.fy });
     } catch (e) { toast('読み込めませんでした：' + e.message, 'bad'); }
