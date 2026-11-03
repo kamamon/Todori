@@ -2,7 +2,21 @@
 /* =========================================================
  *  15_main.js : 起動
  * ========================================================= */
+/* iPhone：開いたときにステータスバーと重なっている高さを一度だけ測り、
+   ページの流れの中の余白（--band0）に使う。スクロールで変わる値（--band）は固定表示の要素だけが使う。 */
+function measureSafeTop() {
+  try {
+    const p = document.createElement('div');
+    p.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:var(--band);visibility:hidden;pointer-events:none';
+    document.body.appendChild(p);
+    const h = p.getBoundingClientRect().height || 0;
+    p.remove();
+    document.documentElement.style.setProperty('--band0', `${Math.round(h)}px`);
+  } catch (e) { /* 測れなければ 0 のまま */ }
+}
 (function boot() {
+  measureSafeTop();
+  window.addEventListener('orientationchange', () => setTimeout(() => { if (window.scrollY < 4) measureSafeTop(); }, 400));
   try { const s = JSON.parse(lsGet(LS.settings) || 'null'); if (s) Object.assign(UI.settings, s); } catch (e) { /* 既定値のまま */ }
   applyTheme(lsGet(LS.theme) || 'auto');
   bindEvents();
