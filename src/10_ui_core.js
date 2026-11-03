@@ -46,6 +46,7 @@ function kv(rows) { return `<dl class="kv">${rows.filter(Boolean).map(([k, v]) =
 /* ---------- 描画 ---------- */
 function render() {
   const app = $('#app');
+  document.body.classList.toggle('ingame', !!G);
   if (!G) { app.innerHTML = renderStart(); return; }
   const tabsEl = $('.tabs');
   const tabScroll = tabsEl ? tabsEl.scrollLeft : 0;

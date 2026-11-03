@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>頭取 ― 地方銀行経営シミュレーション</title>
 <meta name="description" content="経営破綻した信用組合を承継した地方銀行の頭取として、融資審査・粉飾の見抜き・金利設定・金庫やシステムの拡張・決算までを経営する銀行シミュレーションゲーム。">
 <meta name="theme-color" content="#1d5240">
@@ -104,14 +104,32 @@ a { color: var(--vault); }
 .hide { display: none !important; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 
+/* ---------- iPhone の画面の端（ステータスバー・ホームバー・切り欠き） ----------
+ * iOS 26 以降の Safari は、スクロールするとページをステータスバーの下まで描き、
+ * そこにぼかし（もや）を重ねる。もやの範囲は #topfill の無地の帯で覆い、
+ * 貼り付くタブとダイアログはその下に出す。
+ *   --band  : いまステータスバーと重なっている高さ（スクロールで変わる。固定表示の要素だけに使う）
+ *   --band0 : 開いたときの値（JS で一度だけ測る。ページの流れの中の余白に使い、スクロール中に段がずれないようにする） */
+:root {
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+  --band: calc(var(--sat) + min(10px, var(--sat)));
+  --band0: 0px;
+}
+#topfill { position: fixed; top: 0; left: 0; right: 0; height: var(--band); background: var(--paper); z-index: 45; pointer-events: none; }
+body.ingame #topfill { background: var(--mast); }
+html { background: var(--paper); }
+
 /* ---------- 枠組み ---------- */
-#app { min-height: 100vh; display: flex; flex-direction: column; }
+#app { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; padding-left: var(--sal); padding-right: var(--sar); }
 .mast {
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 16px;
-  padding: 10px 20px;
+  padding: calc(10px + var(--band0)) 20px 10px;
   background: var(--mast);
   color: var(--on-mast);
 }
@@ -429,11 +447,14 @@ table.t { width: 100%; border-collapse: collapse; font-size: 13px; }
 /* モーダル */
 #modal-root .scrim {
   position: fixed; inset: 0; z-index: 50; background: rgba(10, 20, 17, .52);
-  display: grid; place-items: center; padding: 16px;
+  display: grid; place-items: center;
+  padding: calc(16px + var(--band)) calc(16px + var(--sar)) calc(16px + var(--sab)) calc(16px + var(--sal));
 }
 .modal {
   background: var(--sheet); color: var(--ink); border-radius: var(--r-l);
-  width: min(760px, 100%); max-height: calc(100vh - 32px); overflow: auto;
+  width: min(760px, 100%); overflow: auto;
+  max-height: calc(100vh - 32px);
+  max-height: calc(100dvh - 32px - var(--band) - var(--sab));
   box-shadow: 0 30px 80px -30px rgba(0, 0, 0, .6); border: 1px solid var(--rule-strong);
 }
 .modal.wide { width: min(1080px, 100%); }
@@ -446,7 +467,7 @@ table.t { width: 100%; border-collapse: collapse; font-size: 13px; }
 .xbtn { border: 0; background: transparent; font-size: 20px; line-height: 1; cursor: pointer; color: var(--ink-3); padding: 4px 8px; }
 
 /* トースト */
-#toast-root { position: fixed; right: 16px; bottom: 16px; z-index: 60; display: grid; gap: 8px; max-width: min(420px, calc(100vw - 32px)); }
+#toast-root { position: fixed; right: calc(16px + var(--sar)); bottom: calc(16px + var(--sab)); z-index: 60; display: grid; gap: 8px; max-width: min(420px, calc(100vw - 32px)); }
 .toast { background: var(--ink); color: var(--sheet); padding: 10px 14px; border-radius: var(--r-m); box-shadow: var(--shadow); font-size: 13px; }
 .toast.bad { background: var(--shu); color: #fff; }
 
@@ -465,7 +486,7 @@ table.t { width: 100%; border-collapse: collapse; font-size: 13px; }
 .appoint .start .btn.primary { padding: 10px 28px; font-size: 15px; }
 
 /* 開始画面：始め方（カスタムスタート）と辞令を並べる */
-.startwrap { max-width: 1120px; margin: 6vh auto 40px; padding: 0 24px; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 20px; align-items: start; position: relative; }
+.startwrap { max-width: 1120px; margin: calc(6vh + var(--band0)) auto calc(40px + var(--sab)); padding: 0 24px; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 20px; align-items: start; position: relative; }
 .startwrap .appoint { max-width: none; margin: 0; }
 .setup { background: var(--sheet); border: 1px solid var(--rule-strong); padding: 22px 22px 20px; box-shadow: var(--shadow); display: grid; gap: 14px; }
 .setup-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
@@ -481,7 +502,7 @@ table.t { width: 100%; border-collapse: collapse; font-size: 13px; }
 .scene { margin: 0; overflow: hidden; border-radius: var(--r-m); background: var(--sheet-3); }
 .scene img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .scene.ph { background: radial-gradient(120% 90% at 20% 10%, var(--vault-soft), var(--sheet-3)); }
-.hero { width: 100%; max-width: 1120px; max-height: 54vh; margin: 20px auto 0; aspect-ratio: 2 / 1; border-radius: var(--r-l); box-shadow: var(--shadow); }
+.hero { width: 100%; max-width: 1120px; max-height: 54vh; margin: calc(20px + var(--band0)) auto 0; aspect-ratio: 2 / 1; border-radius: var(--r-l); box-shadow: var(--shadow); }
 .startwrap.with-hero { margin-top: -64px; }
 .modal-art { width: 100%; aspect-ratio: 21 / 9; max-height: min(300px, 34vh); margin: 0 0 12px; }
 .panel-art { aspect-ratio: 3 / 1; margin: 0 0 12px; }
@@ -552,7 +573,7 @@ table.t { width: 100%; border-collapse: collapse; font-size: 13px; }
 }
 @media (max-width: 760px) {
   body { font-size: 14px; }
-  .mast { grid-template-columns: minmax(0, 1fr) auto; padding: 8px 16px; gap: 8px; }
+  .mast { grid-template-columns: minmax(0, 1fr) auto; padding: calc(8px + var(--band0)) 16px 8px; gap: 8px; }
   .mast-date { grid-column: 1; grid-row: 2; justify-self: start; text-align: left; display: flex; gap: 8px; align-items: baseline; }
   .mast-date .wareki { font-size: 15px; }
   .mast-actions { grid-column: 2; grid-row: 1 / span 2; flex-direction: column; align-items: stretch; gap: 6px; }
@@ -570,12 +591,12 @@ table.t { width: 100%; border-collapse: collapse; font-size: 13px; }
   .body { grid-template-columns: minmax(0, 1fr); }
   .tabs {
     flex-direction: row; overflow-x: auto; padding: 0; border-right: 0; border-bottom: 1px solid var(--rule);
-    position: sticky; top: 0; z-index: 5; scrollbar-width: none;
+    position: sticky; top: var(--band); z-index: 5; scrollbar-width: none;
   }
   .tabs::-webkit-scrollbar { display: none; }
   .tab { border-left: 0; border-bottom: 3px solid transparent; padding: 10px 12px; white-space: nowrap; flex: none; }
   .tab[aria-current="page"] { border-bottom-color: var(--vault); }
-  main { padding: 16px 16px 40px; }
+  main { padding: 16px 16px calc(40px + var(--sab)); }
   .g2, .g3 { grid-template-columns: minmax(0, 1fr); }
   .ringi-head { grid-template-columns: minmax(0, 1fr); padding: 14px 16px; }
   .stamps { grid-template-columns: repeat(4, 56px); justify-self: start; }
@@ -583,11 +604,11 @@ table.t { width: 100%; border-collapse: collapse; font-size: 13px; }
   .ringi section { padding: 12px 16px; }
   .decide { padding: 12px 16px; }
   .appoint { padding: 28px 22px 24px; margin-top: 16px; }
-  .startwrap { grid-template-columns: minmax(0, 1fr); padding: 0 12px; margin-top: 16px; gap: 14px; }
+  .startwrap { grid-template-columns: minmax(0, 1fr); padding: 0 12px; margin-top: calc(16px + var(--band0)); gap: 14px; }
   .startwrap.with-hero { margin-top: -28px; }
   .setup { padding: 18px 16px 16px; }
   .setup .custom-grid { grid-template-columns: minmax(0, 1fr); }
-  .hero { margin-top: 0; border-radius: 0; max-height: none; }
+  .hero { margin-top: var(--band0); border-radius: 0; max-height: none; }
   .stagecard { grid-template-columns: minmax(0, 1fr); }
   .stagecard .stage-art { min-height: 0; aspect-ratio: 16 / 9; }
   .presets { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
@@ -604,6 +625,7 @@ table.t { width: 100%; border-collapse: collapse; font-size: 13px; }
 </style>
 </head>
 <body>
+<div id="topfill" aria-hidden="true"></div>
 <div id="app"></div>
 <div id="modal-root"></div>
 <div id="toast-root" aria-live="polite"></div>
@@ -5601,6 +5623,7 @@ function kv(rows) { return `<dl class="kv">${rows.filter(Boolean).map(([k, v]) =
 /* ---------- 描画 ---------- */
 function render() {
   const app = $('#app');
+  document.body.classList.toggle('ingame', !!G);
   if (!G) { app.innerHTML = renderStart(); return; }
   const tabsEl = $('.tabs');
   const tabScroll = tabsEl ? tabsEl.scrollLeft : 0;
@@ -8000,7 +8023,21 @@ HELP.push(['メガバンク・テラバンク', `<p>銀行の業態は<b>地域�
 /* =========================================================
  *  15_main.js : 起動
  * ========================================================= */
+/* iPhone：開いたときにステータスバーと重なっている高さを一度だけ測り、
+   ページの流れの中の余白（--band0）に使う。スクロールで変わる値（--band）は固定表示の要素だけが使う。 */
+function measureSafeTop() {
+  try {
+    const p = document.createElement('div');
+    p.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:var(--band);visibility:hidden;pointer-events:none';
+    document.body.appendChild(p);
+    const h = p.getBoundingClientRect().height || 0;
+    p.remove();
+    document.documentElement.style.setProperty('--band0', `${Math.round(h)}px`);
+  } catch (e) { /* 測れなければ 0 のまま */ }
+}
 (function boot() {
+  measureSafeTop();
+  window.addEventListener('orientationchange', () => setTimeout(() => { if (window.scrollY < 4) measureSafeTop(); }, 400));
   try { const s = JSON.parse(lsGet(LS.settings) || 'null'); if (s) Object.assign(UI.settings, s); } catch (e) { /* 既定値のまま */ }
   applyTheme(lsGet(LS.theme) || 'auto');
   bindEvents();
