@@ -117,7 +117,8 @@ a { color: var(--vault); }
 }
 .mast-brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .mast-brand svg { width: 38px; height: 38px; flex: none; }
-.bank-name { font-family: var(--f-doc); font-size: 20px; font-weight: 700; letter-spacing: .06em; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bank-name { font-family: var(--f-doc); font-size: 20px; font-weight: 700; letter-spacing: .06em; line-height: 1.2; display: flex; align-items: center; min-width: 0; }
+.bank-name .bn { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .bank-sub { font-size: 12px; opacity: .8; }
 .mast-date { justify-self: center; text-align: center; line-height: 1.25; }
 .mast-date .wareki { font-family: var(--f-doc); font-size: 19px; font-weight: 700; letter-spacing: .08em; white-space: nowrap; }
@@ -460,17 +461,28 @@ table.t { width: 100%; border-collapse: collapse; font-size: 13px; }
 .appoint .body-text { font-family: var(--f-doc); font-size: 17px; line-height: 2.1; }
 .appoint .body-text input { font-family: var(--f-doc); font-size: 17px; border: 0; border-bottom: 1px solid var(--ink-2); border-radius: 0; background: transparent; padding: 0 4px; width: 9em; text-align: center; }
 .appoint .issuer { text-align: right; font-family: var(--f-doc); margin-top: 24px; line-height: 1.9; }
-.appoint .opts { margin-top: 26px; display: grid; gap: 12px; }
-.appoint .field .seg { justify-self: start; }
 .appoint .start { margin-top: 26px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
 .appoint .start .btn.primary { padding: 10px 28px; font-size: 15px; }
+
+/* 開始画面：始め方（カスタムスタート）と辞令を並べる */
+.startwrap { max-width: 1120px; margin: 6vh auto 40px; padding: 0 24px; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 20px; align-items: start; position: relative; }
+.startwrap .appoint { max-width: none; margin: 0; }
+.setup { background: var(--sheet); border: 1px solid var(--rule-strong); padding: 22px 22px 20px; box-shadow: var(--shadow); display: grid; gap: 14px; }
+.setup-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.setup-head h2 { font-family: var(--f-doc); font-size: 20px; letter-spacing: .1em; margin: 0; }
+.setup .presets { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.setup .custom-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.setup .field .seg { justify-self: start; }
+.setup-sum { margin: 0; line-height: 1.7; }
+.preset.custom { border-style: dashed; }
+.preset.custom.on { border-style: solid; }
 
 /* 場面の画像（Canvaで生成。img/ にあれば表示） */
 .scene { margin: 0; overflow: hidden; border-radius: var(--r-m); background: var(--sheet-3); }
 .scene img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .scene.ph { background: radial-gradient(120% 90% at 20% 10%, var(--vault-soft), var(--sheet-3)); }
-.hero { max-width: 1120px; margin: 20px auto 0; aspect-ratio: 2 / 1; border-radius: var(--r-l); box-shadow: var(--shadow); }
-.appoint.with-hero { margin-top: -72px; }
+.hero { width: 100%; max-width: 1120px; max-height: 54vh; margin: 20px auto 0; aspect-ratio: 2 / 1; border-radius: var(--r-l); box-shadow: var(--shadow); }
+.startwrap.with-hero { margin-top: -64px; }
 .modal-art { width: 100%; aspect-ratio: 21 / 9; max-height: min(300px, 34vh); margin: 0 0 12px; }
 .panel-art { aspect-ratio: 3 / 1; margin: 0 0 12px; }
 
@@ -486,8 +498,9 @@ table.t { width: 100%; border-collapse: collapse; font-size: 13px; }
 .stage-steps .now { color: var(--ink); font-weight: 700; }
 .stage-steps .now .n { background: var(--vault); border-color: var(--vault); color: var(--on-vault); }
 .stage-name { font-family: var(--f-doc); font-size: 26px; margin: 0 0 6px; letter-spacing: .04em; }
-.stage-badge { display: inline-block; margin-left: 8px; padding: 1px 8px; font-size: 11px; font-weight: 700; border-radius: 999px; background: var(--brass); color: #fff; vertical-align: 3px; letter-spacing: .06em; }
+.stage-badge { display: inline-block; flex: none; margin-left: 8px; padding: 1px 8px; font-size: 11px; font-weight: 700; border-radius: 999px; background: var(--brass); color: #fff; vertical-align: 3px; letter-spacing: .06em; white-space: nowrap; }
 .stage-badge.s2 { background: var(--on-mast); color: var(--mast); }
+.stage-badge.show-m { display: none; }
 
 /* 店舗網のタイル地図 */
 .tilemap { width: 100%; height: auto; display: block; max-height: 380px; }
@@ -546,6 +559,7 @@ table.t { width: 100%; border-collapse: collapse; font-size: 13px; }
   .mbtn { padding: 4px 10px; font-size: 12px; }
   .bank-name { font-size: 17px; }
   .hide-m { display: none; }
+  .stage-badge.show-m { display: inline-block; font-size: 10px; padding: 0 6px; vertical-align: 1px; }
   .mast-date .sub { font-size: 11px; }
   .mast-brand svg { width: 30px; height: 30px; }
   .strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -569,8 +583,11 @@ table.t { width: 100%; border-collapse: collapse; font-size: 13px; }
   .ringi section { padding: 12px 16px; }
   .decide { padding: 12px 16px; }
   .appoint { padding: 28px 22px 24px; margin-top: 16px; }
-  .appoint.with-hero { margin-top: -28px; }
-  .hero { margin-top: 0; border-radius: 0; }
+  .startwrap { grid-template-columns: minmax(0, 1fr); padding: 0 12px; margin-top: 16px; gap: 14px; }
+  .startwrap.with-hero { margin-top: -28px; }
+  .setup { padding: 18px 16px 16px; }
+  .setup .custom-grid { grid-template-columns: minmax(0, 1fr); }
+  .hero { margin-top: 0; border-radius: 0; max-height: none; }
   .stagecard { grid-template-columns: minmax(0, 1fr); }
   .stagecard .stage-art { min-height: 0; aspect-ratio: 16 / 9; }
   .presets { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
@@ -5614,7 +5631,7 @@ function renderMast() {
   const over = !!G.over;
   const st = G.stage || 0;
   return `<header class="mast">
-    <div class="mast-brand">${SEAL_SVG}<div style="min-width:0"><div class="bank-name">${esc(G.bankName)}${st ? `<span class="stage-badge s${st}">${STAGES[st].name}</span>` : ''}</div><div class="bank-sub">頭取 ${esc(G.ceoName)}<span class="hide-m">　${st ? STAGES[st].area + 'で営業' : bankClass().name}</span></div></div></div>
+    <div class="mast-brand">${SEAL_SVG}<div style="min-width:0"><div class="bank-name"><span class="bn">${esc(G.bankName)}</span>${st ? `<span class="stage-badge s${st} hide-m">${STAGES[st].name}</span>` : ''}</div><div class="bank-sub">頭取 ${esc(G.ceoName)}${st ? `<span class="stage-badge s${st} show-m">${STAGES[st].name}</span>` : ''}<span class="hide-m">　${st ? STAGES[st].area + 'で営業' : bankClass().name}</span></div></div></div>
     <div class="mast-date"><div class="wareki">${warekiLabel(G.m)}</div><div class="sub">${y}年${mo}月　${fyLabel(fy)}${!G.termYears ? '' : yearsLeft > 0 ? `・任期あと${yearsLeft}年` : '・任期満了後'}</div></div>
     <div class="mast-actions"><button type="button" class="mbtn" data-act="menu">メニュー</button><button type="button" class="mbtn" data-act="help">遊び方</button>
     <button type="button" class="btn-advance" data-act="advance"${over ? ' disabled' : ''}>月末を締めて翌月へ</button></div>
@@ -5771,7 +5788,7 @@ async function loadFrom(key) {
     if (!raw) { toast('セーブデータがありません', 'bad'); return false; }
     deserialize(raw);
     UI.tab = 'dash'; UI.appId = null; UI.modal = null; UI.queue = [];
-    drawModal(); render();
+    drawModal(); render(); window.scrollTo({ top: 0 });
     toast(`${G.bankName}（${ymLabel(G.m)}）を読み込みました`);
     if (G.pendingDividend) showModal('yearEnd', { fy: G.pendingDividend.fy });
     return true;
@@ -5797,7 +5814,7 @@ function importSave(file) {
     try {
       deserialize(String(r.result));
       UI.tab = 'dash'; UI.modal = null; UI.queue = [];
-      drawModal(); render(); autosave();
+      drawModal(); render(); window.scrollTo({ top: 0 }); autosave();
       toast('セーブファイルを読み込みました');
       if (G.pendingDividend) showModal('yearEnd', { fy: G.pendingDividend.fy });
     } catch (e) { toast('読み込めませんでした：' + e.message, 'bad'); }
@@ -7641,22 +7658,32 @@ function renderStart() {
   const mission = st === 0 ? `経営破綻した${OLD_UNION}の事業を承継し、${CITY_NAME}の地域経済を支える銀行として健全に成長させること。`
     : st === 1 ? `${CITY_NAME}を発祥とするメガバンク・グループを率い、全国に広がる店舗網と大企業との取引を通じて、日本経済を支えること。`
       : `世界に拠点を持つテラバンクを率い、国内外の預金と貸出、為替と各国の危機を乗りこなし、グループを健全に成長させること。`;
+  const isCustom = s.open || s.preset === 'custom';
   const presets = Object.entries(CUSTOM_PRESETS).map(([k, P]) => `<button type="button" class="preset${s.preset === k ? ' on' : ''}" data-act="stPreset" data-v="${k}" aria-pressed="${s.preset === k}"><b>${P.name}</b><span>${esc(P.desc)}</span></button>`).join('')
-    + `<button type="button" class="preset${s.preset === 'custom' ? ' on' : ''}" data-act="stOpen" aria-pressed="${s.preset === 'custom'}"><b>カスタム</b><span>開始の条件を一つずつ決める。</span></button>`;
+    + `<button type="button" class="preset custom${isCustom ? ' on' : ''}" data-act="stOpen" aria-pressed="${isCustom}"><b>カスタムスタート</b><span>業態・資本・景気・任期などを一つずつ決める。</span></button>`;
   const fields = CUSTOM_FIELDS.map(([k, label]) => `<label class="field"><span>${label}</span><select data-ch="stCustom" data-k="${k}">${CUSTOM_OPTS[k].map(([v, l]) => `<option value="${v}"${String(cu[k]) === String(v) ? ' selected' : ''}>${l}</option>`).join('')}</select></label>`).join('');
-  return `${scene('hero', { cls: 'hero', alt: '夜明けの港町と、時計塔のある銀行の本店' })}<div class="appoint${artSrc('hero') ? ' with-hero' : ''}">
+  const optName = (k, v) => (CUSTOM_OPTS[k].find(([x]) => String(x) === String(v)) || [0, String(v)])[1];
+  const summary = [optName('stage', cu.stage), `資本 ${optName('capMul', cu.capMul)}`, `貸出の質 ${optName('quality', cu.quality)}`, `${CITY_NAME}の店舗 ${optName('branches', cu.branches)}`,
+    `システム ${optName('sys', cu.sys)}`, `景気 ${optName('econ', cu.econ)}`, `任期 ${optName('term', cu.term)}`].join('／');
+  const cont = meta && !meta.over ? btn(`続きから（${esc(meta.bank)}・${ymLabel(meta.m)}）`, 'loadAuto') : '';
+  const setup = `<section class="setup" aria-labelledby="setupTitle">
+    <div class="setup-head"><h2 id="setupTitle">始め方</h2>${cont}</div>
+    <div class="presets">${presets}</div>
+    ${isCustom ? `<div class="custom-grid">${fields}<label class="field"><span>シード（同じ数字なら同じ展開）</span><input type="text" id="stSeed" value="${esc(s.seed)}" placeholder="空欄でランダム" inputmode="numeric"></label></div>`
+      : `<p class="setup-sum small muted">${summary}</p>`}
+    <div class="field"><span>難易度</span><div class="seg" role="radiogroup">${Object.entries(DIFFICULTY).map(([k, d]) => `<button type="button" data-act="stDiff" data-v="${k}" aria-pressed="${s.diff === k}">${d.name}</button>`).join('')}</div>
+    <span class="small muted">${{ easy: '金融危機が起きにくく、資本に余裕がある。', normal: '標準的な難しさ。', hard: '景気の波が荒く、金融庁も厳しい。資本が薄い。' }[s.diff]}</span></div>
+  </section>`;
+  const letter = `<div class="appoint">
     <h1>辞令</h1><div class="gametitle">頭取 ― 銀行経営シミュレーション</div>
     <div class="body-text"><label><input type="text" id="stCeo" value="${esc(s.ceo)}" placeholder="氏名" maxlength="12" aria-label="あなたの氏名"></label>　殿<br>
     貴殿を <label><input type="text" id="stBank" value="${esc(s.bank)}" maxlength="14" aria-label="銀行の名前" style="width:10em"></label> の代表取締役頭取に任命する。<br>
     ${mission}<br>
     任期は${warekiYear(START_YEAR)}${START_MONTH}月から${term}。</div>
     <div class="issuer">${warekiYear(START_YEAR)}${START_MONTH}月1日<br>取締役会</div>
-    <div class="opts"><div class="field"><span>難易度</span><div class="seg" role="radiogroup">${Object.entries(DIFFICULTY).map(([k, d]) => `<button type="button" data-act="stDiff" data-v="${k}" aria-pressed="${s.diff === k}">${d.name}</button>`).join('')}</div>
-    <span class="small muted">${{ easy: '金融危機が起きにくく、資本に余裕がある。', normal: '標準的な難しさ。', hard: '景気の波が荒く、金融庁も厳しい。資本が薄い。' }[s.diff]}</span></div>
-    <div class="field"><span>始め方</span><div class="presets">${presets}</div></div>
-    ${s.open || s.preset === 'custom' ? `<div class="custom-grid">${fields}<label class="field"><span>シード（同じ数字なら同じ展開）</span><input type="text" id="stSeed" value="${esc(s.seed)}" placeholder="空欄でランダム" inputmode="numeric" style="width:10em"></label></div>` : `<button type="button" class="linkish small" data-act="stOpen">条件を細かく決める</button>`}</div>
-    <div class="start">${btn('就任する', 'startGame', {}, 'primary')}${meta && !meta.over ? btn(`続きから（${esc(meta.bank)}・${ymLabel(meta.m)}）`, 'loadAuto') : ''}${btn('ファイルから読み込む', 'importSave')}${btn('遊び方', 'help')}</div>
+    <div class="start">${btn('就任する', 'startGame', {}, 'primary')}${btn('ファイルから読み込む', 'importSave')}${btn('遊び方', 'help')}</div>
   </div>`;
+  return `${scene('hero', { cls: 'hero', alt: '港町と、緑の丸屋根に時計塔のある銀行の本店' })}<div class="startwrap${artSrc('hero') ? ' with-hero' : ''}">${setup}${letter}</div>`;
 }
 Object.assign(ACTIONS, {
   stDiff: d => { startStoreInputs(); UI.start.diff = d.v; render(); },
@@ -7675,6 +7702,7 @@ Object.assign(ACTIONS, {
     newGame(opts);
     UI.tab = 'dash'; UI.appId = null; UI.netSel = null; UI.netView = G.stage >= 2 ? 'ovs' : 'nat';
     render();
+    window.scrollTo({ top: 0 });
     autosave();
     showModal('intro');
   },

@@ -443,22 +443,32 @@ function renderStart() {
   const mission = st === 0 ? `経営破綻した${OLD_UNION}の事業を承継し、${CITY_NAME}の地域経済を支える銀行として健全に成長させること。`
     : st === 1 ? `${CITY_NAME}を発祥とするメガバンク・グループを率い、全国に広がる店舗網と大企業との取引を通じて、日本経済を支えること。`
       : `世界に拠点を持つテラバンクを率い、国内外の預金と貸出、為替と各国の危機を乗りこなし、グループを健全に成長させること。`;
+  const isCustom = s.open || s.preset === 'custom';
   const presets = Object.entries(CUSTOM_PRESETS).map(([k, P]) => `<button type="button" class="preset${s.preset === k ? ' on' : ''}" data-act="stPreset" data-v="${k}" aria-pressed="${s.preset === k}"><b>${P.name}</b><span>${esc(P.desc)}</span></button>`).join('')
-    + `<button type="button" class="preset${s.preset === 'custom' ? ' on' : ''}" data-act="stOpen" aria-pressed="${s.preset === 'custom'}"><b>カスタム</b><span>開始の条件を一つずつ決める。</span></button>`;
+    + `<button type="button" class="preset custom${isCustom ? ' on' : ''}" data-act="stOpen" aria-pressed="${isCustom}"><b>カスタムスタート</b><span>業態・資本・景気・任期などを一つずつ決める。</span></button>`;
   const fields = CUSTOM_FIELDS.map(([k, label]) => `<label class="field"><span>${label}</span><select data-ch="stCustom" data-k="${k}">${CUSTOM_OPTS[k].map(([v, l]) => `<option value="${v}"${String(cu[k]) === String(v) ? ' selected' : ''}>${l}</option>`).join('')}</select></label>`).join('');
-  return `${scene('hero', { cls: 'hero', alt: '夜明けの港町と、時計塔のある銀行の本店' })}<div class="appoint${artSrc('hero') ? ' with-hero' : ''}">
+  const optName = (k, v) => (CUSTOM_OPTS[k].find(([x]) => String(x) === String(v)) || [0, String(v)])[1];
+  const summary = [optName('stage', cu.stage), `資本 ${optName('capMul', cu.capMul)}`, `貸出の質 ${optName('quality', cu.quality)}`, `${CITY_NAME}の店舗 ${optName('branches', cu.branches)}`,
+    `システム ${optName('sys', cu.sys)}`, `景気 ${optName('econ', cu.econ)}`, `任期 ${optName('term', cu.term)}`].join('／');
+  const cont = meta && !meta.over ? btn(`続きから（${esc(meta.bank)}・${ymLabel(meta.m)}）`, 'loadAuto') : '';
+  const setup = `<section class="setup" aria-labelledby="setupTitle">
+    <div class="setup-head"><h2 id="setupTitle">始め方</h2>${cont}</div>
+    <div class="presets">${presets}</div>
+    ${isCustom ? `<div class="custom-grid">${fields}<label class="field"><span>シード（同じ数字なら同じ展開）</span><input type="text" id="stSeed" value="${esc(s.seed)}" placeholder="空欄でランダム" inputmode="numeric"></label></div>`
+      : `<p class="setup-sum small muted">${summary}</p>`}
+    <div class="field"><span>難易度</span><div class="seg" role="radiogroup">${Object.entries(DIFFICULTY).map(([k, d]) => `<button type="button" data-act="stDiff" data-v="${k}" aria-pressed="${s.diff === k}">${d.name}</button>`).join('')}</div>
+    <span class="small muted">${{ easy: '金融危機が起きにくく、資本に余裕がある。', normal: '標準的な難しさ。', hard: '景気の波が荒く、金融庁も厳しい。資本が薄い。' }[s.diff]}</span></div>
+  </section>`;
+  const letter = `<div class="appoint">
     <h1>辞令</h1><div class="gametitle">頭取 ― 銀行経営シミュレーション</div>
     <div class="body-text"><label><input type="text" id="stCeo" value="${esc(s.ceo)}" placeholder="氏名" maxlength="12" aria-label="あなたの氏名"></label>　殿<br>
     貴殿を <label><input type="text" id="stBank" value="${esc(s.bank)}" maxlength="14" aria-label="銀行の名前" style="width:10em"></label> の代表取締役頭取に任命する。<br>
     ${mission}<br>
     任期は${warekiYear(START_YEAR)}${START_MONTH}月から${term}。</div>
     <div class="issuer">${warekiYear(START_YEAR)}${START_MONTH}月1日<br>取締役会</div>
-    <div class="opts"><div class="field"><span>難易度</span><div class="seg" role="radiogroup">${Object.entries(DIFFICULTY).map(([k, d]) => `<button type="button" data-act="stDiff" data-v="${k}" aria-pressed="${s.diff === k}">${d.name}</button>`).join('')}</div>
-    <span class="small muted">${{ easy: '金融危機が起きにくく、資本に余裕がある。', normal: '標準的な難しさ。', hard: '景気の波が荒く、金融庁も厳しい。資本が薄い。' }[s.diff]}</span></div>
-    <div class="field"><span>始め方</span><div class="presets">${presets}</div></div>
-    ${s.open || s.preset === 'custom' ? `<div class="custom-grid">${fields}<label class="field"><span>シード（同じ数字なら同じ展開）</span><input type="text" id="stSeed" value="${esc(s.seed)}" placeholder="空欄でランダム" inputmode="numeric" style="width:10em"></label></div>` : `<button type="button" class="linkish small" data-act="stOpen">条件を細かく決める</button>`}</div>
-    <div class="start">${btn('就任する', 'startGame', {}, 'primary')}${meta && !meta.over ? btn(`続きから（${esc(meta.bank)}・${ymLabel(meta.m)}）`, 'loadAuto') : ''}${btn('ファイルから読み込む', 'importSave')}${btn('遊び方', 'help')}</div>
+    <div class="start">${btn('就任する', 'startGame', {}, 'primary')}${btn('ファイルから読み込む', 'importSave')}${btn('遊び方', 'help')}</div>
   </div>`;
+  return `${scene('hero', { cls: 'hero', alt: '港町と、緑の丸屋根に時計塔のある銀行の本店' })}<div class="startwrap${artSrc('hero') ? ' with-hero' : ''}">${setup}${letter}</div>`;
 }
 Object.assign(ACTIONS, {
   stDiff: d => { startStoreInputs(); UI.start.diff = d.v; render(); },
@@ -477,6 +487,7 @@ Object.assign(ACTIONS, {
     newGame(opts);
     UI.tab = 'dash'; UI.appId = null; UI.netSel = null; UI.netView = G.stage >= 2 ? 'ovs' : 'nat';
     render();
+    window.scrollTo({ top: 0 });
     autosave();
     showModal('intro');
   },
