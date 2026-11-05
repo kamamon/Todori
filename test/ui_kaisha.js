@@ -5,6 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const url = 'file://' + path.join(__dirname, '..', 'index.html');
 const shots = path.join(__dirname, 'shots');
+// 業種：以前の6業種の id（ret など）かカタログの業種名。「+」でつなぐと複合
 const inds = (process.argv[2] && !process.argv[2].startsWith('--') ? process.argv[2] : 'ret,food,mfg,con,whl,it').split(',');
 const doShots = process.argv.includes('--shots');
 const mobile = process.argv.includes('--mobile');
@@ -24,10 +25,25 @@ if (!fs.existsSync(shots)) fs.mkdirSync(shots);
   await page.waitForTimeout(250);
   const tag = mobile ? 'm' : 'd';
   const shot = async (name, full = true) => { if (doShots) await page.screenshot({ path: `${shots}/k${tag}_${name}.png`, fullPage: full }); };
+  // 労災の対応（閉じられないモーダル）を最後まで進める
+  let rosaiN = 0;
+  const handleRosai = async () => {
+    for (let k = 0; k < 20; k++) {
+      const pickB = await page.$('.modal [data-act="kRosaiPick"]:not([disabled])');
+      if (pickB) { if (rosaiN === 0 && doShots) await page.screenshot({ path: `${shots}/k${tag}_rosai.png` }); await pickB.click(); await page.waitForTimeout(60); continue; }
+      const nx = await page.$('.modal [data-act="kRosaiNext"]:not([disabled])');
+      if (nx) { await nx.click(); await page.waitForTimeout(60); continue; }
+      const dn = await page.$('.modal [data-act="kRosaiDone"]');
+      if (dn) { await dn.click(); await page.waitForTimeout(80); rosaiN++; continue; }
+      return;
+    }
+  };
   const closeModals = async () => {
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 12; i++) {
       const name = await page.evaluate(() => (document.querySelector('#modal-root .modal') ? 1 : 0));
       if (!name) return;
+      await handleRosai();
+      if (!(await page.$('#modal-root .modal'))) return;
       const b = await page.$('.modal .mf [data-act="closeModal"]');
       if (b) await b.click(); else await page.keyboard.press('Escape');
       await page.waitForTimeout(80);
@@ -48,8 +64,17 @@ if (!fs.existsSync(shots)) fs.mkdirSync(shots);
     }
     await page.click('[data-act="stMode"][data-v="kaisha"]');
     await page.waitForTimeout(80);
-    await page.click(`[data-act="kStInd"][data-v="${ind}"]`);
-    await page.waitForTimeout(60);
+    const legacy = await page.evaluate(() => window.Toudori.legacy());
+    const names = ind.split('+').map(x => legacy[x] || x);
+    for (let k = 0; k < names.length; k++) {
+      await page.fill('#kstQ', names[k]);
+      await page.waitForTimeout(60);
+      const sel = `[data-act="${k === 0 ? 'kStPick' : 'kStAdd'}"][data-v="${names[k].replace(/"/g, '\\"')}"]`;
+      const b = await page.$(sel);
+      if (!b) { errors.push(`${ind}: 開始画面で${names[k]}が見つからない`); continue; }
+      await b.click();
+      await page.waitForTimeout(60);
+    }
     if (first) await shot('00_start');
     await page.fill('#kstCeo', '山田 一郎');
     await page.fill('#kstSeed', '7');
@@ -59,7 +84,7 @@ if (!fs.existsSync(shots)) fs.mkdirSync(shots);
     if (first) await shot('01_intro', false);
     await closeModals();
     // すべてのタブ
-    for (const t of ['k_dash', 'k_ops', 'k_bank', 'k_fs', 'k_books', 'k_budget', 'k_learn', 'k_news']) {
+    for (const t of ['k_dash', 'k_ops', 'k_grow', 'k_law', 'k_bank', 'k_fs', 'k_books', 'k_budget', 'k_learn', 'k_news']) {
       await page.click(`.tab[data-tab="${t}"]`);
       await page.waitForTimeout(70);
       await screenErr(`${ind} ${t}`);
@@ -67,7 +92,7 @@ if (!fs.existsSync(shots)) fs.mkdirSync(shots);
     }
     // 決算書の各表
     await page.click('.tab[data-tab="k_fs"]');
-    for (const v of ['pl', 'bs', 'cost', 'month', 'cf', 'ratio', 'tax']) {
+    for (const v of ['pl', 'bs', 'cost', 'ccost', 'seg', 'month', 'cf', 'ratio', 'tax']) {
       const b = await page.$(`[data-act="kFsView"][data-v="${v}"]`);
       if (!b) continue;
       await b.click(); await page.waitForTimeout(60);
@@ -103,7 +128,27 @@ if (!fs.existsSync(shots)) fs.mkdirSync(shots);
     if (range) { await range.evaluate(el => { el.value = el.max; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); }); await page.waitForTimeout(60); }
     const hire = await page.$('[data-act="kHire"][data-n="1"]');
     if (hire) { await hire.click(); await page.waitForTimeout(60); }
-    const capex = await page.$('[data-act="kRetFridge"], [data-act="kFoodKitchen"], [data-act="kMfgMach"], [data-act="kWhlTruck"], [data-act="kItDev"], [data-act="kBidM"]');
+    // 事業ごとの画面（ユニットのチップを順に）
+    const chips = await page.$$('[data-act="kUnitSel"]');
+    for (let ci = 0; ci < chips.length; ci++) {
+      const cs = await page.$$('[data-act="kUnitSel"]');
+      await cs[ci].click(); await page.waitForTimeout(60);
+      await screenErr(`${ind} unit ${ci}`);
+      if (first || ci > 0) await shot(`${ind}_unit${ci}`);
+    }
+    // 設備のカタログ
+    const eqb = await page.$('[data-act="kEqBuyOpen"]');
+    if (eqb) {
+      await eqb.click(); await page.waitForTimeout(100);
+      await modalErr(`${ind} eqbuy`);
+      if (first || /mfg/.test(ind)) await shot(`${ind}_eqbuy`, false);
+      const opts = await page.$$('[data-act="kEqPick"]');
+      if (opts.length > 2) { await opts[2].click(); await page.waitForTimeout(60); }
+      const go = await page.$('[data-act="kEqBuyGo"]');
+      if (go) { await go.click(); await page.waitForTimeout(100); await modalErr(`${ind} eq capex`); const gx = await page.$('[data-act="kCxGo"]:not([disabled])'); if (gx) { await gx.click(); await page.waitForTimeout(100); } }
+      await closeModals();
+    }
+    const capex = await page.$('[data-act="kShopEq"], [data-act="kRestKitchen"], [data-act="kTradeTruck"], [data-act="kItDev"], [data-act="kBidM"]');
     if (capex) {
       await capex.click(); await page.waitForTimeout(100);
       await modalErr(`${ind} capex`);
@@ -117,8 +162,35 @@ if (!fs.existsSync(shots)) fs.mkdirSync(shots);
       }
     }
     await screenErr(`${ind} ops after`);
+    // 新しい事業の画面
+    await page.click('[data-act="kNewUnit"]'); await page.waitForTimeout(100);
+    await page.fill('[data-in="kNUq"]', 'データセンター'); await page.waitForTimeout(80);
+    const tp = await page.$('[data-act="kNUPick"]');
+    if (tp) { await tp.click(); await page.waitForTimeout(120); }
+    await modalErr(`${ind} newunit`);
+    if (first) await shot('newunit', false);
+    await closeModals();
+    // 成長の画面
+    await page.click('.tab[data-tab="k_grow"]');
+    for (const v of ['up', 'intl', 'ma', 'ipo', 'ms']) {
+      await page.click(`[data-act="kGrowSec"][data-v="${v}"]`); await page.waitForTimeout(60);
+      await screenErr(`${ind} grow ${v}`);
+      if (first) await shot(`grow_${v}`);
+    }
+    if (first) {
+      await page.click('[data-act="kGrowSec"][data-v="up"]'); await page.waitForTimeout(40);
+      const ub = await page.$('[data-act="kUpgDo"]');
+      if (ub) { await ub.click(); await page.waitForTimeout(100); await modalErr(`${ind} upg`); await shot('upg_modal', false); const g1 = await page.$('[data-act="kUpgGo"], [data-act="kCxGo"]:not([disabled])'); if (g1) { await g1.click(); await page.waitForTimeout(100); } await closeModals(); }
+      await page.click('[data-act="kGrowSec"][data-v="ma"]'); await page.waitForTimeout(40);
+      const mf = await page.$('[data-act="kMaFind"]');
+      if (mf) { await mf.click(); await page.waitForTimeout(150); await screenErr(`${ind} ma list`); await shot('grow_ma_list'); const mo = await page.$('[data-act="kMaOpen"]'); if (mo) { await mo.click(); await page.waitForTimeout(100); await modalErr(`${ind} ma`); await shot('ma_modal', false); await closeModals(); } }
+      await page.click('[data-act="kGrowSec"][data-v="ipo"]'); await page.waitForTimeout(40);
+      const ip = await page.$('[data-act="kIpoPrep"]');
+      if (ip) { await ip.click(); await page.waitForTimeout(80); const ok = await page.$('[data-act="kIpoPrepGo"]'); if (ok) { await ok.click(); await page.waitForTimeout(100); } await screenErr(`${ind} ipo prep`); await shot('grow_ipo_prep'); }
+    }
     // 3か月進めて決算
     for (let i = 0; i < 3; i++) {
+      await closeModals(); // 労災の対応など、途中で開いたモーダルを済ませてから
       await page.click('.btn-advance');
       await page.waitForTimeout(120);
       const cf = await page.$('[data-act="kAdvanceNow"]');
@@ -126,9 +198,10 @@ if (!fs.existsSync(shots)) fs.mkdirSync(shots);
       await modalErr(`${ind} month ${i}`);
       if (first && i === 0) await shot('month', false);
       // 月次報告を閉じる（決算整理は閉じない）
-      for (let k = 0; k < 3; k++) {
+      for (let k = 0; k < 8; k++) {
         const isClose = await page.evaluate(() => !!document.querySelector('.modal .wiz'));
         if (isClose) break;
+        await handleRosai();
         const b = await page.$('.modal .mf [data-act="closeModal"]');
         if (!b) break;
         await b.click(); await page.waitForTimeout(80);

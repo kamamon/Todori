@@ -2,8 +2,13 @@
 const fs = require('fs');
 const path = require('path');
 const dir = path.join(__dirname, 'src');
-const js = fs.readdirSync(dir).filter(f => /^\d\d_.*\.js$/.test(f)).sort()
+const js = fs.readdirSync(dir).filter(f => /^\d\d[a-z]?_.*\.js$/.test(f)).sort()
   .map(f => `/* ---- ${f} ---- */\n` + fs.readFileSync(path.join(dir, f), 'utf8').replace(/^'use strict';\n/, '')).join('\n');
+// 同じ名前の関数が2つあると、あとのファイルの関数が前のものを上書きしてしまう。うっかり重ならないよう警告する
+{
+  const seen = {};
+  for (const f of fs.readdirSync(dir).filter(f => /^\d\d[a-z]?_.*\.js$/.test(f))) for (const m of fs.readFileSync(path.join(dir, f), 'utf8').matchAll(/^function ([A-Za-z0-9_$]+)\(/gm)) { if (seen[m[1]]) console.warn(`警告：関数 ${m[1]} が ${seen[m[1]]} と ${f} の両方にある`); seen[m[1]] = f; }
+}
 const css = fs.readFileSync(path.join(dir, 'style.css'), 'utf8');
 // img/ にある場面の画像（Canvaで生成）を登録する。ファイル名（拡張子なし）がキー
 const imgDir = path.join(__dirname, 'img');

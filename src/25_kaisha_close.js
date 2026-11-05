@@ -22,12 +22,23 @@ function ksShuffle(arr, seed) {
   return a;
 }
 function ksFlowSumFY(k, fy) { return sum(G.months.filter(x => fyOf(x.m) === fy), x => (x.flow[k] || 0)); }
+/* 事業ごとの期中の合計（決算整理の前） */
+function ksFlowSumFYU(k, fy, uid) { return sum(G.months.filter(x => fyOf(x.m) === fy), x => (((x.flowU || {})[uid] || {})[k] || 0)); }
+/* 棚卸の問題に使う在庫：商品・食材（三分法）の事業を優先、なければ材料 */
+function ksStockQItem(c) {
+  const its = c.data.stock.items;
+  return its.slice().sort((a, b) => (b.pacct === 'purch') - (a.pacct === 'purch') || b.book - a.book).find(x => x.pacct === 'purch' || x.pacct === 'matPurch') || its[0];
+}
 /* 金額の選択肢をつくる（重複を避ける） */
 function ksAmtChoices(correct, wrongs) {
   const out = [correct];
   for (const w of wrongs) { const r = Math.round(w); if (isFinite(r) && r > 0 && out.every(o => Math.abs(o - r) > Math.max(1000, Math.abs(correct) * 0.002))) out.push(r); }
-  let k = 1;
-  while (out.length < 4) { const r = Math.round(correct * (1 + 0.17 * k * (k % 2 ? 1 : -1))); if (out.every(o => Math.abs(o - r) > 1000)) out.push(r); k++; }
+  // 正解のまわりに散らす（正解が0や小さいときは1万円刻み。負の金額は使わない）
+  const stp = Math.max(1e4, Math.abs(correct) * 0.17);
+  for (let k = 1; out.length < 4 && k < 60; k++) {
+    const r = Math.round(correct + stp * Math.ceil(k / 2) * (k % 2 ? 1 : -1));
+    if (r >= 0 && out.every(o => Math.abs(o - r) > 1000)) out.push(r);
+  }
   return out.slice(0, 4);
 }
 
@@ -40,22 +51,22 @@ function ksQuizFor(step) {
 }
 function ksMakeQuiz(step) {
   const c = G.closing;
-  const I = ksI();
   const fy = c.fy;
   if (step === 'stock') {
-    if (I.inv === 'sanbun') {
-      const it = c.data.stock.items[0];
-      const purch = ksFlowSumFY('purch', fy);
+    const it = ksStockQItem(c);
+    const multi = c.data.stock.groups.length > 1;
+    const who = multi ? `【${it.un}】` : '';
+    if (it.pacct === 'purch') {
+      const purch = ksFlowSumFYU('purch', fy, it.u);
       const ans = it.begin + purch - it.book;
       const ch = ksAmtChoices(ans, [purch, it.begin + purch, purch + it.book - it.begin]);
-      return { q: `今期の売上原価はいくらでしょう？（期首の在庫 ${ksYenX(it.begin)}・今期の仕入高 ${ksYenX(purch)}・期末の帳簿の在庫 ${ksYenX(it.book)}）`, choices: ch.map(ksYenX), correct: 0,
-        explain: `売上原価 ＝ 期首棚卸高 ${ksYenX(it.begin)} ＋ 当期仕入高 ${ksYenX(purch)} − 期末棚卸高 ${ksYenX(it.book)} ＝ <b>${ksYenX(ans)}</b>。前期から残っていた在庫は今期に売れたものとして費用に加え、売れ残った在庫は来期に売るものとして今期の費用から除きます。` };
+      return { q: `${who}今期の${it.acct === 'mat' ? '食材の原価' : '売上原価'}はいくらでしょう？（期首の在庫 ${ksYenX(it.begin)}・今期の仕入高 ${ksYenX(purch)}・期末の帳簿の在庫 ${ksYenX(it.book)}）`, choices: ch.map(ksYenX), correct: 0,
+        explain: `売上原価 ＝ 期首棚卸高 ${ksYenX(it.begin)} ＋ 当期仕入高 ${ksYenX(purch)} − 期末棚卸高 ${ksYenX(it.book)} ＝ <b>${ksYenX(ans)}</b>。前期から残っていた在庫は今期に売れたものとして費用に加え、売れ残った在庫は来期に売るものとして今期の費用から除きます。${multi ? '事業ごとに同じ計算をして合計します。' : ''}` };
     }
-    const [mat] = c.data.stock.items;
-    const purch = ksFlowSumFY('matPurch', fy);
-    const ans = mat.begin + purch - mat.book;
-    const ch = ksAmtChoices(ans, [purch, mat.begin + purch, purch + mat.book - mat.begin]);
-    return { q: `今期の材料費（使った材料の額）はいくらでしょう？（期首の材料 ${ksYenX(mat.begin)}・今期の材料仕入高 ${ksYenX(purch)}・期末の帳簿の材料 ${ksYenX(mat.book)}）`, choices: ch.map(ksYenX), correct: 0,
+    const purch = ksFlowSumFYU('matPurch', fy, it.u);
+    const ans = it.begin + purch - it.book;
+    const ch = ksAmtChoices(ans, [purch, it.begin + purch, purch + it.book - it.begin]);
+    return { q: `${who}今期の材料費（使った材料の額）はいくらでしょう？（期首の材料 ${ksYenX(it.begin)}・今期の材料仕入高 ${ksYenX(purch)}・期末の帳簿の材料 ${ksYenX(it.book)}）`, choices: ch.map(ksYenX), correct: 0,
       explain: `材料費 ＝ 期首材料棚卸高 ＋ 当期材料仕入高 − 期末材料棚卸高 ＝ <b>${ksYenX(ans)}</b>。使った分だけが今期の製造原価になり、残った材料は資産として来期に繰り越します。` };
   }
   if (step === 'con') {
@@ -98,7 +109,7 @@ function ksMakeQuiz(step) {
     const t = ksTaxCalc();
     if (t.taxable > 0) {
       const ch = ksAmtChoices(t.tax, [Math.max(0, t.pretax) * 0.25 + 7e4, Math.max(0, t.pretax) * 0.3, t.income, 7e4]);
-      return { q: `税引前当期純利益は ${ksYenX(t.pretax)}${t.loss ? `、過去の赤字（繰越欠損金）が ${ksYenX(t.loss)}` : ''}です。所得のうち800万円までは25%、超える部分は34%、さらに住民税の均等割7万円がかかります。法人税等はいくら？`, choices: ch.map(ksYenX), correct: 0,
+      return { q: `税引前当期純利益は ${ksYenX(t.pretax)}${t.fines ? `（うち罰金 ${ksYenX(t.fines)} は税金の計算では費用にならないので、所得に足し戻す）` : ''}${t.loss ? `、過去の赤字（繰越欠損金）が ${ksYenX(t.loss)}` : ''}です。所得のうち800万円までは25%、超える部分は34%、さらに住民税の均等割7万円がかかります。法人税等はいくら？`, choices: ch.map(ksYenX), correct: 0,
         explain: `所得 ${ksYenX(t.taxable)}${t.loss ? `（利益から繰越欠損金を差し引いた額）` : ''} × 税率 ＝ ${ksYenX(t.income)}、均等割 7万円を加えて <b>${ksYenX(t.tax)}</b>。納めるのは5月なので、それまでは未払法人税等（負債）です。` };
     }
     return { q: `今期の税引前当期純利益は ${ksYenX(t.pretax)}${t.pretax > 0 ? `ですが、過去の赤字（繰越欠損金）${ksYenX(t.loss)}で相殺されます` : '（赤字）です'}。法人税等はいくらでしょう？`, choices: ['0円（もうけがないので税金はかからない）', '7万円（住民税の均等割だけはかかる）', `△${ksYenX(Math.abs(t.pretax) * 0.25)}（税金が戻ってくる）`, ksYenX(Math.abs(t.pretax) * 0.25)], correct: 1,
@@ -109,11 +120,14 @@ function ksMakeQuiz(step) {
 
 /* ---------- 手順ごとの画面 ---------- */
 function ksStepLearn(step) {
-  const I = ksI();
   switch (step) {
-    case 'stock': return I.inv === 'sanbun'
-      ? `<p>期中は、商品を仕入れるたびに「${ksAcctName('purch')}」（費用）に記録してきました（${term('三分法', 'sanbunpo')}）。でも、仕入れた${ksInvLabel() === '材料' ? '食材' : '商品'}が全部売れたわけではありません。決算日に倉庫と売場の在庫を全部数え（${term('実地棚卸', 'stocktake')}）、本当の${term('売上原価', 'cogs')}を計算します。</p><div class="formula">売上原価 ＝ 期首棚卸高 ＋ 当期仕入高 − 期末棚卸高</div><p>帳簿の在庫より実際に数えた在庫が少なければ、その差（万引き・廃棄の記録漏れ・数え間違い）は${term('棚卸減耗損', 'shrink')}として費用にします。</p>`
-      : `<p>工場には3種類の在庫があります。<b>原材料</b>（まだ使っていない材料）、<b>仕掛品</b>（作りかけ）、<b>製品</b>（完成して納品前）。決算日に全部数えて、今期に使った分・作った分だけを原価にします。</p><div class="formula">材料費 ＝ 期首材料 ＋ 当期材料仕入高 − 期末材料</div><p>仕掛品と製品も、期首の分を原価に加え、期末の分を資産に移します（${term('製造原価報告書', 'mfgCost')}で計算）。</p>`;
+    case 'stock': {
+      const its = G.closing.data.stock.items;
+      const sanbun = its.some(x => x.pacct === 'purch'), mfg = its.some(x => x.pacct === 'matPurch');
+      return (sanbun ? `<p>期中は、商品や食材を仕入れるたびに「${ksAcctName('purch')}」（費用）に記録してきました（${term('三分法', 'sanbunpo')}）。でも、仕入れたものが全部売れたわけではありません。決算日に倉庫と売場の在庫を全部数え（${term('実地棚卸', 'stocktake')}）、本当の${term('売上原価', 'cogs')}を計算します。</p><div class="formula">売上原価 ＝ 期首棚卸高 ＋ 当期仕入高 − 期末棚卸高</div><p>帳簿の在庫より実際に数えた在庫が少なければ、その差（万引き・廃棄の記録漏れ・数え間違い）は${term('棚卸減耗損', 'shrink')}として費用にします。</p>` : '')
+        + (mfg ? `<p>工場には3種類の在庫があります。<b>原材料</b>（まだ使っていない材料）、<b>仕掛品</b>（作りかけ）、<b>製品</b>（完成して納品前）。決算日に全部数えて、今期に使った分・作った分だけを原価にします。</p><div class="formula">材料費 ＝ 期首材料 ＋ 当期材料仕入高 − 期末材料</div><p>仕掛品と製品も、期首の分を原価に加え、期末の分を資産に移します（${term('製造原価報告書', 'mfgCost')}で計算）。</p>` : '')
+        + (G.closing.data.stock.groups.length > 1 ? '<p class="small">事業が複数あるので、事業ごとに在庫を数えて、それぞれの原価を計算します。</p>' : '');
+    }
     case 'con': return `<p>建設業は、工事が完成して引き渡した期にまとめて売上にします（${term('工事完成基準', 'completion')}）。決算日には、施工中の工事について「かかった費用」と「受け取った代金」が正しく記帳されているかを確かめます。</p>`;
     case 'dep': return `<p>建物・機械・車両・パソコンなど長く使う資産は、買ったときに全額を費用にせず、使う年数（${term('耐用年数', 'straightLine')}）に分けて少しずつ費用にします。これが${term('減価償却', 'dep')}です。期中は月割の見込みで管理し、決算で${term('固定資産台帳', 'fixedRegister')}から正確な額を計算して記帳します。</p><div class="formula">定額法：今期の減価償却費 ＝ 取得価額 ÷ 耐用年数 ×（今期に使った月数 ÷ 12）</div><p>建物などは${term('減価償却累計額', 'accDep')}（資産のマイナス）に積み上げる間接法、ソフトウェアは資産を直接減らす直接法で記帳します。</p>`;
     case 'allow': return `<p>売掛金の中には、取引先の倒産などで回収できなくなるものが出てきます。そこで、過去の実績から回収できなくなりそうな額を見積もって、前もって費用にしておきます（${term('貸倒引当金', 'allowance')}）。貸借対照表では売掛金から差し引いて表示します。</p>`;
@@ -124,23 +138,20 @@ function ksStepLearn(step) {
 }
 function ksStepData(step) {
   const c = G.closing;
-  const I = ksI();
   const fy = c.fy;
   if (step === 'stock') {
-    if (I.inv === 'sanbun') {
-      const it = c.data.stock.items[0];
-      const purch = ksFlowSumFY('purch', fy);
-      return `<table class="t compact"><tbody><tr><td>期首の在庫（前期末に数えた額）</td><td class="n">${ksYenX(it.begin)}</td></tr><tr><td>今期の${ksAcctName('purch')}（期中の合計）</td><td class="n">${ksYenX(purch)}</td></tr>
-        <tr><td>期末の在庫：帳簿の数字</td><td class="n">${ksYenX(it.book)}</td></tr><tr class="total"><td>期末の在庫：実際に数えた数字（${term('実地棚卸', 'stocktake')}）</td><td class="n">${ksYenX(it.phys)}</td></tr>
-        <tr><td>差（${term('棚卸減耗', 'shrink')}）</td><td class="n neg">${ksYenX(it.book - it.phys)}</td></tr></tbody></table>`;
-    }
-    const purch = ksFlowSumFY('matPurch', fy);
-    return `<table class="t compact"><thead><tr><th>在庫</th><th class="n">期首</th><th class="n">期末（帳簿）</th><th class="n">期末（実地）</th></tr></thead><tbody>${c.data.stock.items.map(x => `<tr><td>${esc(x.n)}</td><td class="n">${ksYenX(x.begin)}</td><td class="n">${ksYenX(x.book)}</td><td class="n">${ksYenX(x.phys)}</td></tr>`).join('')}</tbody></table>
-      <p class="small">今期の材料仕入高（期中の合計）：${ksYenX(purch)}</p>`;
+    const multi = c.data.stock.groups.length > 1;
+    const rows = c.data.stock.groups.map(g => {
+      const head = multi ? `<tr class="head"><td colspan="6">${esc(g.n)}</td></tr>` : '';
+      return head + g.items.map(x => { const purch = ksFlowSumFYU(x.pacct, fy, g.u); return `<tr><td>${esc(x.n)}</td><td class="n">${ksYenX(x.begin)}</td><td class="n">${x.pacct === 'invChg' ? '―' : ksYenX(purch)}</td><td class="n">${ksYenX(x.book)}</td><td class="n">${ksYenX(x.phys)}</td><td class="n ${x.book > x.phys ? 'neg' : ''}">${ksYenX(x.book - x.phys)}</td></tr>`; }).join('');
+    }).join('');
+    return `<div class="tbl-wrap"><table class="t compact"><thead><tr><th>在庫</th><th class="n">期首</th><th class="n">今期の仕入（期中）</th><th class="n">期末（帳簿）</th><th class="n">期末（${term('実地棚卸', 'stocktake')}）</th><th class="n">差（${term('棚卸減耗', 'shrink')}）</th></tr></thead><tbody>${rows}</tbody></table></div>`;
   }
   if (step === 'con') {
-    const act = G.op.projects.filter(p => !p.fin && p.startM <= G.m);
-    const done = (G.op.doneFY && G.op.doneFY[fy]) || { n: 0, sales: 0, cost: 0 };
+    const bu = ksUnitsOf('build');
+    const act = bu.flatMap(u => u.op.projects.filter(p => !p.fin && p.startM <= G.m));
+    const done = { n: 0, sales: 0, cost: 0 };
+    for (const u of bu) { const d = (u.op.doneFY && u.op.doneFY[fy]) || {}; done.n += d.n || 0; done.sales += d.sales || 0; done.cost += d.cost || 0; }
     return `<table class="t compact"><thead><tr><th>施工中の工事</th><th class="n">かかった費用</th><th class="n">受け取った代金</th></tr></thead><tbody>
       ${act.map(p => `<tr><td>${esc(p.client)}・${esc(p.n)}<div class="small muted">${G.m - p.startM + 1}/${p.dur}か月目</div></td><td class="n">${ksYenX(p.costToDate)}</td><td class="n">${ksYenX(p.recv)}</td></tr>`).join('') || '<tr><td colspan="3" class="muted">施工中の工事はありません</td></tr>'}
       <tr class="total"><td>合計（貸借対照表）</td><td class="n">${ksYenX(ksB('cwip'))}<div class="small muted">未成工事支出金</div></td><td class="n">${ksYenX(ksB('advRecv'))}<div class="small muted">未成工事受入金</div></td></tr></tbody></table>
@@ -172,8 +183,7 @@ function ksTemptation(step) {
   const c = G.closing;
   const o = c.opt[step] || {};
   if (step === 'stock') {
-    const I = ksI();
-    const base = I.inv === 'sanbun' ? c.data.stock.items[0].phys : sum(c.data.stock.items, x => x.phys);
+    const base = sum(c.data.stock.items, x => x.phys);
     const v = o.fraudInv || 0;
     const opts = [[0, '正しく数えた数字にする'], [0.1, '在庫を1割多くする'], [0.3, '在庫を3割多くする']];
     const ytd = ksYTD();
@@ -229,8 +239,8 @@ MODALS.kClose = () => {
       <div class="grid g2"><div><table class="fs"><thead><tr><th>損益計算書（千円）</th><th>前期</th><th>今期</th></tr></thead><tbody>
         ${line(ksSalesName(), st.pl.sales, prev && prev.pl.sales, 'sales', 'sum')}${line('売上総利益', st.pl.gp, prev && prev.pl.gp, 'gp')}${line('営業利益', st.pl.opi, prev && prev.pl.opi, 'opi', 'sum')}${line('経常利益', st.pl.ord, prev && prev.pl.ord, 'ord', 'sum')}${line('当期純利益', st.pl.ni, prev && prev.pl.ni, 'ni', 'grand')}</tbody></table></div>
       <div><table class="fs"><thead><tr><th>貸借対照表（千円）</th><th>前期</th><th>今期</th></tr></thead><tbody>
-        ${line('資産合計', ta, prev && ksToBankFS(prev, false).TA, 'ta', 'sum')}${line('借入金', b.std + b.ltd, prev && prev.bs.std + prev.bs.ltd, 'debt')}${line('純資産', eq, prev && prev.bs.capital + prev.bs.re, 'eq', 'sum')}
-        <tr><td>${term('自己資本比率', 'eqR')}</td><td class="n">${prev ? fmtPct((prev.bs.capital + prev.bs.re) / Math.max(1, ksToBankFS(prev, false).TA) * 100, 1) : ''}</td><td class="n">${fmtPct(eq / Math.max(1, ta) * 100, 1)}</td></tr></tbody></table></div></div>
+        ${line('資産合計', ta, prev && ksToBankFS(prev, false).TA, 'ta', 'sum')}${line('借入金', b.std + b.ltd, prev && prev.bs.std + prev.bs.ltd, 'debt')}${line('純資産', eq, prev && ksToBankFS(prev, false).EQ, 'eq', 'sum')}
+        <tr><td>${term('自己資本比率', 'eqR')}</td><td class="n">${prev ? fmtPct(ksToBankFS(prev, false).EQ / Math.max(1, ksToBankFS(prev, false).TA) * 100, 1) : ''}</td><td class="n">${fmtPct(eq / Math.max(1, ta) * 100, 1)}</td></tr></tbody></table></div></div>
       <div class="callout" style="margin-top:10px"><b>月次と決算の差</b>：毎月の月次決算の経常利益を合計すると ${fmtYen(mgOrd)}、決算整理後の経常利益は ${fmtYen(st.pl.ord)}（差 ${fmtYen(st.pl.ord - mgOrd)}）。差は、実地棚卸の減耗、減価償却費の確定、引当金、未払・前払の調整の分です。</div>
       ${c.quiz && c.quiz.asked ? `<p class="small" style="margin-top:8px">決算整理の問題：<b>${c.quiz.asked}問中${c.quiz.correct}問</b>正解</p>` : ''}
       <details style="margin-top:8px"><summary class="small">決算整理後の残高試算表を見る</summary>${ksTrialBalance()}</details>`;
