@@ -1,5 +1,5 @@
 // 会社モードの法令対応を、まじめな会社と、法令を守らない会社のボットで比べる
-//   node test/run_law.js [業種,...] [年数] [シード数]
+//   node test/run_law.js [業種,...] [年数] [シード数]（業種は ret などの id か、カタログの業種名）
 const { loadKaisha } = require('./load_kaisha');
 const inds = (process.argv[2] || 'ret,food,mfg,con,whl,it').split(',');
 const years = +(process.argv[3] || 5);
@@ -8,11 +8,14 @@ for (const ind of inds) for (const pol of ['good', 'bad']) {
   const S = { none: 0, short: 0, long: 0, death: 0, karo: 0, fire: 0, bigFire: 0, insp: 0, finds: 0, soken: 0, fines: 0, bk: 0, integ: 0, cost: 0, otMax: 0 };
   for (let seed = 1; seed <= N; seed++) {
     const E = loadKaisha(); const api = E.__api;
-    E.ksNewGame({ ind, coName: 'T', ceo: 'T', seed, cond: 'normal' });
+    // 以前の6業種の id（ret など）か、カタログの業種名（「+」で複合）
+    const units = E.KS_LEGACY_TYPE[ind] ? null : ind.split('+').map(type => ({ type, sc: 1 }));
+    E.ksNewGame({ ind, units, coName: 'T', ceo: 'T', seed, cond: 'normal' });
     let G = api.G;
     const end = G.m + years * 12;
     while (G.m < end && !G.over) {
-      E.KS_ENGINE[G.ind].auto(); E.ksAutoFinance();
+      for (const u of E.ksActiveUnits()) { G.curU = u.id; E.KS_ENGINE[E.ksS(u).eng].auto(u); G.curU = null; }
+      E.ksAutoFinance();
       if (pol === 'good') {
         for (const x of E.ksLawTasks()) if (x.st === 'due' || x.st === 'over') S.cost += E.ksLawDo(x.t.id, { special: true });
         if (E.ksPartRoles().length && E.ksMinWageGap() > 0) E.ksRaisePartWage();

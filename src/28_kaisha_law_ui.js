@@ -58,9 +58,12 @@ KS_SCREENS.k_law = () => {
     <label class="inline small"><input type="checkbox" data-act="kLawPolicy" data-k="yukyu" ${sp.yukyu ? 'checked' : ''}> ${term('年次有給休暇', 'annualLeave')}の計画的付与（全員が年5日以上休めるよう、休む日を決める）</label>`;
   const ot = L.otNow ?? ksOtHours();
   const otCls = ot > 80 ? 'neg' : ot > 45 ? 'warnc' : '';
-  const otPanel = `${kv([['残業（1人・月の見込み）', `<b class="${otCls}">${fmtNum(ot, 0)}時間</b>`], ['36協定', (L.doneFy.r36 ?? -99) >= fyOf(G.m) ? `届出済み（${L.special ? '特別条項あり：月100時間未満・年720時間まで' : '特別条項なし：月45時間まで'}）` : '<span class="neg">今年度の届出がない</span>'], ['直近6か月', L.otHist.length ? L.otHist.map(h => `${Math.round(h)}`).join('・') + '時間' : '―']])}
-    <p class="note">${term('時間外労働の上限', 'otLimit')}は原則月45時間。特別条項があっても月100時間未満、2〜6か月平均80時間以内。人手不足（${G.ind === 'mfg' ? '残業の設定・機械の稼働' : G.ind === 'con' ? '現場監督1人あたりの工事' : G.ind === 'it' ? 'エンジニアの稼働率' : G.ind === 'whl' ? '配送の能力と人員' : '売場・厨房の人員'}）で残業が増えます。長い残業が続くと、過労による労災（脳・心臓疾患や精神障害）が起きやすくなります。</p>`;
-  const mw = ksPartRoles().length ? panel('最低賃金', `${kv([['汐見県の最低賃金', `時給${L.minWage}円（毎年10月に改定）`], ...ksPartRoles().map(r => [`${r.n.replace(/（.*?）/, '')}の時給`, `<b class="${ksPartHourly(r) < L.minWage ? 'neg' : ''}">${fmtNum(ksPartHourly(r), 0)}円</b>（月${KS_PART_HOURS[G.ind][r.id]}時間）`])])}
+  const otu = ksOtUnit();
+  const otWhy = { shop: '売場の人員', rest: '厨房・ホールの人員', mfg: '残業の設定・設備の稼働', build: '現場の人1人あたりの工事', trade: '配送の能力と人員', pro: '稼働率', subs: '開発・運用の人員', cap: '施設のスタッフの人数', trans: '乗務員の人数' };
+  const otRows = ksActiveUnits().length > 1 && L.otU ? ksActiveUnits().filter(u => L.otU[u.id] !== undefined).map(u => [`　${esc(ksUName(u))}`, `${fmtNum(L.otU[u.id], 0)}時間`]) : [];
+  const otPanel = `${kv([[ksActiveUnits().length > 1 ? '残業（いちばん長い事業・1人・月）' : '残業（1人・月の見込み）', `<b class="${otCls}">${fmtNum(ot, 0)}時間</b>`], ...otRows, ['36協定', (L.doneFy.r36 ?? -99) >= fyOf(G.m) ? `届出済み（${L.special ? '特別条項あり：月100時間未満・年720時間まで' : '特別条項なし：月45時間まで'}）` : '<span class="neg">今年度の届出がない</span>'], ['直近6か月', L.otHist.length ? L.otHist.map(h => `${Math.round(h)}`).join('・') + '時間' : '―']])}
+    <p class="note">${term('時間外労働の上限', 'otLimit')}は原則月45時間。特別条項があっても月100時間未満、2〜6か月平均80時間以内。人手不足（${otu ? `${ksActiveUnits().length > 1 ? esc(ksUName(otu)) + 'は' : ''}${otWhy[ksS(otu).eng] || '人員'}` : '人員'}）で残業が増えます。長い残業が続くと、過労による労災（脳・心臓疾患や精神障害）が起きやすくなります。</p>`;
+  const mw = ksPartRoles().length ? panel('最低賃金', `${kv([['汐見県の最低賃金', `時給${L.minWage}円（毎年10月に改定）`], ...ksPartRoles().map(x => [`${esc(x.n)}の時給`, `<b class="${ksPartHourly(x) < L.minWage ? 'neg' : ''}">${fmtNum(ksPartHourly(x), 0)}円</b>（月${x.hours}時間）`])])}
       <div class="row" style="margin-top:8px">${btn('時給を最低賃金＋10円まで引き上げる', 'kLawRaise', {}, ksMinWageGap() > 0 ? 'primary sm' : 'sm', { disabled: ksMinWageGap() <= -10 })}</div><p class="note">${term('最低賃金', 'minWage')}を下回ると、差額の支払い義務と罰金（50万円以下）。改定のたびに人件費が上がるので、値上げや効率化で吸収できるかが課題です。</p>`) : '';
   const insp = L.insp.slice(0, 10).map(x => `<tr><td>${ymLabel(x.m)}</td><td>${LAW_AG[x.ag].n}<div class="small muted">${esc(x.kind)}${x.why ? `（申告：${esc(x.why)}）` : ''}</div></td><td>${x.finds.length ? x.finds.map(f => `${esc((LAW_ITEMS[f.item] || { s: '安全衛生の取り組み' }).s)}${f.fixed ? '<span class="small muted">（是正済み）</span>' : ''}`).join('・') : '<span class="muted">指摘なし</span>'}</td>
     <td>${x.status === 'open' ? `${tag(`期限 ${ymLabel(x.due)}`, 'warn')} ${btn('対応する', 'kInspOpen', { id: x.id }, 'sm')}` : x.status === 'soken' ? tag('送検・命令', 'bad') : tag('完了', 'ok')}</td></tr>`).join('');
@@ -85,7 +88,7 @@ KS_SCREENS.k_law = () => {
 /* ---------- アクション ---------- */
 Object.assign(ACTIONS, {
   kLawDo: d => {
-    const t = KS_LAW_TASKS.find(x => x.id === d.id);
+    const t = ksLawTaskList().find(x => x.id === d.id);
     const cost = ksLawDo(d.id);
     toast(`${ksTaskName(t)}を実施しました（${fmtYen(cost)}）`);
     render();
@@ -165,8 +168,8 @@ MODALS.kRosai = args => {
   const steps = ksRosaiSteps(a);
   const step = steps[R.i];
   const sevTxt = { none: '休業なし（治療のみ）', short: `休業${a.days}日`, long: `休業 約${Math.max(1, Math.round(a.days / 30))}か月`, death: '死亡' }[a.sev];
-  const role = KS_INDS[G.ind].roles.find(r => r.id === a.role);
-  let body = `<div class="callout ${a.sev === 'death' || a.sev === 'long' ? 'bad' : ''}"><b>${ymLabel(a.m)}　${esc(role ? role.n.replace(/（.*?）/, '') : '従業員')}が${esc(a.text)}</b><br><span class="small">程度：${sevTxt}</span></div>`;
+  const roleN = a.roleN || '従業員';
+  let body = `<div class="callout ${a.sev === 'death' || a.sev === 'long' ? 'bad' : ''}"><b>${ymLabel(a.m)}　${ksActiveUnits().length > 1 && a.un ? `${esc(a.un)}の` : ''}${esc(roleN.replace(/（.*?）/, ''))}が${esc(a.text)}</b><br><span class="small">程度：${sevTxt}</span></div>`;
   body += `<ol class="wiz" style="margin-top:12px">${steps.map((s, k) => `<li class="${k < R.i ? 'done' : k === R.i ? 'now' : ''}"><button type="button" disabled><span class="n">${k + 1}</span>${{ first: '初動', pay: '治療と保険', report: '報告', comp: '休業補償', prevent: '再発防止', end: 'まとめ' }[s]}</button></li>`).join('')}</ol>`;
   if (step === 'end') {
     const ch = R.ch;
@@ -222,7 +225,7 @@ MODALS.kInsp = args => {
   const viols = ins.finds.filter(f => f.kind !== 'shido' && f.kind !== 'koto');
   const softs = ins.finds.filter(f => f.kind === 'shido' || f.kind === 'koto');
   const docTitle = lawDoc ? (viols.length ? '是正勧告書' : '指導票') : ins.ag === 'fire' ? '立入検査結果通知書' : '指導書';
-  const costOf = item => { if (item === 'otmax' || item === 'yukyu' || item === 'hinan' || item === 'unpaid') return 0; if (item === 'minwage') return Math.max(0, ksMinWageGap()) * sum(ksPartRoles(), r => (G.staff[r.id] || 0) * KS_PART_HOURS[G.ind][r.id]) * 12; if (item === 'safetyMin') return ksHeadcount() * KS_SAFETY[1].cost * 12; const t = KS_LAW_TASKS.find(x => x.item === item); return t ? Math.round(t.cost()) : 0; };
+  const costOf = item => { if (item === 'otmax' || item === 'yukyu' || item === 'hinan' || item === 'unpaid') return 0; if (item === 'minwage') return Math.max(0, ksMinWageGap()) * sum(ksPartRoles(), x => (x.u.staff[x.r.id] || 0) * x.hours) * 12; if (item === 'safetyMin') return ksHeadcount() * KS_SAFETY[1].cost * 12; if (item === 'lic') return sum(ksLawTasks().filter(x => x.t.item === 'lic' && x.st !== 'ok'), x => x.cost); const t = ksLawTaskList().find(x => x.item === item); return t ? Math.round(t.cost()) : 0; };
   const fixLabel = { otmax: '36協定に特別条項を付け、残業を減らす計画を出す', minwage: '時給を引き上げる', yukyu: '年休の計画的付与を始める', hinan: '避難通路の物をすぐに片付ける', safetyMin: '安全衛生の取り組みを「標準」にする', unpaid: '未払いの残業代を払う', report: '（送検されました）' };
   const row = f => {
     const it = LAW_ITEMS[f.item] || { s: '安全衛生の取り組みが最低限', law: '労働安全衛生法3条（事業者の責務）', rule: '事業者は、快適な職場環境の実現と労働条件の改善を通じて、労働者の安全と健康を確保するようにしなければならない。' };
@@ -242,42 +245,54 @@ MODALS.kInsp = args => {
 };
 
 /* ---------- 火災 ---------- */
-KS_CAPEX_FX.reopen = i => {
-  const list = G.ind === 'ret' ? G.op.stores : G.op.shops;
-  const s = list[i];
+/* 火災で休業している店（u と店の名前） */
+function ksFireClosed() {
+  const out = [];
+  for (const u of ksActiveUnits()) { const L = u.op.stores || u.op.shops; if (L) for (const s of L) if (s.openM === 9999) out.push({ u, s }); }
+  return out;
+}
+function ksRebuildItems(u, s) {
+  const P = ksP(u), p = ksPrice();
+  const eqn = (P.eqn && P.eqn[0]) || (ksS(u).eng === 'rest' ? '厨房機器' : '店の設備');
+  return [{ n: `${s.n}の復旧工事（内装）`, acct: 'bldg', cost: Math.round(P.fit * 0.6 * p), life: 15, part: 'S', u: u.id }, { n: `${s.n}の${eqn}（復旧）`, acct: 'equip', cost: Math.round(P.eqc * p), life: 6, part: 'S', u: u.id }].filter(x => x.cost > 0);
+}
+KS_CAPEX_FX.reopen = a => {
+  const u = ksUnit(a.u);
+  const s = (u.op.stores || u.op.shops).find(x => x.n === a.s);
+  if (!s) return '';
   s.openM = G.m + 2; s.renovM = G.m + 2;
-  if (s.fridgeM !== undefined) s.fridgeM = G.m + 2;
+  if (s.eqM !== undefined) s.eqM = G.m + 2;
   if (s.kitM !== undefined) s.kitM = G.m + 2;
   return `${s.n}は${ymLabel(G.m + 2)}に営業を再開します`;
 };
 MODALS.kFire = args => {
   const f = G.law.fires.find(x => x.id === args.id);
   if (!f) return modalFrame('火災', '<p>記録がありません</p>', btn('閉じる', 'closeModal', {}, 'primary'));
-  const list = G.ind === 'ret' ? G.op.stores : G.ind === 'food' ? G.op.shops : null;
-  const idx = list ? list.findIndex(s => s.n === f.b) : -1;
-  const closed = idx >= 0 && list[idx].openM > G.m + 2;
+  const u = f.u && ksUnit(f.u);
+  const s = u && f.store ? (u.op.stores || u.op.shops || []).find(x => x.n === f.store) : null;
+  const closed = !!(s && s.openM > G.m + 2);
+  const items = closed ? ksRebuildItems(u, s) : [];
+  const cost = sum(items, x => x.cost);
   const body = `<div class="callout bad"><b>${ymLabel(f.m)}　${esc(f.b)}で${f.large ? '火災' : 'ぼや'}</b><br><span class="small">原因：${esc(f.cause)}</span></div>
     ${f.large ? `${kv([['損害（焼けた建物・設備の帳簿価額、在庫、片付け）', fmtYen(f.loss)], ['火災保険から', f.ins ? fmtYen(f.ins) : '<span class="neg">保険に入っていなかった</span>']])}
       <p class="small">焼けた資産の帳簿価額や在庫は「災害による損失」（${term('特別損失', 'extra')}）、受け取った保険金は「受取保険金」（特別利益）になります。臨時の損益なので、本業の力を表す営業利益・経常利益には入りません。</p>
       ${closed ? `<p class="callout">店は営業できません。復旧工事をすると、2か月後に営業を再開できます。休んでいる間も給料や家賃はかかります。</p>` : ''}` : `<p class="small">修理費 ${fmtYen(f.loss)}（修繕費）。けが人はいませんでした。</p>`}
     <p class="note">${term('消防用設備等の点検', 'fireCheck')}や${term('避難訓練', 'evacDrill')}をしていないと、火災が起きやすく、大きくなりやすく、逃げ遅れも起きます。火災のあとは消防署が原因を調べ、立入検査に来ます。</p>`;
-  const cost = idx >= 0 ? Math.round((G.ind === 'ret' ? 4500e4 : 1800e4) * ksPrice()) : 0;
-  const foot = closed ? btn('あとで決める', 'closeModal') + btn(`復旧工事をする（約${fmtYen(cost)}）`, 'kFireRebuild', { i: idx }, 'primary') : btn('閉じる', 'closeModal', {}, 'primary');
+  const foot = closed ? btn('あとで決める', 'closeModal') + btn(`復旧工事をする（約${fmtYen(cost)}）`, 'kFireRebuild', { u: u.id, s: s.n }, 'primary') : btn('閉じる', 'closeModal', {}, 'primary');
   return modalFrame(f.large ? '火災が起きました' : 'ぼやが出ました', body, foot);
 };
 ACTIONS.kFireRebuild = d => {
-  const list = G.ind === 'ret' ? G.op.stores : G.op.shops;
-  const s = list[+d.i];
-  const p = ksPrice();
-  ksCapexOpen({ title: `${s.n}の復旧工事`, desc: '焼けた内装・設備を直し、営業を再開します。工事の費用は資産（建物・器具備品）になり、これから償却します。', items: G.ind === 'ret' ? [{ n: `${s.n}の復旧工事（内装）`, acct: 'bldg', cost: Math.round(3000e4 * p), life: 15 }, { n: `${s.n}の冷蔵ケース（復旧）`, acct: 'equip', cost: Math.round(1500e4 * p), life: 6 }] : [{ n: `${s.n}の復旧工事（内装）`, acct: 'bldg', cost: Math.round(1200e4 * p), life: 15 }, { n: `${s.n}の厨房機器（復旧）`, acct: 'equip', cost: Math.round(600e4 * p), life: 6 }], fx: 'reopen', arg: +d.i });
+  const u = ksUnit(d.u);
+  const s = u && (u.op.stores || u.op.shops || []).find(x => x.n === d.s);
+  if (!s) return;
+  ksCapexOpen({ title: `${s.n}の復旧工事`, desc: '焼けた内装・設備を直し、営業を再開します。工事の費用は資産（建物・器具備品）になり、これから償却します。', items: ksRebuildItems(u, s), fx: 'reopen', arg: { u: u.id, s: s.n } });
 };
-/* 火災で閉まっている店（復旧の前）は「店舗」の表に残し、復旧工事のボタンを出す */
+/* 火災で閉まっている店（復旧の前）は、社長室に復旧工事のボタンを出す */
 const ksInbox1 = ksInbox;
 ksInbox = () => {
   const out = ksInbox1();
   if (!G.law) return out;
-  const list = G.ind === 'ret' ? G.op.stores : G.ind === 'food' ? G.op.shops : [];
-  list.forEach((s, i) => { if (s.openM === 9999) out.push({ ico: '火', cls: 'bad', t1: `${s.n}は火災で営業できません`, t2: '復旧工事をしないと、売上がないまま給料や家賃がかかります', act: btn('復旧工事', 'kFireRebuild', { i }, 'sm primary') }); });
+  for (const { u, s } of ksFireClosed()) out.push({ ico: '火', cls: 'bad', t1: `${ksActiveUnits().length > 1 ? ksUName(u) + '・' : ''}${s.n}は火災で営業できません`, t2: '復旧工事をしないと、売上がないまま給料や家賃がかかります', act: btn('復旧工事', 'kFireRebuild', { u: u.id, s: s.n }, 'sm primary') });
   return out;
 };
 
@@ -295,7 +310,7 @@ MODALS.kLawNews = a => {
 
 /* ---------- 遊び方に「法令と安全」を加える ---------- */
 HELP_K.splice(6, 0, ['法令と安全', `<p>会社には、労働者を守る法律（労働基準法・労働安全衛生法・最低賃金法）、火事を防ぐ法律（消防法）、業種ごとの法律（食品衛生法・建設業法・道路交通法・個人情報保護法）を守る義務があります。「法令と安全」の画面に、この会社がやるべきことと期限が並びます。</p>
-  <ul><li><b>労働災害</b>：起きたら、救護 → 労災保険での治療 → 労働者死傷病報告 → 休業補償 → 再発防止、の順に判断します。報告しないのは「労災かくし」です。</li>
+  <ul><li><b>事業ごとの法令</b>：業種によって、機械の安全・墜落の防止・化学物質・食品衛生・危険物・個人情報・許認可（運送・旅館・介護・酒類など）の決まりが加わります。事業を増やすと、守ることも増えます。</li><li><b>労働災害</b>：起きたら、救護 → 労災保険での治療 → 労働者死傷病報告 → 休業補償 → 再発防止、の順に判断します。報告しないのは「労災かくし」です。</li>
   <li><b>立入検査</b>：労働基準監督署・消防署・保健所などが予告なしに来ます。違反が見つかると是正勧告・指摘を受け、期限までに直して報告します。直さないと送検・公表・命令に進み、罰金（税金の計算では費用にならない）と報道、銀行の格付の引き下げが待っています。</li>
   <li><b>火災</b>：消防設備の点検や訓練を怠ると起きやすく、大きくなりやすくなります。焼けた資産は「災害による損失」、保険金は「受取保険金」として特別損益になります。</li>
   <li><b>労働時間と賃金</b>：残業は36協定の範囲で。人手不足だと残業が増え、過労による労災が起きやすくなります。最低賃金は毎年10月に上がります。</li></ul>`]);

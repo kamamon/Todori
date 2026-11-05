@@ -1,5 +1,5 @@
 // 会社経営モードのランダム操作テスト：ボタンを無作為に押し続け、エラーと帳簿の整合性を確かめる
-//   node test/fuzz_kaisha.js [業種] [クリック数] [シード]
+//   node test/fuzz_kaisha.js [業種] [クリック数] [シード]（業種は ret などの id か、カタログの業種名。「+」で複合）
 const { chromium } = require('playwright');
 const path = require('path');
 const url = 'file://' + path.join(__dirname, '..', 'index.html');
@@ -7,7 +7,7 @@ const ind = process.argv[2] || 'ret';
 const N = +(process.argv[3] || 600);
 let seed = +(process.argv[4] || 1);
 const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
-const SKIP = /^(menu|newGameConfirm|newGameGo|importSave|exportSave|loadAuto|loadSlot|saveSlot|theme|stMode|kStart|kStInd|kStCond|kStTerm|help|helpSec|glossary|glossCat|term)$/;
+const SKIP = /^(menu|newGameConfirm|newGameGo|importSave|exportSave|loadAuto|loadSlot|saveSlot|theme|stMode|kStart|kStPick|kStAdd|kStDel|kStSc|kStCond|kStTerm|help|helpSec|glossary|glossCat|term)$/;
 (async () => {
   const browser = await chromium.launch();
   const page = await (await browser.newContext({ viewport: { width: 1280, height: 860 } })).newPage();
@@ -19,7 +19,16 @@ const SKIP = /^(menu|newGameConfirm|newGameGo|importSave|exportSave|loadAuto|loa
   await page.route('**/fonts.gstatic.com/**', r => r.abort());
   await page.goto(url);
   await page.click('[data-act="stMode"][data-v="kaisha"]');
-  await page.click(`[data-act="kStInd"][data-v="${ind}"]`);
+  await page.waitForTimeout(80);
+  // 業種：以前の6業種の id（ret など）かカタログの業種名。「+」でつなぐと複合
+  const legacy = await page.evaluate(() => window.Toudori.legacy());
+  const names = ind.split('+').map(x => legacy[x] || x);
+  for (let k = 0; k < names.length; k++) {
+    await page.fill('#kstQ', names[k]);
+    await page.waitForTimeout(60);
+    await page.click(`[data-act="${k === 0 ? 'kStPick' : 'kStAdd'}"][data-v="${names[k].replace(/"/g, '\\"')}"]`);
+    await page.waitForTimeout(40);
+  }
   await page.click(`[data-act="kStCond"][data-v="${['good', 'normal', 'bad'][seed % 3]}"]`);
   await page.fill('#kstSeed', String(seed));
   await page.click('[data-act="kStart"]');

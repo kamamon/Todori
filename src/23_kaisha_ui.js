@@ -7,7 +7,7 @@
  * ========================================================= */
 
 const KS_TABS = [
-  ['k_dash', '社長室'], ['k_ops', '現場'], ['k_bank', '資金と銀行'], ['k_fs', '決算書'],
+  ['k_dash', '社長室'], ['k_ops', '現場'], ['k_grow', '成長'], ['k_bank', '資金と銀行'], ['k_fs', '決算書'],
   ['k_books', '帳簿'], ['k_budget', '予算と実績'], ['k_learn', '学ぶ'], ['k_news', 'ニュース'],
 ];
 const KS_SCREENS = {};
@@ -15,7 +15,27 @@ Object.assign(UI, { kFy: null, kFsView: 'pl', coFsView: 'pl', kBooks: 'journal',
 const LSK = { auto: 'toudori.k1.auto', slot: i => `toudori.k1.slot${i}`, meta: i => `toudori.k1.meta${i}` };
 const KS_CITY = CITY_NAME.replace(/市$/, '');
 function isK() { return !!(G && G.mode === 'kaisha'); }
-function ksI() { return KS_INDS[G.ind]; }
+/* いちばん大きい事業 */
+function ksBigUnit() { const us = ksActiveUnits(); let b = us[0], mx = -1; for (const u of us) { const v = ksUnitSales12(u); if (v > mx) { mx = v; b = u; } } return b; }
+/* 会社の顔：アイコン・業種の大分類・事業の説明・銀行が比べる業界の平均 */
+function ksCo() {
+  const u = ksBigUnit();
+  const S = u ? ksS(u) : null;
+  const us = ksActiveUnits();
+  return { icon: S ? S.icon : '社', name: us.length > 1 ? `${us.length}つの事業` : S ? KS_SECTORS[S.sec].n : '', label: ksCompanyDesc(us), avg: ksAvgInd() };
+}
+/* 銀行が比べる業界の平均（事業が複数なら、売上の大きさで重みづけした平均） */
+function ksAvgInd() {
+  const us = ksActiveUnits();
+  const bms = [...new Set(us.map(u => ksS(u).bm))].filter(b => IND[b]);
+  if (bms.length <= 1) return bms[0] || 'mfg';
+  const w = us.map(u => Math.max(1, ksUnitSales12(u)));
+  const W = sum(w, x => x) || 1;
+  const o = { id: 'ksco', name: `複合（${bms.map(b => IND[b].name).join('・')}）` };
+  for (const k of ['gm', 'opm', 'ar', 'inv', 'ap', 'ppe', 'dep', 'beta', 'trend', 'spe', 're', 'size']) o[k] = sum(us, (u, i) => (IND[ksS(u).bm] || IND.mfg)[k] * w[i]) / W;
+  IND.ksco = o;
+  return 'ksco';
+}
 function ksSeal(ch) {
   return `<svg viewBox="0 0 40 40" aria-hidden="true"><rect x="3.5" y="3.5" width="33" height="33" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="8" y="8" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="20" y="25.5" text-anchor="middle" font-size="13" font-weight="700" fill="currentColor" style="font-family:var(--f-doc)">${esc(ch)}</text></svg>`;
 }
@@ -32,9 +52,9 @@ function ksGradeText(g) {
   return '破綻の懸念があるという評価。新しい融資はほぼ受けられません。';
 }
 function ksGradeBadge(g) { return g ? `<span class="grade g${g}" title="銀行の格付 ${g}">${g}</span>` : '<span class="muted">―</span>'; }
-function ksBonusEstimate() { return ksI().roles.reduce((s, r) => s + (G.staff[r.id] || 0) * ksRoleWage(r) * r.bonus / 2 * (G.bonusLv ?? 1), 0); }
+function ksBonusEstimate() { return sum(ksActiveUnits(), u => ksS(u).roles.reduce((s, r) => s + (u.staff[r.id] || 0) * ksRoleWage(r, u) * r.bonus / 2 * (G.bonusLv ?? 1), 0)); }
 function ksFyOfLast() { const l = ksFYList(); return l.length ? l[l.length - 1] : null; }
-function ksSalesName() { return ksI().labels.sales || '売上高'; }
+function ksSalesName() { return ksLabels().sales || '売上高'; }
 
 /* ---------- 描画（render から呼ばれる） ---------- */
 function renderK() {
@@ -53,12 +73,12 @@ function ksScreen() {
   }
 }
 function ksMast() {
-  const I = ksI();
+  const I = ksCo();
   const { y, mo } = ymOf(G.m);
   const fy = fyOf(G.m);
   const label = G.closing ? '決算整理を続ける' : mo === 3 ? '3月末を締めて決算へ' : '月末を締めて翌月へ';
   return `<header class="mast kmast">
-    <div class="mast-brand">${ksSeal(I.icon)}<div style="min-width:0"><div class="bank-name"><span class="bn">${esc(G.coName)}</span></div><div class="bank-sub">代表取締役社長 ${esc(G.ceo)}<span class="hide-m">　${I.name}・${esc(I.label)}</span></div></div></div>
+    <div class="mast-brand">${ksSeal(I.icon)}<div style="min-width:0"><div class="bank-name"><span class="bn">${esc(G.coName)}</span></div><div class="bank-sub">代表取締役社長 ${esc(G.ceo)}<span class="hide-m">　${esc(I.label)}${G.grow && G.grow.ipo.st === 'listed' ? `・${KS_MARKETS[G.grow.ipo.market].s}上場` : ''}</span></div></div></div>
     <div class="mast-date"><div class="wareki">${warekiLabel(G.m)}</div><div class="sub">${y}年${mo}月　${ksFyLabel(fy)}（${ksFyYear(fy)}）</div></div>
     <div class="mast-actions"><button type="button" class="mbtn" data-act="menu">メニュー</button><button type="button" class="mbtn" data-act="help">遊び方</button>
     <button type="button" class="btn-advance" data-act="advance"${G.over ? ' disabled' : ''}>${label}</button></div>
@@ -92,7 +112,7 @@ function ksTabBadge(id) {
     case 'k_dash': { const it = ksInbox(); const n = it.filter(x => x.cls === 'bad' || x.cls === 'warn').length; return n ? `<span class="badge${it.some(x => x.cls === 'bad') ? ' alert' : ''}">${n}</span>` : ''; }
     case 'k_budget': return G.budget && G.budget.status === 'draft' ? '<span class="badge">1</span>' : '';
     case 'k_bank': return ksForecast(3).some(x => x.short) ? '<span class="badge alert">!</span>' : '';
-    case 'k_ops': return G.ind === 'con' && G.op.bids && G.op.bids.length ? `<span class="badge">${G.op.bids.length}</span>` : '';
+    case 'k_ops': { const n = sum(ksUnitsOf('build'), u => u.op.bids.length); return n ? `<span class="badge">${n}</span>` : ''; }
     default: return '';
   }
 }
@@ -125,8 +145,7 @@ function ksInbox() {
   if (mo === 6 || mo === 12) out.push({ ico: '賞', t1: '今月は賞与（ボーナス）を支払います', t2: `賞与の目安 ${fmtYen(ksBonusEstimate())}。人件費の支払が増え、現預金が減ります`, act: '' });
   if (ksFraudActive()) out.push({ ico: '粉', cls: 'bad', t1: '粉飾が発覚し、銀行の新しい融資が止まっています', t2: `${ymLabel(G.flags.fraudFoundM + 36)}まで格付は最低のままです。正しい決算を続けて信頼を取り戻しましょう`, act: '' });
   if ((G.supTrust ?? 3) < 3) out.push({ ico: '仕', cls: 'warn', t1: `仕入先に支払を待ってもらえるのは、あと${G.supTrust}回`, t2: '資金が足りず支払を延ばすたびに仕入先の信用が下がります。毎年4月に1回分戻ります', act: '' });
-  const ops = KS_OPS[G.ind];
-  if (ops && ops.alerts) out.push(...ops.alerts());
+  if (typeof ksOpsAlerts === 'function') out.push(...ksOpsAlerts());
   return out;
 }
 function ksInboxHtml(items) {
@@ -154,7 +173,7 @@ function ksMgTable(mg, m) {
   return `<div class="tbl-wrap"><table class="fs"><thead><tr><th>（千円）</th><th>実績</th>${bud ? '<th>予算</th><th>差異</th>' : ''}</tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 KS_SCREENS.k_dash = () => {
-  const I = ksI();
+  const I = ksCo();
   const last = G.months[G.months.length - 1];
   const inbox = ksInbox();
   const ms = G.months.slice(-12);
@@ -163,17 +182,17 @@ KS_SCREENS.k_dash = () => {
   const lastFS = ksLastFY();
   const g = G.grade;
   const prof = kv([
-    ['業種', `${I.name}（${esc(I.label)}）`],
+    ['事業', `${esc(I.label)}${ksActiveUnits().length > 1 ? `（${ksActiveUnits().length}事業）` : `（${esc(I.name)}）`}`],
     ['創業', `${G.founded}年（${ksFyLabel(fyOf(G.m))}）`],
     ['資本金', fmtYen(ksB('capital'))],
-    ['従業員', `${ksHeadcount()}人（${I.roles.map(r => `${r.n.replace(/（.*?）/, '')} ${G.staff[r.id] || 0}人`).join('・')}）`],
+    ['従業員', `${fmtNum(ksHeadcount(), 0)}人（${ksActiveUnits().length > 1 ? ksActiveUnits().map(u => `${esc(ksUName(u))} ${fmtNum(ksUnitHead(u), 0)}人`).join('・') : ksS(ksMainUnit()).roles.map(r => `${r.n.replace(/（.*?）/, '')} ${fmtNum(ksMainUnit().staff[r.id] || 0, 0)}人`).join('・')}）`],
     ['取引銀行', [...new Set(G.loans.filter(L => L.bal > 0 || L.kind === 'od').map(L => KS_BANKS[L.bank].short))].join('・') || 'なし'],
     lastFS ? ['直近の決算', `${ksFyLabel(lastFS.fy)}　${ksSalesName()} ${fmtYen(lastFS.pl.sales)}・当期純利益 ${ksNum(lastFS.pl.ni)}`] : null,
   ]);
   const news = G.news.slice(0, 7);
   const newsHtml = news.length ? `<ul class="newslist">${news.map(n => `<li class="${n.k === 'bad' ? 'bad' : n.k === 'good' ? 'good' : ''}"><span class="when">${ymOf(n.m).mo}月</span><span class="what">${esc(n.t)}</span></li>`).join('')}</ul>` : '<div class="empty">まだ出来事はありません</div>';
   const lastHtml = last ? `${ksMgTable(last.mg, last.m)}<p class="note">月次決算は毎月の損益の速報です。減価償却費は月割の見込み、在庫は帳簿の数字で計算しています。正式な数字は3月末の決算整理で確定します。</p>` : '<div class="empty">まだ締めた月はありません</div>';
-  return `<div class="row between" style="align-items:flex-end;margin-bottom:12px"><div><h1 class="h1">社長室</h1><p class="lead" style="margin:0">${esc(G.coName)}は${G.founded}年創業の${esc(I.label)}。${G.closing ? '決算整理の途中です。' : calMonth(G.m) === 3 ? '今月末で今期が終わり、決算になります。' : `今期の決算（3月末）まであと${(15 - calMonth(G.m)) % 12 + 1}か月です。`}</p></div>${btn('この業種のお金の流れ', 'kGo', { tab: 'k_learn' }, 'ghost sm')}</div>
+  return `<div class="row between" style="align-items:flex-end;margin-bottom:12px"><div><h1 class="h1">社長室</h1><p class="lead" style="margin:0">${esc(G.coName)}は${G.founded}年創業、${esc(I.label)}の会社。${G.closing ? '決算整理の途中です。' : calMonth(G.m) === 3 ? '今月末で今期が終わり、決算になります。' : `今期の決算（3月末）まであと${(15 - calMonth(G.m)) % 12 + 1}か月です。`}</p></div>${btn('この業種のお金の流れ', 'kGo', { tab: 'k_learn' }, 'ghost sm')}</div>
   <div class="grid g-side"><div class="stack">
     ${panel('今月やること', ksInboxHtml(inbox), { flush: true, aside: `${ymLabel(G.m)}` })}
     ${panel(last ? `${ymLabel(last.m)}の月次決算` : '月次決算', lastHtml, { aside: last ? btn('月次推移', 'kGoFs', { v: 'month' }, 'ghost sm') : '' })}
@@ -228,7 +247,7 @@ function ksBankView() {
   if (ys.length < 2) return '<div class="empty">決算が1期分しかないため、比較できません</div>';
   const fys = ksFYList().slice(-(ys.length - 1));
   const heads = fys.map(fy => ksFyLabel(fy));
-  const steps = fsGuideSteps(ys, ksI().avg);
+  const steps = fsGuideSteps(ys, ksAvgInd());
   const view = UI.coFsView || 'pl';
   FS_BIG = false;
   const last = G.fys[fys[fys.length - 1]];
@@ -236,7 +255,7 @@ function ksBankView() {
   const sub = [['pl', '損益計算書'], ['bs', '貸借対照表'], ['cf', 'キャッシュ・フロー'], ['ratio', '財務分析']];
   return `${note}${UI.settings.learn !== false ? fsGuidePanel(steps, 'co') : ''}
     <div class="subtabs" role="tablist">${sub.map(([k, l]) => `<button type="button" data-act="kCoView" data-v="${k}" aria-pressed="${view === k}">${l}</button>`).join('')}</div>
-    ${fsTableOf(ys, view, { ctx: 'co', heads, ind: ksI().avg })}
+    ${fsTableOf(ys, view, { ctx: 'co', heads, ind: ksAvgInd() })}
     <p class="note">銀行は決算書を自分の形式に組み替えて分析します（減価償却費は販管費から抜き出し、貸倒引当金は売掛金から差し引く）。格付は、直近3期の自己資本比率・利益率・債務償還年数・利息の支払能力・流動比率・売上の伸び・黒字の期数から点数をつけて決まります。</p>`;
 }
 KS_SCREENS.k_bank = () => {
@@ -263,44 +282,52 @@ KS_SCREENS.k_bank = () => {
 };
 
 /* ---------- 決算書 ---------- */
-function ksInvLabel() { const I = ksI(); return I.invAcct === 'mat' ? '材料' : '商品'; }
 function ksPLRows(cur, prev) {
   const rows = [];
   const val = (st, f) => (st ? f(st.pl) : null);
   const R = (label, f, cls = 'i1', tk = '', ded = false) => rows.push({ label, c: val(cur, f), p: val(prev, f), cls, tk, ded });
-  const H = label => rows.push({ label, head: true });
+  const H = (label, cls) => rows.push({ label, head: true, cls });
   const union = key => { const s = new Set(); for (const st of [prev, cur]) if (st) for (const [k] of st.pl[key]) s.add(k); return KS_KEYS.filter(k => s.has(k)); };
   const item = (key, k) => pl => { const e = pl[key].find(x => x[0] === k); return e ? e[1] : 0; };
-  const I = ksI();
-  const con = G.ind === 'con';
-  R(`Ⅰ ${ksSalesName()}`, p => p.sales, 'sum', con ? 'conRev' : 'sales');
-  H(`Ⅱ ${con ? '完成工事原価' : '売上原価'}`);
-  const kind = cur.pl.cogsDetail.kind;
-  if (kind === 'sanbun') {
-    const nm = ksInvLabel();
-    R(`期首${nm}棚卸高`, p => p.cogsDetail.begin, 'i1', 'begInv');
-    R(`当期${I.labels.purch ? I.labels.purch.replace(/高$/, '') + '高' : nm + '仕入高'}`, p => p.cogsDetail.purch, 'i1', 'purch');
-    R('合計', p => p.cogsDetail.begin + p.cogsDetail.purch, 'i2');
-    R(`期末${nm}棚卸高`, p => -p.cogsDetail.end, 'i1', 'endInv', true);
-  } else if (kind === 'mfg') {
-    R('期首製品棚卸高', p => p.cogsDetail.begin, 'i1', 'begInv');
-    R('当期製品製造原価', p => p.cogsDetail.mfgCost, 'i1', 'mfgCost');
-    R('合計', p => p.cogsDetail.begin + p.cogsDetail.mfgCost, 'i2');
-    R('期末製品棚卸高', p => -p.cogsDetail.end, 'i1', 'endInv', true);
-  } else if (kind === 'con') {
-    const parts = p => { const d = p.cogsDetail; const mat = Math.round(d.parts.mat || 0), sub = Math.round(d.parts.sub || 0); return { mat, sub, exp: d.conCost - mat - sub + (d.exp || 0), labor: d.labor }; };
-    R('材料費', p => parts(p).mat, 'i1', 'matCost');
-    R('労務費（現場監督）', p => parts(p).labor, 'i1', 'labor');
-    R('外注費', p => parts(p).sub, 'i1', 'subcon');
-    R('経費', p => parts(p).exp, 'i1', 'mfgOH');
-  } else {
-    R('労務費（エンジニアの給与など）', p => p.cogsDetail.labor + (p.cogsDetail.devTransfer || 0), 'i1', 'labor');
-    if ((cur.pl.cogsDetail.devTransfer || 0) || (prev && prev.pl.cogsDetail.devTransfer)) R('ソフトウェア仮勘定への振替', p => -(p.cogsDetail.devTransfer || 0), 'i1', 'intangible', true);
-    R('外注費', p => p.cogsDetail.subcon, 'i1', 'subcon');
-    R(I.labels.mfgExp || '経費', p => p.cogsDetail.exp, 'i1', 'mfgOH');
+  const K = (pl, kd) => (pl.cogsK && pl.cogsK[kd]) || null;
+  const has = kd => [prev, cur].some(st => st && K(st.pl, kd) && (K(st.pl, kd).total || (kd !== 'svc' && K(st.pl, kd).units.length)));
+  const kinds = ['goods', 'food', 'mfg', 'con', 'svc'].filter(has);
+  const onlyCon = kinds.length === 1 && kinds[0] === 'con';
+  const multi = kinds.length > 1;
+  const v = (kd, f) => pl => { const o = K(pl, kd); return o ? Math.round(f(o)) : 0; };
+  R(`Ⅰ ${ksSalesName()}`, p => p.sales, 'sum', onlyCon ? 'conRev' : 'sales');
+  H(`Ⅱ ${onlyCon ? '完成工事原価' : '売上原価'}`);
+  for (const kd of kinds) {
+    if (multi) H(`（${KS_COGS_KINDS[kd]}）`, 'subhead');
+    if (kd === 'goods' || kd === 'food') {
+      const nm = kd === 'food' ? '材料（食材）' : '商品';
+      R(`期首${nm}棚卸高`, v(kd, o => o.begin), 'i1', 'begInv');
+      R(kd === 'food' ? '当期食材仕入高' : '当期商品仕入高', v(kd, o => o.purch), 'i1', 'purch');
+      R('合計', v(kd, o => o.begin + o.purch), 'i2');
+      R(`期末${nm}棚卸高`, v(kd, o => -o.end), 'i1', 'endInv', true);
+    } else if (kd === 'mfg') {
+      R('期首製品棚卸高', v(kd, o => o.begin), 'i1', 'begInv');
+      R('当期製品製造原価', v(kd, o => o.mfgCost), 'i1', 'mfgCost');
+      R('合計', v(kd, o => o.begin + o.mfgCost), 'i2');
+      R('期末製品棚卸高', v(kd, o => -o.end), 'i1', 'endInv', true);
+    } else if (kd === 'con') {
+      const parts = o => { const mat = Math.round(o.parts.mat || 0), sub = Math.round(o.parts.sub || 0); return { mat, sub, exp: o.conCost - mat - sub + (o.exp || 0), labor: o.labor }; };
+      R('材料費', v(kd, o => parts(o).mat), 'i1', 'matCost');
+      R('労務費（現場の人の給与）', v(kd, o => parts(o).labor), 'i1', 'labor');
+      R('外注費', v(kd, o => parts(o).sub), 'i1', 'subcon');
+      R('経費', v(kd, o => parts(o).exp), 'i1', 'mfgOH');
+    } else {
+      R('労務費（現場の人の給与など）', v(kd, o => (o.labor || 0) + (o.devTransfer || 0)), 'i1', 'labor');
+      if ([prev, cur].some(st => st && K(st.pl, kd) && K(st.pl, kd).devTransfer)) R('ソフトウェア仮勘定への振替', v(kd, o => -(o.devTransfer || 0)), 'i1', 'intangible', true);
+      if ([prev, cur].some(st => st && K(st.pl, kd) && K(st.pl, kd).subcon)) R('外注費', v(kd, o => o.subcon || 0), 'i1', 'subcon');
+      if ([prev, cur].some(st => st && K(st.pl, kd) && K(st.pl, kd).fuel)) R('燃料費', v(kd, o => o.fuel || 0), 'i1', 'fuelCost');
+      R(ksLabels().svcExp || '経費（運営・保守・サーバー・使用料など）', v(kd, o => (o.exp || 0) + (o.other || 0)), 'i1', 'svcCost');
+      if ([prev, cur].some(st => st && K(st.pl, kd) && K(st.pl, kd).depC)) R('減価償却費', v(kd, o => o.depC || 0), 'i1', 'dep');
+    }
+    if (multi) R(`${KS_COGS_KINDS[kd]} 計`, v(kd, o => o.total), 'i2');
   }
-  R(con ? '完成工事原価' : '売上原価', p => p.cogs, 'sum', con ? 'conCost' : 'cogs');
-  R(con ? '完成工事総利益' : '売上総利益', p => p.gp, 'sum', 'gp');
+  R(onlyCon ? '完成工事原価' : '売上原価', p => p.cogs, 'sum', onlyCon ? 'conCost' : 'cogs');
+  R(onlyCon ? '完成工事総利益' : '売上総利益', p => p.gp, 'sum', 'gp');
   H('Ⅲ 販売費及び一般管理費');
   for (const k of union('sgaItems')) R(ksAcctName(k), item('sgaItems', k), 'i1', KS_ACCT[k].tk);
   R('販売費及び一般管理費 合計', p => p.sga, 'sum', 'sga');
@@ -351,26 +378,29 @@ function ksBSRows(cur, prev) {
   add('l', '負債合計', b => grp(b, 'cl') + grp(b, 'ncl'), 'sum', 'debt', true);
   H('l', '純資産の部');
   add('l', '資本金', b => b.capital, 'i1', 'capital', true);
+  add('l', '資本剰余金（資本準備金）', b => b.capSurplus || 0, 'i1', 'capSurplus');
+  add('l', '利益準備金', b => b.legalRes || 0, 'i1', 'legalRes');
   add('l', '繰越利益剰余金', b => b.re, 'i1', 're', true);
-  add('l', '純資産合計', b => b.capital + b.re, 'sum', 'eq', true);
-  add('l', '負債・純資産合計', b => grp(b, 'cl') + grp(b, 'ncl') + b.capital + b.re, 'grand', '', true);
+  add('l', '純資産合計', b => b.capital + (b.capSurplus || 0) + (b.legalRes || 0) + b.re, 'sum', 'eq', true);
+  add('l', '負債・純資産合計', b => grp(b, 'cl') + grp(b, 'ncl') + b.capital + (b.capSurplus || 0) + (b.legalRes || 0) + b.re, 'grand', '', true);
   return rows;
 }
 function ksStmtTable(rows, heads, unitNote = '千円') {
   const body = rows.map(r => {
-    if (r.head) return `<tr class="head"><td colspan="${heads.length + 1}">${esc(r.label)}</td></tr>`;
+    if (r.head) return `<tr class="head${r.cls ? ' ' + r.cls : ''}"><td colspan="${heads.length + 1}">${esc(r.label)}</td></tr>`;
     const vals = heads.length === 2 ? [r.p, r.c] : [r.c];
     return `<tr class="${r.cls || ''}"><td>${r.tk ? term(esc(r.label), r.tk) : esc(r.label)}</td>${vals.map(v => `<td class="${v < 0 && !r.ded ? 'neg' : ''}">${v === null || v === undefined ? '―' : fmtK(v)}</td>`).join('')}</tr>`;
   }).join('');
   return `<div class="tbl-wrap"><table class="fs"><thead><tr><th>（単位：${unitNote}）</th>${heads.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table></div>`;
 }
-function ksCostReport(cur, prev) {
+function ksCostReport(cur, prev, kind) {
   const rows = [];
   const val = (st, f) => (st ? f(st.pl) : null);
   const R = (label, f, cls = 'i1', tk = '', ded = false) => rows.push({ label, c: val(cur, f), p: val(prev, f), cls, tk, ded });
   const H = label => rows.push({ label, head: true });
-  if (G.ind === 'mfg') {
-    const m = p => p.mfgReport;
+  if (kind === 'mfg') {
+    const z = { matBegin: 0, matPurch: 0, matEnd: 0, mat: 0, labor: 0, subcon: 0, mfgExp: 0, depC: 0, oh: 0, total: 0, wipBegin: 0, wipEnd: 0, mfgCost: 0 };
+    const m = p => p.mfgReport || (p.cogsK && p.cogsK.mfg && p.cogsK.mfg.rep) || z;
     H('Ⅰ 材料費');
     R('期首材料棚卸高', p => m(p).matBegin, 'i1', 'begInv');
     R('当期材料仕入高', p => m(p).matPurch, 'i1', 'purch');
@@ -391,13 +421,31 @@ function ksCostReport(cur, prev) {
     R('当期製品製造原価', p => m(p).mfgCost, 'grand', 'mfgCost');
     return rows;
   }
-  const parts = p => { const d = p.cogsDetail; const mat = Math.round(d.parts.mat || 0), sub = Math.round(d.parts.sub || 0); return { mat, sub, exp: d.conCost - mat - sub + (d.exp || 0), labor: d.labor, n: d.parts.n || 0, sales: d.parts.sales || 0 }; };
+  const C = p => (p.cogsK && p.cogsK.con) || { parts: {}, conCost: 0, labor: 0, exp: 0, total: 0 };
+  const parts = p => { const d = C(p); const mat = Math.round(d.parts.mat || 0), sub = Math.round(d.parts.sub || 0); return { mat, sub, exp: d.conCost - mat - sub + (d.exp || 0), labor: d.labor }; };
   R('Ⅰ 材料費', p => parts(p).mat, 'i1', 'matCost');
   R('Ⅱ 労務費', p => parts(p).labor, 'i1', 'labor');
   R('Ⅲ 外注費', p => parts(p).sub, 'i1', 'subcon');
   R('Ⅳ 経費', p => parts(p).exp, 'i1', 'mfgOH');
-  R('完成工事原価', p => p.cogs, 'grand', 'conCost');
+  R('完成工事原価', p => C(p).total, 'grand', 'conCost');
   return rows;
+}
+/* セグメント情報（事業ごとの損益） */
+function ksSegTable(st, prev) {
+  const seg = st.pl.seg || [];
+  if (!seg.length) return '<div class="empty">この期のセグメント情報はありません</div>';
+  const pseg = prev ? prev.pl.seg || [] : [];
+  const rows = seg.map(s => {
+    const p = pseg.find(x => x.id === s.id);
+    const g = p && p.sales > 0 ? s.sales / p.sales - 1 : null;
+    return `<tr><td><b>${esc(s.n)}</b>${s.closed ? ' <span class="tag">撤退</span>' : ''}<div class="small muted">${esc(KS_ENG_INFO[s.eng].n)}</div></td><td class="n">${fmtK(s.sales)}${g !== null ? `<div class="small ${g < 0 ? 'neg' : 'muted'}">${g >= 0 ? '+' : '△'}${fmtPct(Math.abs(g) * 100, 1)}</div>` : ''}</td><td class="n">${fmtK(s.gp)}<div class="small muted">${s.sales ? fmtPct(s.gp / s.sales * 100, 1) : '―'}</div></td><td class="n ${s.opi < 0 ? 'neg' : ''}">${fmtK(s.opi)}<div class="small muted">${s.sales ? fmtPct(s.opi / s.sales * 100, 1) : '―'}</div></td><td class="n">${fmtK(s.dep)}</td><td class="n">${fmtK(s.assets)}</td></tr>`;
+  }).join('');
+  const hq = st.pl.segHQ || { sales: 0, cogs: 0, sga: 0, opi: 0 };
+  const tot = { sales: sum(seg, x => x.sales) + hq.sales, opi: sum(seg, x => x.opi) + hq.opi };
+  return `<div class="tbl-wrap"><table class="fs"><thead><tr><th>（千円）</th><th>売上高</th><th>売上総利益</th><th>営業利益</th><th>減価償却費</th><th>資産（固定資産）</th></tr></thead><tbody>${rows}
+    <tr class="i1"><td>全社（本社の費用：役員報酬・管理部門など）</td><td class="n">${fmtK(hq.sales)}</td><td></td><td class="n neg">${fmtK(hq.opi)}</td><td></td><td></td></tr>
+    <tr class="grand"><td>合計（損益計算書と一致）</td><td class="n">${fmtK(tot.sales)}</td><td class="n">${fmtK(st.pl.gp)}</td><td class="n">${fmtK(tot.opi)}</td><td class="n">${fmtK(st.pl.dep)}</td><td></td></tr></tbody></table></div>
+    <p class="note">${term('セグメント情報', 'segment')}は、事業ごとの売上と利益です。複数の事業を持つ会社は、どの事業が稼ぎ、どの事業が足を引っ張っているかを示します。本社の費用（役員報酬など）は、どの事業にも配らず「全社」に置いています。</p>`;
 }
 function ksMonthTable(fy) {
   const ms = G.months.filter(x => fyOf(x.m) === fy);
@@ -423,22 +471,27 @@ KS_SCREENS.k_fs = () => {
   if (UI.kFy === null || !selList.includes(UI.kFy)) UI.kFy = list[list.length - 1];
   const fy = UI.kFy;
   const cur = G.fys[fy] || null, prev = G.fys[fy - 1] || null;
-  const hasCost = G.ind === 'mfg' || G.ind === 'con';
+  const hasK = kd => [cur, prev].some(st => st && st.pl.cogsK && st.pl.cogsK[kd]);
   const views = [['pl', '損益計算書'], ['bs', '貸借対照表']];
-  if (hasCost) views.push(['cost', G.ind === 'mfg' ? '製造原価報告書' : '完成工事原価報告書']);
+  if (hasK('mfg')) views.push(['cost', '製造原価報告書']);
+  if (hasK('con')) views.push(['ccost', '完成工事原価報告書']);
+  if ([cur, prev].some(st => st && (st.pl.seg || []).length > 1) || ksActiveUnits().length > 1) views.push(['seg', 'セグメント情報']);
   views.push(['month', '月次推移'], ['cf', 'キャッシュ・フロー'], ['ratio', '財務分析'], ['tax', '税金の計算']);
+  if ((view === 'cost' && !hasK('mfg')) || (view === 'ccost' && !hasK('con'))) UI.kFsView = 'pl';
   const heads = prev ? [ksFyLabel(fy - 1), ksFyLabel(fy)] : [ksFyLabel(fy)];
   const fySel = `<div class="seg wrap" role="radiogroup" aria-label="決算期">${selList.map(f => `<button type="button" data-act="kFy" data-v="${f}" aria-pressed="${f === fy}">${ksFyLabel(f)}${G.fys[f] ? '' : '（途中）'}</button>`).join('')}</div>`;
   let body = '';
   if (view === 'pl') {
-    body = ksStmtTable(ksPLRows(cur, prev), heads) + `<p class="note">${ksFyYear(fy)}（${ymLabel(fy * 12)}〜${ymLabel(fy * 12 + 11)}）。△はマイナス。${G.ind === 'con' ? '工事完成基準なので、この期に完成・引き渡した工事だけが完成工事高になります。' : ''}</p>`;
+    body = ksStmtTable(ksPLRows(cur, prev), heads) + `<p class="note">${ksFyYear(fy)}（${ymLabel(fy * 12)}〜${ymLabel(fy * 12 + 11)}）。△はマイナス。${hasK('con') ? '工事の事業は工事完成基準なので、この期に完成・引き渡した工事だけが売上（完成工事高）になります。' : ''}${(cur.pl.cogsKinds || []).length > 1 ? '売上原価は、商品・製品・工事・サービスの区分ごとに計算して合計しています。' : ''}</p>`;
   } else if (view === 'bs') {
     const r = ksBSRows(cur, prev);
     body = `<div class="grid g2 bsgrid"><div><h3 class="fsh">資産の部</h3>${ksStmtTable(r.a, heads)}</div><div><h3 class="fsh">負債の部・純資産の部</h3>${ksStmtTable(r.l, heads)}</div></div><p class="note">${ymLabel(fy * 12 + 11)}末（決算日）の残高。左右の合計は必ず一致します（${term('貸借対照表', 'bs')}）。</p>`;
   } else if (view === 'cost') {
-    body = ksStmtTable(ksCostReport(cur, prev), heads) + (G.ind === 'mfg'
-      ? `<p class="note">${term('製造原価報告書', 'mfgCost')}は、工場で製品を作るのにかかった費用（材料費・労務費・経費）を集計し、作りかけ（仕掛品）の増減を調整して「当期製品製造原価」を出す表です。これが損益計算書の売上原価の計算に入ります。</p>`
-      : `<p class="note">完成工事原価報告書は、この期に完成した工事にかかった費用の内訳です。完成していない工事の費用は${term('未成工事支出金', 'wip')}として貸借対照表に残っています（この期の完成工事 ${(cur.pl.cogsDetail.parts.n || 0)}件）。</p>`);
+    body = ksStmtTable(ksCostReport(cur, prev, 'mfg'), heads) + `<p class="note">${term('製造原価報告書', 'mfgCost')}は、工場で製品を作るのにかかった費用（材料費・労務費・経費）を集計し、作りかけ（仕掛品）の増減を調整して「当期製品製造原価」を出す表です。これが損益計算書の売上原価の計算に入ります。${(cur.pl.cogsKinds || []).length > 1 ? 'ものづくりの事業の分だけを集計しています。' : ''}</p>`;
+  } else if (view === 'ccost') {
+    body = ksStmtTable(ksCostReport(cur, prev, 'con'), heads) + `<p class="note">完成工事原価報告書は、この期に完成した工事にかかった費用の内訳です。完成していない工事の費用は${term('未成工事支出金', 'wip')}として貸借対照表に残っています（この期の完成工事 ${((cur.pl.cogsK && cur.pl.cogsK.con && cur.pl.cogsK.con.parts.n) || 0)}件）。</p>`;
+  } else if (view === 'seg') {
+    body = cur ? ksSegTable(cur, prev) : '<div class="empty">この期は決算がまだありません</div>';
   } else if (view === 'month') {
     body = ksMonthTable(fy);
   } else if (view === 'tax') {
@@ -457,7 +510,7 @@ KS_SCREENS.k_fs = () => {
     const ys = ksBankYears(4);
     const fysB = ksFYList().slice(-(ys.length - 1));
     FS_BIG = false;
-    body = ys.length >= 2 ? fsTableOf(ys, view, { heads: fysB.map(f => ksFyLabel(f)), ind: ksI().avg }) + (view === 'cf' ? `<p class="note">${term('キャッシュ・フロー計算書', 'cf')}（${term('間接法', 'indirect')}）。中小企業は作らなくてよい書類ですが、銀行は貸借対照表の増減からこの形に組み替えて、利益が現金を伴っているかを確かめます。</p>` : '') : '<div class="empty">比較できる決算がありません</div>';
+    body = ys.length >= 2 ? fsTableOf(ys, view, { heads: fysB.map(f => ksFyLabel(f)), ind: ksAvgInd() }) + (view === 'cf' ? `<p class="note">${term('キャッシュ・フロー計算書', 'cf')}（${term('間接法', 'indirect')}）。中小企業は作らなくてよい書類ですが、銀行は貸借対照表の増減からこの形に組み替えて、利益が現金を伴っているかを確かめます。</p>` : '') : '<div class="empty">比較できる決算がありません</div>';
   }
   const hist = fy < fyOf(G.startedM) ? '<p class="small muted" style="margin:0 0 8px">この期は、あなたが社長になる前の決算です（先代の経営）。</p>' : '';
   const qz = cur && cur.quiz && cur.quiz.asked ? `<span class="tag ok">決算整理クイズ ${cur.quiz.correct}/${cur.quiz.asked}問正解</span>` : '';
@@ -646,14 +699,14 @@ KS_SCREENS.k_budget = () => {
 
 /* ---------- 学ぶ ---------- */
 KS_SCREENS.k_learn = () => {
-  const I = ksI();
+  const I = ksCo();
   const q = G.quiz || { asked: 0, correct: 0 };
   const cycle = ['日々の取引', '仕訳（借方・貸方）', '総勘定元帳', '月次決算', '決算整理（3月末）', '決算書', '銀行の審査・格付'];
-  return `<h1 class="h1">学ぶ</h1><p class="lead">${I.name}（${esc(I.label)}）を経営しながら、決算書がどう作られ、銀行がどこを見るかを学びます。</p>
-  <div class="grid g2">
-    ${panel(`${I.name}のお金の流れ`, I.learn.flow)}
-    ${panel(`${I.name}の決算書の特徴`, I.learn.fs)}
-    ${panel('決算のポイント', I.learn.closing + `<p class="small">決算整理は、3月末に月次の数字を「本当の数字」に直す作業です。このゲームでは、手順ごとに問題に答えながら仕訳を記帳します。</p>`)}
+  const engs = [...new Set(ksActiveUnits().map(u => ksS(u).eng))];
+  const learn = engs.map(e => { const L = KS_ENG_LEARN[e]; const us = ksActiveUnits().filter(u => ksS(u).eng === e).map(u => esc(ksUName(u))).join('・'); return `<h2 class="h2" style="margin:16px 0 8px">${esc(KS_ENG_INFO[e].n)}<span class="small muted">（${us}）</span></h2><div class="grid g3">${panel('お金の流れ', L.flow)}${panel('決算書の特徴', L.fs)}${panel('決算のポイント', L.closing)}</div>`; }).join('');
+  return `<h1 class="h1">学ぶ</h1><p class="lead">${esc(I.label)}を経営しながら、決算書がどう作られ、銀行がどこを見るかを学びます。</p>
+  ${learn}
+  <div class="grid g2" style="margin-top:16px">
     ${panel('簿記の5つの要素', `<table class="t compact"><tbody>
       <tr><td><b>資産</b></td><td>会社が持っている財産（現金・売掛金・在庫・建物など）</td><td>増えたら借方</td></tr>
       <tr><td><b>負債</b></td><td>返さなければならないもの（買掛金・借入金など）</td><td>増えたら貸方</td></tr>
@@ -661,12 +714,12 @@ KS_SCREENS.k_learn = () => {
       <tr><td><b>収益</b></td><td>純資産を増やす原因（売上高・受取利息など）</td><td>発生したら貸方</td></tr>
       <tr><td><b>費用</b></td><td>純資産を減らす原因（仕入・給料・家賃・減価償却費など）</td><td>発生したら借方</td></tr></tbody></table>
       <p class="small" style="margin:8px 0 0">例：商品を10万円で売り、代金は翌月もらう →（借方）売掛金 10万円 ／（貸方）売上高 10万円。${btn('仕訳帳を見る', 'kGo', { tab: 'k_books' }, 'sm linkish')}</p>`)}
+    ${panel('帳簿から決算書、そして銀行へ', `<div class="flowline big">${cycle.map(s => `<span class="fl">${s}</span>`).join('<span class="arr" aria-hidden="true">→</span>')}</div>
+      <p class="small" style="margin:8px 0 0">毎月の取引は自動で仕訳され、月末に月次決算（速報）がまとまります。3月末には実地棚卸・減価償却・引当金・未払と前払・税金の決算整理を行い、正式な決算書が完成します。銀行はその決算書で格付を決め、金利や貸せる金額が変わります。</p>`)}
   </div>
-  ${panel('帳簿から決算書、そして銀行へ', `<div class="flowline big">${cycle.map(s => `<span class="fl">${s}</span>`).join('<span class="arr" aria-hidden="true">→</span>')}</div>
-    <p class="small" style="margin:8px 0 0">毎月の取引は自動で仕訳され、月末に月次決算（速報）がまとまります。3月末には実地棚卸・減価償却・引当金・未払と前払・税金の決算整理を行い、正式な決算書が完成します。銀行はその決算書で格付を決め、金利や貸せる金額が変わります。</p>`)}
   <div class="grid g2" style="margin-top:16px">
     ${panel('決算整理クイズの成績', q.asked ? `<p style="margin:0 0 6px">これまで <b>${q.asked}問中${q.correct}問</b> 正解（正答率 ${fmtPct(q.correct / q.asked * 100, 0)}）</p>${meter(q.correct, q.asked, 'ok')}` : '<p class="small" style="margin:0">最初の決算（3月末）で問題が出ます。</p>')}
-    ${panel('用語集', `<p class="small" style="margin:0 0 8px">決算書・経営指標・簿記・予算・銀行の用語を、意味・計算式・決算書のどこを見るかとあわせて解説しています。画面の中の点線の下線がある言葉も押せます。</p>${btn('用語集を開く', 'glossary', {}, 'primary')}`)}
+    ${panel('用語集', `<p class="small" style="margin:0 0 8px">決算書・経営指標・簿記・予算・銀行・上場の用語を、意味・計算式・決算書のどこを見るかとあわせて解説しています。画面の中の点線の下線がある言葉も押せます。</p>${btn('用語集を開く', 'glossary', {}, 'primary')}`)}
   </div>`;
 };
 
@@ -735,16 +788,16 @@ Object.assign(ACTIONS, {
 /* ---------- 月次報告 ---------- */
 function ksMonthTip(x) {
   const mo = calMonth(x.m);
-  const I = ksI();
+  const conOnly = ksActiveUnits().length === 1 && ksHasEng('build');
   const tips = [];
   if (mo === 4) tips.push('4月は新しい期の始まり。前期末に計上した未払費用・前払費用を元に戻す「再振替仕訳」をしました（仕訳帳で確かめられます）。');
   if (mo === 5) tips.push('5月は前期の法人税等を納める月です。費用は前期の決算で計上済みなので、今期の利益は減りませんが、現預金は減ります。');
   if (mo === 6 || mo === 12) tips.push('賞与の月は人件費の支払が大きくなります。利益より先にお金が出ていくので、資金繰り表で確かめておきましょう。');
   if (mo === 2) tips.push('来月は決算です。3月末に在庫を数え（実地棚卸）、減価償却費や引当金を計上して決算書を作ります。');
-  if ((x.cf.collect || 0) + (x.cf.cashSales || 0) < x.mg.sales * 0.8 && I.inv !== 'con') tips.push('今月は売上より入金が少ない月でした。売掛金が増えると、利益が出ていても現預金は増えません。');
+  if ((x.cf.collect || 0) + (x.cf.cashSales || 0) < x.mg.sales * 0.8 && !conOnly) tips.push('今月は売上より入金が少ない月でした。売掛金が増えると、利益が出ていても現預金は増えません。');
   if (x.mg.ord < 0 && x.cash > (G.months[G.months.length - 2] || x).cash) tips.push('今月は赤字でしたが現預金は増えました。売掛金の回収や借入など、損益と関係ないお金の動きがあったためです。');
   if (x.mg.ord > 0 && x.cash < (G.months[G.months.length - 2] || x).cash) tips.push('今月は黒字でしたが現預金は減りました。借入の返済、設備の購入、在庫の積み増しなどは利益を減らさずにお金だけを減らします。');
-  if (!tips.length) tips.push(I.inv === 'con' ? '工事完成基準では、工事が完成した月にまとめて売上が立ちます。月次の損益は波打つので、受注残と未成工事支出金もあわせて見ましょう。' : '月次決算は、毎月の成績を早くつかむための速報です。予算と比べて、ずれが大きい項目の原因を探しましょう。');
+  if (!tips.length) tips.push(conOnly ? '工事完成基準では、工事が完成した月にまとめて売上が立ちます。月次の損益は波打つので、受注残と未成工事支出金もあわせて見ましょう。' : '月次決算は、毎月の成績を早くつかむための速報です。予算と比べて、ずれが大きい項目の原因を探しましょう。');
   return tips[0];
 }
 MODALS.kMonth = a => {
@@ -754,15 +807,14 @@ MODALS.kMonth = a => {
   const begin = x.cash - net;
   const inflow = sum(Object.entries(x.cf).filter(([, v]) => v > 0), ([, v]) => v);
   const outflow = sum(Object.entries(x.cf).filter(([, v]) => v < 0), ([, v]) => v);
-  const ops = KS_OPS[G.ind];
-  const kpi = ops && ops.kpiRows ? ops.kpiRows(x.kpi || {}) : [];
+  const kpiH = ksActiveUnits().map(u => { const k = (x.kpiU || {})[u.id]; if (!k) return ''; const rows = KS_OPS[ksS(u).eng].kpiRows(u, k); return rows.length ? `${ksActiveUnits().length > 1 ? `<div class="small" style="margin:8px 0 2px"><b>${esc(ksUName(u))}</b></div>` : ''}${kv(rows)}` : ''; }).join('');
   const news = G.news.filter(n => n.m === x.m).slice(0, 8);
   const body = `<div class="grid g2"><div><h3 class="fsh">月次の損益（速報）</h3>${ksMgTable(x.mg, x.m)}</div>
     <div><h3 class="fsh">お金の動き</h3><table class="t compact"><tbody>
       <tr><td>月初の現預金</td><td class="n">${fmtYen(begin)}</td></tr><tr><td>入ってきたお金</td><td class="n pos">+${fmtYen(inflow, { noUnit: false })}</td></tr>
       <tr><td>出ていったお金</td><td class="n neg">${fmtYen(outflow)}</td></tr><tr class="total"><td>月末の現預金</td><td class="n ${x.cash < 0 ? 'neg' : ''}">${fmtYen(x.cash)}</td></tr>
       <tr><td>借入金の残高</td><td class="n">${fmtYen(x.bal.std + x.bal.ltd)}</td></tr><tr><td>${ksAcctName('ar', 'bs')}</td><td class="n">${fmtYen(x.bal.ar)}</td></tr></tbody></table>
-      ${kpi.length ? `<h3 class="fsh" style="margin-top:12px">現場の数字</h3>${kv(kpi)}` : ''}</div></div>
+      ${kpiH ? `<h3 class="fsh" style="margin-top:12px">現場の数字</h3>${kpiH}` : ''}</div></div>
     <p class="callout" style="margin-top:12px"><b>今月のポイント</b>　${ksMonthTip(x)}</p>
     <h3 class="fsh" style="margin-top:12px">今月の出来事</h3>${news.length ? `<ul class="newslist" style="border:1px solid var(--rule);border-radius:var(--r-m)">${news.map(n => `<li class="${n.k === 'bad' ? 'bad' : n.k === 'good' ? 'good' : ''}"><span class="when">${n.k === 'bank' ? '銀行' : '会社'}</span><span class="what">${esc(n.t)}</span></li>`).join('')}</ul>` : '<p class="muted small">大きな出来事はありませんでした。</p>'}
     <label class="inline small" style="margin-top:12px"><input type="checkbox" data-ch="setting" data-key="monthly" ${UI.settings.monthly ? 'checked' : ''}> 毎月この報告を表示する</label>`;
@@ -871,13 +923,14 @@ ACTIONS.kRepayGo = () => {
 
 /* ---------- 就任・倒産・任期満了 ---------- */
 MODALS.kIntro = () => {
-  const I = ksI();
+  const I = ksCo();
   const st = ksLastFY();
   const body = `<p style="margin:0 0 10px">${ymLabel(G.m)}、${esc(G.ceo)}さんが${esc(G.coName)}の社長に就任しました。${G.founded}年創業、${esc(I.label)}を営む会社です。</p>
     ${st ? `<p class="small" style="margin:0 0 10px">前期（${ksFyLabel(st.fy)}）の${ksSalesName()}は${fmtYen(st.pl.sales)}、経常利益は${fmtYen(st.pl.ord)}、銀行の格付は${G.grade}。会社の状態は「${KS_COND[G.cond].n}」です。</p>` : ''}
     <ol><li><b>決算書</b>で、先代が作った過去${ksFYList().length}期分の決算書を読む（損益計算書・貸借対照表）。</li>
     <li><b>資金と銀行</b>で、資金繰り表と借入金を確かめる。お金が尽きたら会社は終わりです。</li>
-    <li><b>現場</b>で、値段・人員・設備を決める。</li>
+    <li><b>現場</b>で、事業ごとに値段・人員・設備を決める。新しい事業を始めることもできます。</li>
+    <li><b>成長</b>で、認証・DX・研究開発・海外展開・M&A・株式上場に挑戦する。</li>
     <li>右上の<b>「月末を締めて翌月へ」</b>で1か月が進み、取引が自動で仕訳されて月次決算がまとまります。</li>
     <li>3か月後の<b>3月末は決算</b>。在庫を数え、減価償却費・引当金・税金を計上して、あなたの手で決算書を完成させます。</li></ol>
     <p class="note">遊び方はいつでも右上の「遊び方」から読めます。進行はこのブラウザに自動で保存されます。</p>`;
@@ -892,13 +945,15 @@ function ksEvaluation() {
   const b0 = bs(base), b1 = bs(last);
   const parts = [];
   const eqG = b0.EQ > 0 ? b1.EQ / b0.EQ : b1.EQ > 0 ? 2 : 0;
-  parts.push({ name: '純資産の成長', pts: Math.round(clamp(interp(eqG, [[0.5, 0], [1, 10], [1.5, 18], [2.2, 25]]), 0, 25)), max: 25, note: `${fmtYen(b0.EQ)} → ${fmtYen(b1.EQ)}` });
+  parts.push({ name: '純資産の成長', pts: Math.round(clamp(interp(eqG, [[0.5, 0], [1, 8], [1.5, 14], [2.2, 20]]), 0, 20)), max: 20, note: `${fmtYen(b0.EQ)} → ${fmtYen(b1.EQ)}` });
   const played = fys.filter(f => f > startFy).map(f => G.fys[f]);
   const ordm = played.length ? sum(played, s => s.pl.ord / Math.max(1, s.pl.sales)) / played.length * 100 : 0;
-  const avg = industryAvg(ksI().avg).ordm;
-  parts.push({ name: '稼ぐ力', pts: Math.round(clamp(interp(ordm / Math.max(0.5, avg), [[-0.5, 0], [0, 5], [0.5, 12], [1, 18], [1.6, 25]]), 0, 25)), max: 25, note: `経常利益率の平均 ${fmtPct(ordm, 1)}（業界平均 ${fmtPct(avg, 1)}）` });
+  const avg = industryAvg(ksAvgInd()).ordm;
+  parts.push({ name: '稼ぐ力', pts: Math.round(clamp(interp(ordm / Math.max(0.5, avg), [[-0.5, 0], [0, 4], [0.5, 10], [1, 15], [1.6, 20]]), 0, 20)), max: 20, note: `経常利益率の平均 ${fmtPct(ordm, 1)}（業界平均 ${fmtPct(avg, 1)}）` });
   const eqR = b1.EQ / b1.TA * 100;
-  parts.push({ name: '財務の安全性', pts: Math.round(clamp(interp(eqR, [[0, 0], [10, 6], [30, 14], [50, 20]]), 0, 20)), max: 20, note: `自己資本比率 ${fmtPct(eqR, 1)}` });
+  parts.push({ name: '財務の安全性', pts: Math.round(clamp(interp(eqR, [[0, 0], [10, 5], [30, 11], [50, 15]]), 0, 15)), max: 15, note: `自己資本比率 ${fmtPct(eqR, 1)}` });
+  const ms = G.grow ? Object.values(G.grow.ms).filter(m => m >= (G.startedM ?? 0)).length : 0;
+  parts.push({ name: '成長と挑戦', pts: Math.round(clamp(ms * 1.5, 0, 15)), max: 15, note: `在任中に達成した会社の歩み ${ms}件${G.grow && G.grow.ipo.st === 'listed' ? '・上場' : ''}` });
   parts.push({ name: '銀行の信頼', pts: Math.round(clamp((10 - (G.grade || 10)) / 9 * 15, 0, 15)), max: 15, note: `格付 ${G.grade}${G.flags.fraudFoundM !== undefined ? '・粉飾の発覚あり' : ''}` });
   const q = G.quiz || { asked: 0, correct: 0 };
   const fraud = Object.values(G.fys).some(s => s.fraudInv) || G.flags.fraudFoundM !== undefined;
@@ -923,9 +978,9 @@ MODALS.kTerm = () => modalFrame('任期満了', `<p>就任から${G.termYears}�
 
 /* ---------- 遊び方（会社経営モード） ---------- */
 const HELP_K = [
-  ['ゲームの目的', `<p>あなたは${KS_CITY}にある中小企業の新しい社長です。業種は6つ（小売・飲食・製造・建設・卸売・情報通信）から選べます。先代から会社を引き継ぎ、商売をしながら<b>帳簿をつけ、決算書を作り、銀行からお金を借りて</b>会社を成長させてください。</p>
+  ['ゲームの目的', `<p>あなたは${KS_CITY}にある会社の新しい社長です。業種は、農業・製造（町工場からレーザー加工・半導体・造船まで）・建設・電力・通信・データセンター・鉄道・航空・海運・倉庫・商社・小売・飲食・新聞・メディア・AI開発・医療・介護・教育など<b>${fmtNum(KS_TYPE_LIST.length, 0)}種類</b>から選べ、いくつかの事業を組み合わせた会社にもできます。先代から会社を引き継ぎ、商売をしながら<b>帳簿をつけ、決算書を作り、銀行からお金を借りて</b>会社を成長させてください。</p>
     <p>就任の時点で、過去4期分の決算書と帳簿ができあがっています。最初の決算は3か月後の3月末です。任期の終わりに、純資産の成長・稼ぐ力・財務の安全性・銀行の信頼・正しい決算から経営評価（S〜D）が出ます。<b>お金が尽きると</b>（資金繰りの破綻）、その時点で経営は終わります。</p>`],
-  ['1か月の流れ', `<ol><li><b>現場</b>：値段・人員・広告・設備投資・見積などを決める（業種ごとに違います）。</li><li><b>資金と銀行</b>：資金繰り表で3か月先のお金を確かめ、足りなければ融資を申し込む。</li><li><b>月末を締めて翌月へ</b>：売上・仕入・給与・経費・入金・支払・返済が自動で仕訳され、月次決算（速報）が出ます。</li></ol>
+  ['1か月の流れ', `<ol><li><b>現場</b>：事業ごとに、値段・人員・広告・設備投資・見積などを決める（事業の型ごとに違います）。新しい事業を始めたり、撤退したりもできます。</li><li><b>成長</b>：認証・DX・研究開発・人材への投資、海外展開、M&A、株式上場。</li><li><b>資金と銀行</b>：資金繰り表で3か月先のお金を確かめ、足りなければ融資を申し込む。</li><li><b>月末を締めて翌月へ</b>：売上・仕入・給与・経費・入金・支払・返済が自動で仕訳され、月次決算（速報）が出ます。</li></ol>
     <p>4月は予算を決める月、5月は法人税等の納付、6月と12月は賞与、3月は決算です。</p>`],
   ['決算書の読み方', `<p>決算書は3つの表でできています。${term('損益計算書', 'pl')}は1年間の成績（売上からいろいろな費用を引いて、いくら利益が残ったか）、${term('貸借対照表', 'bs')}は決算日の財産と借金の一覧、${term('キャッシュ・フロー計算書', 'cf')}はお金の動きです。</p>
     <p>損益計算書は利益を5段階で表します。売上総利益（粗利）→ 営業利益（本業のもうけ）→ 経常利益（利息なども含めた普段のもうけ）→ 税引前当期純利益（臨時の損益も含む）→ 当期純利益（税金を引いた最終のもうけ）。</p>
@@ -950,7 +1005,8 @@ const HELP_K = [
     <p>銀行は決算書から<b>格付</b>（1〜10）をつけます。自己資本比率、経常利益率、債務償還年数（借入金を何年で返せるか）、利息の支払能力、流動比率、売上の伸び、黒字の期数で決まります。資金が足りなくなったときは、一度だけ緊急の運転資金を借りられます。</p>`],
   ['予算と予実管理', `<p>4月に今期の<b>予算</b>を決めます。直近12か月の実績から予算案ができるので、売上の伸び・粗利率・人件費・経費の目標を調整して決定します。</p>
     <p>毎月の月次決算と予算を比べ、ずれ（差異）の原因を探して手を打つのが<b>予実管理</b>です。「予算と実績」の画面で、年間の見通しも確かめられます。</p>`],
-  ['業種ごとのポイント', `<table class="t compact"><tbody>${KS_IND_IDS.map(id => `<tr><td><b>${KS_INDS[id].name}</b><div class="small muted">${esc(KS_INDS[id].label)}</div></td><td class="small">${esc(KS_INDS[id].desc)}</td></tr>`).join('')}</tbody></table>`],
+  ['事業の型', `<p>${fmtNum(KS_TYPE_LIST.length, 0)}の業種は、稼ぎ方で9つの型に分かれます。同じ型の業種は、画面と決算書のしくみが同じで、数字（単価・原価率・設備・季節）が違います。</p><table class="t compact"><tbody>${Object.entries(KS_ENG_INFO).map(([k, x]) => `<tr><td><b>${esc(x.n)}</b><div class="small muted">${fmtNum(ksCountTypes(null, k), 0)}業種</div></td><td class="small">${esc(x.desc)}</td></tr>`).join('')}</tbody></table>`],
+  ['成長と上場', `<p>会社が大きくなったら、<b>成長</b>の画面で次の挑戦ができます。</p><ul><li><b>投資</b>：ISOなどの認証、基幹システム・EC・AI、研究開発センター、ブランド、人事制度、太陽光発電など。効果（需要・ロス・電気代・労災・離職）と費用（資産になるもの・費用になるもの）を見て選びます。</li><li><b>海外展開</b>：輸出 → 海外営業所 → 現地の拠点と段階を踏みます。外貨で受け取る代金は、為替で円の額が変わります（為替差損益）。</li><li><b>M&A</b>：他社の事業を買い、引き継いだ資産と払った代金の差を「のれん」として10年で償却します。</li><li><b>株式上場</b>：監査法人の監査を受けた決算を2期そろえ、取引所の基準（株主数・流通株式時価総額・利益など）を満たすと、TOKYO PRO Market・グロース・スタンダード・プライムに上場できます。公募増資で資金を集められ、株価・配当・上場維持基準とも向き合います。</li></ul>`],
 ];
 MODALS.kHelp = a => {
   const i = a.sec || 0;
@@ -959,15 +1015,17 @@ MODALS.kHelp = a => {
 };
 
 /* ---------- 保存と読み込み ---------- */
-function ksSaveMeta() { return JSON.stringify({ co: G.coName, ceo: G.ceo, m: G.m, ind: G.ind, at: Date.now(), over: !!G.over }); }
+function ksSaveMeta() { return JSON.stringify({ co: G.coName, ceo: G.ceo, m: G.m, desc: ksCompanyDesc(), at: Date.now(), over: !!G.over }); }
 function ksDeserialize(s) {
-  if (s.version !== KS_SAVE_VERSION || !s.bal) throw new Error('セーブデータの形式が違います');
+  if (s.version !== KS_SAVE_VERSION || !s.bal) throw new Error(s.version && s.version < KS_SAVE_VERSION ? '古い版のセーブデータです（業種が増えた新しい版では読み込めません）。新しいゲームを始めてください' : 'セーブデータの形式が違います');
+  for (const u of s.units || []) if (!KS_TYPES[u.type]) throw new Error(`セーブデータの業種「${u.type}」が見つかりません`);
   G = s;
   G.pendingModals = G.pendingModals || [];
   for (const k of KS_KEYS) if (G.bal[k] === undefined) G.bal[k] = 0;
   if (!G.quiz) G.quiz = { asked: 0, correct: 0 };
   if (!G.flags) G.flags = {};
   if (!G.law && typeof ksLawInit === 'function') ksLawInit();
+  if (!G.grow && typeof ksGrowInit === 'function') ksGrowInit();
   return G;
 }
 /* 今のモード（ゲーム中ならそのモード、開始画面なら選んでいるモード）の保存先 */
@@ -985,39 +1043,75 @@ function startModeSwitch() {
     <button type="button" class="modebtn${m === 'gyosei' ? ' on' : ''}" data-act="stMode" data-v="gyosei" aria-pressed="${m === 'gyosei'}"><b>法令を守らせる</b><span>監督署・消防署の署長として立入検査をし、労災や火災に対応する</span></button>
   </div>`;
 }
-function ksStartDefaults() { return UI.start.k || (UI.start.k = { ind: 'ret', cond: 'normal', term: 10, coName: '', ceo: '', seed: '', coEdited: false }); }
-function ksDefaultCoName(ind) { return `株式会社${KS_CITY}${KS_INDS[ind].core[0]}`; }
+function ksStartDefaults() { return UI.start.k || (UI.start.k = { units: [{ type: KS_LEGACY_TYPE.ret, sc: 1 }], cond: 'normal', term: 10, coName: '', ceo: '', seed: '', coEdited: false, q: '', sec: '', eng: '' }); }
+/* 会社の名前の初めの案（いちばん目の事業の型から） */
+function ksDefaultCoName(type) {
+  const lid = KS_LEGACY_ID[type];
+  if (lid) return `株式会社${KS_CITY}${KS_INDS[lid].core[0]}`;
+  const S = KS_TYPES[type];
+  const c = S ? KS_CO_CORE[S.eng] : null;
+  return `株式会社${KS_CITY}${c ? c[0] : '産業'}`;
+}
+/* おすすめの業種（カタログにあるものだけ） */
+function ksStartPicks() {
+  const out = Object.values(KS_LEGACY_TYPE).filter(n => KS_TYPES[n]);
+  // 言葉と事業の型の組み合わせで、代表的な業種を選ぶ
+  for (const [w, e] of [['データセンター', 'cap'], ['総合商社', 'trade'], ['鉄道', 'trans'], ['航空', 'trans'], ['海運', 'trans'], ['倉庫', 'cap'], ['新聞', 'subs'], ['AI', 'pro'], ['携帯電話', 'subs'], ['ホテル', 'cap'], ['レーザー', 'mfg'], ['病院', 'cap'], ['発電', 'cap'], ['半導体', 'mfg']]) {
+    const S = KS_TYPE_LIST.find(x => x.eng === e && x.name.includes(w) && !out.includes(x.name)) || KS_TYPE_LIST.find(x => x.eng === e && x.key.includes(w.toLowerCase()) && !out.includes(x.name));
+    if (S) out.push(S.name);
+  }
+  return out.slice(0, 18);
+}
 function ksStartStore() {
   const k = ksStartDefaults();
   const co = $('#kstCo'), ceo = $('#kstCeo'), seed = $('#kstSeed');
   if (ceo) k.ceo = ceo.value;
   if (seed) k.seed = seed.value;
-  if (co) { if (co.value.trim() && co.value.trim() !== ksDefaultCoName(k.ind)) { k.coName = co.value; k.coEdited = true; } else if (!co.value.trim()) { k.coName = ''; k.coEdited = false; } }
+  if (co) { if (co.value.trim() && co.value.trim() !== ksDefaultCoName(k.units[0].type)) { k.coName = co.value; k.coEdited = true; } else if (!co.value.trim()) { k.coName = ''; k.coEdited = false; } }
+}
+function ksStartTypeRow(S, k) {
+  const sel = k.units.some(x => x.type === S.name);
+  return `<li class="stype${sel ? ' on' : ''}"><span class="indico" aria-hidden="true">${esc(S.icon)}</span><span class="stype-t"><b>${esc(S.name)}</b><span class="small muted">${esc(S.grp)}・${esc(KS_ENG_INFO[S.eng].n)}</span></span>
+    <span class="stype-a">${btn(sel ? '選択中' : 'これにする', 'kStPick', { v: S.name }, `sm${sel ? '' : ' primary'}`, { disabled: sel })}${!sel && k.units.length < 3 ? btn('＋加える', 'kStAdd', { v: S.name }, 'sm') : ''}</span></li>`;
+}
+function ksStartTypesHtml(k) {
+  const list = ksSearchTypes(k.q, k.sec, k.eng, 40);
+  return list.length ? `<ul class="stypes">${list.map(S => ksStartTypeRow(S, k)).join('')}</ul>` : '<div class="empty">見つかりません。言葉を変えて探してください</div>';
 }
 function renderStartK() {
   const k = ksStartDefaults();
+  k.units = k.units.filter(x => KS_TYPES[x.type]);
+  if (!k.units.length) k.units = [{ type: KS_LEGACY_TYPE.ret, sc: 1 }];
   let meta = null;
   try { meta = JSON.parse(lsGet(LSK.meta('a')) || 'null'); } catch (e) { meta = null; }
-  const cont = meta && !meta.over ? btn(`続きから（${esc(meta.co)}・${ymLabel(meta.m)}）`, 'loadAuto') : '';
-  const I = KS_INDS[k.ind];
-  const inds = KS_IND_IDS.map(id => { const J = KS_INDS[id]; return `<button type="button" class="preset indcard${k.ind === id ? ' on' : ''}" data-act="kStInd" data-v="${id}" aria-pressed="${k.ind === id}"><b><span class="indico" aria-hidden="true">${J.icon}</span>${J.name}<span class="small muted">・${esc(J.label)}</span></b><span>${esc(J.desc)}</span></button>`; }).join('');
+  const cont = meta && !meta.over && meta.desc ? btn(`続きから（${esc(meta.co)}・${ymLabel(meta.m)}）`, 'loadAuto') : '';
+  const chosen = k.units.map((x, i) => { const S = KS_TYPES[x.type]; return `<li class="sunit"><span class="indico" aria-hidden="true">${esc(S.icon)}</span><span class="stype-t"><b>${esc(S.name)}</b><span class="small muted">${esc(S.d || KS_ENG_INFO[S.eng].desc)}</span></span>
+    <span class="stype-a"><span class="seg sm" role="radiogroup" aria-label="規模">${[[0.5, '小'], [1, '中'], [2, '大'], [4, '特大']].map(([v, l]) => `<button type="button" data-act="kStSc" data-i="${i}" data-v="${v}" aria-pressed="${x.sc === v}">${l}</button>`).join('')}</span>${k.units.length > 1 ? btn('外す', 'kStDel', { i }, 'sm ghost') : ''}</span></li>`; }).join('');
+  const picks = ksStartPicks().map(n => `<button type="button" class="chip${k.units.some(x => x.type === n) ? ' on' : ''}" data-act="kStPick" data-v="${esc(n)}">${esc(KS_TYPES[n].icon)} ${esc(n)}</button>`).join('');
+  const secs = Object.entries(KS_SECTORS).map(([c, x]) => `<option value="${c}"${k.sec === c ? ' selected' : ''}>${esc(x.n)}（${ksCountTypes(c, null)}）</option>`).join('');
+  const engs = Object.entries(KS_ENG_INFO).map(([c, x]) => `<option value="${c}"${k.eng === c ? ' selected' : ''}>${esc(x.n)}</option>`).join('');
   const conds = Object.entries(KS_COND).map(([c, C]) => `<button type="button" data-act="kStCond" data-v="${c}" aria-pressed="${k.cond === c}">${C.n}</button>`).join('');
   const terms = [[10, '10年'], [20, '20年'], [0, '定めない']].map(([v, l]) => `<button type="button" data-act="kStTerm" data-v="${v}" aria-pressed="${k.term === v}">${l}</button>`).join('');
   const setup = `<section class="setup" aria-labelledby="setupTitle">
     <div class="setup-head"><h2 id="setupTitle">始め方</h2>${cont}</div>
     ${startModeSwitch()}
-    <div class="field"><span>業種</span><div class="presets indgrid">${inds}</div></div>
+    <div class="field"><span>事業（${fmtNum(KS_TYPE_LIST.length, 0)}の業種から。3つまで組み合わせられます）</span><ul class="sunits">${chosen}</ul></div>
+    <div class="field"><span>おすすめ</span><div class="chips">${picks}</div></div>
+    <div class="field"><span>業種を探す</span><div class="row" style="gap:6px;flex-wrap:wrap"><input type="search" id="kstQ" value="${esc(k.q)}" data-in="kStQ" placeholder="例：レーザー、データセンター、航空、海運、新聞、介護" style="flex:1;min-width:12em" aria-label="業種を探す">
+      <select data-ch="kStSec" aria-label="産業"><option value="">すべての産業</option>${secs}</select><select data-ch="kStEng" aria-label="事業の型"><option value="">すべての型</option>${engs}</select></div>
+      <div id="kstList" class="stypes-wrap">${ksStartTypesHtml(k)}</div></div>
     <div class="field"><span>引き継ぐ会社の状態</span><div class="seg" role="radiogroup">${conds}</div><span class="small muted">${esc(KS_COND[k.cond].desc)}</span></div>
     <div class="grid g2" style="gap:12px"><div class="field"><span>任期</span><div class="seg" role="radiogroup">${terms}</div></div>
     <label class="field"><span>シード（同じ数字なら同じ展開）</span><input type="text" id="kstSeed" value="${esc(k.seed)}" placeholder="空欄でランダム" inputmode="numeric"></label></div>
     <p class="small muted" style="margin:0">就任の時点で、先代が経営した過去4期分の決算書と帳簿があります。最初の決算は3か月後の3月末。銀行の頭取モードとは別に保存されます。</p>
   </section>`;
   const termTxt = k.term ? `${k.term === 10 ? '十' : '二十'}年とする` : '定めない';
+  const desc = ksCompanyDesc(k.units.map(x => ({ type: x.type, n: null })).map(u => Object.assign(u, { sc: 1 })));
   const letter = `<div class="appoint">
     <h1>辞令</h1><div class="gametitle">社長 ― 会社経営と決算書のシミュレーション</div>
     <div class="body-text"><label><input type="text" id="kstCeo" value="${esc(k.ceo)}" placeholder="氏名" maxlength="12" aria-label="あなたの氏名"></label>　殿<br>
-    貴殿を <label><input type="text" id="kstCo" value="${esc(k.coEdited ? k.coName : ksDefaultCoName(k.ind))}" maxlength="18" aria-label="会社の名前" style="width:12em"></label> の代表取締役社長に選任する。<br>
-    ${esc(I.label)}を営む当社の経営を先代から引き継ぎ、日々の数字と毎年の決算書を自らの手で作り、取引銀行の信頼を得て、会社を健全に成長させること。<br>
+    貴殿を <label><input type="text" id="kstCo" value="${esc(k.coEdited ? k.coName : ksDefaultCoName(k.units[0].type))}" maxlength="18" aria-label="会社の名前" style="width:12em"></label> の代表取締役社長に選任する。<br>
+    ${esc(desc)}を営む当社の経営を先代から引き継ぎ、日々の数字と毎年の決算書を自らの手で作り、取引銀行の信頼を得て、会社を健全に成長させること。<br>
     任期は${warekiYear(2027)}1月から${termTxt}。</div>
     <div class="issuer">${warekiYear(2027)}1月1日<br>株主総会・取締役会</div>
     <div class="start">${btn('就任する', 'kStart', {}, 'primary')}${btn('ファイルから読み込む', 'importSave')}${btn('遊び方', 'help')}</div>
@@ -1026,23 +1120,31 @@ function renderStartK() {
 }
 Object.assign(ACTIONS, {
   stMode: d => { if (UI.start.mode === 'gyosei') gyStartStore(); else if (UI.start.mode === 'kaisha') ksStartStore(); else if (typeof startStoreInputs === 'function') startStoreInputs(); UI.start.mode = d.v; render(); },
-  kStInd: d => { ksStartStore(); UI.start.k.ind = d.v; render(); },
+  kStPick: d => { ksStartStore(); const k = UI.start.k; k.units = [{ type: d.v, sc: 1 }]; if (!k.coEdited) k.coName = ''; render(); },
+  kStAdd: d => { ksStartStore(); const k = UI.start.k; if (k.units.length < 3 && !k.units.some(x => x.type === d.v)) k.units.push({ type: d.v, sc: 1 }); render(); },
+  kStDel: d => { ksStartStore(); const k = UI.start.k; if (k.units.length > 1) k.units.splice(+d.i, 1); render(); },
+  kStSc: d => { ksStartStore(); const k = UI.start.k; if (k.units[+d.i]) k.units[+d.i].sc = +d.v; render(); },
   kStCond: d => { ksStartStore(); UI.start.k.cond = d.v; render(); },
   kStTerm: d => { ksStartStore(); UI.start.k.term = +d.v; render(); },
   kStart: () => {
     ksStartStore();
     const k = UI.start.k;
     const ceo = (k.ceo || '').trim() || `${KS_CITY} 太郎`;
-    let co = (k.coEdited ? k.coName : '').trim() || ksDefaultCoName(k.ind);
+    let co = (k.coEdited ? k.coName : '').trim() || ksDefaultCoName(k.units[0].type);
     if (!/株式会社|有限会社|合同会社/.test(co)) co = '株式会社' + co;
     const seedN = parseInt(String(k.seed).replace(/[^0-9]/g, ''), 10);
-    const o = { ind: k.ind, coName: co, ceo, cond: k.cond, term: k.term };
+    const o = { units: k.units.map(x => ({ type: x.type, sc: x.sc })), coName: co, ceo, cond: k.cond, term: k.term };
     if (Number.isFinite(seedN)) o.seed = seedN;
     ksNewGame(o);
-    UI.tab = 'k_dash'; UI.kFy = null; UI.kJm = null; UI.guideSel = null;
+    UI.tab = 'k_dash'; UI.kFy = null; UI.kJm = null; UI.guideSel = null; UI.kUnit = null;
     render();
     window.scrollTo({ top: 0 });
     autosave();
     showModal('kIntro');
   },
 });
+Object.assign(CHANGES, {
+  kStSec: el => { ksStartStore(); UI.start.k.sec = el.value; const b = $('#kstList'); if (b) b.innerHTML = ksStartTypesHtml(UI.start.k); },
+  kStEng: el => { ksStartStore(); UI.start.k.eng = el.value; const b = $('#kstList'); if (b) b.innerHTML = ksStartTypesHtml(UI.start.k); },
+});
+INPUTS.kStQ = el => { UI.start.k.q = el.value; const b = $('#kstList'); if (b) b.innerHTML = ksStartTypesHtml(UI.start.k); };

@@ -2,11 +2,13 @@
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
-const files = ['00_util.js', '01_data.js', '01_terms.js', '05_company.js', '20_kaisha_data.js', '21_kaisha_core.js', '22_kaisha_ind.js', '26_law_data.js', '27_kaisha_law.js'];
+const src = path.join(__dirname, '..', 'src');
+// ビルドと同じ、ファイル名の順。画面（DOM）を使うファイルは除く
+const files = fs.readdirSync(src).filter(f => /^(00_util|01_data|01_terms|05_company|20_kaisha_data|20[a-z]_.*|21_kaisha_core|22_kaisha_ind|22[a-z]_.*|26_law_data|27_kaisha_law|29_kaisha_grow)\.js$/.test(f)).filter(f => !(process.env.NOLAW && /law/.test(f))).sort();
 function loadKaisha() {
   const ctx = { console, Math, JSON, Date, Object, Array, Number, String, Set, Map, isFinite, isNaN, Infinity, NaN, parseInt, parseFloat, Error };
   vm.createContext(ctx);
-  let code = 'var TERM_BY_NAME = {};\n' + files.map(f => fs.readFileSync(path.join(__dirname, '..', 'src', f), 'utf8')).join('\n;\n');
+  let code = 'var TERM_BY_NAME = {};\n' + files.map(f => fs.readFileSync(path.join(src, f), 'utf8')).join('\n;\n');
   code = code.replace(/^(const|let) /gm, 'var ');
   code += '\n;globalThis.__api = { get G(){return G;}, set G(v){G=v;} };';
   vm.runInContext(code, ctx, { filename: 'kaisha.js' });

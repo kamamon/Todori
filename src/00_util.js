@@ -60,7 +60,7 @@ function seeded(seed) {
 const clamp = (x, a, b) => (x < a ? a : x > b ? b : x);
 const lerp = (a, b, t) => a + (b - a) * t;
 const sigmoid = x => 1 / (1 + Math.exp(-x));
-function sum(arr, f) { let s = 0; for (const x of arr) s += f ? f(x) : x; return s; }
+function sum(arr, f) { let s = 0, i = 0; for (const x of arr) s += f ? f(x, i++) : x; return s; }
 const roundTo = (x, unit) => Math.round(x / unit) * unit;
 /* 区分線形補間： pts = [[x0,y0],[x1,y1],...]（x昇順） */
 function interp(x, pts) {

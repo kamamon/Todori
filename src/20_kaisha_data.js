@@ -5,7 +5,7 @@
  *  金額は円。1か月＝ m（銀行モードと同じ暦。2026年4月 = 0）
  * ========================================================= */
 
-const KS_SAVE_VERSION = 1;
+const KS_SAVE_VERSION = 2;
 const KS_START_M = 9;        // 社長に就任する月（2027年1月）。最初の決算は3か月後
 const KS_HIST_START = -48;   // 過去4期分を自動で経営して決算書を作る
 const KS_TERM_YEARS = 10;
@@ -30,8 +30,10 @@ const KS_ACCT = {
   equip: { n: '工具器具備品', t: 'A', g: 'fa', tk: 'equip' },
   accDep: { n: '減価償却累計額', t: 'C', g: 'fa', tk: 'accDep' },
   land: { n: '土地', t: 'A', g: 'fa', tk: 'land' },
+  cip: { n: '建設仮勘定', t: 'A', g: 'fa', tk: 'cip' },
   sw: { n: 'ソフトウェア', t: 'A', g: 'ia', tk: 'intangible' },
   swip: { n: 'ソフトウェア仮勘定', t: 'A', g: 'ia', tk: 'intangible' },
+  goodwill: { n: 'のれん', t: 'A', g: 'ia', tk: 'goodwill' },
   deposit: { n: '差入保証金', t: 'A', g: 'io', tk: 'deposit' },
   ap: { n: '買掛金', t: 'L', g: 'cl', tk: 'ap' },
   accrued: { n: '未払金', t: 'L', g: 'cl', tk: 'accrued' },
@@ -41,11 +43,14 @@ const KS_ACCT = {
   std: { n: '短期借入金', t: 'L', g: 'cl', tk: 'std' },
   ltd: { n: '長期借入金', t: 'L', g: 'ncl', tk: 'ltd' },
   capital: { n: '資本金', t: 'E', g: 'eq', tk: 'capital' },
+  capSurplus: { n: '資本準備金', t: 'E', g: 'eq', tk: 'capSurplus' },
+  legalRes: { n: '利益準備金', t: 'E', g: 'eq', tk: 'legalRes' },
   re: { n: '繰越利益剰余金', t: 'E', g: 'eq', tk: 're' },
   sales: { n: '売上高', t: 'R', g: 'sales', tk: 'sales' },
   intInc: { n: '受取利息', t: 'R', g: 'noi', tk: 'nonopInc' },
   miscInc: { n: '雑収入', t: 'R', g: 'noi', tk: 'nonopInc' },
   allowRev: { n: '貸倒引当金戻入額', t: 'R', g: 'noi', tk: 'allowance' },
+  fxGain: { n: '為替差益', t: 'R', g: 'noi', tk: 'fxGainLoss' },
   gainSale: { n: '固定資産売却益', t: 'R', g: 'exg', tk: 'extra' },
   insRecv: { n: '受取保険金', t: 'R', g: 'exg', tk: 'extra' },
   purch: { n: '仕入高', t: 'X', g: 'cogs', tk: 'purch' },
@@ -56,6 +61,8 @@ const KS_ACCT = {
   depC: { n: '減価償却費（製造）', t: 'X', g: 'cogs', tk: 'dep' },
   invChg: { n: '製品・仕掛品の増減', t: 'X', g: 'cogs', tk: 'mfgCost' },
   conCost: { n: '完成工事原価', t: 'X', g: 'cogs', tk: 'conCost' },
+  fuel: { n: '燃料費', t: 'X', g: 'cogs', tk: 'fuelCost' },
+  svcExp: { n: '経費（原価）', t: 'X', g: 'cogs', tk: 'svcCost' },
   execPay: { n: '役員報酬', t: 'X', g: 'sga', tk: 'execPay' },
   salary: { n: '給料手当', t: 'X', g: 'sga', tk: 'salary' },
   welfare: { n: '法定福利費', t: 'X', g: 'sga', tk: 'welfare' },
@@ -73,11 +80,16 @@ const KS_ACCT = {
   dues: { n: '租税公課', t: 'X', g: 'sga' },
   misc: { n: '雑費', t: 'X', g: 'sga' },
   depS: { n: '減価償却費', t: 'X', g: 'sga', tk: 'dep' },
+  gwAmort: { n: 'のれん償却額', t: 'X', g: 'sga', tk: 'goodwill' },
+  rnd: { n: '研究開発費', t: 'X', g: 'sga', tk: 'rnd' },
+  listFee: { n: '上場関連費用（監査報酬・上場料・IR）', t: 'X', g: 'sga', tk: 'ipoCost' },
   allowExp: { n: '貸倒引当金繰入額', t: 'X', g: 'sga', tk: 'badDebtExp' },
   badDebt: { n: '貸倒損失', t: 'X', g: 'sga', tk: 'badDebtExp' },
   shrink: { n: '棚卸減耗損', t: 'X', g: 'sga', tk: 'shrink' },
   interest: { n: '支払利息', t: 'X', g: 'noe', tk: 'interest' },
   guarFee: { n: '信用保証料', t: 'X', g: 'noe', tk: 'guarFee' },
+  fxLoss: { n: '為替差損', t: 'X', g: 'noe', tk: 'fxGainLoss' },
+  stockCost: { n: '株式交付費', t: 'X', g: 'noe', tk: 'ipoCost' },
   fines: { n: '罰金及び科料', t: 'X', g: 'noe', tk: 'soken' },
   lossSale: { n: '固定資産売却損', t: 'X', g: 'exl', tk: 'extra' },
   disaster: { n: '災害による損失', t: 'X', g: 'exl', tk: 'extra' },
@@ -136,6 +148,10 @@ const KS_JNOTE = {
   odRepay: ['当座貸越の返済', '資金に余裕ができたので当座貸越を返しました。'],
   taxPay: ['法人税等の納付', '前期の決算で計上した未払法人税等を納めました。決算から2か月以内に納めます。'],
   buyAsset: ['固定資産の購入', '長く使う設備を買いました。買ったときは費用にせず資産に計上し、決算で減価償却費として少しずつ費用にします。'],
+  buyCip: ['建設中の設備の支払（建設仮勘定）', 'まだ完成・納入していない設備への支払いは建設仮勘定（資産）にためておきます。使い始めるまでは減価償却をしません。'],
+  cipDone: ['建設仮勘定の振替（使い始め）', '設備が完成・納入されて使い始めたので、建設仮勘定から本来の固定資産の科目に振り替えます。この月から減価償却が始まります。'],
+  fuel: ['燃料費の支払', 'トラック・列車・航空機・船の燃料です。運ぶ事業では、燃料費は運賃収入に対応する原価（運送原価）になります。'],
+  svcExp: ['原価の経費の支払', 'サービスを提供するためにかかった経費（整備費・施設の運営費・通信費・サーバー代・コンテンツの制作費など）。売上原価に入れます。'],
   sellAsset: ['固定資産の売却', '設備を売りました。帳簿価額（取得価額−減価償却累計額）と売却額の差が売却損益になります。'],
   deposit: ['保証金の差入', '店舗を借りるときの保証金（敷金）。退去すると戻るので費用ではなく資産です。'],
   cwipMat: ['工事の材料・外注費（掛け）', '完成していない工事にかかった費用は、未成工事支出金（資産）にためておきます。'],
@@ -284,5 +300,29 @@ const KS_COND = {
 };
 
 /* 減価償却の耐用年数（このゲームの設定） */
-const KS_LIFE = { bldg: 15, mach: 10, veh: 5, equip: 6, sw: 5 };
-const KS_ASSET_NAMES = { bldg: '建物', mach: '機械装置', veh: '車両運搬具', equip: '工具器具備品', sw: 'ソフトウェア', land: '土地' };
+const KS_LIFE = { bldg: 15, mach: 10, veh: 5, equip: 6, sw: 5, goodwill: 10 };
+const KS_ASSET_NAMES = { bldg: '建物', mach: '機械装置', veh: '車両運搬具', equip: '工具器具備品', sw: 'ソフトウェア', land: '土地', goodwill: 'のれん' };
+/* 直接法で償却する資産（減価償却累計額を使わず、資産を直接減らす） */
+const KS_DIRECT = { sw: 1, goodwill: 1 };
+
+/* ---------- 事業の型ごとの学び（お金の流れ・決算書の特徴・決算のポイント） ---------- */
+const KS_ENG_LEARN = {
+  shop: KS_INDS.ret.learn, rest: KS_INDS.food.learn, mfg: KS_INDS.mfg.learn, build: KS_INDS.con.learn, trade: KS_INDS.whl.learn, pro: KS_INDS.it.learn,
+  subs: {
+    flow: '<p>利用者から毎月の料金（サブスクリプション）や、広告・手数料で稼ぎます。売上 ＝ <b>利用者数 × 1人あたりの月の売上</b>。毎月いくらかの利用者が解約するので、広告や営業で新しい利用者を集め続けます。</p><p>サーバー・基地局・輪転機などの<b>設備</b>と、開発・制作の<b>人件費</b>が先にかかり、利用者が少ないうちは赤字。利用者が積み上がると、1人増えるごとの費用が小さいので利益が急に増えます（<b>規模の経済</b>）。</p>',
+    fs: '<ul><li>損益計算書：開発・制作の人の給与は労務費、サーバーや通信・コンテンツの費用は経費（どちらも売上原価）。利用者を集める広告宣伝費は販管費。</li><li>貸借対照表：設備（工具器具備品・機械装置）とソフトウェアが大きい。カードの売上は翌月に入金。</li><li>銀行が見るところ：解約率、獲得の費用と生涯の売上（LTV）、設備投資を回収できるか。</li></ul>',
+    closing: '<p>在庫はほとんどありません。決算では、設備とソフトウェアの減価償却、未払費用（3月分の社会保険料）、前払費用（翌月分の家賃）を確かめます。</p>',
+  },
+  cap: {
+    flow: '<p>客室・倉庫の床・データセンターのラック・病床・駐車場・発電所などの<b>施設</b>を、お客さんに使ってもらって稼ぎます。売上 ＝ <b>能力 × 稼働率 × 単価</b>。</p><p>建物と設備に大きなお金を先に払い、何十年もかけて回収します。費用の多くは減価償却費・人件費・保守費などの<b>固定費</b>なので、稼働率が少し下がるだけで赤字になり、少し上がるだけで大きな利益が出ます。</p>',
+    fs: '<ul><li>貸借対照表：建物・機械装置などの有形固定資産が資産の大半。建設中の施設は建設仮勘定。</li><li>損益計算書：施設で働く人の給与は労務費、施設の運営費は経費（売上原価）。減価償却費が重い。</li><li>銀行が見るところ：稼働率と単価の推移、借入金を何年で返せるか（債務償還年数）、設備の更新の資金。</li></ul>',
+    closing: '<p>決算の中心は<b>減価償却</b>です。完成して使い始めた施設は、建設仮勘定から建物・機械装置に振り替えてから償却を始めます。</p>',
+  },
+  trans: {
+    flow: '<p>トラック・バス・鉄道・航空機・船で、人や物を運んで稼ぎます。売上 ＝ <b>輸送力 × 稼働 × 積載率（乗車率）× 運賃</b>。貨物の運賃は月末締め翌月払いが多く、旅客は乗る前に払ってもらいます。</p><p>燃料費・整備費・乗務員の人件費が大きく、<b>燃料の値段</b>で利益が大きく動きます。乗務員が足りないと運休が出ます。車両や機体・船は高価で、長期の借入で買います。</p>',
+    fs: '<ul><li>損益計算書：燃料費と運行経費（整備・空港や港の使用料）、乗務員の給与は売上原価。</li><li>貸借対照表：車両運搬具（トラック・航空機・船）が大きい。</li><li>銀行が見るところ：積載率と燃料費の割合、車両の更新の計画、債務償還年数。</li></ul>',
+    closing: '<p>車両の減価償却が中心です。高価な機体・船は、納入されるまでの支払を建設仮勘定にためておきます。</p>',
+  },
+};
+/* 事業の型ごとの、社名の後ろの言葉 */
+const KS_CO_CORE = { shop: ['ストア', '商店', 'マート'], rest: ['キッチン', 'ダイニング', 'フーズ'], mfg: ['製作所', '工業', '精工'], build: ['建設', '工務店', '建工'], trade: ['商事', '物産', '商会'], pro: ['システムズ', 'コンサルティング', 'ラボ'], subs: ['ネットワークス', 'メディア', 'デジタル'], cap: ['開発', 'ホールディングス', 'サービス'], trans: ['運輸', '交通', '海運'] };

@@ -368,7 +368,7 @@ MODALS.menu = () => {
   const slot = i => {
     let meta = null;
     try { meta = JSON.parse(lsGet(L.meta(i)) || 'null'); } catch (e) { meta = null; }
-    const desc = !meta ? '<span class="muted">空き</span>' : gmode ? `${esc(meta.co)}・${ymLabel(meta.m)}・署長 ${esc(meta.ceo)}` : kmode ? `${esc(meta.co)}・${ymLabel(meta.m)}・${esc((KS_INDS[meta.ind] || {}).name || '')}` : `${esc(meta.bank)}・${ymLabel(meta.m)}・総資産${fmtYen(meta.ta)}`;
+    const desc = !meta ? '<span class="muted">空き</span>' : gmode ? `${esc(meta.co)}・${ymLabel(meta.m)}・署長 ${esc(meta.ceo)}` : kmode ? `${esc(meta.co)}・${ymLabel(meta.m)}・${esc(meta.desc || '')}` : `${esc(meta.bank)}・${ymLabel(meta.m)}・総資産${fmtYen(meta.ta)}`;
     return `<tr><td>${i === 'a' ? '自動保存' : 'スロット' + i}</td><td class="small">${desc}</td><td class="n">${i === 'a' ? '' : btn('保存', 'saveSlot', { slot: i }, 'sm', { disabled: !G })} ${btn('読込', i === 'a' ? 'loadAuto' : 'loadSlot', { slot: i }, 'sm', { disabled: !meta })}</td></tr>`;
   };
   const theme = lsGet(LS.theme) || 'auto';
