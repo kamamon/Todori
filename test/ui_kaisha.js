@@ -24,10 +24,25 @@ if (!fs.existsSync(shots)) fs.mkdirSync(shots);
   await page.waitForTimeout(250);
   const tag = mobile ? 'm' : 'd';
   const shot = async (name, full = true) => { if (doShots) await page.screenshot({ path: `${shots}/k${tag}_${name}.png`, fullPage: full }); };
+  // 労災の対応（閉じられないモーダル）を最後まで進める
+  let rosaiN = 0;
+  const handleRosai = async () => {
+    for (let k = 0; k < 20; k++) {
+      const pickB = await page.$('.modal [data-act="kRosaiPick"]:not([disabled])');
+      if (pickB) { if (rosaiN === 0 && doShots) await page.screenshot({ path: `${shots}/k${tag}_rosai.png` }); await pickB.click(); await page.waitForTimeout(60); continue; }
+      const nx = await page.$('.modal [data-act="kRosaiNext"]:not([disabled])');
+      if (nx) { await nx.click(); await page.waitForTimeout(60); continue; }
+      const dn = await page.$('.modal [data-act="kRosaiDone"]');
+      if (dn) { await dn.click(); await page.waitForTimeout(80); rosaiN++; continue; }
+      return;
+    }
+  };
   const closeModals = async () => {
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 12; i++) {
       const name = await page.evaluate(() => (document.querySelector('#modal-root .modal') ? 1 : 0));
       if (!name) return;
+      await handleRosai();
+      if (!(await page.$('#modal-root .modal'))) return;
       const b = await page.$('.modal .mf [data-act="closeModal"]');
       if (b) await b.click(); else await page.keyboard.press('Escape');
       await page.waitForTimeout(80);
@@ -59,7 +74,7 @@ if (!fs.existsSync(shots)) fs.mkdirSync(shots);
     if (first) await shot('01_intro', false);
     await closeModals();
     // すべてのタブ
-    for (const t of ['k_dash', 'k_ops', 'k_bank', 'k_fs', 'k_books', 'k_budget', 'k_learn', 'k_news']) {
+    for (const t of ['k_dash', 'k_ops', 'k_law', 'k_bank', 'k_fs', 'k_books', 'k_budget', 'k_learn', 'k_news']) {
       await page.click(`.tab[data-tab="${t}"]`);
       await page.waitForTimeout(70);
       await screenErr(`${ind} ${t}`);
@@ -126,9 +141,10 @@ if (!fs.existsSync(shots)) fs.mkdirSync(shots);
       await modalErr(`${ind} month ${i}`);
       if (first && i === 0) await shot('month', false);
       // 月次報告を閉じる（決算整理は閉じない）
-      for (let k = 0; k < 3; k++) {
+      for (let k = 0; k < 8; k++) {
         const isClose = await page.evaluate(() => !!document.querySelector('.modal .wiz'));
         if (isClose) break;
+        await handleRosai();
         const b = await page.$('.modal .mf [data-act="closeModal"]');
         if (!b) break;
         await b.click(); await page.waitForTimeout(80);

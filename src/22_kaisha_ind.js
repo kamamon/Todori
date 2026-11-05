@@ -95,7 +95,7 @@ KS_ENGINE.ret = {
     ksPayCash('misc', 8e4 * n, 'expense');
     if ([6, 9, 12, 2].includes(ctx.mo)) ksPayCash('dues', 30e4 * n, 'dues');
     op.rep = clamp(op.rep + 0.01 * ((staffF - 1) * 2 + (stockF - 1) * 2 + (0.255 - op.markup) * 2) - ksRepPull(op.rep), 0.75, 1.25);
-    if (!G.hist && chance(0.012)) {
+    if (!G.hist && open.length && chance(0.012)) {
       const s = pick(open);
       s.comp = (s.comp || 1) * 0.93;
       ksNews(`${s.n}の近くに大手ドラッグストアが開店。客数が7%ほど減りそうです`, 'bad');

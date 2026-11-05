@@ -98,7 +98,7 @@ function ksMakeQuiz(step) {
     const t = ksTaxCalc();
     if (t.taxable > 0) {
       const ch = ksAmtChoices(t.tax, [Math.max(0, t.pretax) * 0.25 + 7e4, Math.max(0, t.pretax) * 0.3, t.income, 7e4]);
-      return { q: `税引前当期純利益は ${ksYenX(t.pretax)}${t.loss ? `、過去の赤字（繰越欠損金）が ${ksYenX(t.loss)}` : ''}です。所得のうち800万円までは25%、超える部分は34%、さらに住民税の均等割7万円がかかります。法人税等はいくら？`, choices: ch.map(ksYenX), correct: 0,
+      return { q: `税引前当期純利益は ${ksYenX(t.pretax)}${t.fines ? `（うち罰金 ${ksYenX(t.fines)} は税金の計算では費用にならないので、所得に足し戻す）` : ''}${t.loss ? `、過去の赤字（繰越欠損金）が ${ksYenX(t.loss)}` : ''}です。所得のうち800万円までは25%、超える部分は34%、さらに住民税の均等割7万円がかかります。法人税等はいくら？`, choices: ch.map(ksYenX), correct: 0,
         explain: `所得 ${ksYenX(t.taxable)}${t.loss ? `（利益から繰越欠損金を差し引いた額）` : ''} × 税率 ＝ ${ksYenX(t.income)}、均等割 7万円を加えて <b>${ksYenX(t.tax)}</b>。納めるのは5月なので、それまでは未払法人税等（負債）です。` };
     }
     return { q: `今期の税引前当期純利益は ${ksYenX(t.pretax)}${t.pretax > 0 ? `ですが、過去の赤字（繰越欠損金）${ksYenX(t.loss)}で相殺されます` : '（赤字）です'}。法人税等はいくらでしょう？`, choices: ['0円（もうけがないので税金はかからない）', '7万円（住民税の均等割だけはかかる）', `△${ksYenX(Math.abs(t.pretax) * 0.25)}（税金が戻ってくる）`, ksYenX(Math.abs(t.pretax) * 0.25)], correct: 1,

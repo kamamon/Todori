@@ -445,6 +445,7 @@ KS_SCREENS.k_fs = () => {
     const t = cur.tax || {};
     body = `<table class="t" style="max-width:560px"><tbody>
       <tr><td>税引前当期純利益</td><td class="n">${fmtYen(t.pretax || cur.pl.pretax)}</td></tr>
+      ${t.fines ? `<tr><td>${term('罰金及び科料', 'soken')}の加算（税金の計算では費用にならない＝損金不算入）</td><td class="n">+${fmtYen(t.fines)}</td></tr>` : ''}
       <tr><td>繰越欠損金の控除（過去の赤字）</td><td class="n">${t.loss ? MINUS + fmtYen(Math.min(t.loss, Math.max(0, t.pretax))) : '―'}</td></tr>
       <tr class="total"><td>課税所得（このゲームの簡単な計算）</td><td class="n">${fmtYen(t.taxable || 0)}</td></tr>
       <tr><td>所得にかかる税（800万円までは25%、超える部分は34%）</td><td class="n">${fmtYen(t.income || 0)}</td></tr>
@@ -966,10 +967,14 @@ function ksDeserialize(s) {
   for (const k of KS_KEYS) if (G.bal[k] === undefined) G.bal[k] = 0;
   if (!G.quiz) G.quiz = { asked: 0, correct: 0 };
   if (!G.flags) G.flags = {};
+  if (!G.law && typeof ksLawInit === 'function') ksLawInit();
   return G;
 }
 /* 今のモード（ゲーム中ならそのモード、開始画面なら選んでいるモード）の保存先 */
-function lsKeys() { return (G ? isK() : UI.start && UI.start.mode === 'kaisha') ? LSK : LS; }
+function lsKeys() {
+  const m = G ? (isG() ? 'gyosei' : isK() ? 'kaisha' : 'bank') : (UI.start && UI.start.mode) || 'bank';
+  return m === 'gyosei' ? LSG : m === 'kaisha' ? LSK : LS;
+}
 
 /* ---------- 開始画面（会社を経営する） ---------- */
 function startModeSwitch() {
@@ -977,6 +982,7 @@ function startModeSwitch() {
   return `<div class="modesw" role="radiogroup" aria-label="遊ぶモード">
     <button type="button" class="modebtn${m === 'bank' ? ' on' : ''}" data-act="stMode" data-v="bank" aria-pressed="${m === 'bank'}"><b>銀行を経営する</b><span>頭取として融資を審査し、銀行の決算をまとめる</span></button>
     <button type="button" class="modebtn${m === 'kaisha' ? ' on' : ''}" data-act="stMode" data-v="kaisha" aria-pressed="${m === 'kaisha'}"><b>会社を経営する</b><span>社長として商売をし、決算書を作り、銀行から借りる</span></button>
+    <button type="button" class="modebtn${m === 'gyosei' ? ' on' : ''}" data-act="stMode" data-v="gyosei" aria-pressed="${m === 'gyosei'}"><b>法令を守らせる</b><span>監督署・消防署の署長として立入検査をし、労災や火災に対応する</span></button>
   </div>`;
 }
 function ksStartDefaults() { return UI.start.k || (UI.start.k = { ind: 'ret', cond: 'normal', term: 10, coName: '', ceo: '', seed: '', coEdited: false }); }
@@ -1019,7 +1025,7 @@ function renderStartK() {
   return `${scene('hero', { cls: 'hero', alt: `港町の${CITY_NAME}の風景` })}<div class="startwrap${artSrc('hero') ? ' with-hero' : ''}">${setup}${letter}</div>`;
 }
 Object.assign(ACTIONS, {
-  stMode: d => { if (typeof startStoreInputs === 'function' && UI.start.mode !== 'kaisha') startStoreInputs(); if (UI.start.mode === 'kaisha') ksStartStore(); UI.start.mode = d.v; render(); },
+  stMode: d => { if (UI.start.mode === 'gyosei') gyStartStore(); else if (UI.start.mode === 'kaisha') ksStartStore(); else if (typeof startStoreInputs === 'function') startStoreInputs(); UI.start.mode = d.v; render(); },
   kStInd: d => { ksStartStore(); UI.start.k.ind = d.v; render(); },
   kStCond: d => { ksStartStore(); UI.start.k.cond = d.v; render(); },
   kStTerm: d => { ksStartStore(); UI.start.k.term = +d.v; render(); },

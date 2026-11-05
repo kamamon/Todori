@@ -115,7 +115,7 @@ function ksWriteOffAR(cust, ratio = 1) {
 function ksApDueNow() { return sum(G.ap.filter(x => x.due <= G.m), x => x.amt); }
 
 /* ---------- 給与 ---------- */
-function ksRoleWage(r) { return r.wage * G.eco.wageIdx * (r.cost === 'labor' && G.ind === 'it' ? G.op.salaryLv : 1) * (G.wageLv || 1); }
+function ksRoleWage(r) { return r.wage * G.eco.wageIdx * (r.cost === 'labor' && G.ind === 'it' ? G.op.salaryLv : 1) * (G.wageLv || 1) * (G.law && G.law.partAdj && typeof KS_PART_HOURS !== 'undefined' && KS_PART_HOURS[G.ind] && KS_PART_HOURS[G.ind][r.id] ? G.law.partAdj : 1); }
 function ksHeadcount() { return KS_INDS[G.ind].roles.reduce((s, r) => s + (G.staff[r.id] || 0), 0); }
 /* 月の人件費の見込み（賞与・社会保険を含む平均） */
 function ksPayrollEstimate() {
@@ -396,6 +396,7 @@ function ksAdvance() {
   ksLoansMonthly();
   if (calMonth(m) === 5 && ksB('taxPay') > 0) { const t = ksB('taxPay'); ksPost('taxPay', [['taxPay', t, 0], ['cash', 0, t]], { cf: 'tax' }); }
   ksEventsMonth(ctx);
+  if (typeof ksLawMonth === 'function' && G.law) ksLawMonth(ctx, res);
   if (calMonth(m) === 4) ksBudgetApprove(true); // 4月末までに決めなければ予算案のまま決まる
   ksPayAP();
   if (!ksCashCover()) {
@@ -1155,6 +1156,7 @@ function ksNewGame(o) {
   ksBudgetDraft();
   ksBudgetApprove(true);
   G.startedM = G.m;
+  if (typeof ksLawInit === 'function') ksLawInit();
   ksNews(`${G.ceo}氏が${G.coName}の代表取締役社長に就任。${KS_INDS[G.ind].label}を営む${G.founded}年創業の会社`, 'info');
   return G;
 }

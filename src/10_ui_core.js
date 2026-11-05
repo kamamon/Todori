@@ -49,6 +49,7 @@ function render() {
   document.body.classList.toggle('ingame', !!G);
   if (!G) { app.innerHTML = renderStart(); return; }
   if (G.mode === 'kaisha') { renderK(); return; }
+  if (G.mode === 'gyosei') { renderG(); return; }
   const tabsEl = $('.tabs');
   const tabScroll = tabsEl ? tabsEl.scrollLeft : 0;
   app.innerHTML = `${renderMast()}${renderStrip()}<div class="body"><nav class="tabs" aria-label="画面の切り替え">${renderTabs()}</nav><main id="main">${renderScreen()}</main></div>`;
@@ -223,7 +224,7 @@ async function unpackSave(s) {
   }
   return s;
 }
-function saveMeta() { return isK() ? ksSaveMeta() : JSON.stringify({ bank: G.bankName, ceo: G.ceoName, m: G.m, ta: totalAssets(), at: Date.now(), over: !!G.over }); }
+function saveMeta() { return isG() ? gySaveMeta() : isK() ? ksSaveMeta() : JSON.stringify({ bank: G.bankName, ceo: G.ceoName, m: G.m, ta: totalAssets(), at: Date.now(), over: !!G.over }); }
 async function autosave() {
   if (!G) return;
   const L = lsKeys();
@@ -243,7 +244,7 @@ async function loadFrom(key) {
     if (!raw) { toast('セーブデータがありません', 'bad'); return false; }
     deserialize(raw);
     afterLoad();
-    toast(`${isK() ? G.coName : G.bankName}（${ymLabel(G.m)}）を読み込みました`);
+    toast(`${gameName()}（${ymLabel(G.m)}）を読み込みました`);
     return true;
   } catch (e) {
     console.error(e);
@@ -254,7 +255,7 @@ async function loadFrom(key) {
 /* 読み込んだ後の画面の準備（銀行・会社の両方） */
 function afterLoad() {
   UI.appId = null; UI.modal = null; UI.queue = []; UI.guideSel = null;
-  if (isK()) { UI.tab = 'k_dash'; UI.kFy = null; UI.kJm = null; UI.start.mode = 'kaisha'; } else { UI.tab = 'dash'; UI.start.mode = 'bank'; }
+  if (isG()) { UI.tab = 'g_dash'; UI.gRes = null; UI.gSai = null; UI.start.mode = 'gyosei'; } else if (isK()) { UI.tab = 'k_dash'; UI.kFy = null; UI.kJm = null; UI.start.mode = 'kaisha'; } else { UI.tab = 'dash'; UI.start.mode = 'bank'; }
   drawModal(); render(); window.scrollTo({ top: 0 });
   if (isK()) { if (G.closing) showModal('kClose'); else if (G.over) showModal('kOver'); }
   else if (G.pendingDividend) showModal('yearEnd', { fy: G.pendingDividend.fy });
@@ -263,7 +264,7 @@ function exportSave() {
   const blob = new Blob([serialize()], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `${isK() ? 'shacho' : 'toudori'}_${isK() ? G.coName : G.bankName}_${ymOf(G.m).y}-${String(ymOf(G.m).mo).padStart(2, '0')}.json`;
+  a.download = `${isG() ? 'shocho' : isK() ? 'shacho' : 'toudori'}_${gameName()}_${ymOf(G.m).y}-${String(ymOf(G.m).mo).padStart(2, '0')}.json`;
   document.body.appendChild(a);
   a.click();
   a.remove();
@@ -286,7 +287,9 @@ function applyTheme(t) {
 }
 
 /* 遊び方：会社経営モード（またはその開始画面）では会社の遊び方を開く */
-function helpName() { return isK() || (!G && UI.start && UI.start.mode === 'kaisha') ? 'kHelp' : 'help'; }
+function helpName() { return isG() || (!G && UI.start && UI.start.mode === 'gyosei') ? 'gHelp' : isK() || (!G && UI.start && UI.start.mode === 'kaisha') ? 'kHelp' : 'help'; }
+/* 今のゲームの名前（銀行・会社・役所） */
+function gameName() { return isG() ? GY_AGENCY[G.agency].n : isK() ? G.coName : G.bankName; }
 
 /* ---------- 月の進行 ---------- */
 function requestAdvance() {
@@ -323,7 +326,7 @@ function runAdvance() {
 Object.assign(ACTIONS, {
   tab: d => { UI.tab = d.tab; render(); window.scrollTo({ top: 0 }); },
   go: d => { UI.tab = d.tab; if (d.app) UI.appId = d.app; if (d.dist) UI.cityD = d.dist; if (d.fin) UI.finTab = d.fin; UI.modal = null; drawModal(); render(); window.scrollTo({ top: 0 }); },
-  advance: () => (isK() ? ksRequestAdvance() : requestAdvance()),
+  advance: () => (isG() ? gyRequestAdvance() : isK() ? ksRequestAdvance() : requestAdvance()),
   advanceNow: () => runAdvance(),
   closeModal: d => closeModal(!!(d && d.force)),
   scrim: (d, el, e) => { if (e.target === el) closeModal(); },
@@ -337,7 +340,7 @@ Object.assign(ACTIONS, {
   importSave: () => $('#importFile').click(),
   theme: d => { lsSet(LS.theme, d.v); applyTheme(d.v); drawModal(); },
   newGameConfirm: () => confirmBox('新しいゲームを始める', '現在のゲームは自動保存の内容が上書きされます。始める前に必要ならスロットに保存してください。', '新しく始める', 'newGameGo', {}, true),
-  newGameGo: () => { if (G) UI.start.mode = isK() ? 'kaisha' : 'bank'; G = null; UI.modal = null; UI.queue = []; drawModal(); render(); window.scrollTo({ top: 0 }); },
+  newGameGo: () => { if (G) UI.start.mode = isG() ? 'gyosei' : isK() ? 'kaisha' : 'bank'; G = null; UI.modal = null; UI.queue = []; drawModal(); render(); window.scrollTo({ top: 0 }); },
 });
 Object.assign(CHANGES, {
   importFile: el => { if (el.files && el.files[0]) importSave(el.files[0]); el.value = ''; },

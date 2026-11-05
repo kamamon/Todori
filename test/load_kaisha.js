@@ -2,11 +2,11 @@
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
-const files = ['00_util.js', '01_data.js', '05_company.js', '20_kaisha_data.js', '21_kaisha_core.js', '22_kaisha_ind.js'];
+const files = ['00_util.js', '01_data.js', '01_terms.js', '05_company.js', '20_kaisha_data.js', '21_kaisha_core.js', '22_kaisha_ind.js', '26_law_data.js', '27_kaisha_law.js'];
 function loadKaisha() {
   const ctx = { console, Math, JSON, Date, Object, Array, Number, String, Set, Map, isFinite, isNaN, Infinity, NaN, parseInt, parseFloat, Error };
   vm.createContext(ctx);
-  let code = files.map(f => fs.readFileSync(path.join(__dirname, '..', 'src', f), 'utf8')).join('\n;\n');
+  let code = 'var TERM_BY_NAME = {};\n' + files.map(f => fs.readFileSync(path.join(__dirname, '..', 'src', f), 'utf8')).join('\n;\n');
   code = code.replace(/^(const|let) /gm, 'var ');
   code += '\n;globalThis.__api = { get G(){return G;}, set G(v){G=v;} };';
   vm.runInContext(code, ctx, { filename: 'kaisha.js' });

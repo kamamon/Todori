@@ -649,7 +649,7 @@ table.fs tr.focus td:first-child { box-shadow: inset 3px 0 0 var(--brass); }
 .fsh { font-size: 14px; margin: 0 0 6px; }
 h4.fsh { font-size: 13px; }
 /* 開始画面：モードの切り替えと業種 */
-.modesw { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.modesw { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .modebtn { text-align: left; border: 1px solid var(--rule-strong); background: var(--sheet-2); border-radius: var(--r-m); padding: 10px 12px; cursor: pointer; display: grid; gap: 3px; font: inherit; color: inherit; }
 .modebtn b { font-size: 14px; font-family: var(--f-doc); letter-spacing: .04em; }
 .modebtn span { font-size: 11px; color: var(--ink-3); line-height: 1.45; }
@@ -722,6 +722,44 @@ details > summary.small { cursor: pointer; color: var(--vault); }
   .qz-ch { grid-template-columns: minmax(0, 1fr); }
   .jtable td.jdesc { min-width: 150px; }
   .gradebig { width: 48px; height: 48px; font-size: 22px; }
+}
+
+
+/* 法令と安全・行政 */
+.lawdoc { border: 1px solid var(--rule-strong); background: var(--sheet); border-radius: var(--r-s); padding: 14px 16px; box-shadow: 0 1px 0 var(--rule); }
+.ld-title { font-family: var(--f-doc); font-size: 20px; font-weight: 700; text-align: center; letter-spacing: .3em; margin: 0 0 8px; }
+.ld-meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 16px; font-size: 12px; color: var(--ink-2); border-bottom: 1px solid var(--rule); padding-bottom: 6px; margin-bottom: 8px; }
+.lawitem { border-bottom: 1px solid var(--rule); padding: 6px 0; }
+.lawitem:last-child { border-bottom: 0; }
+.lawitem summary { cursor: pointer; font-size: 13px; }
+.lawitem p { margin: 6px 0 0; }
+.meas { display: flex; flex-wrap: wrap; gap: 6px; }
+.gy-ent td:first-child { min-width: 11em; }
+.riskdots { letter-spacing: 1px; color: var(--shu); }
+.kpi-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.kpi { border: 1px solid var(--rule); border-radius: var(--r-m); padding: 10px 12px; background: var(--sheet); }
+.kpi .k { font-size: 11px; color: var(--ink-3); }
+.kpi .v { font-family: var(--f-num); font-size: 20px; font-weight: 700; }
+.kpi .d { font-size: 11px; color: var(--ink-3); }
+.capbar { height: 10px; border-radius: 5px; background: var(--sheet-3); overflow: hidden; }
+.capbar > span { display: block; height: 100%; background: var(--vault); }
+.capbar.over > span { background: var(--shu); }
+.capbar + .kv { margin-top: 10px; }
+.gyent { font-weight: 700; text-align: left; }
+.campopt { display: grid; gap: 6px; border: 1px solid var(--rule); border-radius: var(--r-m); padding: 8px 10px; }
+.campopt.on { border-color: var(--vault); background: var(--vault-soft); }
+.campopt .row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.fsh.sp { margin-top: 14px; }
+.campopt select { max-width: 11em; }
+.measlist { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.measbtn { display: grid; gap: 2px; align-content: start; }
+.measbtn b { font-size: 14px; }
+.ladder { margin: 0; padding-left: 1.4em; display: grid; gap: 8px; }
+.ladder li { font-size: 13px; }
+.gmast .bank-name .bn { letter-spacing: .06em; }
+@media (max-width: 760px) {
+  .measlist { grid-template-columns: minmax(0, 1fr); }
+  .kpi-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media print {

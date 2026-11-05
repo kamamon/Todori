@@ -662,7 +662,7 @@ table.fs tr.focus td:first-child { box-shadow: inset 3px 0 0 var(--brass); }
 .fsh { font-size: 14px; margin: 0 0 6px; }
 h4.fsh { font-size: 13px; }
 /* 開始画面：モードの切り替えと業種 */
-.modesw { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.modesw { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .modebtn { text-align: left; border: 1px solid var(--rule-strong); background: var(--sheet-2); border-radius: var(--r-m); padding: 10px 12px; cursor: pointer; display: grid; gap: 3px; font: inherit; color: inherit; }
 .modebtn b { font-size: 14px; font-family: var(--f-doc); letter-spacing: .04em; }
 .modebtn span { font-size: 11px; color: var(--ink-3); line-height: 1.45; }
@@ -735,6 +735,44 @@ details > summary.small { cursor: pointer; color: var(--vault); }
   .qz-ch { grid-template-columns: minmax(0, 1fr); }
   .jtable td.jdesc { min-width: 150px; }
   .gradebig { width: 48px; height: 48px; font-size: 22px; }
+}
+
+
+/* 法令と安全・行政 */
+.lawdoc { border: 1px solid var(--rule-strong); background: var(--sheet); border-radius: var(--r-s); padding: 14px 16px; box-shadow: 0 1px 0 var(--rule); }
+.ld-title { font-family: var(--f-doc); font-size: 20px; font-weight: 700; text-align: center; letter-spacing: .3em; margin: 0 0 8px; }
+.ld-meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 16px; font-size: 12px; color: var(--ink-2); border-bottom: 1px solid var(--rule); padding-bottom: 6px; margin-bottom: 8px; }
+.lawitem { border-bottom: 1px solid var(--rule); padding: 6px 0; }
+.lawitem:last-child { border-bottom: 0; }
+.lawitem summary { cursor: pointer; font-size: 13px; }
+.lawitem p { margin: 6px 0 0; }
+.meas { display: flex; flex-wrap: wrap; gap: 6px; }
+.gy-ent td:first-child { min-width: 11em; }
+.riskdots { letter-spacing: 1px; color: var(--shu); }
+.kpi-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.kpi { border: 1px solid var(--rule); border-radius: var(--r-m); padding: 10px 12px; background: var(--sheet); }
+.kpi .k { font-size: 11px; color: var(--ink-3); }
+.kpi .v { font-family: var(--f-num); font-size: 20px; font-weight: 700; }
+.kpi .d { font-size: 11px; color: var(--ink-3); }
+.capbar { height: 10px; border-radius: 5px; background: var(--sheet-3); overflow: hidden; }
+.capbar > span { display: block; height: 100%; background: var(--vault); }
+.capbar.over > span { background: var(--shu); }
+.capbar + .kv { margin-top: 10px; }
+.gyent { font-weight: 700; text-align: left; }
+.campopt { display: grid; gap: 6px; border: 1px solid var(--rule); border-radius: var(--r-m); padding: 8px 10px; }
+.campopt.on { border-color: var(--vault); background: var(--vault-soft); }
+.campopt .row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.fsh.sp { margin-top: 14px; }
+.campopt select { max-width: 11em; }
+.measlist { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.measbtn { display: grid; gap: 2px; align-content: start; }
+.measbtn b { font-size: 14px; }
+.ladder { margin: 0; padding-left: 1.4em; display: grid; gap: 8px; }
+.ladder li { font-size: 13px; }
+.gmast .bank-name .bn { letter-spacing: .06em; }
+@media (max-width: 760px) {
+  .measlist { grid-template-columns: minmax(0, 1fr); }
+  .kpi-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media print {
@@ -5362,6 +5400,7 @@ function serialize() { return JSON.stringify(G); }
 function deserialize(json) {
   const s = JSON.parse(json);
   if (s && s.mode === 'kaisha') return ksDeserialize(s);
+  if (s && s.mode === 'gyosei') return gyDeserialize(s);
   if (!s || s.version !== SAVE_VERSION || !s.ledger) throw new Error('セーブデータの形式が違います');
   G = s;
   G.pendingModals = G.pendingModals || [];
@@ -6276,6 +6315,7 @@ function render() {
   document.body.classList.toggle('ingame', !!G);
   if (!G) { app.innerHTML = renderStart(); return; }
   if (G.mode === 'kaisha') { renderK(); return; }
+  if (G.mode === 'gyosei') { renderG(); return; }
   const tabsEl = $('.tabs');
   const tabScroll = tabsEl ? tabsEl.scrollLeft : 0;
   app.innerHTML = `${renderMast()}${renderStrip()}<div class="body"><nav class="tabs" aria-label="画面の切り替え">${renderTabs()}</nav><main id="main">${renderScreen()}</main></div>`;
@@ -6450,7 +6490,7 @@ async function unpackSave(s) {
   }
   return s;
 }
-function saveMeta() { return isK() ? ksSaveMeta() : JSON.stringify({ bank: G.bankName, ceo: G.ceoName, m: G.m, ta: totalAssets(), at: Date.now(), over: !!G.over }); }
+function saveMeta() { return isG() ? gySaveMeta() : isK() ? ksSaveMeta() : JSON.stringify({ bank: G.bankName, ceo: G.ceoName, m: G.m, ta: totalAssets(), at: Date.now(), over: !!G.over }); }
 async function autosave() {
   if (!G) return;
   const L = lsKeys();
@@ -6470,7 +6510,7 @@ async function loadFrom(key) {
     if (!raw) { toast('セーブデータがありません', 'bad'); return false; }
     deserialize(raw);
     afterLoad();
-    toast(`${isK() ? G.coName : G.bankName}（${ymLabel(G.m)}）を読み込みました`);
+    toast(`${gameName()}（${ymLabel(G.m)}）を読み込みました`);
     return true;
   } catch (e) {
     console.error(e);
@@ -6481,7 +6521,7 @@ async function loadFrom(key) {
 /* 読み込んだ後の画面の準備（銀行・会社の両方） */
 function afterLoad() {
   UI.appId = null; UI.modal = null; UI.queue = []; UI.guideSel = null;
-  if (isK()) { UI.tab = 'k_dash'; UI.kFy = null; UI.kJm = null; UI.start.mode = 'kaisha'; } else { UI.tab = 'dash'; UI.start.mode = 'bank'; }
+  if (isG()) { UI.tab = 'g_dash'; UI.gRes = null; UI.gSai = null; UI.start.mode = 'gyosei'; } else if (isK()) { UI.tab = 'k_dash'; UI.kFy = null; UI.kJm = null; UI.start.mode = 'kaisha'; } else { UI.tab = 'dash'; UI.start.mode = 'bank'; }
   drawModal(); render(); window.scrollTo({ top: 0 });
   if (isK()) { if (G.closing) showModal('kClose'); else if (G.over) showModal('kOver'); }
   else if (G.pendingDividend) showModal('yearEnd', { fy: G.pendingDividend.fy });
@@ -6490,7 +6530,7 @@ function exportSave() {
   const blob = new Blob([serialize()], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `${isK() ? 'shacho' : 'toudori'}_${isK() ? G.coName : G.bankName}_${ymOf(G.m).y}-${String(ymOf(G.m).mo).padStart(2, '0')}.json`;
+  a.download = `${isG() ? 'shocho' : isK() ? 'shacho' : 'toudori'}_${gameName()}_${ymOf(G.m).y}-${String(ymOf(G.m).mo).padStart(2, '0')}.json`;
   document.body.appendChild(a);
   a.click();
   a.remove();
@@ -6513,7 +6553,9 @@ function applyTheme(t) {
 }
 
 /* 遊び方：会社経営モード（またはその開始画面）では会社の遊び方を開く */
-function helpName() { return isK() || (!G && UI.start && UI.start.mode === 'kaisha') ? 'kHelp' : 'help'; }
+function helpName() { return isG() || (!G && UI.start && UI.start.mode === 'gyosei') ? 'gHelp' : isK() || (!G && UI.start && UI.start.mode === 'kaisha') ? 'kHelp' : 'help'; }
+/* 今のゲームの名前（銀行・会社・役所） */
+function gameName() { return isG() ? GY_AGENCY[G.agency].n : isK() ? G.coName : G.bankName; }
 
 /* ---------- 月の進行 ---------- */
 function requestAdvance() {
@@ -6550,7 +6592,7 @@ function runAdvance() {
 Object.assign(ACTIONS, {
   tab: d => { UI.tab = d.tab; render(); window.scrollTo({ top: 0 }); },
   go: d => { UI.tab = d.tab; if (d.app) UI.appId = d.app; if (d.dist) UI.cityD = d.dist; if (d.fin) UI.finTab = d.fin; UI.modal = null; drawModal(); render(); window.scrollTo({ top: 0 }); },
-  advance: () => (isK() ? ksRequestAdvance() : requestAdvance()),
+  advance: () => (isG() ? gyRequestAdvance() : isK() ? ksRequestAdvance() : requestAdvance()),
   advanceNow: () => runAdvance(),
   closeModal: d => closeModal(!!(d && d.force)),
   scrim: (d, el, e) => { if (e.target === el) closeModal(); },
@@ -6564,7 +6606,7 @@ Object.assign(ACTIONS, {
   importSave: () => $('#importFile').click(),
   theme: d => { lsSet(LS.theme, d.v); applyTheme(d.v); drawModal(); },
   newGameConfirm: () => confirmBox('新しいゲームを始める', '現在のゲームは自動保存の内容が上書きされます。始める前に必要ならスロットに保存してください。', '新しく始める', 'newGameGo', {}, true),
-  newGameGo: () => { if (G) UI.start.mode = isK() ? 'kaisha' : 'bank'; G = null; UI.modal = null; UI.queue = []; drawModal(); render(); window.scrollTo({ top: 0 }); },
+  newGameGo: () => { if (G) UI.start.mode = isG() ? 'gyosei' : isK() ? 'kaisha' : 'bank'; G = null; UI.modal = null; UI.queue = []; drawModal(); render(); window.scrollTo({ top: 0 }); },
 });
 Object.assign(CHANGES, {
   importFile: el => { if (el.files && el.files[0]) importSave(el.files[0]); el.value = ''; },
@@ -8375,14 +8417,15 @@ MODALS.term = () => modalFrame('任期満了', `${scene(STAGE_ART[G.stage || 0],
 MODALS.menu = () => {
   const L = lsKeys();
   const kmode = L === LSK;
+  const gmode = L === LSG;
   const slot = i => {
     let meta = null;
     try { meta = JSON.parse(lsGet(L.meta(i)) || 'null'); } catch (e) { meta = null; }
-    const desc = !meta ? '<span class="muted">空き</span>' : kmode ? `${esc(meta.co)}・${ymLabel(meta.m)}・${esc((KS_INDS[meta.ind] || {}).name || '')}` : `${esc(meta.bank)}・${ymLabel(meta.m)}・総資産${fmtYen(meta.ta)}`;
+    const desc = !meta ? '<span class="muted">空き</span>' : gmode ? `${esc(meta.co)}・${ymLabel(meta.m)}・署長 ${esc(meta.ceo)}` : kmode ? `${esc(meta.co)}・${ymLabel(meta.m)}・${esc((KS_INDS[meta.ind] || {}).name || '')}` : `${esc(meta.bank)}・${ymLabel(meta.m)}・総資産${fmtYen(meta.ta)}`;
     return `<tr><td>${i === 'a' ? '自動保存' : 'スロット' + i}</td><td class="small">${desc}</td><td class="n">${i === 'a' ? '' : btn('保存', 'saveSlot', { slot: i }, 'sm', { disabled: !G })} ${btn('読込', i === 'a' ? 'loadAuto' : 'loadSlot', { slot: i }, 'sm', { disabled: !meta })}</td></tr>`;
   };
   const theme = lsGet(LS.theme) || 'auto';
-  const body = `<h3 style="font-size:14px;margin:0 0 6px">セーブとロード（${kmode ? '会社を経営する' : '銀行を経営する'}）</h3><table class="t compact"><tbody>${slot('a')}${slot(1)}${slot(2)}${slot(3)}</tbody></table>
+  const body = `<h3 style="font-size:14px;margin:0 0 6px">セーブとロード（${gmode ? '法令を守らせる' : kmode ? '会社を経営する' : '銀行を経営する'}）</h3><table class="t compact"><tbody>${slot('a')}${slot(1)}${slot(2)}${slot(3)}</tbody></table>
     <p class="note">データはこのブラウザ内に保存されます。別の端末で続けるときはファイルに書き出してください。</p>
     <div class="row">${btn('ファイルに書き出す', 'exportSave', {}, '', { disabled: !G })}${btn('ファイルから読み込む', 'importSave')}</div>
     <hr class="sep"><h3 style="font-size:14px;margin:0 0 6px">表示</h3>
@@ -8460,6 +8503,7 @@ function startStoreInputs() {
 }
 function renderStart() {
   if (UI.start.mode === 'kaisha') return renderStartK();
+  if (UI.start.mode === 'gyosei') return renderStartG();
   let meta = null;
   try { meta = JSON.parse(lsGet(LS.meta('a')) || 'null'); } catch (e) { meta = null; }
   const s = UI.start, cu = s.custom;
@@ -9063,6 +9107,7 @@ const KS_ACCT = {
   miscInc: { n: '雑収入', t: 'R', g: 'noi', tk: 'nonopInc' },
   allowRev: { n: '貸倒引当金戻入額', t: 'R', g: 'noi', tk: 'allowance' },
   gainSale: { n: '固定資産売却益', t: 'R', g: 'exg', tk: 'extra' },
+  insRecv: { n: '受取保険金', t: 'R', g: 'exg', tk: 'extra' },
   purch: { n: '仕入高', t: 'X', g: 'cogs', tk: 'purch' },
   matPurch: { n: '材料仕入高', t: 'X', g: 'cogs', tk: 'matCost' },
   labor: { n: '労務費', t: 'X', g: 'cogs', tk: 'labor' },
@@ -9074,12 +9119,15 @@ const KS_ACCT = {
   execPay: { n: '役員報酬', t: 'X', g: 'sga', tk: 'execPay' },
   salary: { n: '給料手当', t: 'X', g: 'sga', tk: 'salary' },
   welfare: { n: '法定福利費', t: 'X', g: 'sga', tk: 'welfare' },
+  fukuri: { n: '福利厚生費', t: 'X', g: 'sga', tk: 'healthCheck' },
   rent: { n: '地代家賃', t: 'X', g: 'sga', tk: 'rent' },
   util: { n: '水道光熱費', t: 'X', g: 'sga', tk: 'utilities' },
   ads: { n: '広告宣伝費', t: 'X', g: 'sga', tk: 'ads' },
   fees: { n: '支払手数料', t: 'X', g: 'sga', tk: 'fees' },
   freight: { n: '荷造運賃・燃料費', t: 'X', g: 'sga' },
   repairs: { n: '修繕費', t: 'X', g: 'sga', tk: 'repairs' },
+  safety: { n: '安全衛生費', t: 'X', g: 'sga', tk: 'rosai' },
+  insur: { n: '保険料', t: 'X', g: 'sga', tk: 'liabIns' },
   supplies: { n: '消耗品費', t: 'X', g: 'sga' },
   recruit: { n: '採用教育費', t: 'X', g: 'sga' },
   dues: { n: '租税公課', t: 'X', g: 'sga' },
@@ -9090,8 +9138,10 @@ const KS_ACCT = {
   shrink: { n: '棚卸減耗損', t: 'X', g: 'sga', tk: 'shrink' },
   interest: { n: '支払利息', t: 'X', g: 'noe', tk: 'interest' },
   guarFee: { n: '信用保証料', t: 'X', g: 'noe', tk: 'guarFee' },
+  fines: { n: '罰金及び科料', t: 'X', g: 'noe', tk: 'soken' },
   lossSale: { n: '固定資産売却損', t: 'X', g: 'exl', tk: 'extra' },
   disaster: { n: '災害による損失', t: 'X', g: 'exl', tk: 'extra' },
+  compens: { n: '損害賠償金', t: 'X', g: 'exl', tk: 'safetyDuty' },
   taxExp: { n: '法人税、住民税及び事業税', t: 'X', g: 'tax', tk: 'tax' },
 };
 const KS_KEYS = Object.keys(KS_ACCT);
@@ -9414,7 +9464,7 @@ function ksWriteOffAR(cust, ratio = 1) {
 function ksApDueNow() { return sum(G.ap.filter(x => x.due <= G.m), x => x.amt); }
 
 /* ---------- 給与 ---------- */
-function ksRoleWage(r) { return r.wage * G.eco.wageIdx * (r.cost === 'labor' && G.ind === 'it' ? G.op.salaryLv : 1) * (G.wageLv || 1); }
+function ksRoleWage(r) { return r.wage * G.eco.wageIdx * (r.cost === 'labor' && G.ind === 'it' ? G.op.salaryLv : 1) * (G.wageLv || 1) * (G.law && G.law.partAdj && typeof KS_PART_HOURS !== 'undefined' && KS_PART_HOURS[G.ind] && KS_PART_HOURS[G.ind][r.id] ? G.law.partAdj : 1); }
 function ksHeadcount() { return KS_INDS[G.ind].roles.reduce((s, r) => s + (G.staff[r.id] || 0), 0); }
 /* 月の人件費の見込み（賞与・社会保険を含む平均） */
 function ksPayrollEstimate() {
@@ -9695,6 +9745,7 @@ function ksAdvance() {
   ksLoansMonthly();
   if (calMonth(m) === 5 && ksB('taxPay') > 0) { const t = ksB('taxPay'); ksPost('taxPay', [['taxPay', t, 0], ['cash', 0, t]], { cf: 'tax' }); }
   ksEventsMonth(ctx);
+  if (typeof ksLawMonth === 'function' && G.law) ksLawMonth(ctx, res);
   if (calMonth(m) === 4) ksBudgetApprove(true); // 4月末までに決めなければ予算案のまま決まる
   ksPayAP();
   if (!ksCashCover()) {
@@ -10454,6 +10505,7 @@ function ksNewGame(o) {
   ksBudgetDraft();
   ksBudgetApprove(true);
   G.startedM = G.m;
+  if (typeof ksLawInit === 'function') ksLawInit();
   ksNews(`${G.ceo}氏が${G.coName}の代表取締役社長に就任。${KS_INDS[G.ind].label}を営む${G.founded}年創業の会社`, 'info');
   return G;
 }
@@ -10602,7 +10654,7 @@ KS_ENGINE.ret = {
     ksPayCash('misc', 8e4 * n, 'expense');
     if ([6, 9, 12, 2].includes(ctx.mo)) ksPayCash('dues', 30e4 * n, 'dues');
     op.rep = clamp(op.rep + 0.01 * ((staffF - 1) * 2 + (stockF - 1) * 2 + (0.255 - op.markup) * 2) - ksRepPull(op.rep), 0.75, 1.25);
-    if (!G.hist && chance(0.012)) {
+    if (!G.hist && open.length && chance(0.012)) {
       const s = pick(open);
       s.comp = (s.comp || 1) * 0.93;
       ksNews(`${s.n}の近くに大手ドラッグストアが開店。客数が7%ほど減りそうです`, 'bad');
@@ -11607,6 +11659,7 @@ KS_SCREENS.k_fs = () => {
     const t = cur.tax || {};
     body = `<table class="t" style="max-width:560px"><tbody>
       <tr><td>税引前当期純利益</td><td class="n">${fmtYen(t.pretax || cur.pl.pretax)}</td></tr>
+      ${t.fines ? `<tr><td>${term('罰金及び科料', 'soken')}の加算（税金の計算では費用にならない＝損金不算入）</td><td class="n">+${fmtYen(t.fines)}</td></tr>` : ''}
       <tr><td>繰越欠損金の控除（過去の赤字）</td><td class="n">${t.loss ? MINUS + fmtYen(Math.min(t.loss, Math.max(0, t.pretax))) : '―'}</td></tr>
       <tr class="total"><td>課税所得（このゲームの簡単な計算）</td><td class="n">${fmtYen(t.taxable || 0)}</td></tr>
       <tr><td>所得にかかる税（800万円までは25%、超える部分は34%）</td><td class="n">${fmtYen(t.income || 0)}</td></tr>
@@ -12128,10 +12181,14 @@ function ksDeserialize(s) {
   for (const k of KS_KEYS) if (G.bal[k] === undefined) G.bal[k] = 0;
   if (!G.quiz) G.quiz = { asked: 0, correct: 0 };
   if (!G.flags) G.flags = {};
+  if (!G.law && typeof ksLawInit === 'function') ksLawInit();
   return G;
 }
 /* 今のモード（ゲーム中ならそのモード、開始画面なら選んでいるモード）の保存先 */
-function lsKeys() { return (G ? isK() : UI.start && UI.start.mode === 'kaisha') ? LSK : LS; }
+function lsKeys() {
+  const m = G ? (isG() ? 'gyosei' : isK() ? 'kaisha' : 'bank') : (UI.start && UI.start.mode) || 'bank';
+  return m === 'gyosei' ? LSG : m === 'kaisha' ? LSK : LS;
+}
 
 /* ---------- 開始画面（会社を経営する） ---------- */
 function startModeSwitch() {
@@ -12139,6 +12196,7 @@ function startModeSwitch() {
   return `<div class="modesw" role="radiogroup" aria-label="遊ぶモード">
     <button type="button" class="modebtn${m === 'bank' ? ' on' : ''}" data-act="stMode" data-v="bank" aria-pressed="${m === 'bank'}"><b>銀行を経営する</b><span>頭取として融資を審査し、銀行の決算をまとめる</span></button>
     <button type="button" class="modebtn${m === 'kaisha' ? ' on' : ''}" data-act="stMode" data-v="kaisha" aria-pressed="${m === 'kaisha'}"><b>会社を経営する</b><span>社長として商売をし、決算書を作り、銀行から借りる</span></button>
+    <button type="button" class="modebtn${m === 'gyosei' ? ' on' : ''}" data-act="stMode" data-v="gyosei" aria-pressed="${m === 'gyosei'}"><b>法令を守らせる</b><span>監督署・消防署の署長として立入検査をし、労災や火災に対応する</span></button>
   </div>`;
 }
 function ksStartDefaults() { return UI.start.k || (UI.start.k = { ind: 'ret', cond: 'normal', term: 10, coName: '', ceo: '', seed: '', coEdited: false }); }
@@ -12181,7 +12239,7 @@ function renderStartK() {
   return `${scene('hero', { cls: 'hero', alt: `港町の${CITY_NAME}の風景` })}<div class="startwrap${artSrc('hero') ? ' with-hero' : ''}">${setup}${letter}</div>`;
 }
 Object.assign(ACTIONS, {
-  stMode: d => { if (typeof startStoreInputs === 'function' && UI.start.mode !== 'kaisha') startStoreInputs(); if (UI.start.mode === 'kaisha') ksStartStore(); UI.start.mode = d.v; render(); },
+  stMode: d => { if (UI.start.mode === 'gyosei') gyStartStore(); else if (UI.start.mode === 'kaisha') ksStartStore(); else if (typeof startStoreInputs === 'function') startStoreInputs(); UI.start.mode = d.v; render(); },
   kStInd: d => { ksStartStore(); UI.start.k.ind = d.v; render(); },
   kStCond: d => { ksStartStore(); UI.start.k.cond = d.v; render(); },
   kStTerm: d => { ksStartStore(); UI.start.k.term = +d.v; render(); },
@@ -12819,7 +12877,7 @@ function ksMakeQuiz(step) {
     const t = ksTaxCalc();
     if (t.taxable > 0) {
       const ch = ksAmtChoices(t.tax, [Math.max(0, t.pretax) * 0.25 + 7e4, Math.max(0, t.pretax) * 0.3, t.income, 7e4]);
-      return { q: `税引前当期純利益は ${ksYenX(t.pretax)}${t.loss ? `、過去の赤字（繰越欠損金）が ${ksYenX(t.loss)}` : ''}です。所得のうち800万円までは25%、超える部分は34%、さらに住民税の均等割7万円がかかります。法人税等はいくら？`, choices: ch.map(ksYenX), correct: 0,
+      return { q: `税引前当期純利益は ${ksYenX(t.pretax)}${t.fines ? `（うち罰金 ${ksYenX(t.fines)} は税金の計算では費用にならないので、所得に足し戻す）` : ''}${t.loss ? `、過去の赤字（繰越欠損金）が ${ksYenX(t.loss)}` : ''}です。所得のうち800万円までは25%、超える部分は34%、さらに住民税の均等割7万円がかかります。法人税等はいくら？`, choices: ch.map(ksYenX), correct: 0,
         explain: `所得 ${ksYenX(t.taxable)}${t.loss ? `（利益から繰越欠損金を差し引いた額）` : ''} × 税率 ＝ ${ksYenX(t.income)}、均等割 7万円を加えて <b>${ksYenX(t.tax)}</b>。納めるのは5月なので、それまでは未払法人税等（負債）です。` };
     }
     return { q: `今期の税引前当期純利益は ${ksYenX(t.pretax)}${t.pretax > 0 ? `ですが、過去の赤字（繰越欠損金）${ksYenX(t.loss)}で相殺されます` : '（赤字）です'}。法人税等はいくらでしょう？`, choices: ['0円（もうけがないので税金はかからない）', '7万円（住民税の均等割だけはかかる）', `△${ksYenX(Math.abs(t.pretax) * 0.25)}（税金が戻ってくる）`, ksYenX(Math.abs(t.pretax) * 0.25)], correct: 1,
@@ -13038,6 +13096,2410 @@ MODALS.kResult = () => {
   return modalFrame(`${ksFyLabel(r.fy)}の決算が確定しました`, body, btn('銀行から見た決算書', 'kGo', { tab: 'k_bank', sec: 'view' }) + btn('決算書を見る', 'kGoFs', { v: 'pl' }) + btn('閉じる', 'closeModal', {}, 'primary'), { sub: ksFyYear(r.fy) });
 };
 
+/* ---- 26_law_data.js ---- */
+/* =========================================================
+ *  26_law_data.js : 労働・安全衛生・消防・食品衛生などの法令のデータ
+ *   会社経営モード（守る側）と行政モード（労働基準監督署・消防署）で共有する。
+ *   ※ ゲーム向けに単純化しています。実際の手続きは所管の役所や専門家に確認してください。
+ * ========================================================= */
+
+const LAW_AG = {
+  labor: { n: '労働基準監督署', s: '労基署', icon: '労' },
+  fire: { n: '消防署', s: '消防署', icon: '消' },
+  health: { n: '保健所', s: '保健所', icon: '保' },
+  police: { n: '警察署（公安委員会）', s: '警察', icon: '警' },
+  pref: { n: '県（建設業の許可）', s: '県', icon: '県' },
+  ppc: { n: '個人情報保護委員会', s: '個情委', icon: '個' },
+};
+
+/* 法令の項目
+ *  ag: 所管  sev: 重さ（1 軽い・2 重い・3 重大）  det: 立入検査で見つかる確率
+ *  acc: 違反しているときの労働災害の起きやすさ（倍）  fire: 火災の起きやすさ（倍）  death: 火災のときの死者の出やすさ（倍）
+ *  compl: 違反しているときに労働者から申告（相談）が来る確率（月）
+ *  gy: 行政モードで使う業種・用途（この中のどれかなら対象）  minEmp / minCap: 人数の条件
+ *  rule: 法律の決まり  how: 守り方  pen: 罰則など  tk: 用語集  meas: 通常の措置（労基署：shido 指導票／kankoku 是正勧告／meirei 使用停止命令、消防：koto 口頭指導／shiteki 違反指摘／keikoku 警告／meirei 命令）
+ */
+const LAW_ITEMS = {
+  r36: { n: '36協定を届け出ずに残業させている', s: '36協定の届出', ag: 'labor', sev: 2, det: 0.95, acc: 1.05, compl: 0.006, law: '労働基準法32条・36条', tk: 'kyotei36',
+    rule: '法定労働時間（1日8時間・週40時間）を超えて働かせたり、休日に働かせたりするには、労働者の代表と36協定を結び、労働基準監督署に届け出なければならない。協定の期間は1年が普通で、毎年届け出る。',
+    how: '毎年4月の前に労働者の過半数代表と協定を結び、届け出る。月45時間を超える可能性があれば特別条項を付ける。', pen: '6か月以下の拘禁刑または30万円以下の罰金', meas: 'kankoku' },
+  otmax: { n: '時間外労働の上限を超えている', s: '残業の上限', ag: 'labor', sev: 3, det: 0.75, acc: 1.25, compl: 0.012, law: '労働基準法36条6項', tk: 'otLimit',
+    rule: '時間外労働は原則として月45時間・年360時間まで。特別条項があっても年720時間、休日労働を含めて月100時間未満、2〜6か月の平均80時間以内、月45時間を超えられるのは年6か月まで。',
+    how: '人を増やす、外注する、受注量を調整する、残業を管理職が承認制にする。', pen: '6か月以下の拘禁刑または30万円以下の罰金', meas: 'kankoku' },
+  unpaid: { n: '残業代（割増賃金）を払っていない', s: '割増賃金', ag: 'labor', sev: 2, det: 0.6, compl: 0.02, law: '労働基準法37条', tk: 'premium',
+    rule: '時間外労働には25%以上、月60時間を超える部分には50%以上、休日労働には35%以上、深夜（22時〜5時）には25%以上の割増賃金を払う。',
+    how: '労働時間をタイムカードなどで客観的に記録し、全員に正しく払う。不払いがあれば過去にさかのぼって払う。', pen: '6か月以下の拘禁刑または30万円以下の罰金', meas: 'kankoku' },
+  minwage: { n: '最低賃金を下回る時給で働かせている', s: '最低賃金', ag: 'labor', sev: 2, det: 0.9, compl: 0.012, law: '最低賃金法4条', tk: 'minWage', part: true,
+    rule: '使用者は、都道府県ごとの地域別最低賃金以上の賃金を払わなければならない。最低賃金は毎年10月ごろに改定される。',
+    how: '改定のたびにパート・アルバイトの時給を確認し、下回る人の時給を引き上げる。', pen: '50万円以下の罰金（差額の支払い義務も残る）', meas: 'kankoku' },
+  kenshin: { n: '定期健康診断を受けさせていない', s: '健康診断', ag: 'labor', sev: 1, det: 0.95, acc: 1.05, law: '労働安全衛生法66条', tk: 'healthCheck',
+    rule: '常時使用する労働者に、年1回（深夜業などは6か月に1回）定期健康診断を受けさせ、結果を記録・保存する。',
+    how: '毎年、健診機関と契約して全員に受けさせる。異常があれば医師の意見を聞いて、仕事の量などを見直す。', pen: '50万円以下の罰金', meas: 'kankoku' },
+  taisei: { n: '安全衛生の担当者を選んでいない', s: '安全衛生の体制', ag: 'labor', sev: 1, det: 0.95, acc: 1.15, law: '労働安全衛生法10〜13条・12条の2', tk: 'safetyOrg', minEmp: 10,
+    rule: '常時10〜49人の事業場は安全衛生推進者（衛生推進者）、50人以上は衛生管理者と産業医を選び、衛生委員会を毎月開く。',
+    how: '担当者を決めて講習を受けさせる。50人以上なら産業医と契約する。', pen: '50万円以下の罰金', meas: 'kankoku' },
+  yukyu: { n: '年5日の年次有給休暇を取らせていない', s: '年休5日', ag: 'labor', sev: 1, det: 0.8, compl: 0.005, law: '労働基準法39条7項', tk: 'annualLeave',
+    rule: '年10日以上の年次有給休暇がある労働者には、毎年5日は会社が時季を指定してでも取らせる。管理簿を作って3年保存する。',
+    how: '計画的付与（会社全体や班ごとに休む日を決める）や、取得の少ない人への声かけ。', pen: '30万円以下の罰金（対象者1人ごと）', meas: 'shido' },
+  contract: { n: '労働条件を書面で明示していない', s: '労働条件の明示', ag: 'labor', sev: 1, det: 0.85, compl: 0.004, law: '労働基準法15条', tk: 'laborCond',
+    rule: '雇うときに、賃金・労働時間・仕事の場所と内容・契約期間などを書面（労働条件通知書）で明示する。',
+    how: '採用のたびに労働条件通知書を渡す。', pen: '30万円以下の罰金', meas: 'kankoku' },
+  machine: { n: '機械の安全装置や点検が不十分', s: '機械の安全', ag: 'labor', sev: 3, det: 0.85, acc: 1.8, law: '労働安全衛生法20条・45条', tk: 'machineSafety', gy: ['mfgm', 'mfgf', 'whl'],
+    rule: '機械の回転部分・はさまれる部分には覆いや安全装置を付ける。プレス機械やフォークリフトは1年に1回、特定自主検査をする。',
+    how: '安全カバー・非常停止装置を付け、年次の特定自主検査を受ける。', pen: '6か月以下の拘禁刑または50万円以下の罰金（危険なときは使用停止命令）', meas: 'kankoku', danger: true },
+  fall: { n: '墜落を防ぐ措置が不十分（足場・手すり・フルハーネス）', s: '墜落の防止', ag: 'labor', sev: 3, det: 0.9, acc: 2.0, law: '労働安全衛生法21条・労働安全衛生規則518〜521条', tk: 'fallPrev', gy: ['con', 'clean', 'trans'],
+    rule: '高さ2m以上で作業するときは、足場・手すり・作業床を設け、それが難しいときは墜落制止用器具（フルハーネス型）を使わせる。足場は毎日点検する。',
+    how: '足場の点検、手すりの設置、フルハーネスの支給と特別教育。', pen: '6か月以下の拘禁刑または50万円以下の罰金（危険なときは作業停止命令）', meas: 'kankoku', danger: true },
+  chem: { n: '化学物質の危険性を調べていない', s: '化学物質', ag: 'labor', sev: 2, det: 0.7, acc: 1.3, law: '労働安全衛生法57条の3', tk: 'chemRisk', gy: ['mfgm', 'mfgf', 'clean'],
+    rule: '危険性・有害性のある化学物質を使うときは、リスクアセスメント（どれくらい危ないかの評価）をして、保護具や換気などの対策をとる。',
+    how: '使っている化学物質の一覧を作り、安全データシート（SDS）で危険性を確かめて対策する。', pen: '指導・是正勧告（悪質なら送検）', meas: 'shido' },
+  report: { n: '労働災害を報告していない（労災かくし）', s: '労災かくし', ag: 'labor', sev: 3, det: 0, law: '労働安全衛生法100条・労働安全衛生規則97条', tk: 'rosaiHide',
+    rule: '労働災害で労働者が死亡または休業したら、労働者死傷病報告を労働基準監督署に出す（休業4日以上は遅滞なく、1〜3日は四半期ごと）。報告しない・うその報告は「労災かくし」として処罰される。',
+    how: 'けがの大小にかかわらず、休業したら報告する。治療は労災保険を使う。', pen: '50万円以下の罰金（会社名が公表されることもある）', meas: 'soken' },
+  hoken: { n: '労働保険の手続きをしていない', s: '労働保険', ag: 'labor', sev: 1, det: 0.7, law: '労働保険徴収法', tk: 'laborIns',
+    rule: '労働者を1人でも雇えば、労災保険と雇用保険に加入し、毎年6月1日〜7月10日に保険料を申告・納付する（年度更新）。',
+    how: '年度更新の申告書を期限までに出し、保険料を払う。', pen: '保険料の追徴金（10%）。未加入中の事故は保険給付の費用を会社が負担することも', meas: 'shido' },
+  /* ---------- 消防 ---------- */
+  bouka: { n: '防火管理者を選んでいない・消防計画を出していない', s: '防火管理者', ag: 'fire', sev: 2, det: 0.98, fire: 1.4, death: 1.3, law: '消防法8条', tk: 'fireMgr',
+    rule: '特定防火対象物（店舗・飲食店・ホテル・病院など）は収容人員30人以上、それ以外（工場・事務所など）は50人以上なら、防火管理者を選んで届け出、消防計画を作って届け出る。',
+    how: '防火管理講習を受けた人を防火管理者に選び、消防計画を作って消防署に届け出る。', pen: '命令に従わないと6か月以下の拘禁刑または50万円以下の罰金', meas: 'shiteki' },
+  tenken: { n: '消防用設備等の点検・報告をしていない', s: '消防設備の点検', ag: 'fire', sev: 1, det: 0.98, fire: 1.5, death: 1.4, law: '消防法17条の3の3', tk: 'fireCheck',
+    rule: '消火器・自動火災報知設備・誘導灯などは、6か月ごとに機器点検、1年ごとに総合点検をして、結果を消防署に報告する（特定防火対象物は毎年、それ以外は3年ごと）。',
+    how: '消防設備士などの点検業者に点検を頼み、報告書を消防署に出す。', pen: '30万円以下の罰金または拘留', meas: 'shiteki' },
+  kunren: { n: '消火・避難訓練をしていない', s: '避難訓練', ag: 'fire', sev: 1, det: 0.9, fire: 1.1, death: 1.8, law: '消防法8条・消防法施行規則3条', tk: 'evacDrill',
+    rule: '特定防火対象物では消火訓練と避難訓練を年2回以上行い、行うときは消防署に通報する。それ以外も消防計画に従って訓練する。',
+    how: '訓練の計画を作り、従業員全員が消火器の使い方と避難経路を確かめる。', pen: '指導（防火管理の不備として命令の対象になる）', meas: 'koto' },
+  hinan: { n: '避難通路や防火戸の前に物が置かれている', s: '避難通路', ag: 'fire', sev: 2, det: 0.8, fire: 1.1, death: 2.2, law: '消防法8条の2の4', tk: 'evacRoute',
+    rule: '廊下・階段・避難口・防火戸の付近に、避難や防火戸の閉鎖のじゃまになる物を置いてはいけない。',
+    how: '在庫や段ボールを決められた場所にしまい、毎日見回る。', pen: '命令に従わないと30万円以下の罰金', meas: 'koto' },
+  jikahou: { n: '自動火災報知設備を設置していない', s: '自動火災報知設備', ag: 'fire', sev: 3, det: 0.99, fire: 1.0, death: 3.0, law: '消防法17条', tk: 'fireAlarm', spec: true, minCap: 50,
+    rule: '用途と延べ面積などに応じて、自動火災報知設備・スプリンクラー・屋内消火栓などを設置する。重大な違反は消防本部のホームページで公表される（違反対象物の公表制度）。',
+    how: '消防設備業者に工事を頼み、設置したら消防署の検査を受ける。', pen: '命令に従わないと1年以下の拘禁刑または100万円以下の罰金（法人は1億円以下）', meas: 'keikoku' },
+  shokaki: { n: '消火器や誘導灯が使えない・足りない', s: '消火器・誘導灯', ag: 'fire', sev: 1, det: 0.95, fire: 1.2, death: 1.2, law: '消防法17条', tk: 'fireCheck',
+    rule: '消火器は決められた本数を見やすい場所に置き、誘導灯は常に点灯させる。',
+    how: '期限切れの消火器を交換し、誘導灯のバッテリーを替える。', pen: '指導・命令', meas: 'koto' },
+  kiken: { n: '危険物を許可なく大量に貯めている', s: '危険物', ag: 'fire', sev: 3, det: 0.65, fire: 2.0, death: 1.3, law: '消防法10条', tk: 'hazmat', gy: ['mfgm', 'mfgf', 'whl', 'trans', 'warehouse'],
+    rule: '灯油・ガソリン・塗料・溶剤などの危険物は、指定数量以上を貯めるには市町村長などの許可を受けた施設が必要。',
+    how: '量を減らすか、許可を受けた危険物倉庫を使う。', pen: '1年以下の拘禁刑または100万円以下の罰金', meas: 'keikoku' },
+  boen: { n: 'カーテンなどに防炎物品を使っていない', s: '防炎物品', ag: 'fire', sev: 1, det: 0.9, fire: 1.2, death: 1.2, law: '消防法8条の3', tk: 'fireMgr', spec: true,
+    rule: '特定防火対象物や高層建物では、カーテン・じゅうたんなどに防炎性能のある物（防炎ラベル付き）を使う。',
+    how: '防炎ラベルの付いたカーテンに取り替える。', pen: '指導・命令', meas: 'koto' },
+  /* ---------- その他（会社モードのみ） ---------- */
+  haccp: { n: 'HACCPに沿った衛生管理をしていない', s: '衛生管理（HACCP）', ag: 'health', sev: 2, det: 0.85, law: '食品衛生法51条', tk: 'haccp',
+    rule: '食品を扱う事業者は、HACCPに沿った衛生管理計画を作り、手順どおりに実施して記録する。食品衛生責任者を置く。',
+    how: '衛生管理計画と記録表を作り、毎日つける。従業員に手洗い・温度管理を教える。', pen: '保健所の指導、食中毒のときは営業停止', meas: 'shido' },
+  alcohol: { n: '運転前後のアルコールチェックをしていない', s: 'アルコールチェック', ag: 'police', sev: 2, det: 0.85, acc: 1.4, law: '道路交通法74条の3・同施行規則9条の10', tk: 'alcCheck',
+    rule: '白ナンバーの車を5台以上使う事業所は安全運転管理者を選び、運転の前後に検知器で酒気帯びの有無を確かめ、記録を1年保存する。',
+    how: '安全運転管理者を届け出て、検知器をそろえ、毎回の確認と記録を徹底する。', pen: '公安委員会の解任命令・是正措置命令（従わないと罰金）', meas: 'shido' },
+  kyoka: { n: '建設業の許可が切れている', s: '建設業の許可', ag: 'pref', sev: 3, det: 1, law: '建設業法3条', tk: 'conLicense',
+    rule: '1件500万円以上（建築一式は1,500万円以上）の工事を請け負うには建設業の許可が必要。許可は5年ごとに更新する。',
+    how: '期限の30日前までに更新を申請する。', pen: '無許可で請け負うと3年以下の拘禁刑または300万円以下の罰金', meas: 'kankoku' },
+  privacy: { n: '個人情報の安全管理が不十分', s: '情報セキュリティ', ag: 'ppc', sev: 2, det: 0.7, law: '個人情報保護法23条・26条', tk: 'privacy',
+    rule: '個人データを漏えいなどから守る措置をとる。漏えいのおそれがあれば、個人情報保護委員会に速報（3〜5日以内）と確報（30日以内）をし、本人に通知する。',
+    how: 'アクセス権限の管理、ソフトの更新、社員教育、外部の点検。', pen: '命令に従わないと1年以下の拘禁刑または100万円以下の罰金（法人は1億円以下）', meas: 'shido' },
+};
+const LAW_KEYS = Object.keys(LAW_ITEMS);
+
+/* 用語集に「法令・労務・防火」を加える */
+TERM_CATS.push(['law', '法令・労務・防火']);
+Object.assign(TERMS, {
+  rosai: { n: '労働災害（労災）', c: 'law', s: '仕事中や通勤中のけが・病気・死亡。', b: '仕事が原因のけがや病気は「業務災害」、通勤途中のものは「通勤災害」。会社には、安全に働ける環境を用意する義務（安全配慮義務）があります。', p: '会社の決算書には直接は出ませんが、休業補償・見舞金・損害賠償・罰金は費用や特別損失になります。銀行は重大な労災や送検を信用の問題として見ます。', see: ['rosaiIns', 'deathReport', 'safetyDuty'] },
+  rosaiIns: { n: '労災保険', c: 'law', s: '労働者のけが・病気を補償する国の保険。保険料は会社が全額払う。', b: '療養（治療費）・休業（4日目から賃金の約8割）・障害・遺族などの給付があります。業務上のけがに健康保険は使えません。保険料は賃金の総額に業種ごとの労災保険率を掛けて計算し、毎年6〜7月の「年度更新」で申告・納付します。', g: '労災保険率：小売・卸・飲食は0.3%前後、製造業（金属）は0.6%前後、建設業（建築）は0.9%前後。', see: ['rosai', 'waiting', 'laborIns'] },
+  waiting: { n: '待期期間と休業補償', c: 'law', s: '休業の最初の3日間は、会社が平均賃金の60%以上を払う。', b: '労災で休業したとき、4日目からは労災保険の休業補償給付（給付基礎日額の60%＋特別支給金20%）が出ます。最初の3日間（待期期間）は保険から出ないので、会社が労働基準法76条の休業補償として払います。', see: ['rosaiIns'] },
+  deathReport: { n: '労働者死傷病報告', c: 'law', s: '労災で死亡・休業したら労働基準監督署に出す報告。', b: '休業4日以上・死亡は遅滞なく、休業1〜3日は四半期ごとにまとめて報告します。休業がない（治療だけの）場合は報告は不要です。', p: '報告しない・うその報告をすると「労災かくし」として50万円以下の罰金。', see: ['rosaiHide'] },
+  rosaiHide: { n: '労災かくし', c: 'law', s: '労働災害を報告しない、またはうその報告をすること。', b: '元請の評価や保険料を気にして隠す例がありますが、犯罪です。労働者が健康保険で治療を受けると、健康保険組合からの照会などで発覚することがあります。発覚すると送検され、会社名が報道されることもあります。', see: ['deathReport', 'soken'] },
+  safetyDuty: { n: '安全配慮義務', c: 'law', s: '労働者が安全・健康に働けるよう配慮する会社の義務。', b: '労働契約法5条に定められています。義務を怠って労災が起きると、労災保険の給付とは別に、会社が損害賠償（慰謝料など）を負うことがあります。死亡事故では数千万円になることも。使用者賠償責任保険で備えられます。', see: ['rosai', 'liabIns'] },
+  liabIns: { n: '使用者賠償責任保険', c: 'law', s: '労災で会社が負う損害賠償に備える民間の保険。', b: '労災保険は治療や休業などを補償しますが、慰謝料などは補償しません。会社が安全配慮義務違反で訴えられたときの賠償金を補う保険です。保険料は費用（保険料）です。', see: ['safetyDuty'] },
+  kyotei36: { n: '36協定（さぶろく協定）', c: 'law', s: '残業や休日労働をさせるために労使で結び、労基署に届ける協定。', b: '労働基準法36条にちなんだ名前。届け出ずに1分でも法定労働時間を超えて働かせると違法です。月45時間を超える可能性があるときは「特別条項」を付けます。', see: ['otLimit', 'premium'] },
+  otLimit: { n: '時間外労働の上限規制', c: 'law', s: '残業は原則月45時間・年360時間まで。', b: '特別条項があっても、年720時間、休日労働を含めて月100時間未満、2〜6か月の平均80時間以内、月45時間超は年6か月まで。2024年4月からは建設業や自動車運転の仕事にも適用されています（いわゆる2024年問題）。', g: '過労死ライン：発症前1か月に約100時間、または2〜6か月の平均で約80時間を超える時間外労働。', see: ['kyotei36', 'karoshi'] },
+  premium: { n: '割増賃金（残業代）', c: 'law', s: '時間外25%以上、月60時間超は50%以上、休日35%以上、深夜25%以上。', b: '中小企業も2023年4月から月60時間を超える時間外労働に50%以上の割増が必要になりました。払っていない残業代は「未払賃金」として、さかのぼって払う義務があります（時効は当面3年）。', see: ['otLimit'] },
+  minWage: { n: '最低賃金', c: 'law', s: '国が決める賃金の最低額。都道府県ごとに毎年改定。', b: '時給で決められ、毎年10月ごろに引き上げられます。月給の人も、月給を1か月の所定労働時間で割って比べます。下回っていると差額を払う義務があり、罰金の対象にもなります。', see: ['minwageAdj'] },
+  minwageAdj: { n: '最低賃金の改定への対応', c: 'law', s: '改定のたびにパート・アルバイトの時給を確かめ、下回る人を引き上げる。', b: '最低賃金に近い時給の人が多い小売業・飲食業では、改定のたびに人件費が上がります。値上げや生産性の向上で吸収できるかが経営の課題です。', see: ['minWage', 'laborShare'] },
+  healthCheck: { n: '定期健康診断', c: 'law', s: '年1回、労働者に健康診断を受けさせる会社の義務。', b: '費用は会社が負担し、福利厚生費として処理するのが一般的です。結果に異常があれば医師の意見を聞き、必要なら仕事の量や時間を見直します（就業上の措置）。', see: ['safetyOrg'] },
+  safetyOrg: { n: '安全衛生管理体制', c: 'law', s: '人数に応じて安全衛生の担当者・産業医・委員会を置く仕組み。', b: '10〜49人は安全衛生推進者（衛生推進者）、50人以上は衛生管理者・産業医・衛生委員会（業種によっては安全管理者・安全委員会も）。50人以上はストレスチェックも義務です。', see: ['healthCheck'] },
+  annualLeave: { n: '年次有給休暇の年5日取得', c: 'law', s: '年10日以上の有給休暇がある人に、毎年5日は取らせる義務。', b: '2019年4月から。取らせないと対象者1人につき30万円以下の罰金。計画的付与（会社や班ごとに休む日を決める）が有効です。', see: ['kyotei36'] },
+  laborCond: { n: '労働条件の明示', c: 'law', s: '雇うときに賃金・時間・仕事内容などを書面で示す義務。', b: '労働条件通知書を渡します。2024年4月からは就業場所・業務の変更の範囲なども明示が必要です。', see: [] },
+  machineSafety: { n: '機械の安全対策', c: 'law', s: '機械の危険な部分に覆い・安全装置を付け、定期に検査する。', b: '製造業の死亡・重傷事故の多くは「はさまれ・巻き込まれ」です。フォークリフトやプレス機械は年1回の特定自主検査が義務です。', see: ['rosai'] },
+  fallPrev: { n: '墜落・転落の防止', c: 'law', s: '高さ2m以上の作業では足場・手すり・フルハーネスで墜落を防ぐ。', b: '建設業の死亡災害でいちばん多いのが墜落・転落です。足場は毎日点検し、フルハーネス型の墜落制止用器具を使う作業には特別教育が必要です。', see: ['rosai'] },
+  chemRisk: { n: '化学物質のリスクアセスメント', c: 'law', s: '使う化学物質の危険性を評価し、対策する義務。', b: '2024年から、事業者が自ら危険性を評価して対策を決める「自律的な管理」に移りました。化学物質管理者の選任なども必要です。', see: [] },
+  laborIns: { n: '労働保険の年度更新', c: 'law', s: '毎年6月1日〜7月10日に労災保険・雇用保険の保険料を申告・納付する手続き。', b: '前年度の賃金総額で確定保険料を計算して精算し、今年度の概算保険料を前払いします。期限を過ぎると国が保険料を決め（認定決定）、追徴金がかかります。', see: ['rosaiIns'] },
+  fireMgr: { n: '防火管理者と消防計画', c: 'law', s: '一定の建物で火災予防の責任者を選び、消防計画を作って届ける。', b: '店舗・飲食店などの特定防火対象物は収容人員30人以上、工場・事務所などは50人以上が対象。防火管理者は消防計画に基づき、訓練・設備の点検・火気の管理を行います。', see: ['fireCheck', 'evacDrill'] },
+  fireCheck: { n: '消防用設備等の点検・報告', c: 'law', s: '消火器・火災報知設備などを半年ごとに点検し、消防署に報告する。', b: '機器点検は6か月ごと、総合点検は1年ごと。報告は特定防火対象物が毎年、それ以外は3年ごと。点検の費用は支払手数料や修繕費として処理します。', see: ['fireMgr'] },
+  evacDrill: { n: '消火・避難訓練', c: 'law', s: '特定防火対象物では年2回以上の消火訓練と避難訓練が必要。', b: '訓練をしていない建物の火災では、避難が遅れて被害が大きくなりがちです。訓練の前に消防署に通報します。', see: ['fireMgr', 'evacRoute'] },
+  evacRoute: { n: '避難経路の確保', c: 'law', s: '廊下・階段・避難口・防火戸の前に物を置かない。', b: '過去の雑居ビル火災では、階段に置かれた物や閉まらない防火戸で多くの人が亡くなりました。消防法で物件の放置が禁じられています。', see: ['evacDrill'] },
+  fireAlarm: { n: '消防用設備の設置と違反対象物の公表', c: 'law', s: '用途と規模に応じた消防用設備の設置義務。重大な違反は公表される。', b: '自動火災報知設備・スプリンクラー・屋内消火栓が必要なのに設置していない建物は、消防本部のホームページで公表されます（違反対象物の公表制度）。利用者は、安全な建物かを確かめられます。', see: ['fireCheck', 'fireOrder'] },
+  hazmat: { n: '危険物の規制', c: 'law', s: 'ガソリン・灯油・塗料などは指定数量以上なら許可を受けた施設で扱う。', b: '指定数量の5分の1以上は少量危険物として届出が必要です。危険物取扱者の資格もあります。', see: [] },
+  fireOrder: { n: '消防署の立入検査と違反処理', c: 'law', s: '立入検査 → 指導 → 警告 → 命令 → 告発・公表と段階的に進む。', b: '消防法4条で消防職員は建物に立ち入って検査できます。違反を指摘しても直さないと、警告、措置命令・使用停止命令と進み、命令に従わないと刑事告発されます。命令を出すと建物に標識を付け、公示します。', see: ['fireAlarm'] },
+  haccp: { n: 'HACCP（ハサップ）', c: 'law', s: '食中毒などの危害を工程ごとに管理する衛生管理の方法。', b: '2021年6月から、原則としてすべての食品事業者にHACCPに沿った衛生管理が義務になりました。小規模な飲食店は業界団体の手引書に沿って計画と記録を作れば足ります。', see: [] },
+  alcCheck: { n: 'アルコールチェック義務', c: 'law', s: '社用車を5台以上使う事業所は、運転の前後に酒気帯びを確認する。', b: '2022年4月から目視での確認、2023年12月から検知器での確認が義務になりました。安全運転管理者が確認し、記録を1年保存します。', see: [] },
+  conLicense: { n: '建設業の許可', c: 'law', s: '500万円以上の工事を請け負うのに必要な許可。5年ごとに更新。', b: '経営業務の管理責任者や専任技術者、財産的な基礎（自己資本500万円以上など）が要件です。決算後には毎年、決算変更届（事業年度終了届）を出します。', see: [] },
+  privacy: { n: '個人情報の漏えい対応', c: 'law', s: '漏えいのおそれがあれば、個人情報保護委員会への報告と本人への通知が必要。', b: '要配慮個人情報の漏えい、1,000人を超える漏えい、不正アクセスによる漏えいなどは報告が義務です（速報は3〜5日以内、確報は30日以内）。', see: [] },
+  shido: { n: '指導票', c: 'law', s: '法違反ではないが改善が望ましい点を示す労働基準監督署の文書。', b: '行政指導です。法違反ではない改善事項や、違反とまではいえない点について改善を求めます。', see: ['kankoku'] },
+  kankoku: { n: '是正勧告', c: 'law', s: '法違反を指摘し、期日までに直すよう求める労働基準監督署の文書。', b: '是正勧告書には違反した法令の条項・違反の内容・是正期日が書かれます。会社は直したら是正報告書を出します。行政指導なので強制力はありませんが、従わないと再監督を経て送検されることがあります。', see: ['shido', 'soken'] },
+  stopOrder: { n: '使用停止等命令', c: 'law', s: '危険がさし迫っているときに、機械や作業を止める命令。', b: '労働安全衛生法98条などに基づく行政処分で、従う義務があります。足場の不備や安全装置のない機械などに出されます。', see: ['kankoku'] },
+  soken: { n: '送検（書類送検）', c: 'law', s: '労働基準監督官が事件を検察庁に送ること。', b: '労働基準監督官は特別司法警察員として、労働基準法・労働安全衛生法などの違反を捜査し、検察庁に送ります。重大な労災、労災かくし、是正勧告を無視し続けた場合などに行われ、起訴されると罰金などの刑が科されます。厚生労働省は送検した事案を公表しています。', see: ['kankoku', 'rosaiHide'] },
+  inspType: { n: '労働基準監督の種類', c: 'law', s: '定期監督・申告監督・災害時監督・再監督。', b: '定期監督は計画に基づく立入調査、申告監督は労働者からの申告（相談）を受けての調査、災害時監督は重大な労災が起きたときの調査、再監督は是正されたかの確認です。予告なしに行くのが原則です。', see: ['kankoku'] },
+  rosaiNintei: { n: '労災の認定（業務上・業務外）', c: 'law', s: '仕事が原因かどうかを労働基準監督署長が判断する。', b: 'けがは「業務遂行性」（会社の指揮の下にいたか）と「業務起因性」（仕事が原因か）で判断します。脳・心臓疾患や精神障害は、労働時間や出来事の強さをもとにした認定基準で判断します。決定に不服があれば審査請求ができます。', see: ['karoshi', 'mental'] },
+  karoshi: { n: '過労死の認定基準', c: 'law', s: '脳・心臓疾患は、発症前の時間外労働の長さなどで判断する。', b: '発症前1か月に約100時間、または2〜6か月の平均で月約80時間を超える時間外労働があれば、業務との関連性が強いと評価されます。それに近い時間でも、不規則な勤務や出張などの負荷があれば認められることがあります。', see: ['otLimit', 'rosaiNintei'] },
+  kantokukan: { n: '労働基準監督官', c: 'law', s: '労働基準法などが守られているかを監督する国の職員。', b: '事業場に予告なしに立ち入り（臨検）、帳簿や書類を調べ、使用者や労働者に質問できます（労働基準法101条・労働安全衛生法91条）。法律違反の罪について捜査する特別司法警察員でもあり、送検できます（労働基準法102条）。全国の労働基準監督署に配置されています。', see: ['inspType', 'kankoku', 'soken'] },
+  gyomuJo: { n: '業務災害（業務上・業務外）', c: 'law', s: '仕事が原因の災害。業務遂行性と業務起因性で判断する。', b: '業務遂行性は「会社の指揮命令の下にいたか」、業務起因性は「仕事に伴う危険が現実になったか」。休憩中の私的な行為や、出張中の飲酒・遊興などは業務外になります。ただし休憩中でも、会社の施設の欠陥が原因なら業務上です。', see: ['rosaiNintei', 'tsukin'] },
+  tsukin: { n: '通勤災害', c: 'law', s: '住居と仕事の場所の間を、合理的な経路と方法で移動している間の災害。', b: '経路をそれる（逸脱）・中断すると、その後は通勤になりません。ただし、日用品の購入など日常生活上必要な行為のための最小限のものなら、元の経路に戻った後は再び通勤です。通勤災害の給付は「療養給付」「休業給付」と呼び、業務災害の「補償給付」と区別します。', see: ['gyomuJo', 'rosaiIns'] },
+  shinsa: { n: '審査請求（労災保険）', c: 'law', s: '労災保険の決定に不服があるときの申立て。', b: '労働基準監督署長の支給・不支給の決定に不服があれば、労働者災害補償保険審査官に審査請求できます（決定を知った日の翌日から3か月以内）。さらに労働保険審査会への再審査請求、裁判所への訴えへと進めます。', see: ['rosaiNintei'] },
+  tachiiri: { n: '消防の立入検査', c: 'law', s: '消防職員が建物に立ち入り、防火の状況を検査すること（消防法4条）。', b: '消防長・消防署長は、火災予防のために、消防職員を関係のある場所に立ち入らせ、消防対象物の位置・構造・設備・管理の状況を検査させ、関係者に質問させることができます。違反があれば、立入検査結果通知書で知らせます。', see: ['fireOrder', 'fireCheck'] },
+  fireCause: { n: '火災原因調査', c: 'law', s: '消防が火災の原因と損害を調べること（消防法31条〜）。', b: '消防長・消防署長は、消火活動と並行して、火災の原因と、火災や消火による損害を調査します。関係者への質問や資料の提出命令ができ、放火の疑いなどがあれば警察と協力します。調べた結果は、同じような火災を防ぐ予防行政に生かされます。', see: ['tachiiri'] },
+  mental: { n: '精神障害の認定基準', c: 'law', s: '発病前6か月の出来事の心理的な負荷が「強」なら業務上。', b: 'パワーハラスメント、ひどい嫌がらせ、極度の長時間労働（発病前1か月に約160時間を超えるなど）、重大な事故の経験などが「強」の例です。', see: ['rosaiNintei'] },
+});
+for (const k of Object.keys(TERMS)) if (!TERM_KEYS.includes(k)) TERM_KEYS.push(k);
+for (const k of Object.keys(TERMS)) if (TERMS[k].c === 'law' && !TERM_BY_NAME[TERMS[k].n]) TERM_BY_NAME[TERMS[k].n] = k;
+
+/* ---- 27_kaisha_law.js ---- */
+/* =========================================================
+ *  27_kaisha_law.js : 会社経営モードの法令対応（エンジン・画面に依存しない）
+ *   36協定・健康診断・安全衛生の体制・最低賃金・労働保険・機械や足場の安全・消防設備の点検・防火管理・
+ *   避難訓練・HACCP・アルコールチェック・建設業許可・情報セキュリティ。
+ *   労働災害・火災・食中毒・情報漏えい、役所の立入検査と是正、送検・公表、労災かくしの発覚。
+ * ========================================================= */
+
+/* 業種ごとの労災の起きやすさ（1人・1か月あたり）と、休業4日以上のうち死亡になる割合 */
+const KS_ACC_BASE = { ret: 0.0028, food: 0.0036, mfg: 0.0036, con: 0.0058, whl: 0.0034, it: 0.0008 };
+const KS_ACC_DEATH = { ret: 0.004, food: 0.004, mfg: 0.025, con: 0.045, whl: 0.03, it: 0.003 };
+const KS_FIRE_BASE = { ret: 0.0012, food: 0.003, mfg: 0.0016, con: 0.0005, whl: 0.0011, it: 0.0004 };
+/* 安全衛生への取り組み：費用（1人・月）と事故の起きやすさ */
+const KS_SAFETY = [
+  { n: '最低限', cost: 0, mul: 1.45, desc: '法律で決まったこと以外はしない。' },
+  { n: '標準', cost: 2500, mul: 1.0, desc: '保護具の支給、危険予知の朝礼、月1回の職場の巡回。' },
+  { n: '手厚い', cost: 7000, mul: 0.65, desc: '外部の専門家による点検、設備の改善、毎月の安全教育。' },
+];
+/* パート・アルバイトの1か月の労働時間（時給の計算に使う） */
+const KS_PART_HOURS = { ret: { part: 88 }, food: { part: 70 } };
+const KS_MINWAGE_START = 1080; // 2026年10月改定の汐見県の最低賃金（時給・架空）
+
+/* 会社の建物（店・工場・倉庫・事務所） */
+function ksBuildings() {
+  if (G.ind === 'ret') return KS_ENGINE.ret.storesOpen().map(s => ({ n: s.n, spec: true, key: s }));
+  if (G.ind === 'food') return KS_ENGINE.food.shopsOpen().map(s => ({ n: s.n, spec: true, key: s }));
+  return [{ n: { mfg: '本社工場', con: '本社事務所・資材置場', whl: '本社倉庫', it: '本社オフィス' }[G.ind], spec: false }];
+}
+/* 防火管理者が必要か（収容人員：特定防火対象物は30人以上、それ以外は50人以上） */
+function ksNeedsFireMgr() { return G.ind === 'ret' || G.ind === 'food' || ksHeadcount() >= 50; }
+
+/* ---------- 法令のやること ---------- */
+/* freq: year（毎年）・half（半年ごと）・once（一度）・five（5年ごと）・fy（年度ごと：dueMo までに） */
+const KS_LAW_TASKS = [
+  { id: 'r36', item: 'r36', freq: 'fy', dueMo: 4, n: '36協定の締結・届出', acct: 'fees', cost: () => 5e4, why: '残業・休日出勤をさせるには、毎年、労働者の代表と協定を結んで労基署に届け出る。' },
+  { id: 'hoken', item: 'hoken', freq: 'fy', dueMo: 7, fromMo: 6, n: '労働保険の年度更新（6月1日〜7月10日）', acct: 'fees', cost: () => 3e4, why: '労災保険・雇用保険の保険料を申告・納付する（保険料は法定福利費として毎月計上済み。ここでは社会保険労務士への報酬）。' },
+  { id: 'kenshin', item: 'kenshin', freq: 'year', n: '定期健康診断', acct: 'fukuri', cost: () => ksHeadcount() * 1.2e4 * ksPrice(), why: '年1回、全員に健康診断を受けさせる（福利厚生費）。' },
+  { id: 'taisei', item: 'taisei', freq: 'once', n: () => (ksHeadcount() >= 50 ? '衛生管理者・産業医の選任と衛生委員会' : '安全衛生推進者の選任'), acct: 'recruit', cost: () => (ksHeadcount() >= 50 ? 15e4 : 3e4), applies: () => ksHeadcount() >= 10, why: '10〜49人は安全衛生推進者、50人以上は衛生管理者・産業医（毎月の報酬）と衛生委員会が必要。' },
+  { id: 'machine', item: 'machine', freq: 'year', n: () => (G.ind === 'mfg' ? '機械の安全装置の点検と特定自主検査' : 'フォークリフトの特定自主検査'), acct: 'repairs', cost: () => (G.ind === 'mfg' ? KS_ENGINE.mfg.machines().length * 6e4 : 2 * 5e4), applies: () => G.ind === 'mfg' || G.ind === 'whl', why: '危険な部分に覆いや安全装置を付け、年1回の特定自主検査を受ける。' },
+  { id: 'fall', item: 'fall', freq: 'half', n: '足場・墜落防止の点検と特別教育', acct: 'safety', cost: () => Math.max(2, G.staff.site || 0) * 5e4, applies: () => G.ind === 'con', why: '高さ2m以上の作業の墜落防止。足場の点検、手すり、フルハーネスの特別教育。' },
+  { id: 'chem', item: 'chem', freq: 'once', n: '化学物質のリスクアセスメント', acct: 'fees', cost: () => 15e4, applies: () => G.ind === 'mfg', why: '切削油・洗浄剤などの危険性を調べ、換気や保護具の対策を決める。' },
+  { id: 'bouka', item: 'bouka', freq: 'once', n: '防火管理者の選任・消防計画の届出', acct: 'recruit', cost: () => ksBuildings().length * 2e4, applies: ksNeedsFireMgr, why: '店舗・飲食店は収容人員30人以上、工場・事務所は50人以上で必要。防火管理講習を受けた人を選ぶ。' },
+  { id: 'tenken', item: 'tenken', freq: 'half', n: '消防用設備等の点検（結果は消防署へ報告）', acct: 'fees', cost: () => ksBuildings().length * 5e4 * ksPrice(), why: '消火器・自動火災報知設備・誘導灯などを半年ごとに点検する。' },
+  { id: 'kunren', item: 'kunren', freq: () => (G.ind === 'ret' || G.ind === 'food' ? 'half' : 'year'), n: '消火・避難訓練', acct: 'misc', cost: () => ksBuildings().length * 1e4, why: '店舗・飲食店（特定防火対象物）は年2回以上、それ以外も消防計画に従って行う。' },
+  { id: 'haccp', item: 'haccp', freq: 'year', n: 'HACCPの衛生管理計画の見直しと衛生教育', acct: 'fees', cost: () => ksBuildings().length * 5e4, applies: () => G.ind === 'food' || G.ind === 'ret', why: '食中毒を防ぐ衛生管理の計画と記録。食品衛生責任者を置く。' },
+  { id: 'alcohol', item: 'alcohol', freq: 'year', n: '安全運転管理者とアルコールチェック（検知器の更新）', acct: 'supplies', cost: () => 8e4, applies: () => G.ind === 'whl', why: '社用車5台以上。運転の前後に検知器で確認し、記録を1年保存する。' },
+  { id: 'kyoka', item: 'kyoka', freq: 'five', n: '建設業許可の更新', acct: 'dues', cost: () => 10e4, applies: () => G.ind === 'con', why: '500万円以上の工事を請け負うのに必要。5年ごとに更新する。' },
+  { id: 'privacy', item: 'privacy', freq: 'year', n: '情報セキュリティの点検と社員教育', acct: 'fees', cost: () => 40e4, applies: () => G.ind === 'it', why: 'お客さまの個人データを預かる。漏えいすると報告・通知の義務がある。' },
+];
+function ksTaskName(t) { return typeof t.n === 'function' ? t.n() : t.n; }
+function ksTaskFreq(t) { return typeof t.freq === 'function' ? t.freq() : t.freq; }
+function ksTaskApplies(t) { return !t.applies || t.applies(); }
+
+/* やることの状態：ok（済）・soon（期限が近い）・due（期限内に要対応）・over（期限切れ＝違反） */
+function ksTaskStatus(t) {
+  const L = G.law;
+  const last = L.done[t.id];
+  const f = ksTaskFreq(t);
+  const mo = calMonth(G.m), fy = fyOf(G.m);
+  if (f === 'fy') {
+    const cov = L.doneFy[t.id] ?? -99;
+    if (t.id === 'r36' && (mo === 2 || mo === 3)) {
+      if (cov >= fy + 1) return { st: 'ok', next: `${ksFyLabel(fy + 1)}の分も届出済み` };
+      if (cov >= fy) return { st: 'due', next: `${ksFyLabel(fy + 1)}の分を3月末までに` };
+    }
+    if (cov >= fy) return { st: 'ok', next: t.id === 'r36' ? `${ksFyLabel(fy + 1)}の分は2〜3月に` : '今年度は済み' };
+    const dueM = fy * 12 + ((t.dueMo + 8) % 12);
+    if (t.fromMo && G.m < fy * 12 + ((t.fromMo + 8) % 12)) return { st: 'ok', next: `${t.fromMo}月から` };
+    if (G.m <= dueM) return { st: 'due', next: `${ymLabel(dueM)}末まで` };
+    return { st: 'over', next: `${ymLabel(dueM)}末が期限` };
+  }
+  if (f === 'once') return last === undefined ? { st: 'over', next: 'まだしていない' } : { st: 'ok', next: `${ymLabel(last)}に実施` };
+  const span = f === 'half' ? 6 : f === 'five' ? 60 : 12;
+  if (last === undefined) return { st: 'over', next: '記録がない' };
+  const age = G.m - last;
+  if (age >= span + 1) return { st: 'over', next: `${ymLabel(last + span)}が期限` };
+  if (age >= span - 1) return { st: 'due', next: `${ymLabel(last + span)}までに` };
+  if (age >= span - 2) return { st: 'soon', next: `${ymLabel(last + span)}までに` };
+  return { st: 'ok', next: `次は${ymLabel(last + span)}` };
+}
+function ksLawTasks() { return KS_LAW_TASKS.filter(ksTaskApplies).map(t => Object.assign({ t, name: ksTaskName(t), cost: Math.round(t.cost()) }, ksTaskStatus(t))); }
+
+/* 実施する（費用を払い、記録する） */
+function ksLawDo(id, o = {}) {
+  const t = KS_LAW_TASKS.find(x => x.id === id);
+  if (!t || !ksTaskApplies(t)) return 0;
+  const cost = Math.round(t.cost());
+  ksPayCash(t.acct, cost, 'law_' + id);
+  G.law.done[id] = G.m;
+  if (ksTaskFreq(t) === 'fy') {
+    const target = id === 'r36' && (calMonth(G.m) === 2 || calMonth(G.m) === 3) && (G.law.doneFy.r36 ?? -99) >= fyOf(G.m) ? fyOf(G.m) + 1 : fyOf(G.m);
+    G.law.doneFy[id] = Math.max(G.law.doneFy[id] ?? -99, target);
+  }
+  if (id === 'r36') G.law.special = o.special !== undefined ? !!o.special : G.law.special;
+  ksLawFixFindings(t.item);
+  return cost;
+}
+
+/* ---------- 最低賃金 ---------- */
+function ksPartRoles() { const h = KS_PART_HOURS[G.ind]; return h ? KS_INDS[G.ind].roles.filter(r => h[r.id]) : []; }
+function ksPartHourly(r) { return ksRoleWage(r) / KS_PART_HOURS[G.ind][r.id]; } // ksRoleWage が時給の引き上げ（partAdj）を含む
+function ksMinWageGap() {
+  let gap = 0;
+  for (const r of ksPartRoles()) gap = Math.max(gap, G.law.minWage - ksPartHourly(r));
+  return gap;
+}
+/* 時給を最低賃金＋10円まで引き上げる */
+function ksRaisePartWage() {
+  for (const r of ksPartRoles()) {
+    const h = ksPartHourly(r);
+    if (h < G.law.minWage + 10) G.law.partAdj *= (G.law.minWage + 10) / h;
+  }
+  G.law.done.minwage = G.m;
+  ksLawFixFindings('minwage');
+}
+
+/* ---------- 残業時間の見込み（1人・1か月） ---------- */
+function ksOtHours() {
+  const k = (G.months[G.months.length - 1] || {}).kpi || {};
+  switch (G.ind) {
+    case 'ret': return 12 + Math.max(0, 1 - KS_ENGINE.ret.staffCap()) * 220;
+    case 'food': return 15 + Math.max(0, 1 - KS_ENGINE.food.staffCap()) * 220;
+    case 'mfg': return G.op.ot * 160 + (k.util > 0.98 ? 8 : 0);
+    case 'con': { const E = KS_ENGINE.con; const lr = E.load() / Math.max(1, E.loadCap()); return 25 + Math.max(0, lr - 0.85) * 160; }
+    case 'whl': { const pot = sum(G.op.customers, c => c.size * c.ramp) * ksPrice(); return 20 + Math.max(0, pot / Math.max(1, KS_ENGINE.whl.capacity()) - 0.9) * 160 + Math.max(0, KS_ENGINE.whl.trucks().length * 1.1 - G.staff.logi) * 12; }
+    case 'it': return 15 + (k.demand && k.avail ? Math.max(0, Math.min(k.demand, k.avail * 1.3) / Math.max(1, k.avail) - 1) * 150 : 0) + (k.util > 0.98 ? 10 : 0);
+    default: return 15;
+  }
+}
+
+/* ---------- いま違反している項目 ---------- */
+function ksLawViolations() {
+  const L = G.law;
+  const v = new Set();
+  for (const x of ksLawTasks()) if (x.st === 'over') v.add(x.t.item);
+  const ot = L.otNow ?? ksOtHours();
+  if (ot > 80 || (ot > 45 && !L.special)) v.add('otmax');
+  if (ksPartRoles().length && ksMinWageGap() > 0) v.add('minwage');
+  if (!L.policy.yukyu) v.add('yukyu');
+  if (L.hinan) v.add('hinan');
+  return v;
+}
+
+/* ---------- 初期状態（就任時。先代のやり方を引き継ぐ） ---------- */
+function ksLawInit() {
+  const cond = G.cond || 'normal';
+  const L = G.law = {
+    done: {}, doneFy: {}, special: true, partAdj: 1, minWage: KS_MINWAGE_START,
+    policy: { safety: cond === 'good' ? 2 : cond === 'bad' ? 0 : 1, fireIns: cond !== 'bad', liabIns: cond === 'good', yukyu: cond !== 'bad' },
+    acc: [], insp: [], fires: [], seq: 0, absent: [], fixMul: 1, otHist: [], hinan: false, flagM: undefined, soken: 0,
+  };
+  // 実施済みにしておく項目（状態が悪いほど、放置された項目が多い）
+  const neglect = { good: 0, normal: 2, bad: 4 }[cond];
+  const tasks = KS_LAW_TASKS.filter(ksTaskApplies);
+  const skip = new Set();
+  const pool = tasks.filter(t => t.id !== 'hoken').map(t => t.id);
+  for (let i = 0; i < neglect && pool.length; i++) skip.add(pool.splice(randInt(0, pool.length - 1), 1)[0]);
+  for (const t of tasks) {
+    if (skip.has(t.id)) continue;
+    const f = ksTaskFreq(t);
+    if (f === 'fy') L.doneFy[t.id] = fyOf(G.m);
+    else if (f === 'once') L.done[t.id] = G.m - randInt(12, 80);
+    else L.done[t.id] = G.m - randInt(1, (f === 'half' ? 5 : f === 'five' ? 50 : 10));
+  }
+  if (skip.has('r36')) L.doneFy.r36 = undefined;
+  if (G.ind === 'con' && !skip.has('kyoka')) L.done.kyoka = G.m - randInt(20, 50);
+}
+
+/* ---------- 毎月の処理（ksAdvance から呼ばれる） ---------- */
+function ksLawMonth(ctx) {
+  const L = G.law;
+  if (!L || G.hist) return;
+  const emp = ksHeadcount();
+  // 毎月の費用：安全衛生・保険・産業医
+  const sp = KS_SAFETY[L.policy.safety];
+  if (sp.cost) ksPayCash('safety', emp * sp.cost, 'law_safety');
+  const assetsVal = sum(ksActiveAssets().filter(a => ['bldg', 'mach', 'equip', 'veh'].includes(a.acct)), a => a.cost) + ksB('goods') + ksB('mat') + ksB('prod');
+  if (L.policy.fireIns) ksPayCash('insur', assetsVal * 0.0011 / 12, 'law_ins');
+  if (L.policy.liabIns) ksPayCash('insur', emp * 1200, 'law_ins');
+  if (emp >= 50 && L.done.taisei !== undefined) ksPayCash('fees', 5e4, 'law_doctor');
+  // 労災で休んでいる人の穴埋め（応援・派遣の費用と、休んでいる人の給与の差額）
+  L.absent = L.absent.filter(a => a.until > G.m);
+  for (const a of L.absent) ksPayCash('misc', a.wage * 0.35, 'law_cover');
+  L.fixMul = 1 + (L.fixMul - 1) * 0.96;
+  // 最低賃金の改定（10月）
+  if (ctx.mo === 10) {
+    L.minWage = Math.round(L.minWage * (1 + uni(0.035, 0.05)));
+    if (ksPartRoles().length) {
+      const gap = ksMinWageGap();
+      ksNews(`汐見県の最低賃金が時給${L.minWage}円に改定されました。${gap > 0 ? `パート・アルバイトの時給（約${fmtNum(L.minWage - gap, 0)}円）が下回っています。引き上げが必要です` : 'パート・アルバイトの時給は上回っています'}`, gap > 0 ? 'bad' : 'info');
+    }
+  }
+  // 残業時間
+  L.otNow = ksOtHours();
+  L.otHist.push(L.otNow);
+  if (L.otHist.length > 6) L.otHist.shift();
+  // 避難通路の物品（忙しく、安全への取り組みが弱いほど置かれがち）
+  const busy = G.ind === 'ret' || G.ind === 'whl' || G.ind === 'mfg';
+  if (!L.hinan && chance((busy ? 0.05 : 0.02) * [1.6, 1, 0.45][L.policy.safety])) L.hinan = true;
+  else if (L.hinan && chance(0.08 + 0.06 * L.policy.safety)) L.hinan = false;
+  const viol = ksLawViolations();
+  ksLawAccidents(viol, emp);
+  ksLawFires(viol);
+  ksLawOtherEvents(viol);
+  ksLawInspections(viol);
+  ksLawDeadlines(viol);
+  // 健康保険で治療した労災は、健康保険組合からの照会で労災保険に切り替えることになる
+  for (const a of L.acc) {
+    if (!a.kenpo || a.kenpoDone || !chance(0.15)) continue;
+    a.kenpoDone = true;
+    ksPayCash('fees', 3e4, 'law_kenpo');
+    ksNews(`健康保険組合から、${ymLabel(a.m)}のけがは仕事中のものではないかと照会がありました。労災保険に切り替える手続きをしました（業務上のけがに健康保険は使えません）`, 'bad');
+    if (a.conceal && !a.found) { a.found = true; ksLawSoken('労災かくし（健康保険で治療させ、労働者死傷病報告を出さなかった）', 50e4); }
+  }
+  // 労災かくしの発覚
+  for (const a of L.acc) {
+    if (!a.conceal || a.found) continue;
+    if (chance(0.025)) {
+      a.found = true;
+      ksLawSoken('労災かくし（労働者死傷病報告を出さなかった）', 50e4);
+    }
+  }
+}
+
+/* 送検・公表などの処分 */
+function ksLawSoken(why, fine, kind = 'soken') {
+  const L = G.law;
+  if (fine) ksPost('law_fine', [['fines', fine, 0], ['cash', 0, fine]], { cf: 'other' });
+  L.flagM = G.m;
+  if (kind === 'soken') L.soken++;
+  const rep = G.op.rep !== undefined ? G.op.rep : null;
+  if (rep !== null) G.op.rep = clamp(rep - (kind === 'koukai' ? 0.04 : 0.03), 0.7, 1.3);
+  const label = kind === 'soken' ? `${esc(G.coName)}を労働基準法などの違反の疑いで書類送検` : kind === 'koukai' ? `消防法違反の建物として${esc(G.coName)}を公表` : `${esc(G.coName)}に命令`;
+  ksNews(`【報道】${label}：${why}${fine ? `。罰金${fmtYen(fine)}を納付（罰金は税金の計算で費用にならない）` : ''}。銀行の評価にも響きます`, 'bad');
+  G.pendingModals.push({ type: 'kLawNews', kind, why, fine });
+}
+
+/* ---------- 労働災害 ---------- */
+const KS_ACC_TEXT = {
+  ret: [['品出し中に脚立から落ち、手首を骨折', 'fall'], ['濡れた床で滑って転び、腰を打った', 'slip'], ['段ボールをカッターで開けていて指を切った', 'cut'], ['重い飲料のケースを持ち上げて腰を痛めた', 'back'], ['冷凍庫の中で転倒し、膝を痛めた', 'slip']],
+  food: [['揚げ物の油がはねて腕をやけど', 'burn'], ['包丁で指を深く切った', 'cut'], ['厨房の濡れた床で滑って転倒', 'slip'], ['スライサーで指先を負傷', 'machine'], ['重い寸胴鍋を運んでいて腰を痛めた', 'back']],
+  mfg: [['旋盤の回転部に袖を巻き込まれ、腕を負傷', 'machine'], ['プレス機械に手を挟まれた', 'machine'], ['削りくずが目に入った', 'cut'], ['フォークリフトに足をひかれた', 'machine'], ['重い部品を運んでいて腰を痛めた', 'back']],
+  con: [['足場から転落', 'fall'], ['脚立から落ちて足を骨折', 'fall'], ['上から落ちてきた資材で頭を負傷', 'hit'], ['夏の現場で熱中症になった', 'heat'], ['電動のこぎりで手を切った', 'cut']],
+  whl: [['フォークリフトの荷崩れで足を負傷', 'machine'], ['配送中に交通事故を起こした', 'traffic'], ['トラックの荷台から転落', 'fall'], ['重いケースを運んでいて腰を痛めた', 'back'], ['冷凍倉庫で転倒', 'slip']],
+  it: [['オフィスの階段で転倒', 'slip'], ['通勤途中に自転車で転倒（通勤災害）', 'commute'], ['長時間労働が続き、うつ病と診断された', 'mental'], ['腱鞘炎がひどくなり、休業した', 'back']],
+};
+function ksLawAccidents(viol, emp) {
+  const L = G.law;
+  let mul = KS_SAFETY[L.policy.safety].mul * L.fixMul;
+  for (const v of viol) mul *= (LAW_ITEMS[v] && LAW_ITEMS[v].acc) || 1;
+  const ot = L.otNow;
+  mul *= ot > 80 ? 1.4 : ot > 60 ? 1.2 : ot > 45 ? 1.08 : 1;
+  const p = KS_ACC_BASE[G.ind] * emp * mul;
+  // 過労（脳・心臓疾患や精神障害）：長い残業が2か月以上続くと起きやすい
+  const longOt = L.otHist.slice(-2).length === 2 && L.otHist.slice(-2).every(h => h >= 80);
+  if (longOt && chance(0.03)) { ksLawNewAccident({ text: G.ind === 'it' ? '長時間労働が続いたエンジニアが、うつ病と診断された' : '長時間の残業が続いていた社員が、仕事中に倒れた（脳出血）', kind: 'karo', sev: chance(0.12) ? 'death' : 'long' }); return; }
+  if (!chance(Math.min(0.6, p))) return;
+  const list = KS_ACC_TEXT[G.ind];
+  let [text, kind] = list[randInt(0, list.length - 1)];
+  if (kind === 'heat' && ![6, 7, 8, 9].includes(calMonth(G.m))) [text, kind] = list[0];
+  const r = rand();
+  let sev = r < 0.56 ? 'none' : r < 0.76 ? 'short' : 'long';
+  if (sev === 'long' && chance(KS_ACC_DEATH[G.ind] * (viol.has('fall') || viol.has('machine') ? 2 : 1))) sev = 'death';
+  if (kind === 'traffic' && viol.has('alcohol') && chance(0.3)) text += '（運転前のアルコールチェックをしていなかった）';
+  ksLawNewAccident({ text, kind, sev });
+}
+function ksLawNewAccident(o) {
+  const L = G.law;
+  const roles = KS_INDS[G.ind].roles.filter(r => (G.staff[r.id] || 0) > 0);
+  const role = roles.slice().sort((a, b) => (G.staff[b.id] || 0) - (G.staff[a.id] || 0))[o.kind === 'mental' || o.kind === 'karo' ? 0 : randInt(0, Math.min(1, roles.length - 1))] || roles[0];
+  const days = o.sev === 'none' ? 0 : o.sev === 'short' ? randInt(1, 3) : o.sev === 'death' ? 0 : o.kind === 'mental' || o.kind === 'karo' ? randInt(90, 240) : randInt(7, 90);
+  const a = { id: ++L.seq, m: G.m, text: o.text, kind: o.kind, sev: o.sev, days, role: role.id, wage: ksRoleWage(role), status: 'new', choice: {} };
+  L.acc.unshift(a);
+  if (L.acc.length > 40) L.acc.length = 40;
+  const sevTxt = { none: '休業なし', short: `休業${days}日`, long: `休業約${Math.round(days / 30 * 10) / 10}か月`, death: '死亡' }[o.sev];
+  ksNews(`【労災】${role.n.replace(/（.*?）/, '')}が${o.text}（${sevTxt}）`, o.sev === 'none' ? 'info' : 'bad');
+  G.pendingModals.push({ type: 'kRosai', id: a.id });
+  return a;
+}
+/* 労災の対応を決める（kRosai の画面から呼ぶ）。choice: { first, pay, report, comp, prevent } */
+function ksLawResolveAccident(id, ch) {
+  const L = G.law;
+  const a = L.acc.find(x => x.id === id);
+  if (!a || a.status === 'done') return;
+  a.choice = ch;
+  a.status = 'done';
+  const daily = a.wage / 30;
+  // 見舞金
+  const gift = { none: 0, short: 3e4, long: 10e4, death: 100e4 }[a.sev];
+  if (gift) ksPayCash('fukuri', gift, 'law_gift');
+  // 待期期間3日の休業補償（会社が平均賃金の60%）
+  if ((a.sev === 'short' || a.sev === 'long') && ch.comp === 'pay') ksPayCash('fukuri', daily * Math.min(3, a.days) * 0.6, 'law_kyugyo');
+  // 治療費の扱い
+  if (ch.pay === 'company') ksPayCash('fukuri', { none: 3e4, short: 8e4, long: 40e4, death: 80e4 }[a.sev], 'law_medical');
+  if (ch.pay === 'kenpo') a.kenpo = true;
+  // 報告
+  const mustReport = a.sev !== 'none';
+  a.conceal = mustReport && ch.report === 'hide';
+  if (a.conceal && ch.pay === 'kenpo') a.found = false;
+  // 休業の穴埋め
+  if (a.sev === 'long') L.absent.push({ until: G.m + Math.ceil(a.days / 30), wage: a.wage });
+  if (a.sev === 'death') {
+    G.staff[a.role] = Math.max(0, (G.staff[a.role] || 0) - 1);
+    // 安全配慮義務違反があれば損害賠償（使用者賠償責任保険で補う）
+    const viol = ksLawViolations();
+    const fault = viol.has('fall') || viol.has('machine') || viol.has('otmax') || L.policy.safety === 0;
+    if (fault) {
+      const amt = niceAmount(uni(3000e4, 6000e4));
+      ksPost('law_comp', [['compens', amt, 0], ['cash', 0, amt]], { cf: 'other' });
+      if (L.policy.liabIns) { const cov = Math.round(amt * 0.9); ksPost('law_insrecv', [['cash', cov, 0], ['insRecv', 0, cov]], { cf: 'other' }); ksNews(`遺族に損害賠償${fmtYen(amt)}を払いました。使用者賠償責任保険から${fmtYen(cov)}が支払われました`, 'bad'); }
+      else ksNews(`安全配慮義務違反として、遺族に損害賠償${fmtYen(amt)}を払いました（特別損失）`, 'bad');
+      ksLawSoken('死亡災害で、法律で決められた安全対策をとっていなかった', 50e4);
+    }
+  } else if (a.kind === 'karo' || a.kind === 'mental') {
+    if (L.policy.safety === 0 || (L.otHist.length && Math.max(...L.otHist) > 80)) {
+      const amt = niceAmount(uni(800e4, 2000e4));
+      ksPost('law_comp', [['compens', amt, 0], ['cash', 0, amt]], { cf: 'other' });
+      if (L.policy.liabIns) { const cov = Math.round(amt * 0.9); ksPost('law_insrecv', [['cash', cov, 0], ['insRecv', 0, cov]], { cf: 'other' }); }
+      ksNews(`長時間労働による労災として認定され、本人と和解金${fmtYen(amt)}で合意しました${L.policy.liabIns ? '（保険で9割を補填）' : ''}`, 'bad');
+    }
+  }
+  // 再発防止
+  if (ch.prevent === 'equip') { ksPayCash('safety', niceAmount(uni(30e4, 120e4) * (a.sev === 'death' ? 3 : 1)), 'law_prevent'); L.fixMul = Math.min(L.fixMul, 0.6); }
+  else if (ch.prevent === 'edu') { ksPayCash('safety', 5e4, 'law_prevent'); L.fixMul = Math.min(L.fixMul, 0.85); }
+  // 重い労災は労基署が調べに来る
+  if (a.sev === 'long' || a.sev === 'death') L.inspNext = Object.assign(L.inspNext || {}, { labor: a.conceal ? 0.15 : a.sev === 'death' ? 0.95 : 0.35 });
+}
+
+/* ---------- 火災 ---------- */
+function ksLawFires(viol) {
+  const L = G.law;
+  let mul = 1;
+  for (const v of viol) mul *= (LAW_ITEMS[v] && LAW_ITEMS[v].fire) || 1;
+  for (const b of ksBuildings()) {
+    if (!chance(KS_FIRE_BASE[G.ind] * mul)) continue;
+    const large = chance(0.18 * (viol.has('tenken') ? 1.6 : 1) * (viol.has('kunren') ? 1.3 : 1));
+    ksLawNewFire(b, large, viol);
+    break;
+  }
+}
+function ksLawNewFire(b, large, viol) {
+  const L = G.law;
+  const cause = pick({ ret: ['惣菜の調理場のフライヤー', 'バックヤードの電気配線', '放火（ごみ置き場）'], food: ['厨房のダクトにたまった油', 'ガスコンロの消し忘れ', '電気配線'], mfg: ['研削の火花が切りくずに引火', '電気設備のショート', '乾燥炉の過熱'], con: ['資材置場のたばこの不始末', '電気ストーブ'], whl: ['フォークリフトの充電器', '倉庫の電気配線'], it: ['サーバー室の電源タップ', 'モバイルバッテリーの発火'] }[G.ind]);
+  const f = { id: ++L.seq, m: G.m, b: b.n, cause, large, loss: 0, ins: 0, death: false };
+  if (!large) {
+    f.loss = niceAmount(uni(30e4, 150e4));
+    ksPayCash('repairs', f.loss, 'law_fire');
+    ksNews(`【火災】${b.n}で${cause}からぼやが出ました。けが人なし（修理 ${fmtYen(f.loss)}）`, 'bad');
+  } else {
+    // 建物・設備・在庫が焼ける
+    let loss = 0;
+    const targets = ksActiveAssets().filter(a => ['bldg', 'equip', 'mach'].includes(a.acct));
+    const share = uni(0.25, 0.5) / Math.max(1, ksBuildings().length);
+    for (const a of targets) if (chance(share * 1.4)) loss += ksLoseAsset(a);
+    // 焼けた在庫：三分法では期中の在庫は仕入高（材料仕入高）に入っているので、そこから災害による損失に振り替える
+    const sk = { ret: ['purch', 'book'], whl: ['purch', 'book'], food: ['purch', 'book'], mfg: ['matPurch', 'matBook'] }[G.ind];
+    if (sk && G.op[sk[1]] > 0) {
+      const frac = Math.min(0.9, share * 1.5);
+      const inv = Math.round(G.op[sk[1]] * frac);
+      ksPost('law_fire', [['disaster', inv, 0], [sk[0], 0, inv]], { desc: '火災で焼けた在庫（仕入高から振り替え）' });
+      G.op[sk[1]] -= inv;
+      const hk = sk[1] === 'book' ? 'hid' : 'matHid';
+      if (G.op[hk]) G.op[hk] *= 1 - frac; // 帳簿に出ていない目減りも、焼けた分だけ消える
+      loss += inv;
+    }
+    const clean = niceAmount(uni(100e4, 400e4));
+    ksPost('law_fire', [['disaster', clean, 0], ['cash', 0, clean]], { cf: 'other', desc: '火災の片付け・仮復旧' });
+    loss += clean;
+    f.loss = loss;
+    if (L.policy.fireIns) {
+      f.ins = Math.round(loss * 0.9);
+      ksPost('law_insrecv', [['cash', f.ins, 0], ['insRecv', 0, f.ins]], { cf: 'other' });
+    }
+    // 店は休業（復旧工事が終わるまで）
+    if (b.key) b.key.openM = 9999;
+    const dmul = [...viol].reduce((s, v) => s * ((LAW_ITEMS[v] && LAW_ITEMS[v].death) || 1), 1);
+    f.death = chance(Math.min(0.5, 0.04 * dmul));
+    ksNews(`【火災】${b.n}で${cause}から火が出て、建物の一部と在庫が焼けました（損害 ${fmtYen(loss)}${L.policy.fireIns ? `・火災保険から${fmtYen(f.ins)}` : '・火災保険に入っていなかった'}）${f.death ? '。逃げ遅れた従業員1人が亡くなりました' : ''}`, 'bad');
+    if (f.death) {
+      const viol2 = ['hinan', 'kunren', 'tenken', 'bouka'].filter(v => viol.has(v));
+      if (viol2.length) ksLawSoken(`火災で死者。${viol2.map(v => LAW_ITEMS[v].s).join('・')}に違反していた（業務上過失致死の疑い）`, 100e4, 'soken');
+    }
+    L.inspNext = Object.assign(L.inspNext || {}, { fire: 0.9 });
+  }
+  L.fires.unshift(f);
+  if (L.fires.length > 20) L.fires.length = 20;
+  G.pendingModals.push({ type: 'kFire', id: f.id });
+}
+/* 資産をなくす（火災など）：期中の償却を計上し、残りの帳簿価額を災害による損失にする */
+function ksLoseAsset(a) {
+  const fy = fyOf(G.m);
+  if (a.life) {
+    const months = Math.max(0, G.m - Math.max(fy * 12, a.acqM));
+    const dep = Math.max(0, Math.min(Math.round(a.cost / a.life * months / 12), a.cost - 1 - a.booked));
+    if (dep > 0) { ksPost('cDep', [[a.part === 'C' ? 'depC' : 'depS', dep, 0], [a.acct === 'sw' ? 'sw' : 'accDep', 0, dep]], { desc: `焼けた資産の期中の減価償却（${a.n}）` }); a.booked += dep; }
+  }
+  const bv = a.cost - a.booked;
+  ksPost('law_fire', [['accDep', a.booked, 0], ['disaster', bv, 0], [a.acct, 0, a.cost]], { desc: `火災で焼けた資産（${a.n}）` });
+  a.soldM = G.m;
+  a.lost = true;
+  return bv;
+}
+
+/* ---------- その他の出来事（食中毒・情報漏えい・建設業許可の失効・申告） ---------- */
+function ksLawOtherEvents(viol) {
+  const L = G.law;
+  if ((G.ind === 'food' || G.ind === 'ret') && chance((G.ind === 'food' ? 0.004 : 0.0015) * (viol.has('haccp') ? 4 : 1) * ([6, 7, 8, 9].includes(calMonth(G.m)) ? 1.8 : 1))) {
+    const b = ksBuildings()[0];
+    const cost = niceAmount(uni(80e4, 250e4));
+    ksPayCash('misc', cost, 'law_food');
+    if (G.op.rep !== undefined) G.op.rep = clamp(G.op.rep - 0.04, 0.7, 1.3);
+    ksNews(`【食中毒】${b ? b.n : '店'}で食事をしたお客さま${randInt(4, 18)}人が腹痛を訴え、保健所が3日間の営業停止を命じました（消毒・見舞いなど ${fmtYen(cost)}）${viol.has('haccp') ? '。衛生管理の計画と記録がなかったことも指摘されました' : ''}`, 'bad');
+    L.inspNext = Object.assign(L.inspNext || {}, { health: 1 });
+  }
+  if (G.ind === 'it' && chance(0.004 * (viol.has('privacy') ? 4 : 1))) {
+    const cost = niceAmount(uni(300e4, 900e4));
+    ksPayCash('misc', cost, 'law_leak');
+    G.op.rep = clamp(G.op.rep - 0.05, 0.7, 1.3);
+    ksNews(`【情報漏えい】不正アクセスで、取引先から預かった顧客データ約${randInt(2, 30) * 1000}件が漏えいしたおそれ。個人情報保護委員会に報告し、本人に通知しました（調査・お詫びなど ${fmtYen(cost)}）`, 'bad');
+    L.inspNext = Object.assign(L.inspNext || {}, { ppc: viol.has('privacy') ? 0.8 : 0.3 });
+  }
+  if (G.ind === 'con' && viol.has('kyoka') && !L.kyokaLost) { L.kyokaLost = true; ksNews('建設業の許可の期限が切れました。更新するまで、500万円以上の工事を請け負えません', 'bad'); }
+  if (G.ind === 'con' && !viol.has('kyoka')) L.kyokaLost = false;
+  // 労働者からの申告（相談）：残業代・最低賃金・長時間労働・年休
+  for (const v of ['unpaid', 'minwage', 'otmax', 'yukyu', 'r36']) {
+    if (!viol.has(v) || !LAW_ITEMS[v].compl) continue;
+    if (chance(LAW_ITEMS[v].compl * Math.max(1, ksHeadcount() / 20))) { L.inspNext = Object.assign(L.inspNext || {}, { labor: 0.85 }); L.complaint = v; break; }
+  }
+}
+/* 建設業の許可が切れている間は、500万円以上の見積依頼に応えられない */
+if (typeof KS_ENGINE !== 'undefined' && KS_ENGINE.con) {
+  const ksConNext0 = KS_ENGINE.con.next;
+  KS_ENGINE.con.next = function () { ksConNext0.call(this); if (G.law && G.law.kyokaLost && G.op.bids) G.op.bids = G.op.bids.filter(b => b.est * (1 + b.margin) < 500e4); };
+}
+
+/* ---------- 立入検査 ---------- */
+const KS_INSP_P = { labor: 0.011, fire: 0.012, health: 0.012, police: 0.006, ppc: 0 };
+function ksLawInspections(viol) {
+  const L = G.law;
+  const nx = L.inspNext || {};
+  L.inspNext = {};
+  for (const ag of ['labor', 'fire', 'health', 'police', 'ppc']) {
+    if (ag === 'health' && G.ind !== 'food' && G.ind !== 'ret') continue;
+    if (ag === 'police' && G.ind !== 'whl') continue;
+    if (ag === 'ppc' && G.ind !== 'it') continue;
+    if (L.insp.some(x => x.ag === ag && x.status === 'open')) continue;
+    let p = KS_INSP_P[ag];
+    if (ag === 'fire' && (G.ind === 'ret' || G.ind === 'food')) p = 0.028;
+    p = Math.max(p, nx[ag] || 0);
+    if (!chance(p)) continue;
+    const kind = ag === 'labor' ? (L.complaint ? '申告監督' : nx.labor >= 0.3 ? '災害時監督' : '定期監督') : ag === 'fire' ? '立入検査' : ag === 'health' ? '立入検査' : ag === 'police' ? '立入検査' : '報告徴収';
+    const finds = [];
+    for (const v of viol) {
+      const it = LAW_ITEMS[v];
+      if (!it || it.ag !== ag) continue;
+      if (chance(it.det)) finds.push({ item: v, kind: it.sev >= 3 && it.danger && chance(0.4) ? 'meirei' : it.meas === 'soken' ? 'kankoku' : it.meas, fixed: false });
+    }
+    // 労災かくしが見つかることもある
+    if (ag === 'labor') for (const a of L.acc) if (a.conceal && !a.found && chance(0.35)) { a.found = true; finds.push({ item: 'report', kind: 'soken', fixed: true }); }
+    // 安全への取り組みが最低限なら指導票
+    if (ag === 'labor' && L.policy.safety === 0 && chance(0.6)) finds.push({ item: 'safetyMin', kind: 'shido', fixed: false, soft: true });
+    const ins = { id: ++L.seq, m: G.m, ag, kind, finds, due: G.m + 2, status: finds.some(f => !f.fixed) ? 'open' : 'closed', stage: 0, why: ag === 'labor' && L.complaint ? LAW_ITEMS[L.complaint].s : '' };
+    if (ag === 'labor') L.complaint = null;
+    L.insp.unshift(ins);
+    if (L.insp.length > 30) L.insp.length = 30;
+    const agN = LAW_AG[ag].n;
+    ksNews(`【${agN}】${kind}がありました。${finds.length ? `指摘 ${finds.length}件（${finds.map(f => (LAW_ITEMS[f.item] || { s: '安全衛生の取り組み' }).s).join('・')}）` : '指摘はありませんでした'}`, finds.length ? 'bad' : 'good');
+    if (finds.some(f => f.item === 'report')) ksLawSoken('労災かくし（労働者死傷病報告を出さなかった）', 50e4);
+    if (finds.some(f => f.kind === 'meirei')) { ksNews(`${agN}から使用停止命令。是正が終わるまで危険な機械・作業を止めます`, 'bad'); }
+    G.pendingModals.push({ type: 'kInsp', id: ins.id });
+  }
+}
+/* 指摘された項目を直したら、指摘を「是正済み」にする */
+function ksLawFixFindings(item) {
+  for (const ins of G.law.insp) for (const f of ins.finds) if (f.item === item) f.fixed = true;
+}
+function ksLawFindingFix(item) {
+  if (item === 'otmax') { G.law.special = true; return; }
+  if (item === 'minwage') { ksRaisePartWage(); return; }
+  if (item === 'yukyu') { G.law.policy.yukyu = true; ksLawFixFindings('yukyu'); return; }
+  if (item === 'hinan') { G.law.hinan = false; ksLawFixFindings('hinan'); return; }
+  if (item === 'safetyMin') { G.law.policy.safety = Math.max(1, G.law.policy.safety); ksLawFixFindings('safetyMin'); return; }
+  if (item === 'unpaid') { ksLawFixFindings('unpaid'); return; }
+  const t = KS_LAW_TASKS.find(x => x.item === item);
+  if (t) ksLawDo(t.id);
+}
+/* 是正報告書を出す（指摘をすべて直していれば終わり） */
+function ksLawReport(id) {
+  const ins = G.law.insp.find(x => x.id === id);
+  if (!ins) return false;
+  const viol = ksLawViolations();
+  for (const f of ins.finds) if (!f.fixed && !viol.has(f.item) && f.item !== 'safetyMin') f.fixed = true;
+  if (ins.finds.every(f => f.fixed)) { ins.status = 'closed'; ins.reportM = G.m; return true; }
+  return false;
+}
+/* 是正期日を過ぎたら：労基署は再監督 → 送検、消防は警告 → 命令 → 公表、保健所・警察は命令 */
+function ksLawDeadlines(viol) {
+  for (const ins of G.law.insp) {
+    if (ins.status !== 'open' || G.m < ins.due) continue;
+    for (const f of ins.finds) if (!f.fixed && !viol.has(f.item) && f.item !== 'safetyMin') f.fixed = true;
+    if (ins.finds.every(f => f.fixed)) { ins.status = 'closed'; continue; }
+    ins.stage++;
+    const left = ins.finds.filter(f => !f.fixed).map(f => (LAW_ITEMS[f.item] || { s: '安全衛生' }).s).join('・');
+    if (ins.ag === 'labor') {
+      if (ins.stage === 1) { ins.due = G.m + 1; ksNews(`【労働基準監督署】是正期日を過ぎたため再監督がありました。来月末までに是正しなければ送検されます（${left}）`, 'bad'); }
+      else { ins.status = 'soken'; ksLawSoken(`是正勧告に従わなかった（${left}）`, 30e4); }
+    } else if (ins.ag === 'fire') {
+      if (ins.stage === 1) { ins.due = G.m + 1; ksNews(`【消防署】是正されていないため警告書が出されました（${left}）`, 'bad'); }
+      else if (ins.stage === 2) { ins.due = G.m + 2; ins.status = 'open'; ksLawSoken(`消防法の措置命令に違反（${left}）。建物に命令の標識が付けられました`, 0, 'koukai'); }
+      else { ins.status = 'soken'; ksLawSoken(`措置命令に従わなかったため告発（${left}）`, 50e4); }
+    } else {
+      ins.status = 'soken';
+      ksLawSoken(`${LAW_AG[ins.ag].n}の指導に従わなかった（${left}）`, 30e4, 'meirei');
+    }
+  }
+}
+
+/* ---------- 銀行・税金とのつながり ---------- */
+/* 送検・公表から1年は、銀行の格付が1段階下がる */
+const ksGrade0 = ksGrade;
+ksGrade = function () {
+  const r = ksGrade0();
+  if (G.law && G.law.flagM !== undefined && G.m - G.law.flagM < 12 && r.g < 10) r.g = Math.min(10, r.g + 1);
+  return r;
+};
+const ksEvalLoan0 = ksEvalLoan;
+ksEvalLoan = function (app) {
+  const r = ksEvalLoan0(app);
+  if (G.law && G.law.flagM !== undefined && G.m - G.law.flagM < 12 && r.reasons) r.reasons.push('法令違反（送検・公表）の報道があったため、格付を1段階下げて審査しました。');
+  return r;
+};
+/* 罰金は税金の計算で費用にならない（損金不算入）ので、所得に足し戻す */
+const ksTaxCalc0 = ksTaxCalc;
+ksTaxCalc = function () {
+  const t = ksTaxCalc0();
+  const fines = ksB('fines');
+  if (!fines) return t;
+  const loss = G.lossCF || 0;
+  let taxable = t.pretax + fines - loss;
+  let lossAfter = 0;
+  if (taxable <= 0) { lossAfter = -taxable; taxable = 0; }
+  const income = Math.round(Math.min(taxable, 8e6) * 0.25 + Math.max(0, taxable - 8e6) * 0.34);
+  const tax = Math.round((income + 7e4) / 100) * 100;
+  return Object.assign(t, { fines, taxable, income, tax, lossAfter });
+};
+
+/* 仕訳帳の解説 */
+Object.assign(KS_JNOTE, {
+  law_r36: ['36協定の作成・届出（社会保険労務士への報酬）', '専門家への報酬は支払手数料。36協定そのものは届出の書類で、費用ではありません。'],
+  law_hoken: ['労働保険の年度更新（社会保険労務士への報酬）', '労働保険料そのものは、毎月の法定福利費に含めています。'],
+  law_kenshin: ['定期健康診断の費用', '全員が受ける健康診断の費用は福利厚生費（販管費）。'],
+  law_taisei: ['安全衛生の担当者の講習', '講習の費用は採用教育費。'],
+  law_machine: ['機械・フォークリフトの点検', '定期の点検・検査は修繕費。'],
+  law_fall: ['足場の点検・墜落防止の教育', '安全衛生費。'],
+  law_chem: ['化学物質のリスクアセスメント', '外部の専門家への報酬は支払手数料。'],
+  law_bouka: ['防火管理講習', '講習の費用は採用教育費。'],
+  law_tenken: ['消防用設備等の点検', '点検業者への支払いは支払手数料。'],
+  law_kunren: ['消火・避難訓練', '訓練に使った消火器の詰め替えなどは雑費。'],
+  law_haccp: ['衛生管理の計画と教育', '支払手数料。'],
+  law_alcohol: ['アルコール検知器の購入', '10万円未満の備品は消耗品費（資産にしない）。'],
+  law_kyoka: ['建設業許可の更新手数料', '役所に払う手数料は租税公課。'],
+  law_privacy: ['情報セキュリティの点検', '外部の専門家への報酬は支払手数料。'],
+  law_safety: ['安全衛生の費用', '保護具・安全教育・巡回など。安全衛生費（販管費）。'],
+  law_ins: ['保険料（火災保険・使用者賠償責任保険）', '毎月払う保険料は費用（保険料）。'],
+  law_doctor: ['産業医の報酬', '支払手数料。'],
+  law_cover: ['労災で休んでいる人の穴埋め', '応援の人の費用と、休んでいる人の給与（労災保険から出るので会社は払わない）の差額。'],
+  law_gift: ['お見舞金', '福利厚生費。'],
+  law_kyugyo: ['休業補償（待期期間3日分）', '労災の休業の最初の3日間は、会社が平均賃金の60%以上を払う（労働基準法76条）。'],
+  law_medical: ['治療費を会社が負担', '労災保険を使わずに会社が払った治療費。'],
+  law_comp: ['損害賠償金', '労災で安全配慮義務違反があったときの賠償。臨時の損失として特別損失。'],
+  law_insrecv: ['保険金の受取', '保険会社から受け取った保険金は受取保険金（特別利益）。'],
+  law_prevent: ['再発防止の対策', '安全カバー・手すり・滑り止めなど少額の対策は安全衛生費。'],
+  law_fire: ['火災による損失', '焼けた建物・設備の帳簿価額、在庫、片付けの費用は「災害による損失」（特別損失）。'],
+  law_food: ['食中毒の対応', '消毒・お見舞い・廃棄などの費用。'],
+  law_leak: ['情報漏えいの対応', '調査・お詫び・コールセンターなどの費用。'],
+  law_fine: ['罰金の納付', '罰金及び科料は営業外費用。税金の計算では費用にならない（損金不算入）。'],
+  law_kenpo: ['健康保険から労災保険への切り替え', '手続きの手数料。'],
+});
+
+/* ---- 28_kaisha_law_ui.js ---- */
+/* =========================================================
+ *  28_kaisha_law_ui.js : 会社経営モードの「法令と安全」の画面と、
+ *   労災の対応・立入検査・火災・送検の知らせのモーダル
+ * ========================================================= */
+
+KS_TABS.splice(2, 0, ['k_law', '法令と安全']);
+const KS_ST_TAG = { ok: ['済', 'ok'], soon: ['近い', ''], due: ['要対応', 'warn'], over: ['期限切れ', 'bad'] };
+function ksLawOpenInsp() { return G.law ? G.law.insp.filter(x => x.status === 'open') : []; }
+function ksLawBadgeN() {
+  if (!G.law) return 0;
+  return ksLawTasks().filter(x => x.st === 'over').length + ksLawOpenInsp().length + (ksPartRoles().length && ksMinWageGap() > 0 ? 1 : 0);
+}
+const ksTabBadge0 = ksTabBadge;
+ksTabBadge = id => {
+  if (id !== 'k_law') return ksTabBadge0(id);
+  const n = ksLawBadgeN();
+  return n ? `<span class="badge${ksLawOpenInsp().length ? ' alert' : ''}">${n}</span>` : '';
+};
+/* 社長室の「今月やること」に法令の項目を加える */
+const ksInbox0 = ksInbox;
+ksInbox = () => {
+  const out = ksInbox0();
+  if (!G.law || G.over) return out;
+  for (const ins of ksLawOpenInsp()) {
+    const left = ins.finds.filter(f => !f.fixed).length;
+    out.push({ ico: LAW_AG[ins.ag].icon, cls: 'bad', t1: `${LAW_AG[ins.ag].n}の指摘への対応（残り${left}件・期限${ymLabel(ins.due)}末）`, t2: left ? '期限までに直して是正報告書を出さないと、送検・公表などの処分に進みます' : 'すべて直しました。是正報告書を出しましょう', act: btn('対応する', 'kInspOpen', { id: ins.id }, 'sm primary') });
+  }
+  const over = ksLawTasks().filter(x => x.st === 'over');
+  const due = ksLawTasks().filter(x => x.st === 'due');
+  if (over.length) out.push({ ico: '法', cls: 'warn', t1: `法令で決められたことが${over.length}件、期限切れになっています`, t2: over.map(x => x.name).join('・'), act: btn('法令と安全へ', 'kGo', { tab: 'k_law' }, 'sm') });
+  if (due.length) out.push({ ico: '法', t1: `今月までの法令の手続き：${due.map(x => x.name).join('・')}`, t2: '期限を過ぎると違反になります', act: btn('法令と安全へ', 'kGo', { tab: 'k_law' }, 'sm') });
+  if (ksPartRoles().length && ksMinWageGap() > 0) out.push({ ico: '賃', cls: 'bad', t1: `パート・アルバイトの時給が最低賃金（${G.law.minWage}円）を下回っています`, t2: '差額を払う義務があり、労働基準監督署に申告されることもあります', act: btn('時給を引き上げる', 'kLawRaise', {}, 'sm primary') });
+  const ot = G.law.otNow;
+  if (ot > 80 || (ot > 45 && !G.law.special)) out.push({ ico: '時', cls: 'warn', t1: `残業が1人あたり月${fmtNum(ot, 0)}時間になっています`, t2: ot > 80 ? '過労死ライン（月80〜100時間）に近い水準です。人を増やすか仕事の量を調整しましょう' : '月45時間を超えるには36協定の特別条項が必要です', act: btn('法令と安全へ', 'kGo', { tab: 'k_law' }, 'sm') });
+  return out;
+};
+
+/* ---------- 画面 ---------- */
+KS_SCREENS.k_law = () => {
+  const L = G.law;
+  if (!L) return '<div class="empty">法令の情報がありません</div>';
+  const tasks = ksLawTasks();
+  const viol = ksLawViolations();
+  const rows = tasks.map(x => {
+    const it = LAW_ITEMS[x.t.item];
+    const [tl, tc] = KS_ST_TAG[x.st];
+    const can = x.st !== 'ok' || x.t.id === 'r36';
+    return `<tr><td><b>${esc(x.name)}</b><div class="small muted">${esc(x.t.why)}</div></td><td>${LAW_AG[it.ag].s}<div class="small muted">${esc(it.law)}</div></td><td>${tag(tl, tc)}<div class="small muted">${esc(x.next)}</div></td><td class="n">${fmtYen(x.cost)}</td>
+      <td class="n">${can ? btn(x.t.id === 'r36' ? '協定を届け出る' : x.st === 'ok' ? '実施' : '実施する', x.t.id === 'r36' ? 'kLawR36' : 'kLawDo', { id: x.t.id }, `sm${x.st === 'over' ? ' primary' : ''}`, { disabled: x.t.id === 'hoken' && x.st === 'ok' }) : ''}</td></tr>`;
+  }).join('');
+  const sp = L.policy;
+  const emp = ksHeadcount();
+  const pol = `<div class="field"><span>${term('安全衛生', 'safetyOrg')}への取り組み</span><div class="seg" role="radiogroup">${KS_SAFETY.map((x, i) => `<button type="button" data-act="kLawPolicy" data-k="safety" data-v="${i}" aria-pressed="${sp.safety === i}">${x.n}</button>`).join('')}</div>
+      <span class="small muted">${KS_SAFETY[sp.safety].desc} 費用 月${fmtYen(emp * KS_SAFETY[sp.safety].cost)}（1人${fmtNum(KS_SAFETY[sp.safety].cost, 0)}円）。労災の起きやすさ ${fmtPct(KS_SAFETY[sp.safety].mul * 100, 0)}。</span></div>
+    <label class="inline small"><input type="checkbox" data-act="kLawPolicy" data-k="fireIns" ${sp.fireIns ? 'checked' : ''}> 火災保険に入る（建物・設備・在庫。保険料は年0.11%程度）</label>
+    <label class="inline small"><input type="checkbox" data-act="kLawPolicy" data-k="liabIns" ${sp.liabIns ? 'checked' : ''}> ${term('使用者賠償責任保険', 'liabIns')}に入る（労災の損害賠償に備える。1人月1,200円）</label>
+    <label class="inline small"><input type="checkbox" data-act="kLawPolicy" data-k="yukyu" ${sp.yukyu ? 'checked' : ''}> ${term('年次有給休暇', 'annualLeave')}の計画的付与（全員が年5日以上休めるよう、休む日を決める）</label>`;
+  const ot = L.otNow ?? ksOtHours();
+  const otCls = ot > 80 ? 'neg' : ot > 45 ? 'warnc' : '';
+  const otPanel = `${kv([['残業（1人・月の見込み）', `<b class="${otCls}">${fmtNum(ot, 0)}時間</b>`], ['36協定', (L.doneFy.r36 ?? -99) >= fyOf(G.m) ? `届出済み（${L.special ? '特別条項あり：月100時間未満・年720時間まで' : '特別条項なし：月45時間まで'}）` : '<span class="neg">今年度の届出がない</span>'], ['直近6か月', L.otHist.length ? L.otHist.map(h => `${Math.round(h)}`).join('・') + '時間' : '―']])}
+    <p class="note">${term('時間外労働の上限', 'otLimit')}は原則月45時間。特別条項があっても月100時間未満、2〜6か月平均80時間以内。人手不足（${G.ind === 'mfg' ? '残業の設定・機械の稼働' : G.ind === 'con' ? '現場監督1人あたりの工事' : G.ind === 'it' ? 'エンジニアの稼働率' : G.ind === 'whl' ? '配送の能力と人員' : '売場・厨房の人員'}）で残業が増えます。長い残業が続くと、過労による労災（脳・心臓疾患や精神障害）が起きやすくなります。</p>`;
+  const mw = ksPartRoles().length ? panel('最低賃金', `${kv([['汐見県の最低賃金', `時給${L.minWage}円（毎年10月に改定）`], ...ksPartRoles().map(r => [`${r.n.replace(/（.*?）/, '')}の時給`, `<b class="${ksPartHourly(r) < L.minWage ? 'neg' : ''}">${fmtNum(ksPartHourly(r), 0)}円</b>（月${KS_PART_HOURS[G.ind][r.id]}時間）`])])}
+      <div class="row" style="margin-top:8px">${btn('時給を最低賃金＋10円まで引き上げる', 'kLawRaise', {}, ksMinWageGap() > 0 ? 'primary sm' : 'sm', { disabled: ksMinWageGap() <= -10 })}</div><p class="note">${term('最低賃金', 'minWage')}を下回ると、差額の支払い義務と罰金（50万円以下）。改定のたびに人件費が上がるので、値上げや効率化で吸収できるかが課題です。</p>`) : '';
+  const insp = L.insp.slice(0, 10).map(x => `<tr><td>${ymLabel(x.m)}</td><td>${LAW_AG[x.ag].n}<div class="small muted">${esc(x.kind)}${x.why ? `（申告：${esc(x.why)}）` : ''}</div></td><td>${x.finds.length ? x.finds.map(f => `${esc((LAW_ITEMS[f.item] || { s: '安全衛生の取り組み' }).s)}${f.fixed ? '<span class="small muted">（是正済み）</span>' : ''}`).join('・') : '<span class="muted">指摘なし</span>'}</td>
+    <td>${x.status === 'open' ? `${tag(`期限 ${ymLabel(x.due)}`, 'warn')} ${btn('対応する', 'kInspOpen', { id: x.id }, 'sm')}` : x.status === 'soken' ? tag('送検・命令', 'bad') : tag('完了', 'ok')}</td></tr>`).join('');
+  const sevN = { none: '休業なし', short: '休業1〜3日', long: '休業4日以上', death: '死亡' };
+  const accs = L.acc.slice(0, 10).map(a => `<tr><td>${ymLabel(a.m)}</td><td>${esc(a.text)}</td><td>${tag(sevN[a.sev], a.sev === 'death' ? 'bad' : a.sev === 'long' ? 'warn' : '')}</td><td>${a.status === 'new' ? btn('対応する', 'kRosaiOpen', { id: a.id }, 'sm primary') : a.sev === 'none' ? '<span class="small muted">報告不要</span>' : a.conceal ? (a.found ? tag('労災かくし発覚', 'bad') : tag('未報告', 'bad')) : '<span class="small">報告済み</span>'}</td></tr>`).join('');
+  const fires = L.fires.slice(0, 5).map(f => `<tr><td>${ymLabel(f.m)}</td><td>${esc(f.b)}：${esc(f.cause)}</td><td>${f.large ? tag('火災', 'bad') : tag('ぼや')}</td><td class="n">${fmtYen(f.loss)}${f.ins ? `<div class="small muted">保険 ${fmtYen(f.ins)}</div>` : ''}</td></tr>`).join('');
+  const learn = [...new Set(tasks.map(x => x.t.item).concat(['otmax', 'report', 'hinan']))].filter(k => LAW_ITEMS[k]).map(k => { const it = LAW_ITEMS[k]; return `<details class="lawitem"><summary><b>${esc(it.s)}</b><span class="small muted">　${esc(it.law)}</span>${viol.has(k) ? ' <span class="tag bad">違反</span>' : ''}</summary><p class="small">${esc(it.rule)}</p><p class="small"><b>守り方：</b>${esc(it.how)}</p><p class="small muted"><b>罰則など：</b>${esc(it.pen)}　${term('解説', it.tk)}</p></details>`; }).join('');
+  return `<h1 class="h1">法令と安全</h1><p class="lead">会社は、労働基準法・労働安全衛生法・消防法などのルールを守る義務があります。守らないと労働災害や火災が起きやすくなり、役所の立入検査で指摘され、直さなければ送検・公表され、銀行の評価も下がります。</p>
+    <div class="grid g-side"><div class="stack">
+      ${panel(`法令で決められたこと（${tasks.filter(x => x.st === 'over').length ? `<span class="neg">期限切れ ${tasks.filter(x => x.st === 'over').length}件</span>` : '期限切れなし'}）`, `<div class="tbl-wrap"><table class="t"><thead><tr><th>やること</th><th>所管・法律</th><th>状態</th><th class="n">費用</th><th></th></tr></thead><tbody>${rows}</tbody></table></div><p class="note">費用は、健康診断なら福利厚生費、点検なら支払手数料や修繕費、講習なら採用教育費として仕訳されます（「帳簿」で確かめられます）。</p>`)}
+      ${panel('役所の立入検査と指摘', insp ? `<div class="tbl-wrap"><table class="t"><thead><tr><th>月</th><th>役所</th><th>指摘</th><th>状態</th></tr></thead><tbody>${insp}</tbody></table></div>` : '<div class="empty">まだ立入検査はありません。労働基準監督署・消防署などは、予告なしに来ることがあります。</div>')}
+      ${panel('労働災害の記録', accs ? `<div class="tbl-wrap"><table class="t"><thead><tr><th>月</th><th>何が起きたか</th><th>程度</th><th>報告</th></tr></thead><tbody>${accs}</tbody></table></div>` : '<div class="empty">労働災害は起きていません</div>')}
+      ${fires ? panel('火災の記録', `<div class="tbl-wrap"><table class="t"><thead><tr><th>月</th><th>場所・原因</th><th>程度</th><th class="n">損害</th></tr></thead><tbody>${fires}</tbody></table></div>`) : ''}
+    </div><div class="stack">
+      ${panel('安全と保険の方針', `<div class="stack" style="gap:8px">${pol}</div>`)}
+      ${panel('労働時間', otPanel)}
+      ${mw}
+      ${panel('この会社に関わる法令', learn)}
+    </div></div>`;
+};
+
+/* ---------- アクション ---------- */
+Object.assign(ACTIONS, {
+  kLawDo: d => {
+    const t = KS_LAW_TASKS.find(x => x.id === d.id);
+    const cost = ksLawDo(d.id);
+    toast(`${ksTaskName(t)}を実施しました（${fmtYen(cost)}）`);
+    render();
+  },
+  kLawR36: () => showModal('kR36'),
+  kLawPolicy: d => {
+    const P = G.law.policy;
+    if (d.k === 'safety') P.safety = +d.v; else P[d.k] = !P[d.k];
+    render();
+  },
+  kLawRaise: () => {
+    const before = ksPayrollEstimate().total;
+    ksRaisePartWage();
+    toast(`パート・アルバイトの時給を引き上げました（人件費 月約${fmtYen(ksPayrollEstimate().total - before)}増）`);
+    render();
+  },
+  kInspOpen: d => showModal('kInsp', { id: +d.id }),
+  kRosaiOpen: d => showModal('kRosai', { id: +d.id }),
+  kLawFix: d => {
+    ksLawFindingFix(d.item);
+    const ins = G.law.insp.find(x => x.id === +d.id);
+    if (ins) for (const f of ins.finds) if (f.item === d.item) f.fixed = true;
+    drawModal(); render();
+  },
+  kLawReport: d => {
+    const ok = ksLawReport(+d.id);
+    toast(ok ? '是正報告書を提出しました' : 'まだ直していない指摘があります', ok ? '' : 'bad');
+    if (ok) closeModal(true); else drawModal();
+    render();
+  },
+});
+
+/* ---------- 36協定の届出 ---------- */
+MODALS.kR36 = () => {
+  const ot = G.law.otNow ?? ksOtHours();
+  const body = `<p style="margin:0 0 8px">${term('36協定', 'kyotei36')}は、労働者の過半数代表（または過半数で組織する労働組合）と結び、労働基準監督署に届け出ます。届け出た日から効力があり、さかのぼれません。</p>
+    ${kv([['残業の見込み', `1人・月 ${fmtNum(ot, 0)}時間`], ['対象の年度', (calMonth(G.m) === 2 || calMonth(G.m) === 3) && (G.law.doneFy.r36 ?? -99) >= fyOf(G.m) ? ksFyLabel(fyOf(G.m) + 1) : ksFyLabel(fyOf(G.m))], ['費用', '社会保険労務士への報酬 5万円']])}
+    <div class="callout" style="margin-top:10px"><b>特別条項を付けるか</b><br><span class="small">月45時間を超える残業が見込まれるなら、特別条項（臨時的な特別の事情、上限は年720時間・月100時間未満・2〜6か月平均80時間以内、月45時間を超えるのは年6か月まで）を付けます。付けても、長時間労働そのものが認められるわけではありません。</span></div>`;
+  return modalFrame('36協定を結んで届け出る', body, btn('やめる', 'closeModal') + btn('特別条項なしで届け出る', 'kR36Go', { s: 0 }) + btn('特別条項を付けて届け出る', 'kR36Go', { s: 1 }, 'primary'), { size: 'narrow' });
+};
+ACTIONS.kR36Go = d => { ksLawDo('r36', { special: !!+d.s }); toast('36協定を労働基準監督署に届け出ました'); closeModal(true); render(); };
+
+/* ---------- 労災の対応 ---------- */
+function ksRosaiSteps(a) {
+  const steps = ['first'];
+  if (a.sev !== 'death') steps.push('pay');
+  steps.push('report');
+  if (a.sev === 'short' || a.sev === 'long') steps.push('comp');
+  steps.push('prevent', 'end');
+  return steps;
+}
+function ksRosaiQ(a, step) {
+  const mental = a.kind === 'mental' || a.kind === 'karo';
+  switch (step) {
+    case 'first': return { q: mental ? '社員が倒れた・体調をくずした。会社がまずすべきことは？' : '事故が起きた。まずすべきことは？',
+      ch: [['ok', mental ? '救急車を呼ぶなど本人の安全を最優先にし、家族に連絡する。勤務の記録（タイムカードなど）はそのまま保存する' : '救護して、必要なら救急車（119番）を呼ぶ。現場はそのままにして写真を撮り、上司に報告する'], ['go', mental ? '本人の自己管理の問題なので、回復を待つ' : '本人に自分で病院へ行ってもらい、ほかの人は作業を続ける'], ['clean', mental ? '勤務の記録を、残業が少なく見えるように整える' : '事故の跡をすぐに片付けて、いつもどおり営業する']], ans: 'ok',
+      ex: mental ? '本人の安全が最優先。勤務の記録を書き換えると、証拠の隠滅として重い問題になります。' : 'けが人の救護が最優先。現場を保存すると、原因を調べて再発を防げます。重い事故では労働基準監督署が調査に来ます。' };
+    case 'pay': return { q: mental ? '本人から「労災を請求したい」と言われた。会社は？' : '治療費はどうする？',
+      ch: mental ? [['rosai', '請求書の事業主の証明に協力し、労働時間の記録を正直に出す（労災かどうかは労働基準監督署長が判断する）'], ['kenpo', '仕事が原因とは思えないので、健康保険で治療するよう勧める'], ['company', '会社が治療費を払うので、労災の請求はしないよう頼む']]
+        : [['rosai', '労災保険を使う。病院に「仕事中のけが」と伝え、療養補償給付の請求書を出す（本人の負担はなし）'], ['kenpo', '本人の健康保険証で受診してもらう'], ['company', '会社が治療費を払い、労災保険も届出も使わない']], ans: 'rosai',
+      ex: '仕事中（通勤中）のけがや病気の治療は労災保険で受けます。健康保険は使えません。労災かどうかを最終的に決めるのは労働基準監督署長で、会社が「労災ではない」と決めることはできません。' };
+    case 'report': {
+      if (a.sev === 'none') return { q: '休業しなかった（その日のうちに仕事に戻れた）場合、労働者死傷病報告は？', ch: [['none', '休業していないので報告は不要（治療は労災保険で受ける）'], ['report', '遅滞なく報告する'], ['quarter', '四半期ごとにまとめて報告する']], ans: 'none', ex: '労働者死傷病報告は、休業1日以上または死亡のときに出します。休業がなければ不要ですが、治療費は労災保険で受けます。' };
+      if (a.sev === 'short') return { q: `休業${a.days}日の労災。労働者死傷病報告は？`, ch: [['report', '休業1〜3日なので、四半期ごとにまとめて報告する'], ['hide', '短い休みなので報告しない'], ['late', '本人の同意がないと報告できないので、出さない']], ans: 'report', ex: '休業1〜3日は、1〜3月・4〜6月・7〜9月・10〜12月ごとにまとめて、翌月末までに報告します。報告しないのは労災かくしです。' };
+      return { q: `${a.sev === 'death' ? '死亡災害' : '休業4日以上の労災'}。労働基準監督署への報告は？`, ch: [['report', '労働者死傷病報告を遅滞なく（おおむね1〜2週間以内に）提出する'], ['hide', '取引先や保険料のことを考えて、報告しない'], ['late', '本人が復帰してから、まとめて報告する']], ans: 'report', ex: '休業4日以上や死亡は「遅滞なく」報告します。報告しない・うその報告は労災かくし（50万円以下の罰金）。健康保険の照会や本人・家族の相談から発覚し、送検されて報道されることもあります。' };
+    }
+    case 'comp': return { q: '休業の最初の3日間（待期期間）の補償は？', ch: [['pay', '会社が平均賃金の60%以上を払う。4日目からは労災保険の休業補償給付が出る'], ['none', '最初から労災保険が全部払うので、会社は払わなくてよい'], ['cut', '休んだ分の給料を差し引くだけでよい']], ans: 'pay', ex: '労災保険の休業補償給付は4日目から（給付基礎日額の60%＋特別支給金20%）。最初の3日間は、労働基準法76条により会社が平均賃金の60%以上を払います。' };
+    case 'prevent': return { q: '再発を防ぐには？', ch: [['equip', `設備を改善し（${{ fall: '手すり・足場', machine: '安全カバー・非常停止', slip: '滑り止めマット', burn: 'フライヤーのガード', cut: '安全なカッター・手袋', back: '台車・リフト', heat: 'スポットクーラー・休憩所', traffic: 'ドライブレコーダー・運行管理', mental: '業務量の見直し・相談窓口', karo: '人員の増強・勤務時間の管理', commute: '通勤経路の確認', hit: '落下物の防止網' }[a.kind] || '安全設備'}）、全員に安全教育をする`], ['edu', '朝礼で注意を呼びかける'], ['none', '本人の不注意なので、特に何もしない']], ans: 'equip', ex: '同じ原因の事故は繰り返します。設備（物）と教育（人）と手順（管理）の3つで対策するのが基本です。費用は安全衛生費になります。' };
+    default: return null;
+  }
+}
+MODALS.kRosai = args => {
+  const a = G.law.acc.find(x => x.id === args.id);
+  if (!a) return modalFrame('労働災害', '<p>記録がありません</p>', btn('閉じる', 'closeModal', {}, 'primary'));
+  if (!UI.kRosai || UI.kRosai.id !== a.id) UI.kRosai = { id: a.id, i: 0, ch: {}, ok: {} };
+  const R = UI.kRosai;
+  const steps = ksRosaiSteps(a);
+  const step = steps[R.i];
+  const sevTxt = { none: '休業なし（治療のみ）', short: `休業${a.days}日`, long: `休業 約${Math.max(1, Math.round(a.days / 30))}か月`, death: '死亡' }[a.sev];
+  const role = KS_INDS[G.ind].roles.find(r => r.id === a.role);
+  let body = `<div class="callout ${a.sev === 'death' || a.sev === 'long' ? 'bad' : ''}"><b>${ymLabel(a.m)}　${esc(role ? role.n.replace(/（.*?）/, '') : '従業員')}が${esc(a.text)}</b><br><span class="small">程度：${sevTxt}</span></div>`;
+  body += `<ol class="wiz" style="margin-top:12px">${steps.map((s, k) => `<li class="${k < R.i ? 'done' : k === R.i ? 'now' : ''}"><button type="button" disabled><span class="n">${k + 1}</span>${{ first: '初動', pay: '治療と保険', report: '報告', comp: '休業補償', prevent: '再発防止', end: 'まとめ' }[s]}</button></li>`).join('')}</ol>`;
+  if (step === 'end') {
+    const ch = R.ch;
+    const lines = [];
+    lines.push(ch.pay === 'kenpo' ? '健康保険で治療したため、あとで労災保険への切り替えが必要になります。' : ch.pay === 'company' ? '会社が治療費を負担しました（労災保険を使えば本人も会社も負担はありません）。' : a.sev === 'death' ? '遺族には労災保険から遺族補償給付と葬祭料が出ます。' : '治療は労災保険（療養補償給付）で受けます。');
+    if (a.sev !== 'none') lines.push(ch.report === 'hide' || ch.report === 'late' ? '<b class="neg">労働者死傷病報告を出しませんでした。労災かくしは、発覚すると送検されます。</b>' : '労働者死傷病報告を出しました。');
+    if (a.sev === 'short' || a.sev === 'long') lines.push(ch.comp === 'pay' ? `待期期間3日の休業補償 約${fmtYen(a.wage / 30 * Math.min(3, a.days) * 0.6)}を払います（福利厚生費）。` : '<b class="neg">待期期間の休業補償を払わないのは労働基準法76条違反です。</b>');
+    if (a.sev === 'long') lines.push(`休んでいる間（約${Math.ceil(a.days / 30)}か月）は応援の人で穴を埋めます（給与は労災保険から出るので、差額の費用だけかかります）。`);
+    if (a.sev === 'death') lines.push('亡くなった方の分、人員が1人減ります。安全対策に不備があれば、会社は安全配慮義務違反として損害賠償を負い、送検されることがあります。');
+    lines.push(ch.prevent === 'equip' ? '設備の改善と教育で、しばらく事故が起きにくくなります。' : ch.prevent === 'edu' ? '注意喚起だけでは、効果は限られます。' : '<b class="neg">対策をしないと、同じ事故が起きやすいままです。</b>');
+    const nq = Object.keys(R.ok).length, nc = Object.values(R.ok).filter(Boolean).length;
+    body += `<h3 class="fsh">対応のまとめ</h3><ul class="small" style="padding-left:1.2em;margin:0 0 8px">${lines.map(l => `<li>${l}</li>`).join('')}</ul><p class="small">正しい対応 <b>${nc}/${nq}</b></p>`;
+    return modalFrame('労働災害への対応', body, btn('この対応で進める', 'kRosaiDone', {}, 'primary'), { noClose: true, sub: `${ymLabel(a.m)}の労災` });
+  }
+  const qz = ksRosaiQ(a, step);
+  const ans = R.ch[step];
+  body += `<div class="qz"><div class="qz-q"><span class="qz-tag">判断</span>${qz.q}</div><div class="qz-ch">${qz.ch.map(([v, t]) => `<button type="button" class="qz-b${ans ? (v === qz.ans ? ' ok' : v === ans ? ' ng' : '') : ''}" data-act="kRosaiPick" data-v="${v}"${ans ? ' disabled' : ''}>${t}</button>`).join('')}</div>
+    ${ans ? `<div class="qz-a ${ans === qz.ans ? 'ok' : 'ng'}"><b>${ans === qz.ans ? '適切な対応です' : 'この対応には問題があります'}</b>　${qz.ex}</div>` : ''}</div>`;
+  return modalFrame('労働災害への対応', body, btn('次へ', 'kRosaiNext', {}, 'primary', { disabled: !ans }), { noClose: true, sub: `${ymLabel(a.m)}の労災` });
+};
+MODALS.kRosai.locked = () => true;
+Object.assign(ACTIONS, {
+  kRosaiPick: d => {
+    const R = UI.kRosai;
+    const a = G.law.acc.find(x => x.id === R.id);
+    const step = ksRosaiSteps(a)[R.i];
+    if (R.ch[step]) return;
+    R.ch[step] = d.v;
+    const ok = d.v === ksRosaiQ(a, step).ans;
+    R.ok[step] = ok;
+    G.quiz.asked++; if (ok) G.quiz.correct++;
+    drawModal();
+  },
+  kRosaiNext: () => { UI.kRosai.i++; drawModal(); const mb = document.querySelector('.modal .mb'); if (mb) mb.scrollTop = 0; },
+  kRosaiDone: () => {
+    const R = UI.kRosai;
+    const ch = Object.assign({ pay: 'rosai', comp: 'pay', report: 'report' }, R.ch);
+    if (ch.report === 'late') ch.report = 'hide';
+    ksLawResolveAccident(R.id, ch);
+    UI.kRosai = null;
+    closeModal(true);
+    render();
+    autosave();
+  },
+});
+
+/* ---------- 立入検査 ---------- */
+MODALS.kInsp = args => {
+  const ins = G.law.insp.find(x => x.id === args.id);
+  if (!ins) return modalFrame('立入検査', '<p>記録がありません</p>', btn('閉じる', 'closeModal', {}, 'primary'));
+  const ag = LAW_AG[ins.ag];
+  const lawDoc = ins.ag === 'labor';
+  const viols = ins.finds.filter(f => f.kind !== 'shido' && f.kind !== 'koto');
+  const softs = ins.finds.filter(f => f.kind === 'shido' || f.kind === 'koto');
+  const docTitle = lawDoc ? (viols.length ? '是正勧告書' : '指導票') : ins.ag === 'fire' ? '立入検査結果通知書' : '指導書';
+  const costOf = item => { if (item === 'otmax' || item === 'yukyu' || item === 'hinan' || item === 'unpaid') return 0; if (item === 'minwage') return Math.max(0, ksMinWageGap()) * sum(ksPartRoles(), r => (G.staff[r.id] || 0) * KS_PART_HOURS[G.ind][r.id]) * 12; if (item === 'safetyMin') return ksHeadcount() * KS_SAFETY[1].cost * 12; const t = KS_LAW_TASKS.find(x => x.item === item); return t ? Math.round(t.cost()) : 0; };
+  const fixLabel = { otmax: '36協定に特別条項を付け、残業を減らす計画を出す', minwage: '時給を引き上げる', yukyu: '年休の計画的付与を始める', hinan: '避難通路の物をすぐに片付ける', safetyMin: '安全衛生の取り組みを「標準」にする', unpaid: '未払いの残業代を払う', report: '（送検されました）' };
+  const row = f => {
+    const it = LAW_ITEMS[f.item] || { s: '安全衛生の取り組みが最低限', law: '労働安全衛生法3条（事業者の責務）', rule: '事業者は、快適な職場環境の実現と労働条件の改善を通じて、労働者の安全と健康を確保するようにしなければならない。' };
+    const kindT = { kankoku: '是正勧告', shido: '指導', meirei: '使用停止命令', soken: '送検', koto: '口頭指導', shiteki: '違反指摘', keikoku: '警告' }[f.kind] || '指摘';
+    const c = costOf(f.item);
+    return `<tr><td>${esc(it.law)}</td><td><b>${esc(it.s)}</b><div class="small muted">${esc(it.rule || '')}</div></td><td>${tag(kindT, f.kind === 'shido' || f.kind === 'koto' ? '' : 'bad')}</td>
+      <td class="n">${f.fixed ? tag('是正済み', 'ok') : ins.status === 'open' ? btn(fixLabel[f.item] || `直す（${fmtYen(c)}）`, 'kLawFix', { id: ins.id, item: f.item }, 'sm primary') : ''}${!f.fixed && c && fixLabel[f.item] ? `<div class="small muted">費用 約${fmtYen(c)}${f.item === 'minwage' || f.item === 'safetyMin' ? '／年' : ''}</div>` : ''}</td></tr>`;
+  };
+  const body = `<div class="lawdoc"><div class="ld-title">${docTitle}</div>
+    <div class="ld-meta"><span>${ymLabel(ins.m)}</span><span>${esc(G.coName)}　代表取締役 ${esc(G.ceo)} 殿</span><span>汐見${ag.n.replace('（公安委員会）', '')}${lawDoc ? '　労働基準監督官' : ''}</span></div>
+    <p class="small">${lawDoc ? `貴事業場（${ins.kind}${ins.why ? `：労働者からの申告（${esc(ins.why)}）による` : ''}）における下記の${viols.length ? '労働基準法・労働安全衛生法違反' : '事項'}については、${ymLabel(ins.due)}末までに是正のうえ、遅滞なく報告してください。` : `立入検査の結果、下記の事項を指摘します。${ymLabel(ins.due)}末までに改修し、結果を報告してください。`}</p>
+    ${ins.finds.length ? `<div class="tbl-wrap"><table class="t"><thead><tr><th>根拠の法令</th><th>指摘の内容</th><th>区分</th><th class="n">対応</th></tr></thead><tbody>${viols.map(row).join('')}${softs.map(row).join('')}</tbody></table></div>` : '<p>指摘事項はありません。今後も法令を守ってください。</p>'}</div>
+    <p class="note">${lawDoc ? `${term('是正勧告', 'kankoku')}は行政指導ですが、期限までに直さないと再監督を経て${term('送検', 'soken')}されることがあります。${term('指導票', 'shido')}は法違反ではない改善事項です。` : `直さないと、警告 → 措置命令（建物に標識が付き公示される）→ 告発と進みます（${term('違反処理', 'fireOrder')}）。`}直した費用は、内容に応じた費用の勘定（支払手数料・福利厚生費など）で仕訳されます。</p>`;
+  const allFixed = ins.finds.every(f => f.fixed);
+  const foot = ins.status === 'open' ? btn('あとで対応する', 'closeModal') + btn('是正報告書を提出する', 'kLawReport', { id: ins.id }, 'primary', { disabled: !allFixed }) : btn('閉じる', 'closeModal', {}, 'primary');
+  return modalFrame(`${ag.n}の${esc(ins.kind)}`, body, foot, { size: 'wide', sub: ins.status === 'open' ? `是正期日 ${ymLabel(ins.due)}末` : '' });
+};
+
+/* ---------- 火災 ---------- */
+KS_CAPEX_FX.reopen = i => {
+  const list = G.ind === 'ret' ? G.op.stores : G.op.shops;
+  const s = list[i];
+  s.openM = G.m + 2; s.renovM = G.m + 2;
+  if (s.fridgeM !== undefined) s.fridgeM = G.m + 2;
+  if (s.kitM !== undefined) s.kitM = G.m + 2;
+  return `${s.n}は${ymLabel(G.m + 2)}に営業を再開します`;
+};
+MODALS.kFire = args => {
+  const f = G.law.fires.find(x => x.id === args.id);
+  if (!f) return modalFrame('火災', '<p>記録がありません</p>', btn('閉じる', 'closeModal', {}, 'primary'));
+  const list = G.ind === 'ret' ? G.op.stores : G.ind === 'food' ? G.op.shops : null;
+  const idx = list ? list.findIndex(s => s.n === f.b) : -1;
+  const closed = idx >= 0 && list[idx].openM > G.m + 2;
+  const body = `<div class="callout bad"><b>${ymLabel(f.m)}　${esc(f.b)}で${f.large ? '火災' : 'ぼや'}</b><br><span class="small">原因：${esc(f.cause)}</span></div>
+    ${f.large ? `${kv([['損害（焼けた建物・設備の帳簿価額、在庫、片付け）', fmtYen(f.loss)], ['火災保険から', f.ins ? fmtYen(f.ins) : '<span class="neg">保険に入っていなかった</span>']])}
+      <p class="small">焼けた資産の帳簿価額や在庫は「災害による損失」（${term('特別損失', 'extra')}）、受け取った保険金は「受取保険金」（特別利益）になります。臨時の損益なので、本業の力を表す営業利益・経常利益には入りません。</p>
+      ${closed ? `<p class="callout">店は営業できません。復旧工事をすると、2か月後に営業を再開できます。休んでいる間も給料や家賃はかかります。</p>` : ''}` : `<p class="small">修理費 ${fmtYen(f.loss)}（修繕費）。けが人はいませんでした。</p>`}
+    <p class="note">${term('消防用設備等の点検', 'fireCheck')}や${term('避難訓練', 'evacDrill')}をしていないと、火災が起きやすく、大きくなりやすく、逃げ遅れも起きます。火災のあとは消防署が原因を調べ、立入検査に来ます。</p>`;
+  const cost = idx >= 0 ? Math.round((G.ind === 'ret' ? 4500e4 : 1800e4) * ksPrice()) : 0;
+  const foot = closed ? btn('あとで決める', 'closeModal') + btn(`復旧工事をする（約${fmtYen(cost)}）`, 'kFireRebuild', { i: idx }, 'primary') : btn('閉じる', 'closeModal', {}, 'primary');
+  return modalFrame(f.large ? '火災が起きました' : 'ぼやが出ました', body, foot);
+};
+ACTIONS.kFireRebuild = d => {
+  const list = G.ind === 'ret' ? G.op.stores : G.op.shops;
+  const s = list[+d.i];
+  const p = ksPrice();
+  ksCapexOpen({ title: `${s.n}の復旧工事`, desc: '焼けた内装・設備を直し、営業を再開します。工事の費用は資産（建物・器具備品）になり、これから償却します。', items: G.ind === 'ret' ? [{ n: `${s.n}の復旧工事（内装）`, acct: 'bldg', cost: Math.round(3000e4 * p), life: 15 }, { n: `${s.n}の冷蔵ケース（復旧）`, acct: 'equip', cost: Math.round(1500e4 * p), life: 6 }] : [{ n: `${s.n}の復旧工事（内装）`, acct: 'bldg', cost: Math.round(1200e4 * p), life: 15 }, { n: `${s.n}の厨房機器（復旧）`, acct: 'equip', cost: Math.round(600e4 * p), life: 6 }], fx: 'reopen', arg: +d.i });
+};
+/* 火災で閉まっている店（復旧の前）は「店舗」の表に残し、復旧工事のボタンを出す */
+const ksInbox1 = ksInbox;
+ksInbox = () => {
+  const out = ksInbox1();
+  if (!G.law) return out;
+  const list = G.ind === 'ret' ? G.op.stores : G.ind === 'food' ? G.op.shops : [];
+  list.forEach((s, i) => { if (s.openM === 9999) out.push({ ico: '火', cls: 'bad', t1: `${s.n}は火災で営業できません`, t2: '復旧工事をしないと、売上がないまま給料や家賃がかかります', act: btn('復旧工事', 'kFireRebuild', { i }, 'sm primary') }); });
+  return out;
+};
+
+/* ---------- 送検・公表の知らせ ---------- */
+MODALS.kLawNews = a => {
+  const title = a.kind === 'koukai' ? '違反対象物として公表されました' : a.kind === 'meirei' ? '行政処分を受けました' : '書類送検されました';
+  const body = `<div class="callout bad"><b>${esc(a.why)}</b></div>
+    <ul class="small" style="padding-left:1.2em">${a.fine ? `<li>罰金 ${fmtYen(a.fine)} を納めます。${term('罰金及び科料', 'soken')}は営業外費用ですが、税金の計算では費用にならない（損金不算入）ので、その分の税金も増えます。</li>` : ''}
+      <li>新聞やインターネットで報道され、お客さまや取引先の信頼が下がります（客足・取引が減ります）。</li>
+      <li>銀行は1年間、格付を1段階下げて審査します。</li>
+      ${a.kind === 'soken' ? `<li>${term('送検', 'soken')}された事件は、検察が起訴するかを決めます。厚生労働省は送検した事案を公表しています。</li>` : ''}</ul>
+    <p class="note">法令違反の多くは、指摘された段階で直していれば処分まで進みません。「法令と安全」で、期限切れの項目と役所からの指摘を確かめましょう。</p>`;
+  return modalFrame(title, body, btn('法令と安全へ', 'kGo', { tab: 'k_law' }) + btn('閉じる', 'closeModal', {}, 'primary'), { size: 'narrow' });
+};
+
+/* ---------- 遊び方に「法令と安全」を加える ---------- */
+HELP_K.splice(6, 0, ['法令と安全', `<p>会社には、労働者を守る法律（労働基準法・労働安全衛生法・最低賃金法）、火事を防ぐ法律（消防法）、業種ごとの法律（食品衛生法・建設業法・道路交通法・個人情報保護法）を守る義務があります。「法令と安全」の画面に、この会社がやるべきことと期限が並びます。</p>
+  <ul><li><b>労働災害</b>：起きたら、救護 → 労災保険での治療 → 労働者死傷病報告 → 休業補償 → 再発防止、の順に判断します。報告しないのは「労災かくし」です。</li>
+  <li><b>立入検査</b>：労働基準監督署・消防署・保健所などが予告なしに来ます。違反が見つかると是正勧告・指摘を受け、期限までに直して報告します。直さないと送検・公表・命令に進み、罰金（税金の計算では費用にならない）と報道、銀行の格付の引き下げが待っています。</li>
+  <li><b>火災</b>：消防設備の点検や訓練を怠ると起きやすく、大きくなりやすくなります。焼けた資産は「災害による損失」、保険金は「受取保険金」として特別損益になります。</li>
+  <li><b>労働時間と賃金</b>：残業は36協定の範囲で。人手不足だと残業が増え、過労による労災が起きやすくなります。最低賃金は毎年10月に上がります。</li></ul>`]);
+
+/* ---- 30_gyosei_core.js ---- */
+/* =========================================================
+ *  30_gyosei_core.js : 行政モード（取り締まる側）のエンジン（画面に依存しない）
+ *   労働基準監督署長または消防署長として、管内の事業場（防火対象物）を受け持つ。
+ *   事業場には外から見えない法令違反があり、職員の人日を配分して、監督（立入検査）・
+ *   災害調査・申告や労災請求の処理・違反の是正（指導 → 勧告・命令 → 送検・告発）を進める。
+ *   労働災害や火災が減り、違反が是正され、措置が適正であるほど、年度の評価が上がる。
+ *   ※ 制度はゲーム向けに単純化しています。
+ * ========================================================= */
+
+const GY_SAVE_VERSION = 1;
+const GY_AGENCY = {
+  labor: {
+    n: '汐見労働基準監督署', s: '監督署', parent: '汐見労働局', parentHead: '汐見労働局長', staffN: '労働基準監督官', staff: 3, days: 12, unit: '事業場',
+    insp: '監督', inspKind: '定期監督', inspCost: 6, icon: '労', follow: '再監督',
+    items: ['r36', 'otmax', 'unpaid', 'minwage', 'kenshin', 'taisei', 'yukyu', 'contract', 'machine', 'fall', 'chem', 'hoken'],
+    goal: '管内で働く人の安全と健康を守り、法律で決められた労働条件を確保する',
+  },
+  fire: {
+    n: '汐見消防署', s: '消防署', parent: '汐見市消防局', parentHead: '汐見市消防長', staffN: '予防課の職員（予防査察員）', staff: 3, days: 9, unit: '防火対象物',
+    insp: '立入検査', inspKind: '立入検査', inspCost: 5, icon: '消', follow: '再検査',
+    items: ['bouka', 'tenken', 'kunren', 'hinan', 'jikahou', 'shokaki', 'kiken', 'boen'],
+    goal: '火災を予防し、火災が起きても人の命が失われないようにする',
+  },
+};
+/* 事業場・建物の種類（w: [労基署の管内の多さ, 消防署の管内の多さ]） */
+const GY_TYPES = {
+  mfgm: { n: '金属加工工場', use: '工場（12項イ）', spec: false, emp: [12, 120], acc: 0.0034, death: 0.03, fire: 0.0018, fd: 0.03, w: [3, 1], pre: '株式会社', suf: ['精工', '製作所', '工業', '金属'] },
+  mfgf: { n: '食品工場', use: '工場（12項イ）', spec: false, emp: [20, 160], acc: 0.003, death: 0.012, fire: 0.0018, fd: 0.03, w: [2, 1], pre: '株式会社', suf: ['食品', 'フーズ', '製菓'] },
+  con: { n: '建設会社', use: '', spec: false, emp: [6, 60], acc: 0.0058, death: 0.05, fire: 0, fd: 0, w: [3, 0], pre: '株式会社', suf: ['建設', '工務店', '建工', '組'] },
+  trans: { n: '運送会社', use: '倉庫（14項）', spec: false, emp: [10, 90], acc: 0.0048, death: 0.04, fire: 0.0012, fd: 0.02, w: [2, 1], pre: '株式会社', suf: ['運輸', '物流', '運送'] },
+  ret: { n: 'スーパー・小売店', use: '物品販売店舗（4項）', spec: true, emp: [10, 110], acc: 0.0028, death: 0.004, fire: 0.0024, fd: 0.04, w: [2, 2], pre: '株式会社', suf: ['ストア', '商店', 'マート'] },
+  food: { n: '飲食店', use: '飲食店（3項ロ）', spec: true, emp: [5, 40], acc: 0.0036, death: 0.004, fire: 0.0055, fd: 0.05, w: [2, 3], pre: '株式会社', suf: ['亭', '食堂', 'キッチン', '屋'] },
+  care: { n: '介護施設', use: '社会福祉施設（6項ロ）', spec: true, emp: [15, 90], acc: 0.0038, death: 0.004, fire: 0.0014, fd: 0.2, w: [2, 2], pre: '社会福祉法人', suf: ['ケアホーム', 'の里', '苑'] },
+  hotel: { n: '旅館・ホテル', use: '旅館・ホテル（5項イ）', spec: true, emp: [10, 80], acc: 0.0028, death: 0.004, fire: 0.002, fd: 0.1, w: [1, 2], pre: '株式会社', suf: ['ホテル', '旅館', '荘'] },
+  it: { n: 'IT企業', use: '', spec: false, emp: [10, 100], acc: 0.0008, death: 0.003, fire: 0, fd: 0, w: [1, 0], pre: '株式会社', suf: ['システムズ', 'ソフト', 'テック'] },
+  clean: { n: 'ビルメンテナンス会社', use: '', spec: false, emp: [10, 120], acc: 0.004, death: 0.02, fire: 0, fd: 0, w: [1, 0], pre: '株式会社', suf: ['ビルサービス', '美装', 'メンテナンス'] },
+  whl: { n: '卸売・倉庫', use: '倉庫（14項）', spec: false, emp: [10, 70], acc: 0.0034, death: 0.02, fire: 0.002, fd: 0.02, w: [1, 1], pre: '株式会社', suf: ['商事', '物産', '倉庫'] },
+  zakkyo: { n: '雑居ビル', use: '複合用途（16項イ）', spec: true, emp: [0, 0], acc: 0, death: 0, fire: 0.005, fd: 0.25, w: [0, 3], pre: '', suf: ['ビル', '会館'] },
+  apart: { n: 'マンション', use: '共同住宅（5項ロ）', spec: false, emp: [0, 0], acc: 0, death: 0, fire: 0.0045, fd: 0.06, w: [0, 2], pre: '', suf: ['マンション', 'ハイツ', 'レジデンス'] },
+  hosp: { n: '病院', use: '病院（6項イ）', spec: true, emp: [30, 200], acc: 0.002, death: 0.003, fire: 0.001, fd: 0.12, w: [0, 1], pre: '医療法人', suf: ['病院', '記念病院'] },
+};
+const GY_PRE = ['汐見', '港', '北浜', '南町', '東丘', '西浦', '中央', '丸山', '大島', '新町', '朝日', '日の出', '松風', '竹原', '桜台', '青葉', '白浜', '灯台', '潮風', '岬', '若葉', '旭', '富士見', '浜田', '高砂', '緑町', '本町', '栄', '寿', '千鳥'];
+/* 違反の起きやすさ（着任時の基準） */
+const GY_VBASE = { r36: 0.3, otmax: 0.22, unpaid: 0.22, minwage: 0.08, kenshin: 0.2, taisei: 0.3, yukyu: 0.32, contract: 0.28, machine: 0.35, fall: 0.38, chem: 0.38, hoken: 0.05, bouka: 0.15, tenken: 0.38, kunren: 0.42, hinan: 0.32, jikahou: 0.08, shokaki: 0.28, kiken: 0.15, boen: 0.28 };
+/* 毎年・半年ごとにやることで、怠りがちになる項目 */
+const GY_PERIODIC = { kenshin: 1, tenken: 1, kunren: 1, hinan: 1, shokaki: 1, r36: 1 };
+/* 届出の記録から分かること（役所は、届出が出ていないことを知っている） */
+const GY_RECORD = { r36: '36協定の届出がない', hoken: '労働保険の申告がない', tenken: '点検結果の報告がない', bouka: '防火管理者の届出がない' };
+/* 局・消防局が示す今年度の重点 */
+const GY_FOCUS = {
+  con: '建設業の墜落・転落災害の防止', mfgm: '製造業のはさまれ・巻き込まれ災害の防止', trans: '運送業の荷役災害の防止と長時間労働の是正', care: '介護施設の腰痛・転倒災害の防止', it: 'IT企業の長時間労働とメンタルヘルス対策',
+  zakkyo: '雑居ビルの避難経路の確保と防火管理', food: '飲食店の厨房火災の予防', hotel: '旅館・ホテルの消防用設備の点検', ret: '大型店舗の避難通路の確保',
+};
+const GY_FOCUS_CAND = { labor: ['con', 'mfgm', 'trans', 'care', 'it'], fire: ['zakkyo', 'food', 'care', 'hotel', 'ret'] };
+/* 措置（軽い順）。cost は職員の人日 */
+const GY_MEAS = {
+  labor: [
+    { id: 'shido', n: '指導票', cost: 0.5, d: '法違反ではない改善事項や、軽い事項の改善を求める（行政指導）' },
+    { id: 'kankoku', n: '是正勧告', cost: 1, d: '法違反を指摘し、是正期日までに直して報告するよう求める（行政指導）' },
+    { id: 'meirei', n: '使用停止等命令', cost: 2, d: '危険な機械・設備や作業を止めさせる行政処分（労働安全衛生法98条）。危険な状態にだけ使える', danger: true },
+    { id: 'soken', n: '送検', cost: 12, d: '特別司法警察員として捜査し、検察庁に送る。重大・悪質な違反や、勧告・命令に従わないとき' },
+  ],
+  fire: [
+    { id: 'koto', n: '口頭指導', cost: 0.3, d: 'その場で直せる軽い事項を口頭で指導する' },
+    { id: 'shiteki', n: '違反指摘', cost: 0.8, d: '立入検査結果通知書で違反を指摘し、改修の計画と結果を報告させる' },
+    { id: 'keikoku', n: '警告', cost: 1.5, d: '期限を示して違反を直すよう警告する（命令の前の段階）' },
+    { id: 'meirei', n: '命令', cost: 3, d: '措置命令・使用停止命令などの行政処分。建物に標識を付けて公示する' },
+    { id: 'kokuhatsu', n: '告発', cost: 10, d: '命令に従わないなど悪質な違反を、捜査機関に告発する' },
+  ],
+};
+const GY_EXTEND = { id: 'extend', n: '期日を延長する', cost: 0.3, d: '改善計画を出させ、是正の期日を延ばす。工事などに時間がかかる正当な理由があるとき' };
+/* 措置ごとの、期日までに直す確率 [基本, 遵法意識による上乗せ] */
+const GY_FIXP = { shido: [0.35, 0.45], kankoku: [0.6, 0.35], meirei: [0.9, 0.1], koto: [0.3, 0.45], shiteki: [0.55, 0.35], keikoku: [0.75, 0.2] };
+/* 時間がかかるので「改善計画」が出ることがある項目と、その内容 */
+const GY_PLAN_TXT = {
+  jikahou: '設備業者と工事の契約を結び、来月に設置する（契約書の写しを提出）', machine: '安全装置を発注し、納品を待っている（注文書の写しを提出）',
+  kiken: '危険物倉庫を借りる契約を結び、来月までに移す（契約書の写しを提出）', taisei: '担当者が来月の講習を受ける予定（受講票の写しを提出）',
+  bouka: '防火管理講習を来月受ける予定（受講票の写しを提出）', otmax: '2人を採用し、来月から配置する（採用通知の写しを提出）',
+  fall: '足場の手すりを発注済みで、来週に納品される（注文書の写しを提出）', tenken: '点検業者と契約し、来月に点検する（契約書の写しを提出）',
+};
+const GY_ACC_K = 0.25;   // 1人・1か月の事故の起きやすさのうち、休業4日以上になる割合
+/* 案件の種類 */
+const GY_CASE = {
+  death: { n: '死亡災害', act: '災害時監督', cost: 8, must: true },
+  report: { n: '休業4日以上の労働災害', act: '災害調査', cost: 4, optional: true },
+  complaint: { n: '労働者からの申告', act: '申告監督', cost: 3, must: true },
+  claim: { n: '労災保険の請求（業務上かの判断）', act: '請求の調査', cost: 1, must: true },
+  claimX: { n: '労災保険の請求（過労・精神障害）', act: '請求の調査', cost: 6, must: true },
+  hidden: { n: '労災かくしの疑い', act: '調査', cost: 3, must: true },
+  fire: { n: '火災', act: '火災原因調査', cost: 3, must: true },
+  tip: { n: '違反の通報', act: '立入検査', cost: 2, must: true },
+};
+/* 判断が必要な労災請求（ふつうのけが・通勤災害） */
+const GY_CLAIMS = [
+  { t: '作業中、機械の点検をしていて手を挟まれた', ok: true, cat: '業務災害', ex: '会社の指揮命令の下で仕事をしていて（業務遂行性）、仕事に伴う危険が現実になった（業務起因性）。業務災害です。' },
+  { t: '昼休みに会社の階段で転倒した。階段の手すりが壊れたままだった', ok: true, cat: '業務災害', ex: '休憩中の私的な行為による災害は原則として業務外ですが、事業場の施設・設備の欠陥（壊れた手すり）が原因なら業務災害になります。' },
+  { t: '昼休みに外の飲食店へ昼食を食べに行く途中、歩道で転倒した', ok: false, cat: '業務災害', ex: '休憩時間に事業場の外で私的な行為（外食）をしていて起きた災害は、会社の管理下にないので業務外です。' },
+  { t: '出張先で、泊まったホテルの浴室で滑って転倒した', ok: true, cat: '業務災害', ex: '出張中は移動や宿泊も含めて事業主の支配下にあるとされ、積極的な私的行為でなければ業務上と認められます。' },
+  { t: '出張先で、仕事のあとに繁華街で飲酒し、酔って階段から転落した', ok: false, cat: '業務災害', ex: '出張中でも、飲酒や遊興など積極的な私的行為をしている間の災害は業務外です。' },
+  { t: '帰り道に夕食の材料を買うためスーパーに寄り、いつもの道に戻ってから自転車で転倒した', ok: true, cat: '通勤災害', ex: '日用品の購入など日常生活上必要な行為のための最小限の寄り道なら、通常の経路に戻った後は再び通勤と認められます。' },
+  { t: '仕事帰りに映画館で映画を見て、その帰り道に交通事故にあった', ok: false, cat: '通勤災害', ex: '通勤の経路をそれたり中断したりした後は、日常生活上必要な行為でない限り通勤と認められません。映画鑑賞は当たりません。' },
+  { t: '同僚とお金の貸し借りでもめ、休憩中に殴られてけがをした', ok: false, cat: '業務災害', ex: '私的な恨みによる暴行は、仕事に伴う危険が現実になったものではないので業務外です。' },
+  { t: '接客中に客から言いがかりをつけられ、殴られてけがをした', ok: true, cat: '業務災害', ex: '仕事上のトラブルが原因の暴行は、業務に伴う危険が現実になったものとして業務上と認められます。' },
+  { t: '参加が自由な社内の運動会でアキレス腱を切った', ok: false, cat: '業務災害', ex: '参加が任意のレクリエーション行事は業務外です（会社が参加を強制し、出勤扱いにしていれば業務上とされることがあります）。' },
+  { t: 'テレワーク中、自宅でトイレから作業場所に戻り、椅子に座ろうとして転倒した', ok: true, cat: '業務災害', ex: 'テレワークでも、業務に付随する行為（トイレなど）から作業に戻るときの災害は業務災害と認められます（厚生労働省が示している例）。' },
+  { t: '台風の日に、上司の指示で店の看板を固定していて脚立から落ちた', ok: true, cat: '業務災害', ex: '上司の指示による作業中の災害なので業務上です。悪天候でも仕事中であることに変わりはありません。' },
+];
+
+function isG() { return !!(G && G.mode === 'gyosei'); }
+function gyA() { return GY_AGENCY[G.agency]; }
+function gyTypesOf(ag) { const i = ag === 'labor' ? 0 : 1; return Object.keys(GY_TYPES).filter(k => GY_TYPES[k].w[i] > 0); }
+function gyApplies(e, item) {
+  const t = GY_TYPES[e.t];
+  const it = LAW_ITEMS[item];
+  if (!it || it.ag !== G.agency) return false;
+  if (it.gy && !it.gy.includes(e.t)) return false;
+  if (it.ag === 'labor' && !e.emp) return false;
+  switch (item) {
+    case 'minwage': return ['ret', 'food', 'care', 'clean', 'hotel'].includes(e.t);
+    case 'taisei': return e.emp >= 10;
+    case 'unpaid': return ['ret', 'food', 'care', 'trans', 'it', 'hotel', 'clean', 'con'].includes(e.t);
+    case 'bouka': return (t.spec && e.cap >= 30) || e.cap >= 50;
+    case 'jikahou': return (t.spec && e.cap >= 50) || ['zakkyo', 'hotel', 'care', 'hosp'].includes(e.t);
+    case 'boen': return t.spec;
+    default: return true;
+  }
+}
+function gyItemsOf(e) { return gyA().items.filter(k => gyApplies(e, k)); }
+/* 違反と遵法意識による、労働災害・火災の起きやすさ（倍） */
+function gyAccMul(e) { return gyViolList(e).reduce((s, k) => s * (1 + ((LAW_ITEMS[k].acc || 1) - 1) * 1.5), 1) * (1.5 - e.cult) * (e.patrol && e.patrol > G.m ? 0.8 : 1); }
+function gyFireMul(e) { return gyViolList(e).reduce((s, k) => s * (1 + ((LAW_ITEMS[k].fire || 1) - 1) * 1.3), 1) * (1.4 - 0.7 * e.cult); }
+function gyViolList(e) { return Object.keys(e.v).filter(k => e.v[k]); }
+function gyEnt(id) { return G.ents.find(e => e.id === id); }
+function gyCap() { return G.staff * gyA().days; }
+function gyLeft() { return Math.round((gyCap() - G.used) * 10) / 10; }
+function gyMaxUse() { return Math.floor(gyCap() * 1.5); }
+function gyCanUse(d) { return G.used + d <= gyMaxUse() + 1e-9; }
+function gyUse(d) { G.used = Math.round((G.used + d) * 10) / 10; }
+function gyNews(t, k = 'info') { G.news.unshift({ m: G.m, t, k }); if (G.news.length > 200) G.news.length = 200; }
+function gyFy() { gyNewFy(); return G.fys[fyOf(G.m)]; }
+function gyMeasOf(id) { return id === 'extend' ? GY_EXTEND : GY_MEAS[G.agency].find(x => x.id === id); }
+function gyRank(id) { return id === 'extend' ? -1 : GY_MEAS[G.agency].findIndex(x => x.id === id); }
+
+/* ---------- 新しいゲーム ---------- */
+function gyNewGame(o) {
+  const seed = (o.seed ?? Math.floor(Math.random() * 2 ** 31)) | 0;
+  const A = GY_AGENCY[o.agency];
+  G = {
+    mode: 'gyosei', version: GY_SAVE_VERSION, rs: seed, seed, agency: o.agency, diff: o.diff || 'normal', chief: o.chief || '汐見 太郎', m: 0, startedM: 0, termYears: o.term ?? 5,
+    staff: A.staff, ents: [], cases: [], dec: [], plan: { insp: [], camp: null }, used: 0, seq: 0, news: [], months: [], fys: {}, quiz: { asked: 0, correct: 0 },
+    focus: null, pendingModals: [], flags: {}, over: null, camps: {},
+  };
+  const types = gyTypesOf(o.agency);
+  const wi = o.agency === 'labor' ? 0 : 1;
+  const cultMean = { high: 0.68, normal: 0.55, low: 0.42 }[G.diff] || 0.55;
+  const used = new Set();
+  for (let i = 0; i < 72; i++) {
+    const tk = i < types.length ? types[i] : wpick(types, types.map(k => GY_TYPES[k].w[wi]));
+    const t = GY_TYPES[tk];
+    let n, guard = 0;
+    do { n = `${pick(GY_PRE)}${pick(t.suf)}`; } while (used.has(n) && guard++ < 50);
+    used.add(n);
+    const emp = t.emp[1] ? Math.round(Math.exp(uni(Math.log(t.emp[0]), Math.log(t.emp[1])))) : 0;
+    const cap = tk === 'zakkyo' ? randInt(60, 400) : tk === 'apart' ? randInt(40, 300) : Math.round(emp * (t.spec ? uni(2.5, 6) : 1.1));
+    const e = { id: 'E' + (++G.seq), n: t.pre + n, t: tk, emp, cap, cult: clamp(cultMean + randn() * 0.18, 0.08, 0.97), v: {}, st: {}, lastInsp: -randInt(6, 60), insp: 0, acc: 0, fires: 0, found: 0, hide: [], hist: [], pub: false };
+    for (const k of gyItemsOf(e)) {
+      let p = GY_VBASE[k] * (1 - e.cult) * 1.7;
+      if (k === 'otmax' && ['trans', 'con', 'it', 'care'].includes(tk)) p *= 1.6;
+      if (k === 'hinan' && ['ret', 'zakkyo', 'whl'].includes(tk)) p *= 1.5;
+      if (k === 'jikahou' && tk === 'zakkyo') p *= 2.5;
+      if (chance(p)) e.v[k] = 1;
+    }
+    // 着任前2年の記録（署の記録に残っている労働災害・火災）
+    if (o.agency === 'labor' && e.emp) e.acc = poisson(t.acc * e.emp * gyAccMul(e) * GY_ACC_K * 24);
+    if (o.agency === 'fire' && t.fire) e.fires = poisson(t.fire * gyFireMul(e) * 24);
+    G.ents.push(e);
+  }
+  G.base = gyBaseline();
+  gyNewFy();
+  gyNews(`${G.chief}氏が${A.n}の署長に着任。管内の${A.unit}は${G.ents.length}か所、${A.staffN}は${A.staff}人`, 'info');
+  return G;
+}
+/* 着任前年の実績（評価の基準） */
+function gyBaseline() {
+  const viol = sum(G.ents, e => gyViolList(e).length) / G.ents.length;
+  if (G.agency === 'labor') {
+    let acc = 0, death = 0;
+    for (const e of G.ents) {
+      const t = GY_TYPES[e.t];
+      const a = t.acc * e.emp * gyAccMul(e) * 12 * GY_ACC_K;
+      acc += a; death += a * t.death * (e.v.fall || e.v.machine ? 2 : 1);
+    }
+    return { acc4: Math.max(4, Math.round(acc * 0.85)), death: Math.round(death * 10) / 10, viol };
+  }
+  let fires = 0, fd = 0;
+  for (const e of G.ents) {
+    const t = GY_TYPES[e.t];
+    const mul = gyFireMul(e);
+    fires += t.fire * mul * 12 * 1.08; fd += t.fire * mul * 12 * 0.16 * t.fd;
+  }
+  return { fires: Math.max(3, Math.round(fires)), death: Math.round(fd * 10) / 10, viol };
+}
+function gyNewFy() {
+  const fy = fyOf(G.m);
+  if (G.fys[fy]) return;
+  G.fys[fy] = { fy, acc4: 0, accAll: 0, death: 0, hidden: 0, hiddenFound: 0, fires: 0, fireBig: 0, fireDeath: 0, insp: 0, inspPlan: 0, inspFocus: 0, found: 0, fixed: 0, notFixed: 0,
+    soken: 0, meirei: 0, koukai: 0, overreach: 0, lenient: 0, decided: 0, std: 0, claims: 0, claimWrong: 0, appealLost: 0, complaints: 0, recovered: 0, camps: 0, staffOt: 0, backlog: 0, used: 0, cap: 0, focus: null };
+  const prev = G.focus;
+  const cand = GY_FOCUS_CAND[G.agency].filter(k => k !== prev && G.ents.some(e => e.t === k));
+  G.focus = cand.length ? pick(cand) : prev;
+  G.fys[fy].focus = G.focus;
+  if (G.m > G.startedM) gyNews(`${gyA().parent}が今年度の重点を示しました：${GY_FOCUS[G.focus]}`, 'info');
+}
+
+/* ---------- 案件 ---------- */
+function gyAddCase(type, e, data = {}) {
+  const c = { id: 'C' + (++G.seq), type, ent: e ? e.id : null, m: G.m, status: 'new', data };
+  G.cases.unshift(c);
+  // 済んだ案件は古いものから消す（判断待ちから参照される案件は残す）
+  const done = G.cases.filter(x => x.status === 'done' || x.status === 'filed');
+  if (done.length > 150) { const drop = new Set(done.slice(150).map(x => x.id)); G.cases = G.cases.filter(x => !drop.has(x.id)); }
+  return c;
+}
+function gyCase(id) { return G.cases.find(x => x.id === id); }
+function gyCaseCost(c) { return c.type === 'fire' && c.data.big ? 6 : GY_CASE[c.type].cost; }
+/* 案件に着手する（今月の人日を使い、月末に結果が出る） */
+function gyAssign(id) {
+  const c = gyCase(id);
+  if (!c || c.status !== 'new') return false;
+  const cost = gyCaseCost(c);
+  if (!gyCanUse(cost)) return false;
+  gyUse(cost);
+  c.status = 'assigned';
+  c.am = G.m;
+  return true;
+}
+function gyUnassign(id) {
+  const c = gyCase(id);
+  if (!c || c.status !== 'assigned' || c.am !== G.m) return false;
+  gyUse(-gyCaseCost(c));
+  c.status = 'new';
+  return true;
+}
+/* 監督（立入検査）の計画 */
+function gyPlanToggle(id) {
+  const i = G.plan.insp.indexOf(id);
+  const cost = gyA().inspCost;
+  if (i >= 0) { G.plan.insp.splice(i, 1); gyUse(-cost); return true; }
+  if (!gyEnt(id) || !gyCanUse(cost)) return false;
+  G.plan.insp.push(id);
+  gyUse(cost);
+  return true;
+}
+/* 啓発（集団指導・講習会など） */
+const GY_CAMPS = {
+  labor: [
+    { id: 'seminar', n: '集団指導（説明会）', cost: 4, d: '選んだ業種の事業場を集めて、法令と手続きを説明する。遵法意識が上がり、届出や健康診断などが自主的に改善される。', typed: true },
+    { id: 'patrol', n: '安全パトロール', cost: 6, d: '選んだ業種の現場を回り、危険な作業や設備を指導する。墜落防止や機械の安全が改善され、4か月ほど労災が減る。', typed: true },
+    { id: 'ot', n: '過重労働の解消キャンペーン', cost: 3, d: '長時間労働と残業代の不払いをなくすよう呼びかける（11月は過労死等防止啓発月間）。', typed: false },
+  ],
+  fire: [
+    { id: 'seminar', n: '防火管理講習会', cost: 4, d: '選んだ用途の建物の関係者に、防火管理者の選任と消防計画の作り方を説明する。防火管理が自主的に改善される。', typed: true },
+    { id: 'drill', n: '避難訓練の合同実施', cost: 4, d: '選んだ用途の建物の訓練を後押しする。訓練をしていない建物の多くが訓練をする。', typed: true },
+    { id: 'pr', n: '火災予防運動の広報', cost: 3, d: '点検報告や避難通路の確保を広く呼びかける（春と秋に全国火災予防運動がある）。', typed: false },
+  ],
+};
+function gyCampOf(id) { return GY_CAMPS[G.agency].find(x => x.id === id); }
+function gySetCamp(id, type) {
+  if (G.plan.camp) { gyUse(-gyCampOf(G.plan.camp.id).cost); G.plan.camp = null; }
+  if (!id) return true;
+  const c = gyCampOf(id);
+  if (!c || !gyCanUse(c.cost)) return false;
+  gyUse(c.cost);
+  G.plan.camp = { id, type: c.typed ? (type || G.focus) : null };
+  return true;
+}
+/* リスクの目安（1〜5）。違反そのものは見えないので、業種・規模・最後の監督からの期間・記録から推し量る */
+function gyRiskScore(e) {
+  const t = GY_TYPES[e.t];
+  const base = G.agency === 'labor' ? t.acc * Math.max(1, e.emp) * 40 + t.death * 12 : t.fire * 300 + t.fd * 5 + (t.spec ? 0.4 : 0);
+  const since = Math.min(60, G.m - e.lastInsp) / 30;
+  const rec = gyRecordFlags(e).length * 0.5 + Math.min(3, e.acc) * 0.35 + Math.min(3, e.fires) * 0.5 + Math.min(4, e.found) * 0.15 + (e.soken ? 0.3 : 0);
+  return base * (0.6 + since) + rec;
+}
+/* リスクの段階（管内での順位：上位1割が5、3割までが4、5割5分までが3、8割までが2） */
+let gyRiskCache = { key: '', map: null };
+function gyRiskLevel(e) {
+  const key = `${G.seed}:${G.m}:${G.seq}:${G.dec.length}:${G.ents.length}`;
+  if (gyRiskCache.key !== key) {
+    const arr = G.ents.map(x => [x.id, gyRiskScore(x)]).sort((a, b) => b[1] - a[1]);
+    const map = {};
+    arr.forEach(([id], i) => { const p = i / arr.length; map[id] = p < 0.1 ? 5 : p < 0.3 ? 4 : p < 0.55 ? 3 : p < 0.8 ? 2 : 1; });
+    gyRiskCache = { key, map };
+  }
+  return gyRiskCache.map[e.id] || 1;
+}
+/* 届出の記録から分かること */
+function gyRecordFlags(e) { return Object.keys(GY_RECORD).filter(k => e.v[k] && gyApplies(e, k) && !(e.st[k] && e.st[k].open)); }
+function gyViolTotal() { return sum(G.ents, e => gyViolList(e).length); }
+function gyBacklog() {
+  const old = G.cases.filter(c => c.status === 'new' && !GY_CASE[c.type].optional && G.m - c.m >= 2).length;
+  return old + G.dec.filter(d => G.m - d.m >= 2).length;
+}
+
+/* ---------- 月末の処理 ---------- */
+function gyAdvance() {
+  if (G.over) return null;
+  const fy = gyFy();
+  const rep = { m: G.m, insp: [], cases: [], fixed: 0, follow: 0, newCases: [], camp: G.plan.camp ? Object.assign({}, G.plan.camp) : null, used: G.used, cap: gyCap() };
+  // 1) 今月の監督（立入検査）
+  for (const id of G.plan.insp) {
+    const e = gyEnt(id);
+    if (e) { fy.inspPlan++; if (e.t === G.focus) fy.inspFocus++; rep.insp.push({ e: e.id, items: gyInspect(e, gyA().inspKind) }); }
+  }
+  // 2) 着手した案件
+  for (const c of G.cases.filter(x => x.status === 'assigned')) { gyWorkCase(c); rep.cases.push(c.id); }
+  // 3) 啓発
+  if (G.plan.camp) { gyRunCamp(G.plan.camp); fy.camps++; }
+  // 4) 事業場の変化、是正の期日、審査請求
+  gyDynamics();
+  const dl = gyDeadlines();
+  rep.fixed = dl.fixed; rep.follow = dl.follow;
+  gyAppeals();
+  gyExpireCases();
+  // 5) 新しい出来事（労災・火災・申告・請求・通報）
+  const seq0 = G.seq;
+  gyEvents();
+  rep.newCases = G.cases.filter(c => +c.id.slice(1) > seq0).map(c => c.id);
+  // 6) 記録
+  fy.used += G.used; fy.cap += gyCap();
+  fy.staffOt += Math.max(0, G.used - gyCap()) * 8 / G.staff;
+  fy.backlog += gyBacklog();
+  G.months.push({ m: G.m, used: G.used, cap: gyCap(), acc4: fy.acc4, fires: fy.fires, viol: gyViolTotal() });
+  if (G.months.length > 120) G.months.shift();
+  // 7) 年度末の評価
+  if (calMonth(G.m) === 3) {
+    const n = fyOf(G.m);
+    fy.violEnd = gyViolTotal() / G.ents.length;
+    fy.eval = gyEvaluate(n);
+    gyAfterEval(fy);
+    G.pendingModals.push({ type: 'gEval', fy: n });
+  }
+  G.m++;
+  G.used = 0;
+  G.plan = { insp: [], camp: null };
+  if (calMonth(G.m) === 4) gyNewFy();
+  if (G.termYears && G.m >= G.startedM + G.termYears * 12 && !G.termEnded) { G.termEnded = true; G.pendingModals.push({ type: 'gTerm' }); }
+  return rep;
+}
+/* 監督（立入検査）：違反は見つかる確率で見つかり、措置の判断待ちに積まれる */
+function gyInspect(e, kind, focusItem) {
+  const fy = gyFy();
+  fy.insp++;
+  e.lastInsp = G.m;
+  e.insp++;
+  const finds = [];
+  for (const k of gyViolList(e)) {
+    if (k === 'report' || (e.st[k] && e.st[k].open)) continue;
+    let p = LAW_ITEMS[k].det;
+    if (focusItem === k) p = Math.max(p, 0.95);
+    if (chance(p)) finds.push(k);
+  }
+  // 労災かくしの痕跡（出勤簿の空白、救急の記録など）
+  if (G.agency === 'labor' && e.hide.length && !e.v.report && chance(kind === '災害時監督' || kind === '災害調査' ? 0.5 : 0.3)) { e.v.report = 1; finds.push('report'); fy.hiddenFound++; }
+  e.hist.unshift({ m: G.m, t: `${kind}：${finds.length ? `違反 ${finds.length}件（${finds.map(k => LAW_ITEMS[k].s).join('・')}）` : '違反なし'}` });
+  if (e.hist.length > 24) e.hist.length = 24;
+  for (const k of finds) {
+    e.found++;
+    fy.found++;
+    if (!G.dec.some(d => d.ent === e.id && d.item === k)) G.dec.push({ id: 'D' + (++G.seq), type: 'finding', ent: e.id, item: k, m: G.m, kind, lvl: 0, repeat: !!(e.st[k] && e.st[k].fixedM !== undefined) });
+  }
+  return finds;
+}
+/* 着手した案件の結果 */
+function gyWorkCase(c) {
+  const e = gyEnt(c.ent);
+  c.status = 'done';
+  c.doneM = G.m;
+  switch (c.type) {
+    case 'death': case 'report': {
+      const fs = gyInspect(e, c.type === 'death' ? '災害時監督' : '災害調査');
+      const cause = fs.filter(k => LAW_ITEMS[k].danger);
+      c.result = fs.length ? `法令違反 ${fs.length}件（${fs.map(k => LAW_ITEMS[k].s).join('・')}）${cause.length ? `。${LAW_ITEMS[cause[0]].s}の不備が災害の原因になった` : ''}` : '災害の原因になった法令違反は見つからなかった（作業手順の見直しを指導した）';
+      e.cult = clamp(e.cult + 0.06, 0, 0.98);
+      break;
+    }
+    case 'complaint': {
+      const it = LAW_ITEMS[c.data.item];
+      gyInspect(e, '申告監督', c.data.item);
+      if (e.v[c.data.item]) {
+        c.result = `申告の内容（${it.s}）を確認した`;
+        if (c.data.item === 'unpaid') { c.data.amt = niceAmount(uni(80e4, 500e4) * Math.max(1, e.emp / 25)); c.result += `（不払いの残業代 約${fmtYen(c.data.amt)}）`; }
+      } else c.result = '申告の内容を裏づける事実は確認できなかった（申告者に結果を説明した）';
+      break;
+    }
+    case 'claim': case 'claimX':
+      c.status = 'decide';
+      c.result = c.type === 'claimX' ? '労働時間の記録と出来事を調べた' : '請求書・医師の証明・事業主の証明を確かめた';
+      G.dec.push({ id: 'D' + (++G.seq), type: 'claim', ent: e.id, case: c.id, m: G.m });
+      break;
+    case 'hidden': {
+      if (e.hide.length && !e.v.report) {
+        c.result = `${ymLabel(e.hide[0])}に休業4日以上の労働災害が起きていたのに、労働者死傷病報告を出していなかった（労災かくし）`;
+        e.v.report = 1; e.found++;
+        const fy = gyFy();
+        fy.found++; fy.hiddenFound++;
+        if (!G.dec.some(d => d.ent === e.id && d.item === 'report')) G.dec.push({ id: 'D' + (++G.seq), type: 'finding', ent: e.id, item: 'report', m: G.m, kind: '労災かくしの調査', lvl: 0 });
+      } else c.result = e.v.report ? 'すでに把握している労災かくしだった' : '報告もれは確認できなかった（休業3日以内で、四半期ごとの報告に含まれていた）';
+      break;
+    }
+    case 'fire': {
+      const fs = gyInspect(e, '火災後の立入検査');
+      c.result = `出火原因：${c.data.cause}。${fs.length ? `消防法令の違反 ${fs.length}件（${fs.map(k => LAW_ITEMS[k].s).join('・')}）` : '消防法令の違反はなかった'}`;
+      e.cult = clamp(e.cult + 0.06, 0, 0.98);
+      break;
+    }
+    case 'tip': {
+      gyInspect(e, '通報による立入検査', c.data.item);
+      c.result = e.v[c.data.item] ? `通報の内容（${LAW_ITEMS[c.data.item].s}）を確認した` : '通報の内容は確認できなかった';
+      break;
+    }
+    default: break;
+  }
+}
+/* 啓発の効果 */
+function gyRunCamp(cp) {
+  const C = gyCampOf(cp.id);
+  const tgt = G.ents.filter(e => !cp.type || e.t === cp.type);
+  const fix = (e, k, p) => { if (e.v[k] && !(e.st[k] && e.st[k].open) && chance(p)) delete e.v[k]; };
+  for (const e of tgt) {
+    if (cp.id === 'seminar') {
+      e.cult = clamp(e.cult + 0.04, 0, 0.98);
+      for (const k of ['taisei', 'kenshin', 'contract', 'r36', 'chem', 'yukyu', 'hoken', 'bouka', 'kunren', 'tenken']) fix(e, k, 0.04 + 0.1 * e.cult);
+    }
+    if (cp.id === 'patrol') { e.patrol = G.m + 4; for (const k of ['machine', 'fall', 'chem']) fix(e, k, 0.15); }
+    if (cp.id === 'ot') { for (const k of ['otmax', 'unpaid', 'r36']) fix(e, k, 0.04 + 0.08 * e.cult); }
+    if (cp.id === 'drill') { fix(e, 'kunren', 0.35); fix(e, 'hinan', 0.12); }
+    if (cp.id === 'pr') { for (const k of ['tenken', 'hinan', 'shokaki', 'boen']) fix(e, k, 0.03 + 0.06 * e.cult); }
+  }
+  G.camps = G.camps || {};
+  G.camps[cp.id] = G.m;
+  gyNews(`${C.n}を行いました${cp.type ? `（${GY_TYPES[cp.type].n}の${tgt.length}か所）` : '（管内全体）'}`, 'good');
+}
+/* 事業場の変化：点検や健診を怠りがちになる・自分で直す */
+function gyDynamics() {
+  const mo = calMonth(G.m);
+  for (const e of G.ents) {
+    for (const k of gyItemsOf(e)) {
+      if (e.st[k] && e.st[k].open) continue; // 是正の期日待ち
+      if (!e.v[k]) { if (chance((GY_PERIODIC[k] ? 0.009 : 0.004) * (1 - e.cult) * 1.6)) e.v[k] = 1; }
+      else if (chance(0.006 + 0.012 * e.cult)) delete e.v[k];
+    }
+    // 10月に最低賃金が上がると、時給を上げ忘れる事業場が出る
+    if (mo === 10 && gyApplies(e, 'minwage') && !e.v.minwage && chance(0.12 * (1 - e.cult) + 0.02)) e.v.minwage = 1;
+    e.cult = clamp(e.cult + (0.55 - e.cult) * 0.004, 0.05, 0.98); // 長い目で見ると元の水準へ戻る
+  }
+  if (G.agency === 'labor' && mo === 10) gyNews('汐見県の最低賃金が改定されました。時給を上げ忘れた事業場がないか、申告や監督で確かめます', 'info');
+}
+/* 措置をした違反の期日：直したか */
+function gyDeadlines() {
+  const fy = gyFy();
+  let fixed = 0, follow = 0;
+  for (const e of G.ents) for (const k of Object.keys(e.st)) {
+    const s = e.st[k];
+    if (!s.open || G.m < s.due) continue;
+    s.open = false;
+    let ok = !e.v[k];
+    if (!ok) {
+      const [a, b] = GY_FIXP[s.meas] || [0.5, 0.3];
+      let p = Math.min(0.98, a + b * e.cult);
+      if (s.weak) p *= 0.7;
+      if (s.gf) p = Math.max(p, 0.92);
+      ok = chance(p);
+    }
+    if (ok) {
+      delete e.v[k];
+      if (k === 'report') e.hide = [];
+      if (k === 'jikahou') e.pub = false;
+      if (k === 'unpaid') fy.recovered += niceAmount(uni(60e4, 400e4) * Math.max(1, e.emp / 25));
+      s.fixedM = G.m;
+      fy.fixed++; fixed++;
+      e.hist.unshift({ m: G.m, t: `${LAW_ITEMS[k].s}：是正報告（直した）` });
+      continue;
+    }
+    fy.notFixed++; follow++;
+    const gf = !!GY_PLAN_TXT[k] && !s.gf && chance(0.2 + 0.35 * e.cult);
+    G.dec.push({ id: 'D' + (++G.seq), type: 'follow', ent: e.id, item: k, m: G.m, lvl: s.lvl, prev: s.meas, goodFaith: gf, kind: gyA().follow });
+    e.hist.unshift({ m: G.m, t: `${LAW_ITEMS[k].s}：期日までに直さなかった` });
+  }
+  return { fixed, follow };
+}
+/* 新しい出来事 */
+function gyEvents() {
+  const fy = gyFy();
+  const mo = calMonth(G.m);
+  for (const e of G.ents) {
+    const t = GY_TYPES[e.t];
+    const viol = gyViolList(e);
+    if (G.agency === 'labor' && e.emp) {
+      if (chance(t.acc * e.emp * gyAccMul(e) * GY_ACC_K)) {
+        const death = chance(t.death * (e.v.fall || e.v.machine ? 2 : 1));
+        fy.accAll++;
+        if (!death && e.cult < 0.45 && chance(0.4)) { e.hide.unshift(G.m); if (e.hide.length > 5) e.hide.length = 5; fy.hidden++; }
+        else {
+          e.acc++; fy.acc4++;
+          const text = gyAccText(e, death);
+          if (death) {
+            fy.death++;
+            const c = gyAddCase('death', e, { text });
+            G.pendingModals.push({ type: 'gSaigai', id: c.id });
+            gyNews(`【死亡災害】${e.n}で、労働者が${text}`, 'bad');
+          } else gyAddCase('report', e, { text });
+        }
+      }
+      // 過労・精神障害の労災請求
+      if ((e.v.otmax || e.v.unpaid) && chance(0.003 * Math.max(1, e.emp / 30))) gyAddCase('claimX', e, gyClaimFacts(chance(0.5)));
+      // 労働者からの申告
+      for (const k of viol) {
+        const it = LAW_ITEMS[k];
+        if (it.compl && !(e.st[k] && e.st[k].open) && chance(it.compl * Math.max(0.6, e.emp / 30))) {
+          if (!G.cases.some(c => c.type === 'complaint' && c.ent === e.id && c.data.item === k && c.status !== 'done')) { gyAddCase('complaint', e, { item: k, who: pick(['在職中の労働者', '退職した労働者', '労働者の家族']) }); fy.complaints++; }
+          break;
+        }
+      }
+      // 労災かくしが、健康保険の照会や労災の請求から疑われる
+      if (e.hide.length && !e.v.report && chance(0.035) && !G.cases.some(c => c.type === 'hidden' && c.ent === e.id && c.status !== 'done')) gyAddCase('hidden', e, { from: pick(['健康保険組合からの照会（仕事中のけがを健康保険で治療していた）', '本人からの相談（会社に「労災にしないでくれ」と言われた）', '病院からの連絡（仕事中のけがだと本人が話した）']) });
+    }
+    if (G.agency === 'fire' && t.fire) {
+      const mul = gyFireMul(e) * ([12, 1, 2, 3].includes(mo) ? 1.3 : 0.85);
+      if (chance(t.fire * mul)) {
+        const big = chance(Math.min(0.6, 0.16 * (e.v.tenken ? 1.5 : 1) * (e.v.shokaki ? 1.3 : 1) * (e.v.kunren ? 1.2 : 1)));
+        const dmul = viol.reduce((s, k) => s * (LAW_ITEMS[k].death || 1), 1);
+        const deaths = big && chance(Math.min(0.8, t.fd * dmul)) ? randInt(1, 3) : 0;
+        e.fires++; fy.fires++;
+        if (big) fy.fireBig++;
+        fy.fireDeath += deaths;
+        const cause = pick({ food: ['厨房のダクト火災', 'こんろの消し忘れ'], ret: ['惣菜調理場のフライヤー', '放火（段ボールへの火付け）'], zakkyo: ['飲食店の厨房', '放火', '電気配線'], apart: ['たばこの不始末', 'ストーブ', '電気配線'], hotel: ['電気配線', 'たばこの不始末'], care: ['電気配線', '暖房器具'], hosp: ['電気配線'], mfgm: ['研削の火花', '電気設備'], mfgf: ['フライヤー', '乾燥機'], whl: ['フォークリフトの充電器', '電気配線'], trans: ['車両の電気系統'] }[e.t] || ['電気配線']);
+        const c = gyAddCase('fire', e, { big, deaths, cause });
+        if (deaths) G.pendingModals.push({ type: 'gSaigai', id: c.id });
+        gyNews(`【火災】${e.n}（${t.use}）で${big ? '火災' : 'ぼや'}${deaths ? `。${deaths}人が亡くなった` : big ? '。けが人が出た' : ''}`, 'bad');
+      }
+      for (const k of ['hinan', 'jikahou', 'kunren']) {
+        if (e.v[k] && !(e.st[k] && e.st[k].open) && chance(0.004 * (k === 'hinan' ? 1.5 : 1)) && !G.cases.some(c => c.type === 'tip' && c.ent === e.id && c.status !== 'done')) {
+          gyAddCase('tip', e, { item: k, from: k === 'hinan' ? '利用者からの通報（階段に荷物が積まれている）' : k === 'jikahou' ? '近所の人からの通報（火災報知器が見当たらない）' : '従業員からの相談（避難訓練をしたことがない）' });
+          break;
+        }
+      }
+    }
+  }
+  // 業務上かの判断が必要な労災請求（月に1件ほど）
+  if (G.agency === 'labor') {
+    const ws = G.ents.filter(e => e.emp);
+    for (let i = poisson(0.9); i > 0; i--) { const e = pick(ws); const s = pick(GY_CLAIMS); gyAddCase('claim', e, { kind: 'normal', truth: s.ok, text: s.t, cat: s.cat, ex: s.ex }); }
+  }
+}
+function gyAccText(e, death) {
+  if (death) return pick({ mfgm: ['プレス機械に挟まれて死亡した', 'フォークリフトにひかれて死亡した'], mfgf: ['ミキサーに巻き込まれて死亡した'], con: ['足場から墜落して死亡した', '屋根の明かり窓を踏み抜いて墜落し、死亡した'], trans: ['荷台から転落して死亡した', '荷崩れの下敷きになって死亡した'], clean: ['窓の清掃中に墜落して死亡した'], whl: ['フォークリフトにひかれて死亡した'] }[e.t] || ['転落して死亡した']);
+  return pick({ mfgm: ['プレス機械に手を挟まれた', '旋盤に巻き込まれた', 'フォークリフトに接触した'], mfgf: ['ミキサーに手を巻き込まれた', '床で滑って転倒した', 'スライサーで手を切った'], con: ['足場から墜落した', '脚立から転落した', '落ちてきた資材に当たった'], trans: ['荷台から転落した', '荷崩れで負傷した', '荷物の積み下ろしで腰を痛めた'], ret: ['脚立から転落した', '床で滑って転倒した', '重い荷物で腰を痛めた'], food: ['油でやけどをした', '包丁で手を切った', '床で滑って転倒した'], care: ['入浴の介助で腰を痛めた', '廊下で転倒した'], hotel: ['階段で転倒した', '重い荷物で腰を痛めた'], it: ['階段で転倒した'], clean: ['窓の清掃中に転落した', '洗剤で薬傷を負った', '脚立から転落した'], whl: ['フォークリフトに接触した', '荷崩れで負傷した'] }[e.t] || ['転倒した']);
+}
+/* 過労・精神障害の請求の事実関係（調査で明らかになる） */
+function gyClaimFacts(mental) {
+  if (!mental) {
+    const r = rand();
+    if (r < 0.4) { const a = chance(0.5); return { kind: 'karo', truth: true, m1: a ? randInt(102, 138) : randInt(60, 95), avg: a ? randInt(55, 85) : randInt(82, 98), disease: pick(['くも膜下出血', '心筋梗塞', '脳梗塞']) }; }
+    if (r < 0.55) return { kind: 'karo', truth: true, m1: randInt(84, 96), avg: randInt(70, 79), extra: '深夜を含む不規則な勤務が続き、月の半分以上は泊まりがけの出張だった', disease: pick(['心筋梗塞', '脳出血']) };
+    return { kind: 'karo', truth: false, m1: randInt(30, 70), avg: randInt(25, 60), disease: pick(['くも膜下出血', '心筋梗塞', '脳梗塞']) };
+  }
+  const strong = ['上司から、人格を否定する暴言を何か月も繰り返し受けていた（パワーハラスメント）', '発病の直前の1か月に、約170時間の時間外労働をした', '仕事中に、同僚が死亡する事故を目の前で見た', '発病前の2か月続けて、月120時間を超える時間外労働をした'];
+  const mid = ['配置転換で、慣れない仕事を担当することになった', '顧客から強いクレームを受けた（対応は上司が引き取った）', '仕事の量が増え、時間外労働が月20時間ほど増えた', '上司と仕事の進め方で意見が合わないことがあった', '同僚とうまくいかないことがあった'];
+  const truth = chance(0.5);
+  const ev = truth ? [pick(strong), pick(mid)] : [pick(mid), pick(mid.slice(2))];
+  return { kind: 'mental', truth, events: [...new Set(ev)], disease: pick(['うつ病', '適応障害']) };
+}
+/* 審査請求で取り消される（不支給の誤り） */
+function gyAppeals() {
+  const fy = gyFy();
+  for (const c of G.cases) if (c.appealM === G.m) {
+    fy.appealLost++;
+    const e = gyEnt(c.ent);
+    gyNews(`審査請求で、${e ? e.n : ''}の労働者の労災を不支給とした決定が取り消されました（認定基準に照らすと業務上だった）`, 'bad');
+  }
+}
+/* 処理しないまま時間がたった案件 */
+function gyExpireCases() {
+  for (const c of G.cases) {
+    if (c.status !== 'new') continue;
+    const age = G.m - c.m;
+    if (GY_CASE[c.type].optional && age >= 3) { c.status = 'filed'; c.result = '調査はせず、労働者死傷病報告の書面だけで処理した'; continue; }
+    if (c.type === 'complaint' && age === 3) gyNews(`${gyEnt(c.ent).n}の労働者から「申告したのに監督署が動かない」と苦情が出ています`, 'bad');
+  }
+}
+
+/* ---------- 判断 ---------- */
+/* 通常の運用で選ぶ措置（学習用の目安）と理由 */
+function gyStd(d) {
+  const it = LAW_ITEMS[d.item];
+  const order = GY_MEAS[G.agency].map(x => x.id);
+  if (d.type === 'follow') {
+    if (d.goodFaith) return { id: 'extend', why: '工事や採用などに時間がかかる正当な理由があり、改善計画も出ている。期日を延ばして見守るのが妥当です。' };
+    if (G.agency === 'labor') {
+      if (d.prev === 'shido') return { id: 'kankoku', why: '指導票で改善を求めても直さなかった。法違反として是正勧告に進みます。' };
+      if (d.prev === 'meirei') return { id: 'soken', why: '使用停止等命令（行政処分）に従わなかった。命令違反として送検します。' };
+      if (d.lvl >= 2 || it.sev >= 3) return { id: 'soken', why: it.sev >= 3 ? '重大な違反で、是正勧告に従わず、再監督でも直っていない。送検して刑事責任を問います。' : '是正勧告を繰り返しても直さない。悪質として送検します。' };
+      return { id: 'kankoku', why: '是正勧告の期日までに直さなかった。再監督で改めて是正勧告し、短い期日を示します（それでも直さなければ送検）。' };
+    }
+    const nx = order[Math.min(order.length - 1, Math.max(0, order.indexOf(d.prev)) + 1)];
+    return { id: nx, why: { shiteki: '口頭指導で直らなかった。立入検査結果通知書で違反を指摘します。', keikoku: '違反を指摘しても改修しない。命令の前の段階として警告します。', meirei: '警告に従わない。措置命令（使用停止命令）を出し、標識を付けて公示します。', kokuhatsu: '命令に従わない。悪質な違反として告発します。' }[nx] };
+  }
+  if (G.agency === 'labor') {
+    if (d.item === 'report') return { id: 'soken', why: '労災かくしは、災害の事実を隠して再発防止の機会を失わせる悪質な違反です。原則として送検します。' };
+    if (it.danger && d.kind === '災害時監督') return { id: 'soken', why: '死亡災害の原因になった安全措置の違反は、刑事責任を問うために送検します（危険な状態は同時に止めさせます）。' };
+    if (it.danger && d.kind === '災害調査') return { id: 'meirei', why: '労働災害が起きた危険な設備・作業がそのままになっている。使用停止等命令で止めさせ、改善させます。' };
+    if (d.repeat && it.meas === 'shido') return { id: 'kankoku', why: '前にも指導した事項を繰り返している（再違反）。是正勧告に進みます。' };
+    return it.meas === 'shido' ? { id: 'shido', why: 'すぐに重大な危険につながる違反ではない。指導票で改善を求めます。' } : { id: 'kankoku', why: '法違反がはっきりしている。違反した条項と是正期日を書いた是正勧告書を交付します。' };
+  }
+  let id = it.meas;
+  if (d.repeat) id = order[Math.min(3, order.indexOf(id) + 1)];
+  return { id, why: d.repeat ? '前にも指摘した違反を繰り返している（再違反）。いつもより1段階重い措置にします。' : { koto: 'その場で直せる軽い事項です。口頭で指導します。', shiteki: '点検や届出など、改修に時間がかかる違反です。立入検査結果通知書で指摘し、改修の計画を報告させます。', keikoku: '人の命に関わる重大な違反です。最初から警告し、従わなければ命令に進みます。' }[id] || '通常の措置です。' };
+}
+/* 措置を決める。戻り値の verdict：ok（標準どおり）・light（軽すぎ）・heavy（重すぎ） */
+function gyDecide(id, mid) {
+  const d = G.dec.find(x => x.id === id);
+  if (!d || d.type === 'claim') return null;
+  const e = gyEnt(d.ent);
+  const it = LAW_ITEMS[d.item];
+  const M = gyMeasOf(mid);
+  if (!M || (mid === 'extend' && d.type !== 'follow')) return null;
+  if (M.danger && !it.danger) return { err: 'danger' };
+  if (!gyCanUse(M.cost)) return { err: 'cap' };
+  gyUse(M.cost);
+  G.dec = G.dec.filter(x => x.id !== id);
+  const std = gyStd(d);
+  const fy = gyFy();
+  fy.decided++;
+  let verdict;
+  if (mid === std.id) { verdict = 'ok'; fy.std++; }
+  else if (gyRank(mid) < gyRank(std.id)) { verdict = 'light'; fy.lenient++; }
+  else { verdict = 'heavy'; fy.overreach++; }
+  G.quiz.asked++;
+  if (verdict === 'ok') G.quiz.correct++;
+  const lvl = (d.lvl || 0) + 1;
+  if (mid === 'soken' || mid === 'kokuhatsu') {
+    fy.soken++;
+    delete e.v[d.item];
+    if (d.item === 'report') e.hide = [];
+    if (d.item === 'jikahou') e.pub = false;
+    e.st[d.item] = { lvl, meas: mid, open: false, m: G.m, fixedM: G.m };
+    e.cult = clamp(e.cult + 0.25, 0, 0.98);
+    e.soken = (e.soken || 0) + 1;
+    gyNews(mid === 'soken' ? `${e.n}と代表者を、${it.law}違反の疑いで書類送検しました（${it.s}）${verdict === 'heavy' && it.sev === 1 ? '。軽い違反だったため、検察は起訴を見送る見込みです' : ''}` : `${e.n}の関係者を、消防法違反で告発しました（${it.s}）`, 'info');
+  } else if (mid === 'extend') {
+    const prev = e.st[d.item] || {};
+    e.st[d.item] = Object.assign({}, prev, { open: true, due: G.m + 2, lvl: d.lvl || 1, meas: d.prev || prev.meas || 'kankoku', weak: !d.goodFaith, gf: !!d.goodFaith, m: G.m });
+  } else {
+    const due = G.m + (mid === 'meirei' ? 1 : it.sev >= 3 ? 2 : 3);
+    e.st[d.item] = { lvl, meas: mid, open: true, due, weak: verdict === 'light', m: G.m };
+    if (mid === 'meirei') fy.meirei++;
+    e.cult = clamp(e.cult + (mid === 'shido' || mid === 'koto' ? 0.01 : 0.03), 0, 0.98);
+    if (d.item === 'jikahou' && !e.pub) { e.pub = true; fy.koukai++; gyNews(`${e.n}を、重大な消防法令違反のある建物として公表しました（自動火災報知設備の未設置）`, 'info'); }
+    if (mid === 'meirei' && G.agency === 'fire') gyNews(`${e.n}に命令を出し、建物に標識を付けて公示しました（${it.s}）`, 'info');
+  }
+  e.hist.unshift({ m: G.m, t: `${it.s}：${M.n}` });
+  return { verdict, std, M };
+}
+/* 労災の支給・不支給 */
+function gyDecideClaim(id, pay) {
+  const d = G.dec.find(x => x.id === id);
+  if (!d || d.type !== 'claim') return null;
+  const c = gyCase(d.case);
+  const fy = gyFy();
+  G.dec = G.dec.filter(x => x.id !== id);
+  fy.claims++;
+  const ok = pay === !!c.data.truth;
+  c.decision = pay ? '支給' : '不支給';
+  c.status = 'done';
+  G.quiz.asked++;
+  if (ok) G.quiz.correct++;
+  else {
+    fy.claimWrong++;
+    if (!pay) c.appealM = G.m + randInt(4, 8);
+  }
+  return { ok, truth: !!c.data.truth, c };
+}
+
+/* ---------- 年度の評価 ---------- */
+function gyEvaluate(fyN) {
+  const f = G.fys[fyN];
+  const parts = [];
+  if (G.agency === 'labor') {
+    const base = G.base.acc4;
+    const r = f.acc4 / Math.max(1, base);
+    parts.push({ n: '休業4日以上の労働災害', pts: Math.round(clamp(interp(r, [[0.6, 25], [0.85, 20], [1, 14], [1.2, 6], [1.5, 0]]), 0, 25)), max: 25, note: `${f.acc4}件（目安 ${base}件）` });
+    parts.push({ n: '死亡災害', pts: f.death === 0 ? 15 : f.death === 1 ? 7 : 0, max: 15, note: `${f.death}人` });
+  } else {
+    const base = G.base.fires;
+    const r = f.fires / Math.max(1, base);
+    parts.push({ n: '火災の件数', pts: Math.round(clamp(interp(r, [[0.5, 25], [0.8, 20], [1, 14], [1.3, 6], [1.8, 0]]), 0, 25)), max: 25, note: `${f.fires}件（目安 ${base}件）` });
+    parts.push({ n: '火災による死者', pts: f.fireDeath === 0 ? 15 : f.fireDeath === 1 ? 7 : 0, max: 15, note: `${f.fireDeath}人` });
+  }
+  const target = Math.round(G.ents.length * 0.4);
+  const fN = G.ents.filter(e => e.t === f.focus).length;
+  const fTarget = Math.max(1, Math.ceil(fN * 0.5));
+  parts.push({ n: `計画した${gyA().insp}`, pts: Math.round(clamp(f.inspPlan / target * 10, 0, 10)), max: 10, note: `${f.inspPlan}件（目標 ${target}件。${G.agency === 'labor' ? '災害・申告による監督' : '火災・通報による立入検査'}は別に ${f.insp - f.inspPlan}件）` });
+  parts.push({ n: '重点の取り組み', pts: Math.round(clamp(f.inspFocus / fTarget * 5, 0, 5)), max: 5, note: `${GY_TYPES[f.focus] ? GY_TYPES[f.focus].n : ''}への${gyA().insp} ${f.inspFocus}件（目標 ${fTarget}件）` });
+  const fixR = f.fixed + f.notFixed ? f.fixed / (f.fixed + f.notFixed) : 1;
+  parts.push({ n: '違反の是正率', pts: Math.round(clamp(interp(fixR, [[0.5, 0], [0.7, 6], [0.85, 11], [0.95, 15]]), 0, 15)), max: 15, note: `${fmtPct(fixR * 100, 0)}（期日までに直した ${f.fixed}件・直さなかった ${f.notFixed}件）` });
+  const fair = Math.max(0, 15 - f.lenient * 1.5 - f.overreach * 1.5 - f.appealLost * 3 - f.claimWrong * 1);
+  parts.push({ n: '措置と判断の適正さ', pts: Math.round(fair), max: 15, note: `標準どおり ${f.std}／${f.decided}件・軽すぎ ${f.lenient}・重すぎ ${f.overreach}${G.agency === 'labor' ? `・労災の判断の誤り ${f.claimWrong}${f.appealLost ? `（審査請求で取消 ${f.appealLost}）` : ''}` : ''}` });
+  const ot = f.staffOt / 12;
+  const bl = f.backlog / 12;
+  parts.push({ n: '案件の処理と職員の働き方', pts: Math.round(Math.max(0, 10 - bl * 2 - Math.max(0, ot - 45) * 0.25)), max: 10, note: `2か月以上の未処理 平均${fmtNum(bl, 1)}件・職員の残業 月平均${fmtNum(ot, 0)}時間` });
+  parts.push({ n: G.agency === 'labor' ? '集団指導・安全パトロールなど' : '講習会・訓練・広報', pts: Math.min(5, f.camps * 2), max: 5, note: `${f.camps}回` });
+  const total = sum(parts, p => p.pts);
+  const rank = total >= 85 ? 'S' : total >= 70 ? 'A' : total >= 55 ? 'B' : total >= 40 ? 'C' : 'D';
+  return { parts, total, rank, hidden: f.hidden, hiddenFound: f.hiddenFound, viol: f.violEnd };
+}
+function gyAfterEval(f) {
+  const A = gyA();
+  if (f.eval.rank === 'S' && G.staff < A.staff + 2) { G.staff++; gyNews(`${A.parent}が、${A.n}の${A.staffN}を1人増やしました（来年度から${G.staff}人）`, 'good'); }
+  else if (f.eval.rank === 'D') gyNews(`${A.parentHead}から、${A.n}の業務の進め方について指導がありました`, 'bad');
+}
+
+/* ---------- 保存 ---------- */
+function gySaveMeta() { return JSON.stringify({ co: GY_AGENCY[G.agency].n, ceo: G.chief, m: G.m, ag: G.agency, at: Date.now(), over: !!G.over }); }
+function gyDeserialize(s) {
+  if (s.version !== GY_SAVE_VERSION || !s.ents) throw new Error('セーブデータの形式が違います');
+  G = s;
+  G.pendingModals = G.pendingModals || [];
+  G.flags = G.flags || {};
+  G.camps = G.camps || {};
+  return G;
+}
+function gyCheck() {
+  const out = [];
+  if (!(G.used >= -1e-6)) out.push('人日がマイナス ' + G.used);
+  for (const e of G.ents) for (const k of Object.keys(e.v)) if (!LAW_ITEMS[k]) out.push(`不明な違反 ${k}`);
+  for (const d of G.dec) {
+    if (!gyEnt(d.ent)) out.push(`判断待ちの事業場がない ${d.id}`);
+    if (d.type === 'claim' && !gyCase(d.case)) out.push(`判断待ちの案件がない ${d.id}`);
+  }
+  for (const id of G.plan.insp) if (!gyEnt(id)) out.push(`計画の事業場がない ${id}`);
+  return out;
+}
+
+/* ---- 31_gyosei_ui.js ---- */
+/* =========================================================
+ *  31_gyosei_ui.js : 行政モード（労働基準監督署・消防署）の画面
+ *   骨組み・署長室・管内と監督計画・案件・措置の判断・実績と評価・学ぶ・ニュース、
+ *   月次報告・措置の判断・労災請求の判断・災害調査・年度の評価・任期満了のモーダル、開始画面
+ * ========================================================= */
+
+const LSG = { auto: 'toudori.g1.auto', slot: i => `toudori.g1.slot${i}`, meta: i => `toudori.g1.meta${i}` };
+const GY_SCREENS = {};
+Object.assign(UI, { gEntType: 'all', gEntSort: 'risk', gLearn: 0, gRes: null, gSai: null, gCampType: {} });
+function gyTabs() { return [['g_dash', '署長室'], ['g_ents', G.agency === 'fire' ? '建物と立入検査' : '事業場と監督'], ['g_cases', '案件'], ['g_dec', '措置の判断'], ['g_stats', '実績と評価'], ['g_learn', '学ぶ'], ['g_news', 'ニュース']]; }
+function gyTarget() { return Math.round(G.ents.length * 0.4); }
+function gyFocusTarget() { return Math.max(1, Math.ceil(G.ents.filter(e => e.t === G.focus).length * 0.5)); }
+function gyUrgent() { return G.cases.filter(c => c.status === 'new' && (c.type === 'death' || (c.type === 'fire' && (c.data.big || c.data.deaths)))); }
+function gyEntBtn(e) { return e ? `<button type="button" class="term gyent" data-act="gEntOpen" data-id="${e.id}" data-tip="${esc(GY_TYPES[e.t].n)}">${esc(e.n)}</button>` : ''; }
+function gyDots(e) { const l = gyRiskLevel(e); return `<span class="riskdots" role="img" aria-label="リスク ${l}／5">${'●'.repeat(l)}<span class="muted">${'○'.repeat(5 - l)}</span></span>`; }
+function gyOpenSt(e) { return Object.keys(e.st).filter(k => e.st[k].open); }
+function gyFixRate(f) { return f.fixed + f.notFixed ? f.fixed / (f.fixed + f.notFixed) : NaN; }
+function gyCaseTag(c) {
+  const cls = c.type === 'death' || (c.type === 'fire' && (c.data.big || c.data.deaths)) ? 'bad' : c.type === 'complaint' || c.type === 'hidden' ? 'warn' : '';
+  const n = c.type === 'fire' ? (c.data.big ? '火災' : 'ぼや') : GY_CASE[c.type].n.replace(/（.*?）/, '');
+  return tag(n, cls);
+}
+function gyCaseDesc(c) {
+  switch (c.type) {
+    case 'death': case 'report': return `労働者が${esc(c.data.text)}`;
+    case 'complaint': return `${esc(c.data.who)}から：${esc(LAW_ITEMS[c.data.item].n)}`;
+    case 'claim': return `${esc(c.data.text)}（${c.data.cat}として請求）`;
+    case 'claimX': return c.data.kind === 'karo' ? `${esc(c.data.disease)}を発症した労働者（遺族）からの請求` : `${esc(c.data.disease)}を発病した労働者からの請求`;
+    case 'hidden': return esc(c.data.from);
+    case 'fire': return `${c.data.big ? '火災' : 'ぼや'}${c.data.deaths ? `（死者${c.data.deaths}人）` : ''}。出火の原因を調べ、消防法令の違反がないか確かめる`;
+    case 'tip': return esc(c.data.from);
+    default: return '';
+  }
+}
+function gyNewsLi(n) { return `<li class="${n.k === 'bad' ? 'bad' : n.k === 'good' ? 'good' : ''}"><span class="when">${ymShort(n.m)}</span><span class="what">${esc(n.t)}</span></li>`; }
+function gyInboxHtml(items) {
+  if (!items.length) return '<div class="empty">急ぎの用事はありません。計画を確かめて、月末を締めましょう。</div>';
+  return `<ul class="inbox">${items.map(x => `<li><span class="ico ${x.cls || ''}" aria-hidden="true">${x.ico}</span><div><div class="t1">${x.t1}</div><div class="t2">${x.t2}</div></div><div class="row">${x.act || ''}</div></li>`).join('')}</ul>`;
+}
+
+/* ---------- 骨組み ---------- */
+function renderG() {
+  const app = $('#app');
+  const tabs = gyTabs();
+  if (!tabs.some(t => t[0] === UI.tab)) UI.tab = 'g_dash';
+  const tabsEl = $('.tabs');
+  const sl = tabsEl ? tabsEl.scrollLeft : 0;
+  app.innerHTML = `${gyMast()}${gyStrip()}<div class="body"><nav class="tabs" aria-label="画面の切り替え">${tabs.map(([id, label]) => `<button type="button" class="tab" data-act="tab" data-tab="${id}"${UI.tab === id ? ' aria-current="page"' : ''}><span>${label}</span>${gyTabBadge(id)}</button>`).join('')}</nav><main id="main">${gyScreen()}</main></div>`;
+  const t2 = $('.tabs');
+  if (t2) t2.scrollLeft = sl;
+}
+function gyScreen() {
+  try { return (GY_SCREENS[UI.tab] || GY_SCREENS.g_dash)(); } catch (err) {
+    console.error(err);
+    return `<div class="callout bad">画面の表示中にエラーが発生しました：${esc(err.message)}</div>`;
+  }
+}
+function gyMast() {
+  const A = gyA();
+  const { y, mo } = ymOf(G.m);
+  const left = G.termYears ? G.termYears - (fyOf(G.m) - fyOf(G.startedM)) : 0;
+  return `<header class="mast gmast">
+    <div class="mast-brand">${ksSeal(A.icon)}<div style="min-width:0"><div class="bank-name"><span class="bn">${esc(A.n)}</span></div><div class="bank-sub">署長 ${esc(G.chief)}<span class="hide-m">　${esc(A.parent)}</span></div></div></div>
+    <div class="mast-date"><div class="wareki">${warekiLabel(G.m)}</div><div class="sub">${y}年${mo}月　${fyYearLabel(fyOf(G.m))}${!G.termYears ? '' : left > 0 ? `・任期あと${left}年` : '・任期満了後'}</div></div>
+    <div class="mast-actions"><button type="button" class="mbtn" data-act="menu">メニュー</button><button type="button" class="mbtn" data-act="help">遊び方</button>
+    <button type="button" class="btn-advance" data-act="advance">${mo === 3 ? '3月末を締めて年度の評価へ' : '月末を締めて翌月へ'}</button></div>
+  </header>`;
+}
+function gyStrip() {
+  const A = gyA();
+  const f = gyFy();
+  const prevF = G.fys[fyOf(G.m) - 1];
+  const cap = gyCap();
+  const fr = gyFixRate(f);
+  const newMust = G.cases.filter(c => c.status === 'new' && !GY_CASE[c.type].optional).length;
+  const cells = [
+    ['今月の人日', `${fmtNum(G.used, 1)}<span class="unit"> /${cap}</span>`, G.used > cap ? `<span class="neg">残業 ${fmtNum(G.used - cap, 1)}人日</span>` : `<span class="muted">残り ${fmtNum(cap - G.used, 1)}人日</span>`],
+    ['措置の判断待ち', `${G.dec.length}<span class="unit">件</span>`, `<span class="muted">2か月以上 ${G.dec.filter(d => G.m - d.m >= 2).length}件</span>`],
+    ['未着手の案件', `${newMust}<span class="unit">件</span>`, gyUrgent().length ? `<span class="neg">${G.agency === 'labor' ? '死亡災害' : '火災'} ${gyUrgent().length}件</span>` : `<span class="muted">${G.agency === 'labor' ? '死傷病報告を除く' : '火災・通報'}</span>`],
+    G.agency === 'labor' ? ['今年度の労働災害', `${f.acc4}<span class="unit">件</span>`, `<span class="muted">休業4日以上・着任前 年${G.base.acc4}件</span>`] : ['今年度の火災', `${f.fires}<span class="unit">件</span>`, `<span class="muted">着任前 年${G.base.fires}件</span>`],
+    G.agency === 'labor' ? ['死亡災害', `<span class="${f.death ? 'neg' : ''}">${f.death}</span><span class="unit">人</span>`, '<span class="muted">今年度</span>'] : ['火災の死者', `<span class="${f.fireDeath ? 'neg' : ''}">${f.fireDeath}</span><span class="unit">人</span>`, '<span class="muted">今年度</span>'],
+    [`計画した${A.insp}`, `${f.inspPlan}<span class="unit"> /${gyTarget()}</span>`, `<span class="muted">重点 ${f.inspFocus}/${gyFocusTarget()}件</span>`],
+    ['是正率', isFinite(fr) ? fmtPct(fr * 100, 0) : '―', `<span class="muted">直した ${f.fixed}・直さない ${f.notFixed}</span>`],
+    ['前年度の評価', prevF && prevF.eval ? `${prevF.eval.rank}<span class="unit"> ${prevF.eval.total}点</span>` : '―', `<span class="muted">${A.parent}</span>`],
+  ];
+  return `<div class="strip" role="group" aria-label="主要な数字">${cells.map(([k, v, d]) => `<div><div class="k">${k}</div><div class="v">${v}</div><div class="d">${d}</div></div>`).join('')}</div>`;
+}
+function gyTabBadge(id) {
+  switch (id) {
+    case 'g_dec': { const n = G.dec.length; return n ? `<span class="badge${G.dec.some(d => G.m - d.m >= 2) ? ' alert' : ''}">${n}</span>` : ''; }
+    case 'g_cases': { const n = G.cases.filter(c => c.status === 'new' && !GY_CASE[c.type].optional).length; return n ? `<span class="badge${gyUrgent().length ? ' alert' : ''}">${n}</span>` : ''; }
+    case 'g_ents': return G.plan.insp.length ? `<span class="badge">${G.plan.insp.length}</span>` : '';
+    default: return '';
+  }
+}
+
+/* ---------- 署長室 ---------- */
+function gyUsedParts() {
+  const A = gyA();
+  const insp = G.plan.insp.length * A.inspCost;
+  const cases = sum(G.cases.filter(c => c.status === 'assigned' && c.am === G.m), gyCaseCost);
+  const camp = G.plan.camp ? gyCampOf(G.plan.camp.id).cost : 0;
+  return [[`${A.insp}の計画（${G.plan.insp.length}件）`, insp], ['案件の調査', cases], ['啓発', camp], ['措置の判断・文書', Math.max(0, Math.round((G.used - insp - cases - camp) * 10) / 10)]];
+}
+function gyCapHtml() {
+  const cap = gyCap();
+  const p = clamp(G.used / cap * 100, 0, 100);
+  return `<div class="capbar${G.used > cap ? ' over' : ''}" role="meter" aria-valuenow="${Math.round(G.used)}" aria-valuemin="0" aria-valuemax="${cap}" aria-label="今月の人日"><span style="width:${p.toFixed(1)}%"></span></div>
+    ${kv(gyUsedParts().map(([k, v]) => [k, `${fmtNum(v, 1)}人日`]).concat([['合計', `<b>${fmtNum(G.used, 1)}</b> / ${cap}人日（${G.staff}人×${gyA().days}日）`]]))}`;
+}
+GY_SCREENS.g_dash = () => {
+  const A = gyA();
+  const f = gyFy();
+  const items = [];
+  for (const c of gyUrgent()) { const e = gyEnt(c.ent); items.push({ ico: c.type === 'fire' ? '火' : '災', cls: 'bad', t1: `${c.type === 'death' ? '死亡災害' : '火災'}：${esc(e.n)}`, t2: `${gyCaseDesc(c)}。${GY_CASE[c.type].act}に着手してください（${gyCaseCost(c)}人日）`, act: btn('着手する', 'gAssign', { id: c.id }, 'sm primary', { disabled: !gyCanUse(gyCaseCost(c)) }) }); }
+  if (G.dec.length) { const old = G.dec.filter(d => G.m - d.m >= 2).length; items.push({ ico: '判', cls: old ? 'warn' : '', t1: `措置の判断待ちが${G.dec.length}件${old ? `（うち2か月以上 ${old}件）` : ''}`, t2: '見つかった違反への措置や、労災請求の支給・不支給を決めます', act: btn('判断する', 'gGo', { tab: 'g_dec' }, 'sm primary') }); }
+  const nc = G.cases.filter(c => c.status === 'new' && !GY_CASE[c.type].optional && !gyUrgent().includes(c));
+  if (nc.length) {
+    const cnt = {};
+    for (const c of nc) cnt[c.type] = (cnt[c.type] || 0) + 1;
+    items.push({ ico: '案', cls: nc.some(c => G.m - c.m >= 2) ? 'warn' : '', t1: `未着手の案件が${nc.length}件`, t2: Object.entries(cnt).map(([k, n]) => `${GY_CASE[k].n.replace(/（.*?）/, '')} ${n}件`).join('・'), act: btn('案件へ', 'gGo', { tab: 'g_cases' }, 'sm') });
+  }
+  const nr = G.cases.filter(c => c.status === 'new' && c.type === 'report').length;
+  if (nr) items.push({ ico: '報', t1: `休業4日以上の労働災害の報告が${nr}件`, t2: '災害調査をすると、原因になった違反を見つけて再発を防げます（調べなければ3か月後に書面だけで処理）', act: btn('案件へ', 'gGo', { tab: 'g_cases' }, 'sm') });
+  if (!G.plan.insp.length) items.push({ ico: A.icon, t1: `今月の${A.insp}の計画がまだありません`, t2: `${A.insp}は1件${A.inspCost}人日。リスクの高い${A.unit}や、今年度の重点の${GY_TYPES[G.focus].n}を選びましょう`, act: btn('計画を立てる', 'gGo', { tab: 'g_ents' }, 'sm') });
+  if (calMonth(G.m) === 3) items.push({ ico: '評', cls: 'warn', t1: '今月で年度が終わります', t2: `月末に${A.parent}から今年度の評価が出ます`, act: btn('実績を見る', 'gGo', { tab: 'g_stats' }, 'sm') });
+  const fr = gyFixRate(f);
+  const kpis = [
+    G.agency === 'labor' ? ['休業4日以上の労働災害', `${f.acc4}件`, `着任前の水準 年${G.base.acc4}件`] : ['火災', `${f.fires}件`, `着任前の水準 年${G.base.fires}件`],
+    G.agency === 'labor' ? ['死亡災害', `${f.death}人`, '目標は0人'] : ['火災による死者', `${f.fireDeath}人`, '目標は0人'],
+    [`計画した${A.insp}`, `${f.inspPlan}件`, `年度の目標 ${gyTarget()}件`],
+    ['違反の是正率', isFinite(fr) ? fmtPct(fr * 100, 0) : '―', `直した ${f.fixed}件・直さない ${f.notFixed}件`],
+    [G.agency === 'labor' ? '送検' : '告発', `${f.soken}件`, `${G.agency === 'labor' ? '使用停止等命令' : '命令'} ${f.meirei}件`],
+    ['判断の正答率', G.quiz.asked ? fmtPct(G.quiz.correct / G.quiz.asked * 100, 0) : '―', `${G.quiz.correct}/${G.quiz.asked}（標準の措置・労災の認定）`],
+  ];
+  const news = G.news.slice(0, 6).map(gyNewsLi).join('');
+  return `<h1 class="h1">署長室</h1><p class="lead">${esc(A.n)}の使命は「${esc(A.goal)}」こと。${A.staffN}${G.staff}人の人日を、${A.insp}・案件の調査・措置の判断・啓発に配分します。</p>
+    <div class="grid g-side"><div class="stack">
+      ${panel('今月やること', gyInboxHtml(items), { flush: true })}
+      ${panel(`${fyYearLabel(fyOf(G.m))}の実績`, `<div class="kpi-row">${kpis.map(([k, v, d]) => `<div class="kpi"><div class="k">${k}</div><div class="v">${v}</div><div class="d">${d}</div></div>`).join('')}</div>`)}
+      ${panel('ニュース', news ? `<ul class="newslist">${news}</ul>` : '<div class="empty">まだありません</div>', { flush: true, aside: btn('すべて見る', 'gGo', { tab: 'g_news' }, 'sm') })}
+    </div><div class="stack">
+      ${panel('今月の人日', gyCapHtml() + `<p class="note">人日の上限は${gyMaxUse()}人日（残業込み）。いつも定員を超えると職員の残業が増え、年度の評価が下がります（監督署自身も時間外労働の上限を守る立場です）。</p>`)}
+      ${panel(`今年度の重点（${esc(A.parent)}）`, `<p style="margin:0 0 6px"><b>${esc(GY_FOCUS[G.focus])}</b></p><p class="small" style="margin:0">${esc(GY_TYPES[G.focus].n)}への計画的な${A.insp}を${gyFocusTarget()}件以上（実施 ${f.inspFocus}件）。集団指導や講習会で業種全体に働きかけるのも効果的です。</p>`)}
+      ${panel('1か月の流れ', `<ol class="small" style="margin:0;padding-left:1.3em;line-height:1.8"><li>「案件」で、死亡災害・申告・労災請求などに着手する</li><li>「${gyTabs()[1][1]}」で、リスクの高いところを選んで${A.insp}を計画する</li><li>「措置の判断」で、見つかった違反への措置を決める</li><li>月末を締めると、${A.insp}と調査の結果が出る</li></ol>`)}
+    </div></div>`;
+};
+
+/* ---------- 管内と監督計画 ---------- */
+GY_SCREENS.g_ents = () => {
+  const A = gyA();
+  const types = gyTypesOf(G.agency).filter(k => G.ents.some(e => e.t === k));
+  const filt = UI.gEntType;
+  const list = G.ents.filter(e => filt === 'all' || (filt === 'plan' ? G.plan.insp.includes(e.id) : filt === 'focus' ? e.t === G.focus : e.t === filt));
+  const sorters = { risk: (a, b) => gyRiskScore(b) - gyRiskScore(a), last: (a, b) => a.lastInsp - b.lastInsp, name: (a, b) => a.n.localeCompare(b.n, 'ja') };
+  list.sort(sorters[UI.gEntSort] || sorters.risk);
+  const fseg = [['all', 'すべて'], ['focus', `重点（${GY_TYPES[G.focus].n}）`], ['plan', `今月の計画（${G.plan.insp.length}）`], ...types.map(k => [k, GY_TYPES[k].n])];
+  const rows = list.map(e => {
+    const planned = G.plan.insp.includes(e.id);
+    const flags = gyRecordFlags(e);
+    const open = gyOpenSt(e);
+    const since = G.m - e.lastInsp;
+    return `<tr${planned ? ' class="sel"' : ''}><td>${gyEntBtn(e)}${e.t === G.focus ? ` ${tag('重点')}` : ''}${e.pub ? ` ${tag('公表中', 'bad')}` : ''}<div class="small muted">${esc(GY_TYPES[e.t].n)}${G.agency === 'fire' && GY_TYPES[e.t].use ? `・${esc(GY_TYPES[e.t].use)}` : ''}</div></td>
+      <td class="n">${G.agency === 'labor' ? `${e.emp}人` : `${e.cap}人`}</td>
+      <td class="n">${since}か月前${e.insp ? `<div class="small muted">着任後 ${e.insp}回</div>` : ''}</td>
+      <td>${flags.map(k => tag(GY_RECORD[k], 'warn')).join(' ')}${open.length ? ` ${tag(`措置中 ${open.length}件`)}` : ''}${!flags.length && !open.length ? '<span class="muted small">―</span>' : ''}</td>
+      <td class="n">${G.agency === 'labor' ? e.acc : e.fires}</td>
+      <td>${gyDots(e)}</td>
+      <td class="n">${btn(planned ? '外す' : '計画に入れる', 'gPlan', { id: e.id }, `sm${planned ? '' : ' primary'}`, { disabled: !planned && !gyCanUse(A.inspCost) })}</td></tr>`;
+  }).join('');
+  const plan = G.plan.insp.map(id => gyEnt(id)).filter(Boolean);
+  const camps = GY_CAMPS[G.agency].map(c => {
+    const on = G.plan.camp && G.plan.camp.id === c.id;
+    const ty = on && G.plan.camp.type ? G.plan.camp.type : (UI.gCampType[c.id] || G.focus);
+    const sel = c.typed ? `<select data-ch="gCampType" data-id="${c.id}" aria-label="${esc(c.n)}の対象">${types.map(k => `<option value="${k}"${k === ty ? ' selected' : ''}>${esc(GY_TYPES[k].n)}</option>`).join('')}</select>` : '';
+    return `<div class="campopt${on ? ' on' : ''}"><div><b>${esc(c.n)}</b><span class="small muted">（${c.cost}人日）</span><div class="small muted">${esc(c.d)}</div></div><div class="row">${sel}${btn(on ? 'やめる' : '行う', 'gCamp', { id: c.id }, `sm${on ? '' : ' primary'}`, { disabled: !on && !gyCanUse(c.cost - (G.plan.camp ? gyCampOf(G.plan.camp.id).cost : 0)) })}</div></div>`;
+  }).join('');
+  return `<h1 class="h1">${gyTabs()[1][1]}</h1><p class="lead">管内の${A.unit}は${G.ents.length}か所。どこに法令違反があるかは、${A.insp}をするまで分かりません。業種・規模、最後の${A.insp}からの期間、災害の記録、届出の記録から、リスクの高いところを選びます。</p>
+    <div class="grid g-side"><div class="stack">
+      <div class="row" style="gap:8px;flex-wrap:wrap"><div class="seg wrap" role="radiogroup" aria-label="絞り込み">${fseg.map(([k, l]) => `<button type="button" data-act="gEntType" data-v="${k}" aria-pressed="${filt === k}">${esc(l)}</button>`).join('')}</div>
+      <div class="seg" role="radiogroup" aria-label="並べ方">${[['risk', 'リスクの高い順'], ['last', `${A.insp}が古い順`], ['name', '名前順']].map(([k, l]) => `<button type="button" data-act="gEntSort" data-v="${k}" aria-pressed="${UI.gEntSort === k}">${l}</button>`).join('')}</div></div>
+      ${panel(`${A.unit}の一覧（${list.length}か所）`, `<div class="tbl-wrap"><table class="t gy-ent"><thead><tr><th>名前</th><th class="n">${G.agency === 'labor' ? '労働者' : '収容人員'}</th><th class="n">最後の${A.insp}</th><th>届出の記録・措置</th><th class="n" data-tip="着任前の2年を含む">${G.agency === 'labor' ? '労災' : '火災'}の記録</th><th>リスク</th><th></th></tr></thead><tbody>${rows || `<tr><td colspan="7" class="muted">該当する${A.unit}はありません</td></tr>`}</tbody></table></div>`, { flush: true })}
+    </div><div class="stack">
+      ${panel(`今月の${A.insp}の計画`, `${plan.length ? `<ul class="small" style="margin:0 0 8px;padding-left:1.2em">${plan.map(e => `<li>${esc(e.n)}<span class="muted">（${esc(GY_TYPES[e.t].n)}）</span></li>`).join('')}</ul>` : `<p class="small muted" style="margin:0 0 8px">まだありません。一覧の「計画に入れる」で選びます（1件${A.inspCost}人日）。</p>`}${gyCapHtml()}`)}
+      ${panel(G.agency === 'labor' ? '集団指導・パトロール（啓発）' : '講習会・訓練・広報（啓発）', `<div class="stack" style="gap:8px">${camps}</div><p class="note">啓発は1か月に1つ。${A.insp}ほど確実ではありませんが、多くの${A.unit}に一度に働きかけられます。</p>`)}
+      ${panel('リスクの見方', `<ul class="small" style="margin:0;padding-left:1.2em;line-height:1.7"><li><b>業種と規模</b>：${G.agency === 'labor' ? '建設・製造・運送は重い災害が多い。人が多いほど災害の数も増える' : '飲食店・雑居ビル・ホテル・介護施設は火災や逃げ遅れの危険が大きい'}</li><li><b>最後の${A.insp}からの期間</b>：長いほど、点検や届出を怠っている可能性が高い</li><li><b>届出の記録</b>：${G.agency === 'labor' ? '36協定の届出や労働保険の申告がないことは、署の記録で分かる' : '点検結果の報告や防火管理者の届出がないことは、署の記録で分かる'}</li><li><b>${G.agency === 'labor' ? '労災' : '火災'}の記録</b>：起きたところは、原因が残っていることが多い</li></ul>`)}
+    </div></div>`;
+};
+
+/* ---------- 案件 ---------- */
+GY_SCREENS.g_cases = () => {
+  const A = gyA();
+  const pri = ['death', 'fire', 'hidden', 'complaint', 'claimX', 'claim', 'tip', 'report'];
+  const nw = G.cases.filter(c => c.status === 'new').sort((a, b) => pri.indexOf(a.type) - pri.indexOf(b.type) || a.m - b.m);
+  const asg = G.cases.filter(c => c.status === 'assigned');
+  const dec = G.cases.filter(c => c.status === 'decide');
+  const done = G.cases.filter(c => c.status === 'done' || c.status === 'filed').slice(0, 25);
+  const rowNew = c => { const e = gyEnt(c.ent); const cost = gyCaseCost(c); return `<tr><td>${ymShort(c.m)}${G.m - c.m >= 2 && !GY_CASE[c.type].optional ? `<div>${tag(`${G.m - c.m}か月`, 'warn')}</div>` : ''}</td><td>${gyCaseTag(c)}</td><td>${gyEntBtn(e)}</td><td class="small">${gyCaseDesc(c)}${GY_CASE[c.type].optional ? '<div class="muted">調べなければ3か月後に書面だけで処理</div>' : ''}</td><td class="n">${cost}人日</td><td class="n">${btn(GY_CASE[c.type].act, 'gAssign', { id: c.id }, 'sm primary', { disabled: !gyCanUse(cost) })}</td></tr>`; };
+  const rowAsg = c => { const e = gyEnt(c.ent); return `<tr><td>${gyCaseTag(c)}</td><td>${gyEntBtn(e)}</td><td class="small">${gyCaseDesc(c)}</td><td class="n">${gyCaseCost(c)}人日</td><td class="n">${c.am === G.m ? btn('取り消す', 'gUnassign', { id: c.id }, 'sm') : ''}</td></tr>`; };
+  const rowDone = c => { const e = gyEnt(c.ent); return `<tr><td>${ymShort(c.doneM ?? c.m)}</td><td>${gyCaseTag(c)}</td><td>${gyEntBtn(e)}</td><td class="small">${esc(c.result || '')}${c.decision ? `<b>（${esc(c.decision)}）</b>` : ''}</td></tr>`; };
+  return `<h1 class="h1">案件</h1><p class="lead">${G.agency === 'labor' ? '労働災害の報告、労働者からの申告、労災保険の請求などが毎月届きます。着手すると今月の人日を使い、月末に調査の結果が出ます。死亡災害・申告・労災請求は、放っておくと評価が下がります。' : '火災や違反の通報が届きます。着手すると今月の人日を使い、月末に調査の結果が出ます。'}</p>
+    <div class="stack">
+      ${panel(`未着手（${nw.length}件）`, nw.length ? `<div class="tbl-wrap"><table class="t"><thead><tr><th>受付</th><th>種類</th><th>${A.unit}</th><th>内容</th><th class="n">人日</th><th></th></tr></thead><tbody>${nw.map(rowNew).join('')}</tbody></table></div>` : '<div class="empty">未着手の案件はありません</div>', { flush: true })}
+      ${asg.length ? panel(`今月着手した案件（${asg.length}件・月末に結果）`, `<div class="tbl-wrap"><table class="t"><tbody>${asg.map(rowAsg).join('')}</tbody></table></div>`, { flush: true }) : ''}
+      ${dec.length ? panel(`支給・不支給の判断待ち（${dec.length}件）`, `<p class="small" style="margin:0 0 8px">調査が終わった労災請求です。「措置の判断」で決めます。</p>${btn('判断する', 'gGo', { tab: 'g_dec' }, 'sm primary')}`) : ''}
+      ${panel('処理した案件', done.length ? `<div class="tbl-wrap"><table class="t"><thead><tr><th>月</th><th>種類</th><th>${A.unit}</th><th>結果</th></tr></thead><tbody>${done.map(rowDone).join('')}</tbody></table></div>` : '<div class="empty">まだありません</div>', { flush: true })}
+      ${panel('案件の種類', `<div class="tbl-wrap"><table class="t compact"><tbody>${Object.entries(GY_CASE).filter(([k]) => G.agency === 'labor' ? !['fire', 'tip'].includes(k) : ['fire', 'tip'].includes(k)).map(([k, C]) => `<tr><td><b>${esc(C.n)}</b></td><td class="small">${esc({ death: '監督官が現場に入って原因を調べ（災害時監督）、違反があれば送検を検討する', report: '労働者死傷病報告を受けて災害調査をし、原因になった危険をなくさせる', complaint: '労働基準法違反の申告を受けて申告監督をする。申告者が不利益に扱われないよう注意する（労働基準法104条）', claim: '労災保険の請求が業務上（通勤）の災害かを調べ、支給・不支給を決める', claimX: '脳・心臓疾患や精神障害の請求。労働時間や出来事を調べ、認定基準に照らして決める', hidden: '健康保険の照会などから、労働者死傷病報告の出ていない災害を調べる', fire: '消防法31条の火災原因調査。出火原因と消防用設備・避難の状況を調べ、違反を確かめる', tip: '住民や利用者からの通報を受けて、立入検査をする' }[k])}</td><td class="n">${k === 'fire' ? '3〜6' : C.cost}人日</td></tr>`).join('')}</tbody></table></div>`)}
+    </div>`;
+};
+
+/* ---------- 措置の判断 ---------- */
+GY_SCREENS.g_dec = () => {
+  const A = gyA();
+  const rows = G.dec.map(d => {
+    const e = gyEnt(d.ent);
+    const age = G.m - d.m;
+    if (d.type === 'claim') { const c = gyCase(d.case); return `<tr><td>${ymShort(d.m)}</td><td>${gyEntBtn(e)}</td><td>${tag('労災請求')} <span class="small">${gyCaseDesc(c)}</span></td><td class="small">支給か不支給か</td><td class="n">${btn('判断する', 'gDecOpen', { id: d.id }, 'sm primary')}</td></tr>`; }
+    const it = LAW_ITEMS[d.item];
+    const kind = d.type === 'follow' ? `${A.follow}：前回 ${esc(gyMeasOf(d.prev) ? gyMeasOf(d.prev).n : '')}のあとも直さない` : `${esc(d.kind)}で発見${d.repeat ? '（再違反）' : ''}`;
+    return `<tr><td>${ymShort(d.m)}${age >= 2 ? `<div>${tag(`${age}か月`, 'warn')}</div>` : ''}</td><td>${gyEntBtn(e)}</td><td><b>${esc(it.s)}</b><div class="small muted">${esc(it.law)}</div></td><td class="small">${kind}</td><td class="n">${btn('判断する', 'gDecOpen', { id: d.id }, 'sm primary')}</td></tr>`;
+  }).join('');
+  const ladder = GY_MEAS[G.agency].map(M => `<li><b>${esc(M.n)}</b><span class="muted">（${M.cost}人日）</span><div class="small">${esc(M.d)}</div></li>`).join('');
+  return `<h1 class="h1">措置の判断</h1><p class="lead">${A.insp}で見つかった違反に、どの措置をとるかを決めます。軽すぎると直らず、重すぎると人日を使いすぎ、行政の公平さを欠きます。違反の重さ・危険の大きさ・これまでの経過に見合った措置が「標準」です。</p>
+    <div class="grid g-side"><div class="stack">
+      ${panel(`判断待ち（${G.dec.length}件）`, rows ? `<div class="tbl-wrap"><table class="t"><thead><tr><th>発見</th><th>${A.unit}</th><th>違反・請求</th><th>経過</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>` : '<div class="empty">判断待ちはありません</div>', { flush: true })}
+    </div><div class="stack">
+      ${panel('措置の段階（軽い順）', `<ol class="ladder">${ladder}</ol><p class="note">${G.agency === 'labor' ? `${term('是正勧告', 'kankoku')}・${term('指導票', 'shido')}は行政指導、${term('使用停止等命令', 'stopOrder')}は行政処分、${term('送検', 'soken')}は刑事手続きです。` : `違反処理は、指導 → 警告 → 命令 → 告発と段階的に進めます（${term('違反処理', 'fireOrder')}）。自動火災報知設備などがない重大な違反は${term('公表', 'fireAlarm')}されます。`}</p>`)}
+    </div></div>`;
+};
+
+/* ---------- 実績と評価 ---------- */
+GY_SCREENS.g_stats = () => {
+  const A = gyA();
+  const fys = Object.values(G.fys).sort((a, b) => a.fy - b.fy);
+  const lab = G.agency === 'labor';
+  const rows = fys.map(f => { const fr = gyFixRate(f); return `<tr><td>${fyYearLabel(f.fy)}</td><td class="n">${lab ? f.acc4 : f.fires}</td><td class="n">${lab ? f.death : f.fireDeath}</td><td class="n">${f.inspPlan}<span class="muted small">／${f.insp}</span></td><td class="n">${f.found}</td><td class="n">${isFinite(fr) ? fmtPct(fr * 100, 0) : '―'}</td><td class="n">${f.soken}</td><td class="n">${lab ? `${f.hiddenFound}` : f.koukai}</td><td class="n">${f.decided ? `${f.std}/${f.decided}` : '―'}</td><td class="n">${f.eval ? `<b>${f.eval.rank}</b> ${f.eval.total}` : '<span class="muted">年度中</span>'}</td></tr>`; }).join('');
+  const last = fys.filter(f => f.eval).pop();
+  return `<h1 class="h1">実績と評価</h1><p class="lead">毎年3月末に、${esc(A.parent)}が1年の実績を100点満点で評価します（S・A・B・C・D）。${lab ? '労働災害' : '火災'}と死者を減らすこと、計画的な${A.insp}、違反を直させること、措置と判断の適正さ、案件をためないことが評価されます。</p>
+    <div class="stack">
+      ${panel('年度ごとの実績', `<div class="tbl-wrap"><table class="t"><thead><tr><th>年度</th><th class="n">${lab ? '労働災害' : '火災'}</th><th class="n">${lab ? '死亡' : '死者'}</th><th class="n">計画／全${A.insp}</th><th class="n">違反の発見</th><th class="n">是正率</th><th class="n">${lab ? '送検' : '告発'}</th><th class="n">${lab ? '労災かくし発見' : '公表'}</th><th class="n">標準の措置</th><th class="n">評価</th></tr></thead><tbody>${rows}</tbody></table></div>
+        <p class="note">着任前の水準：${lab ? `休業4日以上の労働災害 年${G.base.acc4}件・死亡 年${fmtNum(G.base.death, 1)}人` : `火災 年${G.base.fires}件・死者 年${fmtNum(G.base.death, 1)}人`}。${lab ? '労働災害の件数は、報告された分だけです（労災かくしの分は数に入りません）。' : ''}</p>`, { flush: false })}
+      ${last ? panel(`${fyYearLabel(last.fy)}の評価の内訳`, gyEvalTable(last.eval)) : ''}
+    </div>`;
+};
+function gyEvalTable(ev) {
+  return `<div class="tbl-wrap"><table class="t"><thead><tr><th>項目</th><th>内容</th><th class="n">点</th></tr></thead><tbody>${ev.parts.map(p => `<tr><td>${esc(p.n)}</td><td class="small">${esc(p.note)}</td><td class="n"><b>${p.pts}</b><span class="muted"> /${p.max}</span></td></tr>`).join('')}<tr><td colspan="2"><b>合計</b></td><td class="n"><b>${ev.total}</b><span class="muted"> /100</span></td></tr></tbody></table></div>`;
+}
+
+/* ---------- 学ぶ ---------- */
+function gyLearnSecs() {
+  const lab = G.agency === 'labor';
+  const items = gyA().items.map(k => { const it = LAW_ITEMS[k]; const std = GY_MEAS[G.agency].find(x => x.id === it.meas); return `<details class="lawitem"><summary><b>${esc(it.s)}</b><span class="small muted">　${esc(it.law)}・標準の措置：${std ? esc(std.n) : ''}</span></summary><p class="small">${esc(it.n)}。${esc(it.rule)}</p><p class="small"><b>会社がすべきこと：</b>${esc(it.how)}</p><p class="small muted"><b>罰則など：</b>${esc(it.pen)}　${term('用語の解説', it.tk)}</p></details>`; }).join('');
+  const flow = lab ? `<h3 class="fsh">監督の種類</h3><ul class="small"><li><b>定期監督</b>：年間の計画に基づき、予告なしに事業場に立ち入る。</li><li><b>申告監督</b>：労働者からの申告（相談）を受けて行う。申告したことを理由に会社が労働者を不利益に扱うことは禁止されている（労働基準法104条）。</li><li><b>災害時監督・災害調査</b>：重大な労働災害が起きたときに、原因を調べて再発防止を指導する。</li><li><b>再監督</b>：是正勧告のあと、直したかを確かめる。</li></ul>
+      <h3 class="fsh">${term('労働基準監督官', 'kantokukan')}の権限</h3><p class="small">事業場に立ち入り（臨検）、帳簿や書類を調べ、使用者や労働者に質問できます（労働基準法101条・労働安全衛生法91条）。法律違反の罪については、警察官と同じように捜査する<b>特別司法警察員</b>です（労働基準法102条）。</p>
+      <h3 class="fsh">違反が見つかったら</h3><ol class="small"><li><b>指導票</b>：法違反ではない改善事項などを示す。</li><li><b>${term('是正勧告', 'kankoku')}</b>：違反した条項と是正期日を書いた是正勧告書を渡す。会社は直して是正報告書を出す。</li><li><b>${term('使用停止等命令', 'stopOrder')}</b>：危険な機械・足場などをすぐ止めさせる行政処分（労働安全衛生法98条）。</li><li><b>${term('送検', 'soken')}</b>：重大・悪質な違反、勧告に従わないとき、労災かくし、死亡災害の原因となった違反などは、捜査して検察庁に送る。厚生労働省は送検した事案を公表している。</li></ol>`
+    : `<h3 class="fsh">${term('立入検査', 'tachiiri')}</h3><p class="small">消防長・消防署長は、火災予防のために、消防職員を事業所・店舗・共同住宅など関係のある場所に立ち入らせ、消防対象物の位置・構造・設備・管理の状況を検査させ、関係者に質問させることができます（消防法4条）。</p>
+      <h3 class="fsh">違反が見つかったら（${term('違反処理', 'fireOrder')}）</h3><ol class="small"><li><b>口頭指導・違反指摘</b>：立入検査結果通知書で違反を知らせ、改修の計画と結果を報告させる。</li><li><b>警告</b>：期限を示して直すよう求める（命令の前の段階）。</li><li><b>命令</b>：措置命令・使用停止命令など。命令を出したら、建物に標識を付けて公示する（消防法5条・5条の2・8条4項・17条の4など）。</li><li><b>告発</b>：命令に従わないなど悪質な違反は、捜査機関に告発する。</li></ol>
+      <h3 class="fsh">${term('違反対象物の公表制度', 'fireAlarm')}</h3><p class="small">屋内消火栓・スプリンクラー・自動火災報知設備が必要なのに設置していない建物は、消防本部のウェブサイトなどで公表されます。利用者が、安全な建物かを自分で確かめられるようにする仕組みです。</p>`;
+  const nintei = lab ? `<h3 class="fsh">労災保険の給付が決まるまで</h3><ol class="small"><li>労働者（遺族）が請求書を出す。会社は事業主の証明に協力する（会社が「労災ではない」と決めることはできない）。</li><li>労働基準監督署長が、業務上（または通勤による）災害かを調べて、支給・不支給を決める。</li><li>決定に不服があれば、労働者災害補償保険審査官に${term('審査請求', 'shinsa')}、さらに労働保険審査会に再審査請求、裁判ができる。</li></ol>
+      <h3 class="fsh">${term('業務災害', 'gyomuJo')}かどうか</h3><p class="small"><b>業務遂行性</b>（会社の指揮命令の下にいたか）と<b>業務起因性</b>（仕事に伴う危険が現実になったか）の2つで判断します。休憩中や出張中、私的な行為との境目がよく問われます。</p>
+      <h3 class="fsh">${term('通勤災害', 'tsukin')}かどうか</h3><p class="small">住居と仕事の場所との間を、合理的な経路と方法で移動している間の災害です。経路をそれたり（逸脱）、中断したりすると、その後は通勤になりません。ただし、日用品の購入など日常生活上必要な行為のための最小限のものなら、元の経路に戻った後は再び通勤になります。</p>
+      <h3 class="fsh">${term('脳・心臓疾患（過労死）', 'karoshi')}</h3><p class="small">発症前1か月に約100時間、または2〜6か月の平均で月約80時間を超える時間外労働があれば、業務との関連が強いと評価されます。これに近い時間でも、不規則な勤務・出張・心理的な負荷などが重なれば、総合して業務上と認められることがあります。</p>
+      <h3 class="fsh">${term('精神障害', 'mental')}</h3><p class="small">発病前おおむね6か月の出来事の心理的な負荷が「強」なら業務上です。強の例：ひどいパワーハラスメント、発病直前の1か月に約160時間を超える時間外労働、2か月続けて月約120時間以上の時間外労働、仕事で重いけがをして長く入院した、など。「中」や「弱」の出来事だけなら業務外です。</p>`
+    : `<h3 class="fsh">${term('火災原因調査', 'fireCause')}</h3><p class="small">消防長・消防署長は、火災の原因と、火災・消火による損害を調査します（消防法31条〜）。関係者への質問、焼けた場所の調査、資料の提出命令ができ、放火などの疑いがあれば警察と協力します。原因が分かれば、同じような火災を防ぐ予防行政に生かします。</p>
+      <h3 class="fsh">防火の基本の仕組み</h3><ul class="small"><li><b>${term('防火管理者と消防計画', 'fireMgr')}</b>（消防法8条）：一定の人数が出入りする建物では、防火管理者を選んで消防計画を作る。</li><li><b>${term('消防用設備等の点検・報告', 'fireCheck')}</b>（17条の3の3）：半年ごとに点検し、消防署に報告する。</li><li><b>${term('避難訓練', 'evacDrill')}</b>：特定防火対象物は年2回以上。</li><li><b>${term('避難経路の確保', 'evacRoute')}</b>：階段・廊下・防火戸の前に物を置かない。</li><li><b>${term('危険物', 'hazmat')}</b>（10条）：指定数量以上は許可を受けた施設で。</li></ul>`;
+  const saigai = lab ? `<div class="grid g2"><div><h3 class="fsh">会社がすること</h3><ol class="small"><li>けが人を救護し、必要なら119番。現場はそのままにして記録する。</li><li>治療は労災保険で（健康保険は使えない）。</li><li>休業したら労働者死傷病報告を出す（休業4日以上・死亡は遅滞なく、1〜3日は四半期ごと）。出さないのは${term('労災かくし', 'rosaiHide')}。</li><li>休業の最初の3日間は、会社が平均賃金の60%以上を補償する（${term('待期期間', 'waiting')}）。</li><li>原因を調べ、設備・作業手順・教育で再発を防ぐ。</li></ol></div>
+      <div><h3 class="fsh">監督署がすること</h3><ol class="small"><li>死亡災害など重大な災害は、監督官がすぐに現場へ行き、災害調査・災害時監督をする。</li><li>設備（物）・作業のしかた（人）・教育や手順（管理）の面から原因を調べ、法令違反を確かめる。</li><li>危険な状態が残っていれば使用停止等命令。原因になった違反は送検を検討する。</li><li>労災保険の請求について、業務上かを調べて支給・不支給を決める。</li><li>同じ業種の事業場にパトロールや集団指導で注意を広げる。</li></ol></div></div>`
+    : `<div class="grid g2"><div><h3 class="fsh">建物の関係者がすること</h3><ol class="small"><li>火災を見つけたら、119番・初期消火・避難誘導。</li><li>消防計画に従って、自衛消防の役割を果たす。</li><li>火災のあとは、消防の原因調査に協力する。</li><li>焼けた設備を直し、消防用設備の点検と訓練を見直す。</li></ol></div>
+      <div><h3 class="fsh">消防署がすること</h3><ol class="small"><li>消火・救助のあと、火災原因調査（消防法31条）で出火原因と被害を調べる。</li><li>自動火災報知設備が働いたか、避難通路に物がなかったか、訓練をしていたかを確かめる。</li><li>違反があれば違反処理をし、悪質なら告発する。</li><li>同じ用途の建物に、立入検査・講習会・広報で予防を広げる。</li></ol></div></div>`;
+  return [['仕事の流れ', flow], ['法令と標準の措置', `<p class="small">管内の${gyA().unit}に関わる主な法令と、見つかったときの標準の措置です。</p>${items}`], [lab ? '労災保険の認定' : '火災原因調査と予防', nintei], [lab ? '労災が起きたとき' : '火災が起きたとき', saigai]];
+}
+GY_SCREENS.g_learn = () => {
+  const secs = gyLearnSecs();
+  const i = clamp(UI.gLearn || 0, 0, secs.length - 1);
+  return `<h1 class="h1">学ぶ</h1><p class="lead">${G.agency === 'labor' ? '労働基準監督署の仕事と、労働基準法・労働安全衛生法・労災保険のしくみ' : '消防署の予防の仕事と、消防法のしくみ'}をまとめています。用語の下線を押すと解説が出ます。</p>
+    <div class="subtabs" role="tablist">${secs.map(([t], k) => `<button type="button" data-act="gLearn" data-v="${k}" aria-pressed="${k === i}">${t}</button>`).join('')}</div>
+    ${panel(secs[i][0], `<div style="max-width:92ch">${secs[i][1]}</div>`)}
+    <div class="row" style="margin-top:12px">${btn('用語集を開く', 'glossary')}</div>`;
+};
+GY_SCREENS.g_news = () => {
+  const list = G.news.map(gyNewsLi).join('');
+  return `<h1 class="h1">ニュース</h1><p class="lead">管内の災害・火災、措置、${esc(gyA().parent)}からの知らせです。</p>${panel('管内の出来事', list ? `<ul class="newslist">${list}</ul>` : '<div class="empty">まだありません</div>', { flush: true })}`;
+};
+
+/* ---------- アクション ---------- */
+Object.assign(ACTIONS, {
+  gGo: d => { UI.tab = d.tab; if (UI.modal) closeModal(true); render(); window.scrollTo({ top: 0 }); },
+  gAssign: d => {
+    const c = gyCase(d.id);
+    if (!gyAssign(d.id)) { toast(`人日が足りません（今月の上限 ${gyMaxUse()}人日）`, 'bad'); return; }
+    toast(`${GY_CASE[c.type].act}に着手しました（${gyCaseCost(c)}人日）`);
+    if (UI.modal && UI.modal.name === 'gSaigai') closeModal(true);
+    render();
+  },
+  gUnassign: d => { gyUnassign(d.id); render(); },
+  gPlan: d => { if (!gyPlanToggle(d.id)) toast(`人日が足りません（今月の上限 ${gyMaxUse()}人日）`, 'bad'); render(); if (UI.modal && UI.modal.name === 'gEnt') drawModal(); },
+  gCamp: d => {
+    const on = G.plan.camp && G.plan.camp.id === d.id;
+    if (on) gySetCamp(null);
+    else if (!gySetCamp(d.id, UI.gCampType[d.id] || G.focus)) toast('人日が足りません', 'bad');
+    render();
+  },
+  gEntType: d => { UI.gEntType = d.v; render(); },
+  gEntSort: d => { UI.gEntSort = d.v; render(); },
+  gEntOpen: d => { hideTip(); showModal('gEnt', { id: d.id }); },
+  gDecOpen: d => { const x = G.dec.find(y => y.id === d.id); if (!x) return; UI.gRes = null; showModal(x.type === 'claim' ? 'gClaim' : 'gDec', { id: x.id }); },
+  gDecide: d => {
+    const dd = G.dec.find(x => x.id === d.id);
+    if (!dd) return;
+    const snap = Object.assign({ talk: gyCultTalk(gyEnt(dd.ent)) }, dd);
+    const r = gyDecide(d.id, d.m);
+    if (!r) return;
+    if (r.err === 'cap') { toast(`人日が足りません（今月の上限 ${gyMaxUse()}人日）。来月に判断できます`, 'bad'); return; }
+    if (r.err === 'danger') { toast('使用停止等命令は、危険な機械・作業にしか使えません', 'bad'); return; }
+    UI.gRes = Object.assign({ id: d.id, d: snap }, r);
+    drawModal(); render();
+  },
+  gClaimGo: d => {
+    const dd = G.dec.find(x => x.id === d.id);
+    if (!dd) return;
+    const r = gyDecideClaim(d.id, d.pay === '1');
+    if (!r) return;
+    UI.gRes = Object.assign({ id: d.id, claim: true, pay: d.pay === '1' }, r);
+    drawModal(); render();
+  },
+  gNextDec: () => {
+    UI.gRes = null;
+    const n = G.dec[0];
+    if (n) showModal(n.type === 'claim' ? 'gClaim' : 'gDec', { id: n.id }); else { closeModal(true); render(); }
+  },
+  gSaiPick: d => { const S = UI.gSai; if (!S || S.ans[d.q]) return; S.ans[d.q] = d.v; G.quiz.asked++; if (d.ok === '1') G.quiz.correct++; drawModal(); },
+  gLearn: d => { UI.gLearn = +d.v; render(); },
+  gAdvanceNow: () => gyRunAdvance(),
+});
+Object.assign(CHANGES, {
+  gCampType: el => {
+    UI.gCampType[el.dataset.id] = el.value;
+    if (G.plan.camp && G.plan.camp.id === el.dataset.id) G.plan.camp.type = el.value;
+  },
+});
+
+/* ---------- 月の進行 ---------- */
+function gyRequestAdvance() {
+  const urgent = gyUrgent().length;
+  const old = G.cases.filter(c => c.status === 'new' && !GY_CASE[c.type].optional && G.m - c.m >= 1).length;
+  if (UI.settings.confirmAdvance && (urgent || (!G.plan.insp.length && gyLeft() >= gyA().inspCost))) {
+    const parts = [];
+    if (urgent) parts.push(`着手していない${G.agency === 'labor' ? '死亡災害' : '火災'}が<b>${urgent}件</b>あります`);
+    if (old) parts.push(`先月以前からの未着手の案件が<b>${old}件</b>あります`);
+    if (!G.plan.insp.length) parts.push(`今月の${gyA().insp}の計画がありません（残り${fmtNum(gyLeft(), 1)}人日）`);
+    confirmBox('このまま月末を締めますか？', parts.join('<br>'), '締めて翌月へ', 'gAdvanceNow');
+    return;
+  }
+  gyRunAdvance();
+}
+function gyRunAdvance() {
+  UI.modal = null;
+  const rep = gyAdvance();
+  UI.queue = [];
+  if (rep && UI.settings.monthly) UI.queue.push({ name: 'gMonthly', args: { rep } });
+  for (const s of (G.pendingModals || [])) UI.queue.push({ name: s.type, args: s });
+  G.pendingModals = [];
+  render();
+  autosave();
+  if (UI.queue.length) { const n = UI.queue.shift(); showModal(n.name, n.args); } else drawModal();
+}
+
+/* ---------- モーダル ---------- */
+MODALS.gIntro = () => {
+  const A = gyA();
+  const body = `<p style="margin-top:0">${esc(G.chief)}署長、着任おめでとうございます。${esc(A.n)}は、${esc(A.parent)}のもとで${G.ents.length}か所の${A.unit}を受け持ちます。${A.staffN}は${G.staff}人、1人が1か月に${A.days}日、${A.insp}や調査に出られます（合計${gyCap()}人日）。</p>
+    <ol class="small" style="line-height:1.8"><li><b>案件</b>：${G.agency === 'labor' ? '労働災害の報告、労働者からの申告、労災保険の請求' : '火災、住民からの通報'}が毎月届きます。着手すると人日を使います。</li>
+    <li><b>${A.insp}の計画</b>：どこに違反があるかは行くまで分かりません。業種・規模・前回からの期間・届出の記録からリスクを見て選びます。</li>
+    <li><b>措置の判断</b>：見つかった違反に、${G.agency === 'labor' ? '指導票・是正勧告・使用停止等命令・送検' : '口頭指導・違反指摘・警告・命令・告発'}のどれをとるかを決めます。重さに見合った措置が大事です。</li>
+    <li><b>評価</b>：毎年3月末に、${G.agency === 'labor' ? '労働災害' : '火災'}と死者の数、${A.insp}、是正率、措置の適正さで評価されます。</li></ol>
+    <div class="callout">今年度の重点：<b>${esc(GY_FOCUS[G.focus])}</b></div>
+    <p class="note">制度はゲーム向けに単純化しています。実際の手続きは所管の役所の案内を確かめてください。</p>`;
+  return modalFrame(`${esc(A.n)}長に着任`, body, btn('遊び方を読む', 'helpSec', { sec: 0 }) + btn('始める', 'closeModal', {}, 'primary'));
+};
+MODALS.gMonthly = a => {
+  const r = a.rep;
+  const A = gyA();
+  const insp = r.insp.map(x => { const e = gyEnt(x.e); return `<li>${esc(e ? e.n : '')}：${x.items.length ? `<b class="neg">違反 ${x.items.length}件</b>（${x.items.map(k => esc(LAW_ITEMS[k].s)).join('・')}）` : '<span class="muted">違反なし</span>'}</li>`; }).join('');
+  const cases = r.cases.map(id => gyCase(id)).filter(Boolean).map(c => `<li>${gyCaseTag(c)} ${esc(gyEnt(c.ent).n)}：${esc(c.result || '')}</li>`).join('');
+  const nc = r.newCases.map(id => gyCase(id)).filter(Boolean);
+  const newHtml = nc.map(c => `<li>${gyCaseTag(c)} ${esc(gyEnt(c.ent).n)}：${gyCaseDesc(c)}</li>`).join('');
+  const body = `${kv([['使った人日', `${fmtNum(r.used, 1)} / ${r.cap}人日${r.used > r.cap ? `（<span class="neg">残業 ${fmtNum(r.used - r.cap, 1)}人日</span>）` : ''}`], ['期日の来た措置', `直した ${r.fixed}件・直さなかった ${r.follow}件${r.follow ? '（判断待ちに追加）' : ''}`], ['措置の判断待ち', `${G.dec.length}件`]])}
+    <h3 class="fsh sp">${A.insp}の結果</h3>${insp ? `<ul class="small">${insp}</ul>` : `<p class="small muted">今月は計画した${A.insp}がありませんでした。</p>`}
+    ${cases ? `<h3 class="fsh sp">案件の調査の結果</h3><ul class="small">${cases}</ul>` : ''}
+    <h3 class="fsh sp">新しく届いた案件（${nc.length}件）</h3>${newHtml ? `<ul class="small">${newHtml}</ul>` : '<p class="small muted">ありませんでした。</p>'}
+    ${r.camp ? `<p class="small">啓発：${esc(gyCampOf(r.camp.id).n)}${r.camp.type ? `（${esc(GY_TYPES[r.camp.type].n)}）` : ''}を行いました。</p>` : ''}`;
+  return modalFrame(`${ymLabel(r.m)}の報告`, body, (G.dec.length ? btn('判断へ', 'gGo', { tab: 'g_dec' }) : '') + btn('閉じる', 'closeModal', {}, 'primary'), { size: 'wide' });
+};
+MODALS.gEnt = a => {
+  const e = gyEnt(a.id);
+  if (!e) return modalFrame('記録', '<p>見つかりません</p>', btn('閉じる', 'closeModal', {}, 'primary'));
+  const A = gyA();
+  const t = GY_TYPES[e.t];
+  const planned = G.plan.insp.includes(e.id);
+  const st = Object.keys(e.st).filter(k => e.st[k].open).map(k => `<li>${esc(LAW_ITEMS[k].s)}：${esc((gyMeasOf(e.st[k].meas) || { n: '' }).n)}（期日 ${ymLabel(e.st[k].due)}）</li>`).join('');
+  const hist = e.hist.slice(0, 12).map(h => `<li><span class="muted">${ymShort(h.m)}</span> ${esc(h.t)}</li>`).join('');
+  const flags = gyRecordFlags(e);
+  const items = gyItemsOf(e).map(k => esc(LAW_ITEMS[k].s)).join('・');
+  const body = `${kv([['種類', `${esc(t.n)}${t.use ? `（${esc(t.use)}）` : ''}`], [G.agency === 'labor' ? '労働者' : '収容人員', `${G.agency === 'labor' ? e.emp : e.cap}人`], [`最後の${A.insp}`, `${G.m - e.lastInsp}か月前`], [G.agency === 'labor' ? '労働災害の記録' : '火災の記録', `${G.agency === 'labor' ? e.acc : e.fires}件<span class="small muted">（着任前の2年を含む）</span>`], ['届出の記録', flags.length ? flags.map(k => esc(GY_RECORD[k])).join('・') : '問題なし'], ['リスクの目安', gyDots(e)]])}
+    ${e.pub ? '<div class="callout bad" style="margin-top:8px">重大な違反のある建物として公表中</div>' : ''}
+    <h3 class="fsh sp">措置中の違反</h3>${st ? `<ul class="small">${st}</ul>` : '<p class="small muted">ありません</p>'}
+    <h3 class="fsh sp">これまでの経過</h3>${hist ? `<ul class="small">${hist}</ul>` : `<p class="small muted">着任してからの記録はありません</p>`}
+    <p class="note">関係する法令：${items}</p>`;
+  return modalFrame(esc(e.n), body, btn(planned ? `${A.insp}の計画から外す` : `${A.insp}の計画に入れる（${A.inspCost}人日）`, 'gPlan', { id: e.id }, planned ? '' : 'primary', { disabled: !planned && !gyCanUse(A.inspCost) }) + btn('閉じる', 'closeModal'), { size: 'narrow', sub: esc(t.n) });
+};
+function gyCultTalk(e) {
+  if (e.cult >= 0.7) return '代表者は指摘をすぐに受け止め、改善を約束した。';
+  if (e.cult >= 0.45) return '担当者は「改善します」と言うが、具体的な計画はまだない。';
+  return '代表者は「どこもやっていることだ」と話し、改善に消極的だった。';
+}
+MODALS.gDec = a => {
+  const A = gyA();
+  const R = UI.gRes && UI.gRes.id === a.id ? UI.gRes : null;
+  const d = R ? R.d : G.dec.find(x => x.id === a.id);
+  if (!d) return modalFrame('措置の判断', '<p>この案件はすでに判断しました。</p>', btn('閉じる', 'closeModal', {}, 'primary'), { size: 'narrow' });
+  const e = gyEnt(d.ent);
+  const it = LAW_ITEMS[d.item];
+  const head = `<div class="lawdoc"><div class="ld-title">${d.type === 'follow' ? `${A.follow}の結果` : '違反の確認'}</div>
+    <div class="ld-meta"><span>${ymLabel(d.m)}　${esc(d.kind)}</span><span>${esc(e.n)}（${esc(GY_TYPES[e.t].n)}${G.agency === 'labor' ? `・労働者${e.emp}人` : `・収容${e.cap}人`}）</span></div>
+    ${kv([['違反の内容', `<b>${esc(it.n)}</b>`], ['根拠の法令', esc(it.law)], ['法律の決まり', `<span class="small">${esc(it.rule)}</span>`], ['罰則など', `<span class="small">${esc(it.pen)}</span>`],
+      d.type === 'follow' ? ['これまでの経過', `前回、${esc((gyMeasOf(d.prev) || { n: '' }).n)}をした。期日までに直さなかった。${d.goodFaith ? `<br><b>会社からの改善計画：</b>${esc(GY_PLAN_TXT[d.item] || '')}` : '<br>改善の計画は出ていない。'}`] : null,
+      d.repeat ? ['経過', '前にも同じ違反で措置を受け、直したことがある（再違反）'] : null,
+      d.kind === '災害時監督' || d.kind === '災害調査' ? ['災害との関係', it.danger ? '<b class="neg">この違反が、起きた労働災害の原因になった</b>' : 'この違反は災害の直接の原因ではない'] : null,
+      ['相手の様子', esc(d.talk || gyCultTalk(e))]])}</div>`;
+  if (R) {
+    const vt = { ok: ['ok', '標準的な措置です'], light: ['bad', '軽すぎる措置です'], heavy: ['bad', '重すぎる措置です'] }[R.verdict];
+    const stdM = gyMeasOf(R.std.id);
+    const st = e.st[d.item];
+    const res = `<div class="callout ${vt[0]}" style="margin-top:12px"><b>${vt[1]}</b>（選んだ措置：${esc(R.M.n)}${R.verdict !== 'ok' ? `／標準：${esc(stdM.n)}` : ''}）<br><span class="small">${esc(R.std.why)}</span>${R.verdict === 'light' ? '<br><span class="small">軽い措置では、期日までに直さない会社が増えます。</span>' : R.verdict === 'heavy' ? '<br><span class="small">重すぎる措置は人日を使い、行政の公平さを欠きます（評価が下がります）。</span>' : ''}</div>
+      <p class="small">${R.M.id === 'soken' || R.M.id === 'kokuhatsu' ? `${R.M.id === 'soken' ? '書類送検' : '告発'}しました。違反は是正され、${e.n}の法令を守る意識は大きく高まります。` : st && st.open ? `是正期日：${ymLabel(st.due)}末。期日に直したかを確かめ、直していなければ次の措置を判断します。` : ''}</p>`;
+    return modalFrame('措置の判断', head + res, (G.dec.length ? btn(`次の判断へ（残り${G.dec.length}件）`, 'gNextDec', {}, 'primary') : '') + btn('閉じる', 'closeModal', {}, G.dec.length ? '' : 'primary'), { size: 'wide', sub: esc(e.n) });
+  }
+  const opts = GY_MEAS[G.agency].map(M => ({ M, dis: M.danger && !it.danger ? '危険な機械・作業でないので使えない' : !gyCanUse(M.cost) ? '人日が足りない' : '' }));
+  if (d.type === 'follow') opts.unshift({ M: GY_EXTEND, dis: !gyCanUse(GY_EXTEND.cost) ? '人日が足りない' : '' });
+  const choose = `<h3 class="fsh">措置を選ぶ</h3><div class="measlist">${opts.map(({ M, dis }) => `<button type="button" class="qz-b measbtn" data-act="gDecide" data-id="${d.id}" data-m="${M.id}"${dis ? ' disabled' : ''}><b>${esc(M.n)}</b><span class="small muted">（${M.cost}人日）</span><span class="small">${esc(M.d)}${dis ? `<br><b>${dis}</b>` : ''}</span></button>`).join('')}</div>`;
+  return modalFrame('措置の判断', head + choose, btn('あとで判断する', 'closeModal'), { size: 'wide', sub: esc(e.n) });
+};
+MODALS.gClaim = a => {
+  const R = UI.gRes && UI.gRes.id === a.id ? UI.gRes : null;
+  const d = G.dec.find(x => x.id === a.id);
+  const c = R ? R.c : d && gyCase(d.case);
+  if (!c) return modalFrame('労災請求の判断', '<p>この請求はすでに判断しました。</p>', btn('閉じる', 'closeModal', {}, 'primary'), { size: 'narrow' });
+  const e = gyEnt(c.ent);
+  const D = c.data;
+  let facts, rule, exTrue, exFalse;
+  if (c.type === 'claim') {
+    facts = kv([['請求', D.cat === '通勤災害' ? '療養給付・休業給付（通勤災害）' : '療養補償給付・休業補償給付（業務災害）'], ['事業場', `${esc(e.n)}（${esc(GY_TYPES[e.t].n)}）`], ['災害の状況', `<b>${esc(D.text)}</b>`]]);
+    rule = D.cat === '通勤災害' ? `${term('通勤災害', 'tsukin')}：住居と仕事の場所の間を、合理的な経路と方法で移動している間の災害。経路をそれる（逸脱）・中断すると、その後は通勤にならない。ただし日用品の購入など日常生活上必要な最小限の行為なら、元の経路に戻った後は通勤になる。`
+      : `${term('業務災害', 'gyomuJo')}：会社の指揮命令の下にいたか（業務遂行性）と、仕事に伴う危険が現実になったか（業務起因性）で判断する。休憩中・出張中・私的な行為との境目に注意。`;
+    exTrue = exFalse = D.ex;
+  } else if (D.kind === 'karo') {
+    facts = kv([['請求', '脳・心臓疾患の労災請求'], ['事業場', `${esc(e.n)}（${esc(GY_TYPES[e.t].n)}）`], ['発症した病気', esc(D.disease)], ['発症前1か月の時間外労働', `<b>${D.m1}時間</b>`], ['発症前2〜6か月の平均（最も長い期間）', `<b>月${D.avg}時間</b>`], D.extra ? ['労働時間以外の負荷', esc(D.extra)] : null]);
+    rule = `${term('過労死の認定基準', 'karoshi')}：発症前1か月に約100時間、または2〜6か月の平均で月約80時間を超える時間外労働があれば、業務との関連が強い。これに近い時間でも、不規則な勤務や出張などの負荷が重なれば、総合して業務上と判断できる。`;
+    const reason = D.m1 > 100 ? `発症前1か月の時間外労働が${D.m1}時間で、約100時間を超えています` : D.avg > 80 ? `2〜6か月の平均が月${D.avg}時間で、約80時間を超えています` : D.extra ? `時間外労働は基準に近く（1か月${D.m1}時間・平均${D.avg}時間）、さらに不規則な勤務と出張の負荷が重なっています` : `時間外労働（1か月${D.m1}時間・平均${D.avg}時間）は基準を大きく下回り、ほかに強い負荷もありません`;
+    exTrue = `${reason}。業務上と認められます。`;
+    exFalse = `${reason}。業務外（不支給）と判断されます。`;
+  } else {
+    facts = `${kv([['請求', '精神障害の労災請求'], ['事業場', `${esc(e.n)}（${esc(GY_TYPES[e.t].n)}）`], ['発病した病気', esc(D.disease)]])}<h3 class="fsh">発病前6か月の出来事</h3><ul class="small">${D.events.map(x => `<li>${esc(x)}</li>`).join('')}</ul>`;
+    rule = `${term('精神障害の認定基準', 'mental')}：発病前おおむね6か月の出来事の心理的な負荷が「強」なら業務上。強の例：ひどいパワーハラスメント、発病直前の1か月に約160時間を超える時間外労働、2か月続けて月約120時間以上の時間外労働、仕事で重いけがをして長く入院した。「中」「弱」の出来事だけなら業務外。`;
+    exTrue = '心理的な負荷が「強」の出来事があるので、業務上と認められます。';
+    exFalse = '出来事はどれも「中」か「弱」にとどまるので、業務外（不支給）と判断されます。';
+  }
+  const head = `<div class="lawdoc"><div class="ld-title">労災保険の請求</div><div class="ld-meta"><span>受付 ${ymLabel(c.m)}</span><span>${esc(c.result || '')}</span></div>${facts}</div>
+    <div class="learnbox" style="margin-top:10px"><p class="small" style="margin:0">${rule}</p></div>`;
+  if (R) {
+    const vt = R.ok ? ['ok', '正しい判断です'] : ['bad', R.pay ? '誤りです（業務外でした）' : '誤りです（業務上でした）'];
+    return modalFrame('労災請求の判断', `${head}<div class="callout ${vt[0]}" style="margin-top:12px"><b>${vt[1]}</b>（決定：${R.pay ? '支給' : '不支給'}）<br><span class="small">${R.truth ? exTrue : exFalse}</span>${!R.ok && !R.pay ? '<br><span class="small">労働者は審査請求をするでしょう。決定が取り消されると評価が下がります。</span>' : ''}</div>`,
+      (G.dec.length ? btn(`次の判断へ（残り${G.dec.length}件）`, 'gNextDec', {}, 'primary') : '') + btn('閉じる', 'closeModal', {}, G.dec.length ? '' : 'primary'), { size: 'wide', sub: esc(e.n) });
+  }
+  const yes = c.type === 'claim' && D.cat === '通勤災害' ? '通勤災害と認める（支給）' : '業務上と認める（支給）';
+  const no = c.type === 'claim' && D.cat === '通勤災害' ? '通勤災害と認めない（不支給）' : '業務外とする（不支給）';
+  return modalFrame('労災請求の判断', head, btn('あとで判断する', 'closeModal') + btn(no, 'gClaimGo', { id: d.id, pay: 0 }) + btn(yes, 'gClaimGo', { id: d.id, pay: 1 }, 'primary'), { size: 'wide', sub: esc(e.n) });
+};
+const GY_SAI_Q = {
+  labor: [
+    { q: '死亡災害の一報が入った。監督署として、まずすべきことは？', ans: 'go', ch: [['go', '監督官がすぐに現場へ行き、災害の状況・機械や設備・作業の手順を確かめる（災害調査）。警察とも連携する'], ['wait', '会社から労働者死傷病報告が出るのを待ち、書類で判断する'], ['police', '事故の責任を調べるのは警察なので、監督署は関わらない']],
+      ex: '重大な災害では、監督官が直ちに現場に入って原因を調べます。法令違反があれば特別司法警察員として捜査し、送検します。警察も業務上過失致死の疑いで捜査するので、連携して進めます。' },
+    { q: '原因を調べるときの考え方として、適切なのは？', ans: 'm4', ch: [['m4', '設備（物）・作業のしかた（人）・教育や手順（管理）の面から原因を洗い出し、法令で決められた措置が取られていたかを確かめる'], ['self', '亡くなった本人の不注意だったかどうかを中心に確かめる'], ['paper', '会社の説明を聞き、書類がそろっていれば調査を終える']],
+      ex: '災害は、危険な状態（物）と不安全な行動（人）が重なって起き、その背景に管理の問題があります。本人の不注意で片付けず、手すり・安全装置・作業手順・教育などの措置が取られていたかを調べ、同じ業種にも再発防止を広げます。' },
+  ],
+  fire: [
+    { q: '死者が出た火災。火が消えたあと、消防署がすべきことは？', ans: 'go', ch: [['go', '火災原因調査（消防法31条）で出火原因と延焼・避難の状況を調べ、消防用設備や防火管理に違反がなかったかを確かめる'], ['police', '消火が終われば消防署の仕事は終わりなので、あとは警察に任せる'], ['talk', '建物の持ち主から話を聞くだけで、現場は見ない']],
+      ex: '消防長・消防署長は、火災の原因と損害を調査します。原因が分かれば、同じような建物の予防に生かせます。消防用設備の不備や避難の妨げがあれば違反として処理し、悪質なら告発します。' },
+    { q: '人が亡くなった原因として、特に確かめるべきことは？', ans: 'ev', ch: [['ev', '自動火災報知設備が鳴ったか、階段や通路に物がなかったか、避難訓練をしていたか'], ['look', '建物の外観がきれいに保たれていたか'], ['ins', '建物の持ち主が火災保険に入っていたか']],
+      ex: '多くの死者が出た雑居ビル火災などでは、火災報知設備の不備、階段に置かれた物、訓練不足による避難の遅れが重なっていました。' },
+  ],
+};
+MODALS.gSaigai = a => {
+  const c = gyCase(a.id);
+  if (!c) return modalFrame('災害', '<p>記録がありません</p>', btn('閉じる', 'closeModal', {}, 'primary'));
+  const e = gyEnt(c.ent);
+  if (!UI.gSai || UI.gSai.id !== c.id) UI.gSai = { id: c.id, ans: {} };
+  const S = UI.gSai;
+  const qs = GY_SAI_Q[G.agency];
+  const quiz = qs.map((Q, qi) => {
+    const ans = S.ans[qi];
+    return `<div class="qz"><div class="qz-q"><span class="qz-tag">判断</span>${esc(Q.q)}</div><div class="qz-ch">${Q.ch.map(([v, t]) => `<button type="button" class="qz-b${ans ? (v === Q.ans ? ' ok' : v === ans ? ' ng' : '') : ''}" data-act="gSaiPick" data-q="${qi}" data-v="${v}" data-ok="${v === Q.ans ? 1 : 0}"${ans ? ' disabled' : ''}>${esc(t)}</button>`).join('')}</div>${ans ? `<div class="qz-a ${ans === Q.ans ? 'ok' : 'ng'}"><b>${ans === Q.ans ? 'そのとおりです' : '適切ではありません'}</b>　${esc(Q.ex)}</div>` : ''}</div>`;
+  }).join('');
+  const head = G.agency === 'labor' ? `<div class="callout bad"><b>${ymLabel(c.m)}　${esc(e.n)}（${esc(GY_TYPES[e.t].n)}）で、労働者が${esc(c.data.text)}</b></div>`
+    : `<div class="callout bad"><b>${ymLabel(c.m)}　${esc(e.n)}（${esc(GY_TYPES[e.t].use)}）で火災。${c.data.deaths}人が亡くなった</b><br><span class="small">出火の原因：${esc(c.data.cause)}（調査中）</span></div>`;
+  const cost = gyCaseCost(c);
+  const done = Object.keys(S.ans).length >= qs.length;
+  const foot = c.status === 'new' ? btn('あとで着手する', 'closeModal') + btn(`${GY_CASE[c.type].act}に着手する（${cost}人日）`, 'gAssign', { id: c.id }, done ? 'primary' : '', { disabled: !gyCanUse(cost) }) : btn('閉じる', 'closeModal', {}, 'primary');
+  return modalFrame(G.agency === 'labor' ? '死亡災害が起きました' : '死者の出た火災が起きました', head + quiz, foot, { sub: '答えると解説が出ます' });
+};
+MODALS.gEval = a => {
+  const f = G.fys[a.fy];
+  if (!f || !f.eval) return modalFrame('年度の評価', '<p>評価がありません</p>', btn('閉じる', 'closeModal', {}, 'primary'));
+  const ev = f.eval;
+  const A = gyA();
+  const comment = { S: '管内の安全が目に見えて高まりました。模範的な署の運営です。', A: '計画的で公平な行政が実を結んでいます。', B: 'おおむね順調ですが、伸ばせる点があります。', C: '取り組みが追いついていない分野があります。', D: '管内の状況が悪化しています。進め方を見直しましょう。' }[ev.rank];
+  const body = `<div class="row" style="align-items:center;gap:16px"><span class="gradebig g${{ S: 1, A: 3, B: 5, C: 7, D: 9 }[ev.rank]}">${ev.rank}</span><div><b style="font-size:18px">${ev.total}点</b><span class="muted"> /100</span><div class="small">${comment}</div></div></div>
+    ${gyEvalTable(ev)}
+    <p class="small">管内の違反の数（年度末の推計）：着任時 1か所あたり ${fmtNum(G.base.viol, 2)}件 → いま ${fmtNum(ev.viol, 2)}件。${G.agency === 'labor' && ev.hidden ? `この年度に起きた労災かくしは推計${ev.hidden}件、そのうち見つけたのは${ev.hiddenFound}件。` : ''}</p>
+    <p class="note">来年度の重点は4月に${esc(A.parent)}から示されます。</p>`;
+  return modalFrame(`${fyYearLabel(a.fy)}の評価（${esc(A.parent)}）`, body, btn('閉じる', 'closeModal', {}, 'primary'), { size: 'wide' });
+};
+MODALS.gTerm = () => {
+  const A = gyA();
+  const evs = Object.values(G.fys).filter(f => f.eval).sort((a, b) => a.fy - b.fy);
+  const avg = evs.length ? Math.round(sum(evs, f => f.eval.total) / evs.length) : 0;
+  const rank = avg >= 85 ? 'S' : avg >= 70 ? 'A' : avg >= 55 ? 'B' : avg >= 40 ? 'C' : 'D';
+  const lab = G.agency === 'labor';
+  const body = `<p style="margin-top:0">${esc(G.chief)}署長の任期${G.termYears}年が満了しました。</p>
+    <div class="tbl-wrap"><table class="t"><thead><tr><th>年度</th><th class="n">${lab ? '労働災害' : '火災'}</th><th class="n">${lab ? '死亡' : '死者'}</th><th class="n">是正率</th><th class="n">評価</th></tr></thead><tbody>${evs.map(f => { const fr = gyFixRate(f); return `<tr><td>${fyYearLabel(f.fy)}</td><td class="n">${lab ? f.acc4 : f.fires}</td><td class="n">${lab ? f.death : f.fireDeath}</td><td class="n">${isFinite(fr) ? fmtPct(fr * 100, 0) : '―'}</td><td class="n"><b>${f.eval.rank}</b> ${f.eval.total}</td></tr>`; }).join('')}</tbody></table></div>
+    <p>任期を通じた評価：<b>${rank}</b>（平均${avg}点）。管内の違反は、1か所あたり ${fmtNum(G.base.viol, 2)}件 → ${fmtNum(gyViolTotal() / G.ents.length, 2)}件になりました。判断の正答率は ${G.quiz.asked ? fmtPct(G.quiz.correct / G.quiz.asked * 100, 0) : '―'}。</p>
+    <p class="note">このまま${esc(A.n)}長を続けることもできます。</p>`;
+  return modalFrame('任期満了', body, btn('続ける', 'closeModal', {}, 'primary'), { size: 'wide' });
+};
+
+/* ---------- 遊び方 ---------- */
+function gyHelpSecs() {
+  const ag = G ? G.agency : (UI.start.g || {}).agency || 'labor';
+  const A = GY_AGENCY[ag];
+  const lab = ag === 'labor';
+  return [
+    ['ゲームの目的', `<p>あなたは${esc(A.n)}の署長です。管内の${A.unit}に法令を守らせ、${lab ? '労働災害と過重労働を減らし、働く人の命と健康を守ります' : '火災を防ぎ、火災が起きても人の命が失われないようにします'}。毎年3月末に${esc(A.parent)}の評価（S〜D）が出ます。任期は開始画面で選べます。</p>
+      <p>このモードでは、会社経営モードで「守る側」だった法令を、<b>守らせる側</b>から見ます。どこに違反があるかは行ってみるまで分からず、職員の時間（人日）は限られています。</p>`],
+    ['1か月の流れ', `<ol><li><b>案件</b>：${lab ? '死亡災害・労働災害の報告・申告・労災保険の請求・労災かくしの疑い' : '火災・違反の通報'}に着手する。</li><li><b>${A.insp}の計画</b>：「${lab ? '事業場と監督' : '建物と立入検査'}」で、リスクの高いところを選ぶ（1件${A.inspCost}人日）。啓発（${lab ? '集団指導・安全パトロール' : '講習会・訓練・広報'}）も選べる。</li><li><b>措置の判断</b>：見つかった違反にとる措置を決める。${lab ? '労災請求の支給・不支給もここで決める。' : ''}</li><li><b>月末を締める</b>：${A.insp}・調査の結果が出て、新しい案件が届く。</li></ol>
+      <p>人日は${A.staffN}${A.staff}人×${A.days}日。上限の1.5倍まで使えますが、超えた分は職員の残業になり、評価が下がります。</p>`],
+    [`${A.insp}と措置`, `<p>${A.insp}で見つかる違反は、${lab ? '36協定・残業の上限・残業代・最低賃金・健康診断・安全衛生の体制・年休・労働条件の明示・機械の安全・墜落の防止・化学物質・労働保険' : '防火管理者・消防設備の点検・避難訓練・避難通路・自動火災報知設備・消火器と誘導灯・危険物・防炎物品'}など。</p>
+      <p>措置は軽い順に ${GY_MEAS[ag].map(M => `<b>${M.n}</b>`).join(' → ')}。違反の重さ・危険・これまでの経過に見合った「標準」の措置を選ぶと、評価の「適正さ」が上がります。軽すぎると直らず、重すぎると人日を使いすぎます。期日までに直さなければ、${A.follow}のあとで次の段階を判断します。工事などで時間がかかる正当な理由があれば、期日の延長が適切なこともあります。</p>`],
+    [lab ? '労災が起きたとき' : '火災が起きたとき', lab ? `<p>死亡災害は、すぐに災害時監督に着手します。原因になった違反（墜落防止・機械の安全など）は送検を検討します。休業4日以上の災害は災害調査をすると、危険な設備を使用停止等命令で止めさせられます。</p><p>労災保険の請求は、業務遂行性・業務起因性、通勤の逸脱・中断、過労死や精神障害の認定基準に照らして支給・不支給を決めます。誤って不支給にすると、審査請求で取り消されます。</p><p>労働災害を報告しない「労災かくし」は、健康保険の照会などから疑いが届きます。見つけたら原則として送検します。</p>`
+      : `<p>火災が起きたら火災原因調査に着手し、出火原因と消防法令の違反を調べます。人が亡くなった火災では、火災報知設備・避難通路・訓練の状況が特に問われます。</p><p>自動火災報知設備などがない重大な違反は、措置をとると公表されます（違反対象物の公表制度）。</p>`],
+    ['評価のしくみ', `<p>100点満点：${lab ? '労働災害の件数（25）・死亡災害（15）' : '火災の件数（25）・火災の死者（15）'}・計画した${A.insp}（10）・重点の取り組み（5）・違反の是正率（15）・措置と判断の適正さ（15）・案件の処理と職員の働き方（10）・啓発（5）。</p><p>評価がSだと、翌年度から職員が1人増えます（2人まで）。</p>`],
+  ];
+}
+MODALS.gHelp = a => {
+  const secs = gyHelpSecs();
+  const i = clamp(a.sec || 0, 0, secs.length - 1);
+  const nav = `<div class="subtabs">${secs.map(([t], k) => `<button type="button" data-act="helpSec" data-sec="${k}" aria-pressed="${k === i}">${t}</button>`).join('')}</div>`;
+  return modalFrame('遊び方（法令を守らせる）', `${nav}<div style="max-width:90ch">${secs[i][1]}</div>`, (i > 0 ? btn('前へ', 'helpSec', { sec: i - 1 }) : '') + (i < secs.length - 1 ? btn('次へ', 'helpSec', { sec: i + 1 }, 'primary') : btn('閉じる', 'closeModal', {}, 'primary')), { size: 'wide' });
+};
+
+/* ---------- 開始画面（役所で取り締まる） ---------- */
+function gyStartDefaults() { return UI.start.g || (UI.start.g = { agency: 'labor', diff: 'normal', term: 5, chief: '', seed: '' }); }
+function gyStartStore() {
+  const g = gyStartDefaults();
+  const c = $('#gstChief'), s = $('#gstSeed');
+  if (c) g.chief = c.value;
+  if (s) g.seed = s.value;
+}
+const GY_AG_DESC = {
+  labor: '労働基準監督官を率いて、工場・建設現場・店舗・介護施設などを監督する。労働災害の調査、申告への対応、労災保険の認定、是正勧告から送検まで。',
+  fire: '予防課の職員を率いて、店舗・ホテル・雑居ビル・病院などに立入検査をする。消防用設備の点検、防火管理、避難経路。火災原因調査と、警告・命令・公表・告発まで。',
+};
+function renderStartG() {
+  const g = gyStartDefaults();
+  let meta = null;
+  try { meta = JSON.parse(lsGet(LSG.meta('a')) || 'null'); } catch (e) { meta = null; }
+  const cont = meta && !meta.over ? btn(`続きから（${esc(meta.co)}・${ymLabel(meta.m)}）`, 'loadAuto') : '';
+  const A = GY_AGENCY[g.agency];
+  const ags = Object.keys(GY_AGENCY).map(k => `<button type="button" class="preset indcard${g.agency === k ? ' on' : ''}" data-act="gStAg" data-v="${k}" aria-pressed="${g.agency === k}"><b><span class="indico" aria-hidden="true">${GY_AGENCY[k].icon}</span>${k === 'labor' ? '労働基準監督署' : '消防署（予防課）'}</b><span>${esc(GY_AG_DESC[k])}</span></button>`).join('');
+  const diffs = [['high', '高い'], ['normal', 'ふつう'], ['low', '低い']].map(([k, l]) => `<button type="button" data-act="gStDiff" data-v="${k}" aria-pressed="${g.diff === k}">${l}</button>`).join('');
+  const terms = [[3, '3年'], [5, '5年'], [0, '定めない']].map(([v, l]) => `<button type="button" data-act="gStTerm" data-v="${v}" aria-pressed="${g.term === v}">${l}</button>`).join('');
+  const setup = `<section class="setup" aria-labelledby="setupTitle">
+    <div class="setup-head"><h2 id="setupTitle">始め方</h2>${cont}</div>
+    ${startModeSwitch()}
+    <div class="field"><span>役所</span><div class="presets indgrid">${ags}</div></div>
+    <div class="grid g2" style="gap:12px"><div class="field"><span>管内の法令を守る意識</span><div class="seg" role="radiogroup">${diffs}</div><span class="small muted">${{ high: '違反が少なく、指導にもよく従う。', normal: '標準的な難しさ。', low: '違反が多く、指導してもなかなか直らない。' }[g.diff]}</span></div>
+    <div class="field"><span>任期</span><div class="seg" role="radiogroup">${terms}</div></div></div>
+    <label class="field"><span>シード（同じ数字なら同じ展開）</span><input type="text" id="gstSeed" value="${esc(g.seed)}" placeholder="空欄でランダム" inputmode="numeric"></label>
+    <p class="small muted" style="margin:0">会社経営モードで「守る側」だった労働・消防の法令を、取り締まる側から学べます。ほかのモードとは別に保存されます。</p>
+  </section>`;
+  const termTxt = g.term ? `${g.term === 3 ? '三' : '五'}年とする` : '定めない';
+  const letter = `<div class="appoint">
+    <h1>辞令</h1><div class="gametitle">署長 ― 労働基準監督署・消防署のシミュレーション</div>
+    <div class="body-text"><label><input type="text" id="gstChief" value="${esc(g.chief)}" placeholder="氏名" maxlength="12" aria-label="あなたの氏名"></label>　殿<br>
+    ${esc(A.n)}長に任命する。<br>
+    ${esc(A.goal)}こと。管内の${A.unit}に法令を守らせ、${g.agency === 'labor' ? '労働災害' : '火災'}を減らすこと。<br>
+    任期は${warekiYear(START_YEAR)}${START_MONTH}月から${termTxt}。</div>
+    <div class="issuer">${warekiYear(START_YEAR)}${START_MONTH}月1日<br>${esc(A.parent)}</div>
+    <div class="start">${btn('着任する', 'gStart', {}, 'primary')}${btn('ファイルから読み込む', 'importSave')}${btn('遊び方', 'help')}</div>
+  </div>`;
+  return `${scene('hero', { cls: 'hero', alt: `港町の${CITY_NAME}の風景` })}<div class="startwrap${artSrc('hero') ? ' with-hero' : ''}">${setup}${letter}</div>`;
+}
+Object.assign(ACTIONS, {
+  gStAg: d => { gyStartStore(); UI.start.g.agency = d.v; render(); },
+  gStDiff: d => { gyStartStore(); UI.start.g.diff = d.v; render(); },
+  gStTerm: d => { gyStartStore(); UI.start.g.term = +d.v; render(); },
+  gStart: () => {
+    gyStartStore();
+    const g = UI.start.g;
+    const chief = (g.chief || '').trim() || `${KS_CITY} 太郎`;
+    const seedN = parseInt(String(g.seed).replace(/[^0-9]/g, ''), 10);
+    const o = { agency: g.agency, chief, diff: g.diff, term: g.term };
+    if (Number.isFinite(seedN)) o.seed = seedN;
+    gyNewGame(o);
+    UI.tab = 'g_dash'; UI.gEntType = 'all'; UI.gEntSort = 'risk'; UI.gRes = null; UI.gSai = null;
+    render();
+    window.scrollTo({ top: 0 });
+    autosave();
+    showModal('gIntro');
+  },
+});
+
 /* ---- 99_main.js ---- */
 /* =========================================================
  *  99_main.js : 起動（すべてのファイルの後に読み込む）
@@ -13065,7 +15527,7 @@ function measureSafeTop() {
   inp.setAttribute('data-ch', 'importFile');
   document.body.appendChild(inp);
   render();
-  window.Toudori = { get G() { return G; }, render, advance: () => (isK() ? ksRunAdvance() : runAdvance()), check: () => (isK() ? ksCheck() : integrityCheck()), show: (name, args) => showModal(name, args || {}) };
+  window.Toudori = { get G() { return G; }, render, advance: () => (isG() ? gyRunAdvance() : isK() ? ksRunAdvance() : runAdvance()), check: () => (isG() ? gyCheck() : isK() ? ksCheck() : integrityCheck()), show: (name, args) => showModal(name, args || {}) };
 })();
 
 })();

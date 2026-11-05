@@ -25,5 +25,5 @@ function measureSafeTop() {
   inp.setAttribute('data-ch', 'importFile');
   document.body.appendChild(inp);
   render();
-  window.Toudori = { get G() { return G; }, render, advance: () => (isK() ? ksRunAdvance() : runAdvance()), check: () => (isK() ? ksCheck() : integrityCheck()), show: (name, args) => showModal(name, args || {}) };
+  window.Toudori = { get G() { return G; }, render, advance: () => (isG() ? gyRunAdvance() : isK() ? ksRunAdvance() : runAdvance()), check: () => (isG() ? gyCheck() : isK() ? ksCheck() : integrityCheck()), show: (name, args) => showModal(name, args || {}) };
 })();
