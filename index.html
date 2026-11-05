@@ -16684,10 +16684,10 @@ function ksNewGame(o) {
   // 式で合わせたあと、会社の写しで1年ほど動かして測り、ずれを倍率で直す。役員報酬（社会保険を含む）は、
   // 事業の売上の割合で割り振って固定費に入れる。合わせた値（lv）で会社を作り直すと、開始時の現預金・売掛金・在庫も
   // その規模になる（作り直しや、状態が合わずに作り直すときも同じ値を使う）
-  if (!o.lv) {
+  // 以前の6業種そのまま（標準の規模で1つだけ）のときは、手で合わせた数字を使う。規模を変えたり組み合わせたりしたときは合わせる
+  if (!o.lv && !legacy) {
     const lv = G.units.map((u, i) => {
       const S = ksS(u), E = KS_ENGINE[S.eng];
-      if (!S.calib) return null;
       G.curU = u.id;
       E.calib(u, KS_ENG_OPM[S.eng] + G.execPay * 12 * 1.15 / annual);
       G.curU = null;
@@ -17827,7 +17827,6 @@ function ksCalibEmp(u, target, hqFixed = 0) {
 /* 途中から始める事業の基準の単価を、同じ業種の標準的な規模の会社に合わせる（キャリブレーション） */
 function ksCalibFresh(u) {
   const S = ksS(u);
-  if (!S.calib) return;
   const got = ksSandbox(() => {
     const t = { id: 'Utmp', type: u.type, n: null, sc: Math.max(1, u.sc || 1), op: {}, staff: {}, invB: {}, kpi: {} };
     G.curU = t.id;
@@ -22086,7 +22085,7 @@ function ksMaBuild(c, sandbox) {
     if (KS_DIRECT[a.acct]) a.booked = Math.min(a.booked, a.cost - 1);
   }
   ksShiftM(u.op, D);
-  if (S.calib) {
+  {
     KS_ENGINE[S.eng].calib(u, KS_ENG_OPM[S.eng]);
     const k = ksCalibEmp(u, KS_ENG_OPM[S.eng]);
     if (k !== 1) KS_ENGINE[S.eng].scale(u, k);

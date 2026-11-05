@@ -264,7 +264,7 @@ function ksMaBuild(c, sandbox) {
     if (KS_DIRECT[a.acct]) a.booked = Math.min(a.booked, a.cost - 1);
   }
   ksShiftM(u.op, D);
-  if (S.calib) {
+  {
     KS_ENGINE[S.eng].calib(u, KS_ENG_OPM[S.eng]);
     const k = ksCalibEmp(u, KS_ENG_OPM[S.eng]);
     if (k !== 1) KS_ENGINE[S.eng].scale(u, k);

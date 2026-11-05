@@ -105,7 +105,6 @@ function ksCalibEmp(u, target, hqFixed = 0) {
 /* 途中から始める事業の基準の単価を、同じ業種の標準的な規模の会社に合わせる（キャリブレーション） */
 function ksCalibFresh(u) {
   const S = ksS(u);
-  if (!S.calib) return;
   const got = ksSandbox(() => {
     const t = { id: 'Utmp', type: u.type, n: null, sc: Math.max(1, u.sc || 1), op: {}, staff: {}, invB: {}, kpi: {} };
     G.curU = t.id;
