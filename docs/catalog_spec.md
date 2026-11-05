@@ -215,10 +215,21 @@ KS_CAT_ADD([
 
 ## 法令のキー（laws）
 machine（機械の安全）・fall（墜落防止）・chem（化学物質）・haccp（食品衛生）・alcohol（社用車のアルコールチェック）・
-kyoka（建設業許可）・privacy（個人情報）・kiken（危険物）。労働時間・健康診断・消防などは自動で全業種にかかる。
+kyoka（建設業許可）・privacy（個人情報）・kiken（危険物）・rad（放射線業務の被ばく管理）・export（輸出管理：軍事にも使える製品・技術）。
+労働時間・健康診断・消防などは自動で全業種にかかる。
 業種独自の許認可は `lic`（例：`{ n: '一般貨物自動車運送事業の許可', law: '貨物自動車運送事業法', every: 0 }`、
 `{ n: '旅館業の許可', law: '旅館業法', every: 0 }`、`{ n: '酒類販売業免許', law: '酒税法', every: 0 }`、
 `{ n: '産業廃棄物収集運搬業の許可', law: '廃棄物処理法', every: 5 }`）。
+
+## 発電（cap で per: 'mwh'）の数字
+units は出力（MW）、price は1MWhあたりの売値、occ は設備の利用率、var は1MWhあたりの燃料費などの変動費。
+fuel を書くと変動費を燃料費に計上する（'oil' なら原油の値段につれて動く。'bio'・'nuke' は動かない）。
+levy は1MWhあたりの拠出金など、om は1MWあたり月の運転・保守の委託費、capPay は1MWあたり月の基本料金（発電しなくても入る）。
+nuke: true の原子力は、13か月ごとに2か月の定期検査で止まり、まれに規制・裁判で長く止まる。
+
+## どの事業の型にも書ける p のキー
+- accF：労災の起きやすさの倍率（既定 1。安全管理の仕組みが特に厚い原子力などは 0.15〜0.3）。
+- accSet：労災の文の組。'plant' は発電所・タンク基地・射場などのプラント向け（足場からの転落、分解点検での挟まれ など）。
 
 ## 季節の型（season）
 flat retail food mfg con whl it fiscal summer winter gift toy fashion tourism travel hotel ski beach leisure school

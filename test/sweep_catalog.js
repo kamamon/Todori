@@ -1,5 +1,5 @@
 // カタログの業種を1つずつ会社にして、過去4期の自動経営と、その後2年のボット経営を回す
-//   node test/sweep_catalog.js [間引き=1] [開始=0] [--eng=mfg] [--name=文字] [--years=2] [--seed=11] [--cond=normal] [--max=80] [--json=結果.json]
+//   node test/sweep_catalog.js [間引き=1] [開始=0] [--eng=mfg] [--name=文字] [--years=2] [--seed=11] [--cond=normal] [--max=80] [--json=結果.json] [--src=20c_cat_x_frontier.js]
 // 落ちる・倒産する・利益率が極端・1人あたり売上が極端な業種を一覧にする
 const { loadKaisha } = require('./load_kaisha');
 const E = loadKaisha();
@@ -11,7 +11,10 @@ const eng = arg('eng'), nameQ = arg('name');
 const years = +(arg('years') || 2);
 const jsonOut = arg('json');
 const seed = +(arg('seed') || 11);
-let list = E.KS_TYPE_LIST.filter(S => (!eng || S.eng === eng) && (!nameQ || S.name.includes(nameQ)));
+// --src=20c_cat_x_frontier.js：そのカタログのファイルの業種だけ
+const srcF = arg('src');
+const srcNames = srcF ? new Set([...require('fs').readFileSync(require('path').join(__dirname, '..', 'src', srcF), 'utf8').matchAll(/\[\s*'([^']+)',\s*\{/g)].map(m => m[1])) : null;
+let list = E.KS_TYPE_LIST.filter(S => (!eng || S.eng === eng) && (!nameQ || S.name.includes(nameQ)) && (!srcNames || srcNames.has(S.name)));
 list = list.filter((_, i) => i >= from && (i - from) % step === 0);
 const rows = [];
 const t0 = Date.now();

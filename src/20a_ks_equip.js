@@ -491,6 +491,33 @@ const KS_EQ = {
   pos_term: { n: '決済端末（貸出用・100台）', a: 'equip', c: 500e4, l: 5, e: 'subs' },
   warehouse_ec: { n: 'EC用の物流センター', a: 'bldg', c: 10e8, l: 31, e: 'subs' },
   print_hub: { n: '印刷工場（雑誌・書籍）', a: 'mach', c: 8e8, l: 10, e: 'subs' },
+  // ---- 宇宙を使うサービス ----
+  sat_eo: { n: '地球観測衛星（小型・光学/SAR）', a: 'mach', c: 25e8, l: 5, e: 'subs' },
+  sat_leo: { n: '低軌道の通信衛星（小型・コンステレーションの1機）', a: 'mach', c: 8e8, l: 5, e: 'subs' },
+  gnss_ref: { n: '電子基準点・補正情報の配信設備', a: 'mach', c: 3e8, l: 8, e: 'subs' },
+  ground_st: { n: '衛星の地上局（アンテナ・管制設備）', a: 'mach', c: 6e8, l: 10, e: 'subs' },
+  // ---- 原子力・宇宙・化学の施設（貸す・使ってもらう） ----
+  nuke_pwr: { n: '原子力発電設備（加圧水型・118万kW級）', a: 'mach', c: 3800e8, l: 15, e: 'cap', cap: 1180, cu: 'MW' },
+  nuke_bwr: { n: '原子力発電設備（沸騰水型・110万kW級）', a: 'mach', c: 3500e8, l: 15, e: 'cap', cap: 1100, cu: 'MW' },
+  nuke_safety: { n: '新規制基準の安全対策設備（防潮堤・非常用電源など）', a: 'mach', c: 1500e8, l: 15, e: 'cap', cap: 0, cu: '' },
+  cask_store: { n: '使用済燃料の乾式貯蔵施設（キャスク100基分）', a: 'bldg', c: 300e8, l: 50, e: 'cap', cap: 100, cu: '基' },
+  rad_store: { n: '低レベル放射性廃棄物の埋設施設（1万本分）', a: 'bldg', c: 100e8, l: 50, e: 'cap', cap: 10000, cu: '本' },
+  launch_pad: { n: 'ロケットの射場（発射台・組立棟）', a: 'bldg', c: 80e8, l: 30, e: 'cap', cap: 12, cu: '回' },
+  test_fac: { n: '宇宙機の試験設備（振動・熱真空・電波）', a: 'mach', c: 30e8, l: 15, e: 'cap', cap: 12, cu: '週' },
+  tank_term: { n: '化学品のタンク（1万kL分）', a: 'mach', c: 25e8, l: 30, e: 'cap', cap: 10000, cu: 'kL' },
+  // ---- 化学・原子力の製造ライン（能力と価格は業種の lineCap・lineCost） ----
+  line_cracker: { n: 'ナフサ分解炉（エチレンプラント）', a: 'mach', l: 8, e: 'mfg', k: 'line' },
+  line_ammonia: { n: 'アンモニア・メタノールの合成プラント', a: 'mach', l: 8, e: 'mfg', k: 'line' },
+  line_semi_mat: { n: '電子材料の精製・ろ過・充填ライン（クリーン）', a: 'mach', l: 8, e: 'mfg', k: 'line' },
+  line_batt_mat: { n: '電池材料の焼成・粉砕ライン', a: 'mach', l: 8, e: 'mfg', k: 'line' },
+  line_fiber_chem: { n: '化学繊維の重合・紡糸設備', a: 'mach', l: 8, e: 'mfg', k: 'line' },
+  line_cf: { n: '炭素繊維の焼成炉（耐炎化・炭化）', a: 'mach', l: 8, e: 'mfg', k: 'line' },
+  line_bio: { n: '発酵・精製の設備（バイオ化学）', a: 'mach', l: 8, e: 'mfg', k: 'line' },
+  line_electrolyzer: { n: '水電解装置（水素製造）', a: 'mach', l: 10, e: 'mfg', k: 'line' },
+  line_fuel_assy: { n: '燃料集合体の成型加工ライン', a: 'mach', l: 10, e: 'mfg', k: 'line' },
+  line_cask: { n: '大型の容器の製缶・機械加工設備', a: 'mach', l: 10, e: 'mfg', k: 'line' },
+  line_radwaste: { n: '放射性廃棄物の減容・固化設備', a: 'mach', l: 10, e: 'mfg', k: 'line' },
+  line_def_sew: { n: '防護服・装具の縫製ライン', a: 'mach', l: 8, e: 'mfg', k: 'line' },
 };
 
 /* ---------- 建設の工事の型 ----------
@@ -502,6 +529,10 @@ const KS_PAYS = {
   pub: [[0, 0.4], ['done', 0.6, 1]],
   sub: [['done', 1, 2]],
   big: [[0, 0.2], [3, 0.2], [6, 0.2], ['done', 0.4, 2]],
+  // 防衛装備庁：前払金と中間の部分払いのあと、納入・検査のあとに残りを払う
+  def: [[0, 0.2], [4, 0.15], [8, 0.15], [12, 0.15], ['done', 0.35, 1]],
+  // 宇宙機：契約時・設計審査・引渡しの節目ごとに払う
+  space: [[0, 0.3], [6, 0.3], ['done', 0.4, 1]],
 };
 const KS_PROJ_LIB = {
   house: { n: '注文住宅', min: 2000e4, max: 3500e4, dur: 5, pay: 'house', mat: 0.45, sub: 0.5, exp: 0.05, load: 1, cl: 'ind' },
@@ -564,6 +595,27 @@ const KS_PROJ_LIB = {
   plant_ex: { n: '大型機械・プラント機器の受注生産', min: 5e8, max: 30e8, dur: 12, pay: 'big', mat: 0.5, sub: 0.4, exp: 0.1, load: 4, cl: 'corp' },
   railcar: { n: '鉄道車両の製造（受注）', min: 10e8, max: 50e8, dur: 18, pay: 'big', mat: 0.55, sub: 0.35, exp: 0.1, load: 5, cl: 'corp' },
   survey_w: { n: '測量・調査業務', min: 200e4, max: 3000e4, dur: 2, pay: 'pub', mat: 0.05, sub: 0.6, exp: 0.35, load: 0.5, cl: 'pub' },
+  // ---- 防衛装備品（防衛装備庁・元請の重工から受注。原価に一般管理費と利益を乗せた価格で契約する） ----
+  def_ship: { n: '艦艇の建造（補給艦・掃海艦など）', min: 80e8, max: 250e8, dur: 30, pay: 'def', mat: 0.5, sub: 0.38, exp: 0.12, load: 9, cl: 'def' },
+  def_shiprep: { n: '艦艇の修理・定期検査', min: 3e8, max: 20e8, dur: 5, pay: 'def', mat: 0.3, sub: 0.45, exp: 0.25, load: 3, cl: 'def' },
+  def_veh: { n: '装甲車・特殊車両の製造', min: 10e8, max: 60e8, dur: 18, pay: 'def', mat: 0.55, sub: 0.33, exp: 0.12, load: 5, cl: 'def' },
+  def_air: { n: '自衛隊機の定期整備（IRAN）・修理', min: 3e8, max: 15e8, dur: 6, pay: 'def', mat: 0.3, sub: 0.35, exp: 0.35, load: 3, cl: 'def' },
+  def_sys: { n: '防衛用の電子機器・システム（レーダー・通信）', min: 5e8, max: 40e8, dur: 15, pay: 'def', mat: 0.45, sub: 0.4, exp: 0.15, load: 4, cl: 'def' },
+  def_parts: { n: '防衛装備品のユニット・部品（元請から）', min: 3000e4, max: 4e8, dur: 6, pay: 'corp', mat: 0.45, sub: 0.4, exp: 0.15, load: 1, cl: 'defprime' },
+  def_ammo: { n: '弾薬・火工品の製造（防衛省向け）', min: 5e8, max: 40e8, dur: 12, pay: 'def', mat: 0.5, sub: 0.3, exp: 0.2, load: 4, cl: 'def' },
+  def_sim: { n: '訓練用のシミュレーター・装置', min: 2e8, max: 15e8, dur: 12, pay: 'def', mat: 0.4, sub: 0.45, exp: 0.15, load: 3, cl: 'def' },
+  // ---- 宇宙機（JAXA・衛星ベンチャー・官公庁から受注） ----
+  sat_small: { n: '小型衛星の製造（受注）', min: 5e8, max: 30e8, dur: 18, pay: 'space', mat: 0.45, sub: 0.4, exp: 0.15, load: 4, cl: 'space' },
+  sat_parts: { n: '衛星のコンポーネント（電源・姿勢制御・通信機）', min: 5000e4, max: 5e8, dur: 9, pay: 'space', mat: 0.45, sub: 0.35, exp: 0.2, load: 1.5, cl: 'space' },
+  launch: { n: '小型ロケットの打ち上げ（1回）', min: 8e8, max: 20e8, dur: 12, pay: 'space', mat: 0.5, sub: 0.3, exp: 0.2, load: 5, cl: 'space' },
+  space_gs: { n: '衛星の地上局・管制システムの構築', min: 1e8, max: 10e8, dur: 9, pay: 'space', mat: 0.45, sub: 0.4, exp: 0.15, load: 2, cl: 'space' },
+  // ---- 原子力（電力会社・研究機関から受注） ----
+  nuke_decom: { n: '原子力発電所の廃止措置（解体・除染）', min: 10e8, max: 60e8, dur: 24, pay: 'big', mat: 0.15, sub: 0.6, exp: 0.25, load: 6, cl: 'power' },
+  nuke_safety_w: { n: '原子力発電所の安全対策工事（耐震・防潮堤）', min: 10e8, max: 80e8, dur: 20, pay: 'big', mat: 0.4, sub: 0.5, exp: 0.1, load: 6, cl: 'power' },
+  nuke_maint: { n: '原子力発電所の定期検査の工事', min: 1e8, max: 8e8, dur: 3, pay: 'corp', mat: 0.25, sub: 0.5, exp: 0.25, load: 2, cl: 'power' },
+  // ---- 化学プラント ----
+  chem_plant: { n: '化学プラントの建設（設計・調達・建設）', min: 10e8, max: 60e8, dur: 20, pay: 'big', mat: 0.5, sub: 0.4, exp: 0.1, load: 6, cl: 'corp' },
+  chem_sdm: { n: '化学プラントの定期修理（シャットダウン・メンテナンス）', min: 5000e4, max: 5e8, dur: 2, pay: 'corp', mat: 0.25, sub: 0.55, exp: 0.2, load: 2, cl: 'corp' },
 };
 
 /* ---------- 業種のカタログ（20c_cat_*.js が追加する） ---------- */

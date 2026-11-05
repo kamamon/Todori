@@ -73,6 +73,8 @@ const KS_LAW_TASKS = [
   { id: 'alcohol', item: 'alcohol', freq: 'year', n: '安全運転管理者とアルコールチェック（検知器の更新）', acct: 'supplies', cost: () => 8e4 * ksUnitsWithLaw('alcohol').length, applies: () => ksUnitsWithLaw('alcohol').length > 0, why: '社用車5台以上（事業用の車は運行管理者の点呼）。運転の前後に検知器で確認し、記録を1年保存する。' },
   { id: 'kyoka', item: 'kyoka', freq: 'five', n: '建設業許可の更新', acct: 'dues', cost: () => 10e4, applies: () => ksUnitsWithLaw('kyoka').length > 0, why: '500万円以上の工事を請け負うのに必要。5年ごとに更新する。' },
   { id: 'privacy', item: 'privacy', freq: 'year', n: '情報セキュリティの点検と社員教育', acct: 'fees', cost: () => 40e4 * Math.sqrt(Math.max(1, ksUnitsWithLaw('privacy').length)), applies: () => ksUnitsWithLaw('privacy').length > 0, why: 'お客さまの個人データを預かる。漏えいすると報告・通知の義務がある。' },
+  { id: 'rad', item: 'rad', freq: 'half', n: '電離放射線健康診断と被ばく線量の測定・記録', acct: 'fukuri', cost: () => sum(ksUnitsWithLaw('rad'), u => ksUnitHead(u)) * 1.5e4 * ksPrice() + 20e4, applies: () => ksUnitsWithLaw('rad').length > 0, why: '放射線業務の従事者に、6か月ごとの特別の健康診断と、線量計による被ばく線量の測定・記録をする。' },
+  { id: 'export', item: 'export', freq: 'year', n: '輸出管理（該非判定・取引審査）の点検と社内研修', acct: 'fees', cost: () => 30e4 * Math.sqrt(Math.max(1, ksUnitsWithLaw('export').length)), applies: () => ksUnitsWithLaw('export').length > 0, why: '軍事にも使える製品・技術を扱う。品目ごとの該非判定と、取引先・用途の審査の手順を毎年見直す。' },
   { id: 'kiken', item: 'kiken', freq: 'year', n: '危険物の保安監督者の選任と施設の定期点検', acct: 'fees', cost: () => 20e4 * ksUnitsWithLaw('kiken').length, applies: () => ksUnitsWithLaw('kiken').length > 0, why: 'ガソリン・灯油・溶剤などを指定数量以上扱う施設は、危険物取扱者から保安監督者を選び、年1回以上の定期点検をする（消防法）。' },
 ];
 /* 業種ごとの許認可（カタログの lic）：更新のあるものは更新、ないものは毎年の事業報告・届出 */
@@ -245,7 +247,7 @@ function ksLawAddUnit(u) {
     if (t.u && t.u !== u.id) continue;
     if (!ksTaskApplies(t)) continue;
     if (G.law.done[t.id] !== undefined || G.law.doneFy[t.id] !== undefined) continue;
-    if (t.u === u.id || ['machine', 'fall', 'chem', 'haccp', 'alcohol', 'kyoka', 'privacy', 'kiken', 'bouka', 'taisei'].includes(t.id)) G.law.done[t.id] = G.m;
+    if (t.u === u.id || ['machine', 'fall', 'chem', 'haccp', 'alcohol', 'kyoka', 'privacy', 'kiken', 'bouka', 'taisei', 'rad', 'export'].includes(t.id)) G.law.done[t.id] = G.m;
   }
 }
 
@@ -334,10 +336,12 @@ const KS_ACC_TEXT = {
   rail: [['線路の保守作業中に転倒', 'slip'], ['車両の整備中に手を挟まれた', 'machine'], ['ホームで乗客の対応中に転落', 'fall'], ['夏の線路作業で熱中症になった', 'heat']],
   air: [['空港のランプで車両と接触', 'machine'], ['手荷物の積み込みで腰を痛めた', 'back'], ['整備中に脚立から落ちた', 'fall'], ['夏のランプで熱中症になった', 'heat']],
   sea: [['甲板で滑って転倒', 'slip'], ['係留作業中にロープに手を挟まれた', 'machine'], ['荷役中に荷が落ちてきて負傷', 'hit'], ['機関室の高温で熱中症になった', 'heat']],
+  // 発電所・タンク基地・射場などのプラント（業種の p.accSet: 'plant'）
+  plant: [['設備の点検中に足場から転落', 'fall'], ['ポンプ・バルブの分解点検中に手を挟まれた', 'machine'], ['夏の屋外の巡視中に熱中症になった', 'heat'], ['重い部品・工具を運んでいて腰を痛めた', 'back'], ['構内の階段・通路で滑って転倒', 'slip'], ['クレーンで吊った資材と接触して負傷', 'hit']],
 };
 function ksAccTexts(u) {
   const S = ksS(u);
-  const list = S.eng === 'trans' ? KS_ACC_TEXT[S.p.mode === 'taxi' ? 'bus' : S.p.mode] || KS_ACC_TEXT.truck : S.eng === 'mfg' && S.bm === 'agr' ? KS_ACC_TEXT.agr : KS_ACC_TEXT[S.eng] || KS_ACC_TEXT.pro;
+  const list = S.p.accSet && KS_ACC_TEXT[S.p.accSet] ? KS_ACC_TEXT[S.p.accSet] : S.eng === 'trans' ? KS_ACC_TEXT[S.p.mode === 'taxi' ? 'bus' : S.p.mode] || KS_ACC_TEXT.truck : S.eng === 'mfg' && S.bm === 'agr' ? KS_ACC_TEXT.agr : KS_ACC_TEXT[S.eng] || KS_ACC_TEXT.pro;
   // 機械の名前：その事業の設備から
   const eqs = ksUA(u).filter(a => { const q = ksEqOf(a); return q.e === S.eng && (q.k === 'job' || q.k === 'line' || S.eng === 'build'); });
   const mn = eqs.length ? ((KS_EQ[pick(eqs).eq] || {}).n || '機械').replace(/（.*?）/, '') : S.eng === 'build' ? '重機' : '機械';
@@ -358,7 +362,8 @@ function ksLawAccidents(viol, emp) {
     return;
   }
   const us = ksActiveUnits();
-  const ps = us.map(u => KS_ACC_BASE[ksS(u).eng] * ksUnitHead(u) * mul * (ksS(u).bm === 'agr' ? 1.3 : 1) * (typeof ksUpgradeF === 'function' ? ksUpgradeF(u, 'acc') : 1));
+  // 業種の p.accF：安全管理の仕組みが特に厚い業種（原子力など）は小さく
+  const ps = us.map(u => KS_ACC_BASE[ksS(u).eng] * ksUnitHead(u) * mul * (ksS(u).bm === 'agr' ? 1.3 : 1) * (ksP(u).accF ?? 1) * (typeof ksUpgradeF === 'function' ? ksUpgradeF(u, 'acc') : 1));
   const p = sum(ps, x => x);
   if (!p || !chance(Math.min(0.6, p))) return;
   const u = wpick(us, ps);
@@ -575,7 +580,7 @@ function ksLawOtherEvents(viol) {
 function ksLawDemandF(u) { return G.law && G.law.licLost && G.law.licLost[u.id] ? 0.8 : 1; }
 
 /* ---------- 立入検査 ---------- */
-const KS_INSP_P = { labor: 0.011, fire: 0.012, health: 0.012, police: 0.006, ppc: 0, pref: 0, gov: 0.006 };
+const KS_INSP_P = { labor: 0.011, fire: 0.012, health: 0.012, police: 0.006, ppc: 0, pref: 0, gov: 0.006, meti: 0.004 };
 function ksLawInspections(viol) {
   const L = G.law;
   const nx = L.inspNext || {};
@@ -583,7 +588,8 @@ function ksLawInspections(viol) {
   const keys = ksLawKeys();
   const hasLic = ksActiveUnits().some(u => ksS(u).lic);
   const spec = ksBuildings().some(b => b.spec);
-  for (const ag of ['labor', 'fire', 'health', 'police', 'ppc', 'gov']) {
+  for (const ag of ['labor', 'fire', 'health', 'police', 'ppc', 'gov', 'meti']) {
+    if (ag === 'meti' && !keys.has('export')) continue;
     if (ag === 'health' && !keys.has('haccp')) continue;
     if (ag === 'police' && !keys.has('alcohol')) continue;
     if (ag === 'ppc' && !keys.has('privacy')) continue;
@@ -707,6 +713,8 @@ Object.assign(KS_JNOTE, {
   law_kyoka: ['建設業許可の更新手数料', '役所に払う手数料は租税公課。'],
   law_privacy: ['情報セキュリティの点検', '外部の専門家への報酬は支払手数料。'],
   law_kiken: ['危険物の保安・点検、流出の対応', '点検の報酬は支払手数料、流出の回収・清掃は雑費。'],
+  law_rad: ['電離放射線健康診断と被ばく線量の測定', '特別の健康診断は福利厚生費。線量計の測定・記録の委託も含める。'],
+  law_export: ['輸出管理の点検と研修', '外部の専門家への報酬は支払手数料。'],
   law_lic: ['許認可の更新・事業報告', '役所に払う更新の手数料は租税公課、書類を作る専門家（行政書士）への報酬は支払手数料。'],
   law_safety: ['安全衛生の費用', '保護具・安全教育・巡回など。安全衛生費（販管費）。'],
   law_ins: ['保険料（火災保険・使用者賠償責任保険）', '毎月払う保険料は費用（保険料）。'],

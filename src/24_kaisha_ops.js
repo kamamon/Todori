@@ -703,20 +703,23 @@ KS_OPS.cap = {
   params(u) {
     const op = u.op, P = ksP(u);
     const r0 = op.ref * ksPrice();
-    const ps = [{ k: 'price', label: `料金（1${P.unit}・${P.per === 'day' ? '1日' : P.per === 'mwh' ? 'MWh' : '1か月'}あたり）`, tk: 'occupancy', min: Math.max(1, Math.round(r0 * 0.7)), max: Math.round(r0 * 1.5), step: Math.max(1, ksNiceStep(r0 * 0.8)), f: 'yenh', help: '上げると1単位あたりの売上は増えるが、稼働率が下がる。' }];
+    const ps = [{ k: 'price', label: `料金（1${P.unit}・${P.per === 'day' ? '1日' : P.per === 'mwh' ? 'MWh' : '1か月'}あたり）`, tk: 'occupancy', min: Math.max(1, Math.round(r0 * 0.7)), max: Math.round(r0 * 1.5), step: Math.max(1, ksNiceStep(r0 * 0.8)), f: 'yenh', help: P.per === 'mwh' ? '上げると1MWhあたりの売上は増えるが、買い手の電力会社や市場に選ばれにくくなり、発電できる量（利用率）が下がる。' : '上げると1単位あたりの売上は増えるが、稼働率が下がる。' }];
     if (P.per !== 'mwh') ps.push({ k: 'ads', label: '広告・営業の費用（月）', tk: 'ads', min: 0, max: Math.max(20e4, Math.round(op.ads * 4 / 1e4) * 1e4), step: ksNiceStep(Math.max(20e4, op.ads * 4)), f: 'yen', help: '予約サイト・営業。稼働率が少し上がる。' });
     return ps;
   },
   kpiRows(u, k) {
     if (k.units === undefined) return [];
     const P = ksP(u);
-    return [['能力', `${fmtNum(k.units, 0)}${esc(P.unit)}`], [P.per === 'mwh' ? '設備の利用率' : '稼働率', fmtPct(k.occ * 100, 1)], ['料金', `${fmtNum(k.price, 0)}円`], [`1${esc(P.unit)}あたりの月の売上`, fmtYen(k.revPer)], ['人員の充足', fmtPct(Math.min(1, k.staffF || 0) * 100, 0)], ['施設の平均の年数', `${fmtNum(k.ageY || 0, 1)}年`]];
+    const rows = [['能力', `${fmtNum(k.units, 0)}${esc(P.unit)}`], [P.per === 'mwh' ? '設備の利用率' : '稼働率', fmtPct(k.occ * 100, 1)], ['料金', `${fmtNum(k.price, 0)}円`], [`1${esc(P.unit)}あたりの月の売上`, fmtYen(k.revPer)], ['人員の充足', fmtPct(Math.min(1, k.staffF || 0) * 100, 0)], ['施設の平均の年数', `${fmtNum(k.ageY || 0, 1)}年`]];
+    if (P.nuke) rows.unshift(['運転の状態', k.off === 'stop' ? `<span class="neg">停止中（${k.stopUntil !== undefined ? `${ymLabel(k.stopUntil)}ごろ再開の見込み` : '再開の時期は未定'}）</span>` : k.off ? '<span class="neg">定期検査で停止中</span>' : `運転中（次の定期検査 ${k.nextInsp !== undefined ? ymLabel(k.nextInsp) : '―'}）`]);
+    return rows;
   },
   alerts(u) {
     const out = [];
     const k = ksKpiU(u);
     if (k.staffF !== undefined && k.staffF < 0.9) out.push({ ico: '人', cls: 'warn', t1: `${ksUName(u)}：人手が足りず、稼働を落としています`, t2: '人員を増やしましょう', act: btn('人員へ', 'kGoUnit', { u: u.id }, 'sm') });
     if (k.occ > 0.9 && ksP(u).per !== 'mwh') out.push({ ico: '満', t1: `${ksUName(u)}：稼働率が${fmtPct(k.occ * 100, 0)}と高い水準です`, t2: '値上げか、施設の増設を考えるときです', act: '' });
+    if (k.off === 'stop') out.push({ ico: '止', cls: 'warn', t1: `${ksUName(u)}：原子炉が止まっています`, t2: '発電しない間も固定費がかかります。資金繰りに注意しましょう', act: '' });
     return out;
   },
   screen(u) {
@@ -729,7 +732,7 @@ KS_OPS.cap = {
         <div class="row" style="margin-top:10px">${btn('施設を増やす（カタログ）', 'kEqBuyOpen', { u: u.id }, 'primary')}<span class="small muted">大きな施設は完成まで時間がかかります（それまでは建設仮勘定）。</span></div>`)}
       ${ksStaffPanel(u, E.need(u))}
     </div><div class="stack">${ksKpiPanel(this.kpiRows(u, k))}
-      ${ksPointsPanel(u, ['売上 ＝ 能力 × 稼働率 × 単価。', '建物・設備に大きなお金を先に払い、長い年数で回収する商売です。借入の期間を設備の耐用年数に合わせるのが基本。', `決算書では${term('有形固定資産', 'fa')}と${term('減価償却費', 'dep')}が大きくなります。銀行は${term('債務償還年数', 'dsy')}を見ます。`])}
+      ${ksPointsPanel(u, P.nuke ? ['売上 ＝ 出力 × 時間 × 設備の利用率 × 単価。13か月ごとに2か月ほど定期検査で止まり、その月は発電しないのに費用はかかります。', '燃料（ウラン）の費用は小さく、減価償却費・人件費・保守の委託費・再処理などの拠出金といった固定的な費用が中心。止まっている期間が長いほど赤字が大きくなります。', `決算書では${term('有形固定資産', 'fa')}と${term('減価償却費', 'dep')}がとても大きく、借入の返済は長い年数で計画します。`] : ['売上 ＝ 能力 × 稼働率 × 単価。', '建物・設備に大きなお金を先に払い、長い年数で回収する商売です。借入の期間を設備の耐用年数に合わせるのが基本。', `決算書では${term('有形固定資産', 'fa')}と${term('減価償却費', 'dep')}が大きくなります。銀行は${term('債務償還年数', 'dsy')}を見ます。`])}
     </div></div>`;
   },
 };

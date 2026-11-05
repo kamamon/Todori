@@ -620,6 +620,10 @@ KS_ENGINE.build = {
 };
 function ksClientName(cl) {
   if (cl === 'pub') return pick(['汐見市', '汐見県', '国土交通省 汐見事務所', '汐見市水道局']);
+  if (cl === 'def') return pick(['防衛装備庁', '海上自衛隊 汐見地方総監部', '陸上自衛隊 補給統制本部', '航空自衛隊 補給本部']);
+  if (cl === 'defprime') return pick(['汐見重工業 防衛・宇宙事業部', '中央重機 特機事業部', '汐見電機 防衛システム事業部', '港南造船 艦艇事業部']);
+  if (cl === 'space') return pick(['宇宙航空研究開発機構（JAXA）', '汐見大学 宇宙工学研究室', '汐見スペース（衛星ベンチャー）', '内閣府 宇宙開発戦略推進事務局', '汐見重工業 宇宙事業部']);
+  if (cl === 'power') return pick(['汐見電力 原子力事業本部', '中央電力 原子力部門', '日本原子力研究開発機構（JAEA）']);
   if (cl === 'corp' || cl === 'shop') return pick(CO_PREFIX) + pick(['商店', '歯科医院', '不動産', '設計事務所', '物産', '工業', 'ホテル', '運輸', '病院', '食品']);
   return pick(FAMILY_NAMES) + '様邸';
 }
