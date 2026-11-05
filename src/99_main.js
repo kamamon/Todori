@@ -1,6 +1,6 @@
 'use strict';
 /* =========================================================
- *  15_main.js : 起動
+ *  99_main.js : 起動（すべてのファイルの後に読み込む）
  * ========================================================= */
 /* iPhone：開いたときにステータスバーと重なっている高さを一度だけ測り、
    ページの流れの中の余白（--band0）に使う。スクロールで変わる値（--band）は固定表示の要素だけが使う。 */
@@ -25,5 +25,5 @@ function measureSafeTop() {
   inp.setAttribute('data-ch', 'importFile');
   document.body.appendChild(inp);
   render();
-  window.Toudori = { get G() { return G; }, render, advance: runAdvance, check: () => integrityCheck(), show: (name, args) => showModal(name, args || {}) };
+  window.Toudori = { get G() { return G; }, render, advance: () => (isK() ? ksRunAdvance() : runAdvance()), check: () => (isK() ? ksCheck() : integrityCheck()), show: (name, args) => showModal(name, args || {}) };
 })();

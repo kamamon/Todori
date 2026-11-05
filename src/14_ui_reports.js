@@ -36,11 +36,19 @@ function bankPLRows(pl) {
     ['経常利益', s.ordinary, 'sum'], ['特別利益', g('extraGain'), 'i1'], ['特別損失', g('extraLoss'), 'i1'], ['税引前当期純利益', s.pretax, 'sum'], ['法人税、住民税及び事業税', s.tax, 'i1'], ['当期純利益', s.net, 'grand'],
   ];
 }
+/* 銀行の財務諸表の行と用語の対応 */
+const BANK_TERM = {
+  '現金預け金': 'cash', 'コールローン': 'call', 'コールマネー': 'call', '有価証券（国債）': 'bankSec', '貸出金': 'bankLoans', '有形固定資産': 'ppe', '無形固定資産': 'intangible',
+  '貸倒引当金': 'bankAllow', '資産の部合計': 'ta', '預金': 'bankDep', '未払法人税等': 'taxPay', '資本金': 'capital', '利益剰余金': 're', '純資産の部合計': 'eq',
+  '資金運用収益': 'nii', '資金調達費用': 'nii', '貸出金利息': 'spread', '役務取引等収益': 'feeIncome', '営業経費': 'ohr', '人件費': 'salary', '減価償却費': 'dep',
+  '貸倒引当金繰入額': 'creditCost', '貸出金償却': 'creditCost', '経常利益': 'ord', '特別利益': 'extra', '特別損失': 'extra', '税引前当期純利益': 'pretax',
+  '法人税、住民税及び事業税': 'tax', '当期純利益': 'ni', '業務粗利益': 'bankGross', '資金利益': 'nii', '役務取引等利益': 'feeIncome', 'コア業務純益': 'coreProfit', '与信関係費用': 'creditCost', '経費': 'ohr',
+};
 function fsTable(cols, rowsList) {
   const head = `<thead><tr><th>（単位：百万円）</th>${cols.map(c => `<th>${c}</th>`).join('')}</tr></thead>`;
   const body = rowsList[0].map((r, i) => {
     if (r[1] === null) return `<tr class="head"><td colspan="${cols.length + 1}">${r[0]}</td></tr>`;
-    return `<tr class="${r[2] || ''}"><td>${r[0]}</td>${rowsList.map(rows => { const v = rows[i][1]; return `<td class="${v < 0 ? 'neg' : ''}">${fmtM(v)}</td>`; }).join('')}</tr>`;
+    return `<tr class="${r[2] || ''}"><td>${term(r[0], BANK_TERM[r[0]])}</td>${rowsList.map(rows => { const v = rows[i][1]; return `<td class="${v < 0 ? 'neg' : ''}">${fmtM(v)}</td>`; }).join('')}</tr>`;
   }).join('');
   return `<div class="tbl-wrap"><table class="fs">${head}<tbody>${body}</tbody></table></div>`;
 }
@@ -48,7 +56,7 @@ function curFYPL() { const fy = fyOf(G.m); return Object.assign({}, sumPL(fy * 1
 function addFlows(a, b) { for (const k in b) a[k] = (a[k] || 0) + b[k]; return a; }
 
 SCREENS.finance = () => {
-  const tabs = [['bs', '貸借対照表'], ['pl', '損益計算書'], ['monthly', '月次収支'], ['capital', '自己資本比率'], ['npl', '開示債権'], ['history', '決算の推移'], ['journal', '仕訳帳・試算表']];
+  const tabs = [['bs', '貸借対照表'], ['pl', '損益計算書'], ['monthly', '月次収支'], ['budget', '予算と実績'], ['capital', '自己資本比率'], ['npl', '開示債権'], ['history', '決算の推移'], ['journal', '仕訳帳・試算表']];
   const last = G.annual[G.annual.length - 1];
   const fy = fyOf(G.m);
   let body = '';
@@ -71,11 +79,11 @@ SCREENS.finance = () => {
       body = `${fsTable(cols, lists)}
         <h3 style="font-size:14px;margin:16px 0 6px">銀行の利益指標</h3>
         <table class="t compact" style="max-width:520px"><tbody>
-        <tr><td>業務粗利益（資金利益＋役務利益＋その他業務利益）</td><td class="n">${fmtYen(s.gross)}</td></tr>
-        <tr><td>経費（営業経費）</td><td class="n">${fmtYen(s.opex)}</td></tr>
-        <tr><td>コア業務純益（国債等債券損益を除く）</td><td class="n ${s.core < 0 ? 'neg' : ''}">${fmtYen(s.core)}</td></tr>
-        <tr><td>与信関係費用（引当金繰入＋償却−戻入・取立益）</td><td class="n">${fmtYen(s.credit)}</td></tr>
-        <tr><td>経費率（OHR）</td><td class="n">${s.gross > 0 ? fmtPct(s.opex / s.gross * 100, 1) : '―'}</td></tr></tbody></table>`;
+        <tr><td>${term('業務粗利益', 'bankGross')}（資金利益＋役務利益＋その他業務利益）</td><td class="n">${fmtYen(s.gross)}</td></tr>
+        <tr><td>${term('経費（営業経費）', 'ohr')}</td><td class="n">${fmtYen(s.opex)}</td></tr>
+        <tr><td>${term('コア業務純益', 'coreProfit')}（国債等債券損益を除く）</td><td class="n ${s.core < 0 ? 'neg' : ''}">${fmtYen(s.core)}</td></tr>
+        <tr><td>${term('与信関係費用', 'creditCost')}（引当金繰入＋償却−戻入・取立益）</td><td class="n">${fmtYen(s.credit)}</td></tr>
+        <tr><td>${term('経費率（OHR）', 'ohr')}</td><td class="n">${s.gross > 0 ? fmtPct(s.opex / s.gross * 100, 1) : '―'}</td></tr></tbody></table>`;
       break;
     }
     case 'monthly': {
@@ -88,6 +96,7 @@ SCREENS.finance = () => {
         <p class="note">6月と12月は賞与の支給で人件費が増えます。3月は決算で税金を計上し、監査の結果によっては引当金を積み増します。</p>`;
       break;
     }
+    case 'budget': body = budgetScreen(); break;
     case 'capital': {
       const r = rwaBreakdown(), p = coreCapitalParts(r);
       const cr = p.core / r.total * 100;
@@ -353,19 +362,23 @@ MODALS.gameover = () => {
 MODALS.term = () => modalFrame('任期満了', `${scene(STAGE_ART[G.stage || 0], { cls: 'modal-art', alt: '' })}<p>就任から${G.termYears}年。${esc(G.bankName)}頭取としての任期を全うしました。</p>${evalHtml()}<p class="note" style="margin-top:10px">このまま続投して経営を続けることもできます。</p>`, btn('続投する', 'closeModal', {}, 'primary'), { size: 'wide' });
 
 MODALS.menu = () => {
+  const L = lsKeys();
+  const kmode = L === LSK;
   const slot = i => {
     let meta = null;
-    try { meta = JSON.parse(lsGet(LS.meta(i)) || 'null'); } catch (e) { meta = null; }
-    return `<tr><td>${i === 'a' ? '自動保存' : 'スロット' + i}</td><td class="small">${meta ? `${esc(meta.bank)}・${ymLabel(meta.m)}・総資産${fmtYen(meta.ta)}` : '<span class="muted">空き</span>'}</td><td class="n">${i === 'a' ? '' : btn('保存', 'saveSlot', { slot: i }, 'sm', { disabled: !G })} ${btn('読込', i === 'a' ? 'loadAuto' : 'loadSlot', { slot: i }, 'sm', { disabled: !meta })}</td></tr>`;
+    try { meta = JSON.parse(lsGet(L.meta(i)) || 'null'); } catch (e) { meta = null; }
+    const desc = !meta ? '<span class="muted">空き</span>' : kmode ? `${esc(meta.co)}・${ymLabel(meta.m)}・${esc((KS_INDS[meta.ind] || {}).name || '')}` : `${esc(meta.bank)}・${ymLabel(meta.m)}・総資産${fmtYen(meta.ta)}`;
+    return `<tr><td>${i === 'a' ? '自動保存' : 'スロット' + i}</td><td class="small">${desc}</td><td class="n">${i === 'a' ? '' : btn('保存', 'saveSlot', { slot: i }, 'sm', { disabled: !G })} ${btn('読込', i === 'a' ? 'loadAuto' : 'loadSlot', { slot: i }, 'sm', { disabled: !meta })}</td></tr>`;
   };
   const theme = lsGet(LS.theme) || 'auto';
-  const body = `<h3 style="font-size:14px;margin:0 0 6px">セーブとロード</h3><table class="t compact"><tbody>${slot('a')}${slot(1)}${slot(2)}${slot(3)}</tbody></table>
+  const body = `<h3 style="font-size:14px;margin:0 0 6px">セーブとロード（${kmode ? '会社を経営する' : '銀行を経営する'}）</h3><table class="t compact"><tbody>${slot('a')}${slot(1)}${slot(2)}${slot(3)}</tbody></table>
     <p class="note">データはこのブラウザ内に保存されます。別の端末で続けるときはファイルに書き出してください。</p>
     <div class="row">${btn('ファイルに書き出す', 'exportSave', {}, '', { disabled: !G })}${btn('ファイルから読み込む', 'importSave')}</div>
     <hr class="sep"><h3 style="font-size:14px;margin:0 0 6px">表示</h3>
     <div class="seg">${[['auto', '端末に合わせる'], ['light', 'ライト'], ['dark', 'ダーク']].map(([k, l]) => `<button type="button" data-act="theme" data-v="${k}" aria-pressed="${theme === k}">${l}</button>`).join('')}</div>
     <div style="margin-top:10px;display:grid;gap:6px"><label class="inline small"><input type="checkbox" data-ch="setting" data-key="monthly" ${UI.settings.monthly ? 'checked' : ''}> 毎月、月次報告を表示する</label>
-    <label class="inline small"><input type="checkbox" data-ch="setting" data-key="confirmAdvance" ${UI.settings.confirmAdvance ? 'checked' : ''}> 未処理の案件があるとき月末の締めを確認する</label></div>
+    <label class="inline small"><input type="checkbox" data-ch="setting" data-key="confirmAdvance" ${UI.settings.confirmAdvance ? 'checked' : ''}> 未処理の案件があるとき月末の締めを確認する</label>
+    <label class="inline small"><input type="checkbox" data-ch="setting" data-key="learn" ${UI.settings.learn !== false ? 'checked' : ''}> 学習サポート（決算書の読み方ガイド・解説）を表示する</label></div>
     <hr class="sep">${G ? btn('新しいゲームを始める', 'newGameConfirm', {}, 'danger') : ''}`;
   return modalFrame('メニュー', body, btn('閉じる', 'closeModal', {}, 'primary'));
 };
@@ -423,7 +436,7 @@ MODALS.intro = () => (G.stage || 0) >= 1 ? modalFrame(`${esc(G.bankName)}へよ�
   <p class="note">遊び方はいつでも右上の「遊び方」から読めます。進行はこのブラウザに自動保存されます。</p>`, btn('遊び方を読む', 'helpSec', { sec: 0 }) + btn('始める', 'closeModal', {}, 'primary'));
 
 /* ---------- 開始画面（辞令・カスタムスタート） ---------- */
-UI.start = { ceo: '', bank: DEFAULT_BANK, diff: 'normal', preset: 'standard', custom: Object.assign({}, CUSTOM_PRESETS.standard), open: false, seed: '' };
+UI.start = { mode: 'bank', ceo: '', bank: DEFAULT_BANK, diff: 'normal', preset: 'standard', custom: Object.assign({}, CUSTOM_PRESETS.standard), open: false, seed: '' };
 const CUSTOM_FIELDS = [
   ['stage', '開始する業態'], ['capMul', '資本'], ['depMul', '預金の規模'], ['quality', '承継する貸出の質'], ['branches', `${CITY_NAME}の店舗`],
   ['sys', 'システム'], ['econ', '景気'], ['rate', '金利の水準'], ['fraud', '粉飾企業の多さ'], ['term', '任期'],
@@ -435,6 +448,7 @@ function startStoreInputs() {
   s.seed = $('#stSeed')?.value ?? s.seed;
 }
 function renderStart() {
+  if (UI.start.mode === 'kaisha') return renderStartK();
   let meta = null;
   try { meta = JSON.parse(lsGet(LS.meta('a')) || 'null'); } catch (e) { meta = null; }
   const s = UI.start, cu = s.custom;
@@ -453,6 +467,7 @@ function renderStart() {
   const cont = meta && !meta.over ? btn(`続きから（${esc(meta.bank)}・${ymLabel(meta.m)}）`, 'loadAuto') : '';
   const setup = `<section class="setup" aria-labelledby="setupTitle">
     <div class="setup-head"><h2 id="setupTitle">始め方</h2>${cont}</div>
+    ${startModeSwitch()}
     <div class="presets">${presets}</div>
     ${isCustom ? `<div class="custom-grid">${fields}<label class="field"><span>シード（同じ数字なら同じ展開）</span><input type="text" id="stSeed" value="${esc(s.seed)}" placeholder="空欄でランダム" inputmode="numeric"></label></div>`
       : `<p class="setup-sum small muted">${summary}</p>`}

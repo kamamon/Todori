@@ -83,6 +83,7 @@ function newGame(opts = {}) {
   if (cu.econ === 'precrisis') addNews('eco', '地価と株価が歴史的な高値を更新。過熱を懸念する声も出始めた', 'neutral');
   genApplications();
   G.hist.push({ m: -1, bs: bsSnapshot(), pl: {}, kpi: kpiSnapshot() });
+  ensureBudget();
   return G;
 }
 
@@ -286,8 +287,10 @@ function advanceMonth() {
   G.hist.push({ m, bs: bsSnapshot(), pl: flow, kpi: kpiSnapshot() });
   if ([6, 9, 12, 3].includes(calMonth(m))) { updateRating(); G.hist[G.hist.length - 1].kpi.rating = G.ratingIdx; stageQuarterly(); }
   pruneState();
+  if (calMonth(m) === 4) approveBudget(true); // 4月末までに決めなければ予算案のまま確定
   // ===== 翌月 =====
   G.m = m + 1;
+  if (calMonth(G.m) === 4) ensureBudget();
   G.capUsed = { credit: 0, audit: 0 };
   ecoStep();
   applyRateLinks();
@@ -431,6 +434,8 @@ function shareholdersMeeting() {
   let sat = 55 + 2.5 * clamp(last.roe, -8, 10) + 30 * Math.min(0.5, G.lastPayout || 0) + 0.2 * clamp(ret, -50, 50)
     - 6 * Math.min(3, G.scandalHeat / 6) + (G.ratingIdx <= 5 ? 5 : 0) - (G.shareholders.dilution || 0) * 25;
   if (last.pl.net < 0) sat -= 6;
+  const ach = lastBudgetAchievement(); // 予算（経常利益）の達成度
+  if (ach && isFinite(ach.rate)) sat += ach.rate >= 100 ? 4 : ach.rate < 80 ? -4 : 0;
   sat = clamp(sat, G.annual.length <= 1 ? 30 : 0, 100);
   G.shareholders.dilution = 0;
   G.shareholders.sat = sat;
@@ -526,6 +531,7 @@ function bankClass(ta = totalAssets()) {
 function serialize() { return JSON.stringify(G); }
 function deserialize(json) {
   const s = JSON.parse(json);
+  if (s && s.mode === 'kaisha') return ksDeserialize(s);
   if (!s || s.version !== SAVE_VERSION || !s.ledger) throw new Error('セーブデータの形式が違います');
   G = s;
   G.pendingModals = G.pendingModals || [];
@@ -543,6 +549,7 @@ function migrateSave() {
   if (!G.cfg) G.cfg = Object.assign({ bubbleUntil: -1 }, DIFFICULTY[G.difficulty] || DIFFICULTY.normal);
   if (G.termYears === undefined) G.termYears = TERM_YEARS;
   if (!G.policy) G.policy = { delegate: Object.assign({}, DELEGATE_DEFAULT) };
+  if (!G.budget) { ensureBudget(); approveBudget(true); }
 }
 
 /* 内部整合性のチェック（開発・検証用） */

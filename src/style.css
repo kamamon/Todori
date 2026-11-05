@@ -604,6 +604,126 @@ table.t { width: 100%; border-collapse: collapse; font-size: 13px; }
   .modal .mb { padding: 14px 16px; }
   .modal .mh, .modal .mf { padding-left: 16px; padding-right: 16px; }
 }
+/* ---------- 学習サポート：用語・用語集・決算書の読み方ガイド ---------- */
+.term { border: 0; background: none; padding: 0; margin: 0; font: inherit; color: inherit; text-align: inherit; cursor: help;
+  text-decoration: underline dotted; text-decoration-color: var(--ink-3); text-underline-offset: 3px; text-decoration-thickness: 1px; }
+.term:hover { color: var(--vault); text-decoration-color: var(--vault); }
+.termcard .lead { font-size: 15px; font-weight: 700; margin: 0 0 8px; }
+.termcard p { margin: 0 0 10px; }
+.formula { font-family: var(--f-num); background: var(--sheet-2); border: 1px solid var(--rule); border-radius: var(--r-s); padding: 8px 12px; margin: 0 0 10px; font-size: 13px; }
+.lookhere { border-left: 3px solid var(--vault); background: var(--vault-soft); padding: 8px 12px; margin: 0 0 10px; border-radius: 0 var(--r-s) var(--r-s) 0; }
+.lookhere p { margin: 4px 0 0; font-size: 13px; }
+.see { margin-top: 12px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.chip { border: 1px solid var(--rule-strong); background: var(--sheet); border-radius: 999px; padding: 3px 10px; font-size: 12px; cursor: pointer; }
+.chip:hover { border-color: var(--vault); color: var(--vault); }
+.gsearch { width: 100%; padding: 8px 10px; border: 1px solid var(--rule-strong); border-radius: var(--r-m); background: var(--sheet); margin: 4px 0 10px; }
+.glist { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.gitem { width: 100%; text-align: left; border: 1px solid var(--rule); background: var(--sheet); border-radius: var(--r-m); padding: 8px 10px; cursor: pointer; display: grid; gap: 2px; }
+.gitem:hover { border-color: var(--vault); }
+.gitem span { font-size: 12px; color: var(--ink-2); }
+.guide { border: 1px solid var(--rule); background: var(--sheet-2); border-radius: var(--r-m); padding: 12px 14px; margin: 0 0 12px; }
+.guide-head { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; margin-bottom: 8px; }
+.gsteps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.gstep { background: var(--sheet); border: 1px solid var(--rule); border-radius: var(--r-m); padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; }
+.gstep.on { border-color: var(--vault); box-shadow: inset 3px 0 0 var(--vault); }
+.gstep p { margin: 0; }
+.gst-head { display: flex; align-items: flex-start; gap: 8px; }
+.gst-head > div { flex: 1; min-width: 0; }
+.gnum { flex: none; width: 22px; height: 22px; border-radius: 50%; background: var(--vault); color: var(--on-vault); font-size: 12px; font-weight: 700; display: grid; place-items: center; font-family: var(--f-num); }
+.gst-vals { color: var(--ink-2); }
+.gst-foot { margin-top: auto; gap: 8px; flex-wrap: wrap; align-items: center; }
+.guide .note { margin: 8px 0 0; }
+.btn.linkish { border: 0; background: none; color: var(--vault); text-decoration: underline; padding: 0 2px; }
+table.fs tr.focus td { background: var(--brass-soft); }
+table.fs tr.focus td:first-child { box-shadow: inset 3px 0 0 var(--brass); }
+@media (max-width: 760px) {
+  .glist, .gsteps { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ---------- 会社経営モード ---------- */
+.warnc { color: var(--warn); }
+.seg.wrap { flex-wrap: wrap; }
+.field > .seg, .field > .seg.wrap { justify-self: start; }
+.gradebig { flex: none; width: 58px; height: 58px; border-radius: 50%; border: 2px solid var(--vault); color: var(--vault); display: grid; place-items: center; font-family: var(--f-num); font-weight: 700; font-size: 26px; background: var(--vault-soft); }
+.fsh { font-size: 14px; margin: 0 0 6px; }
+h4.fsh { font-size: 13px; }
+/* 開始画面：モードの切り替えと業種 */
+.modesw { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.modebtn { text-align: left; border: 1px solid var(--rule-strong); background: var(--sheet-2); border-radius: var(--r-m); padding: 10px 12px; cursor: pointer; display: grid; gap: 3px; font: inherit; color: inherit; }
+.modebtn b { font-size: 14px; font-family: var(--f-doc); letter-spacing: .04em; }
+.modebtn span { font-size: 11px; color: var(--ink-3); line-height: 1.45; }
+.modebtn:hover { border-color: var(--vault-2); }
+.modebtn.on { border-color: var(--vault); background: var(--vault); color: var(--on-vault); }
+.modebtn.on span { color: color-mix(in srgb, var(--on-vault) 82%, transparent); }
+.indgrid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+.indcard b { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.indico { display: inline-grid; place-items: center; width: 22px; height: 22px; border: 1.5px solid currentColor; border-radius: 3px; font-family: var(--f-doc); font-size: 12px; flex: none; }
+.indcard.on .indico { color: var(--vault); }
+/* 現場：つまみ */
+.ctls { display: grid; gap: 14px; }
+.ctl { display: grid; gap: 4px; }
+.ctl-l { font-size: 13px; font-weight: 700; }
+.ctl-in { display: grid; grid-template-columns: minmax(0, 1fr) 6.5em; gap: 10px; align-items: center; }
+.ctl-in output { text-align: right; font-weight: 700; font-size: 14px; }
+/* 帳簿 */
+.flowline { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin: 0 0 12px; font-size: 12px; }
+.flowline .fl { padding: 3px 9px; border: 1px solid var(--rule-strong); border-radius: 999px; background: var(--sheet); color: var(--ink-2); white-space: nowrap; }
+.flowline .fl.on { background: var(--vault); border-color: var(--vault); color: var(--on-vault); font-weight: 700; }
+.flowline .arr { color: var(--ink-3); }
+.flowline.big { font-size: 13px; margin: 0; }
+.jtable td { vertical-align: top; }
+.jtable td.jdesc { min-width: 220px; max-width: 360px; border-right: 1px solid var(--rule); }
+.jtable tr:not(.jend) td { border-bottom-color: transparent; }
+.jtable tr:not(.jend) td.jdesc { border-bottom-color: var(--rule); }
+.tb td { font-family: var(--f-num); }
+.cfplan th .small { display: block; font-weight: 400; }
+.cfplan td.fc, .cfplan th.fc { background: color-mix(in srgb, var(--s2) 7%, transparent); }
+.fs.monthly td, .fs.monthly th { padding-left: 6px; padding-right: 6px; }
+.bsgrid { align-items: start; }
+/* 決算整理 */
+.wiz { list-style: none; display: flex; flex-wrap: wrap; gap: 6px; padding: 0; margin: 0 0 14px; }
+.wiz button { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--rule-strong); background: var(--sheet); border-radius: 999px; padding: 3px 11px 3px 4px; font: inherit; font-size: 12px; color: var(--ink-3); cursor: pointer; }
+.wiz button:disabled { cursor: default; opacity: .6; }
+.wiz .n { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; background: var(--sheet-3); font-family: var(--f-num); font-size: 11px; }
+.wiz li.done button { color: var(--vault); border-color: var(--vault); }
+.wiz li.done .n { background: var(--vault-soft); }
+.wiz li.now button { color: var(--ink); font-weight: 700; border-color: var(--ink-2); }
+.wiz li.now .n { background: var(--vault); color: var(--on-vault); }
+.wiz li.sel button { box-shadow: 0 0 0 2px var(--brass-soft); }
+.learnbox { border-left: 3px solid var(--vault); background: var(--vault-soft); padding: 8px 12px; border-radius: 0 var(--r-s) var(--r-s) 0; font-size: 13px; }
+.learnbox p { margin: 0 0 6px; }
+.learnbox p:last-child, .learnbox ul:last-child { margin-bottom: 0; }
+.learnbox .formula { background: var(--sheet); }
+.qz { border: 1px solid var(--rule-strong); border-radius: var(--r-m); padding: 12px 14px; background: var(--sheet); margin-top: 12px; }
+.qz-q { font-weight: 700; margin-bottom: 10px; line-height: 1.6; }
+.qz-tag { display: inline-block; background: var(--brass); color: #fff; font-size: 11px; padding: 1px 7px; border-radius: 3px; margin-right: 8px; vertical-align: 1px; }
+.qz-ch { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.qz-b { text-align: left; border: 1px solid var(--rule-strong); background: var(--sheet-2); border-radius: var(--r-m); padding: 9px 12px; cursor: pointer; font: inherit; color: inherit; font-family: var(--f-num); }
+.qz-b:hover:not(:disabled) { border-color: var(--vault); background: var(--vault-soft); }
+.qz-b:disabled { cursor: default; opacity: .65; }
+.qz-b.ok { border-color: var(--ok); background: color-mix(in srgb, var(--ok) 14%, var(--sheet)); opacity: 1; font-weight: 700; }
+.qz-b.ng { border-color: var(--shu); background: var(--shu-soft); opacity: 1; }
+.qz-a { margin-top: 10px; padding: 8px 12px; border-radius: var(--r-s); font-size: 13px; line-height: 1.7; }
+.qz-a.ok { background: color-mix(in srgb, var(--ok) 12%, var(--sheet)); }
+.qz-a.ng { background: var(--shu-soft); }
+.qz-a.ok b:first-child { color: var(--ok); }
+.qz-a.ng b:first-child { color: var(--shu); }
+.tempt { margin-top: 12px; border: 1px dashed var(--warn); border-radius: var(--r-m); padding: 8px 12px; background: var(--warn-soft); }
+.tempt summary { cursor: pointer; font-weight: 700; font-size: 13px; color: var(--warn); }
+.tempt p { margin: 6px 0 0; }
+tr.qrow td { background: var(--brass-soft); }
+details > summary.small { cursor: pointer; color: var(--vault); }
+@media (max-width: 760px) {
+  .kops .tbl-wrap .t td:first-child, .kops .tbl-wrap .t th:first-child { min-width: 8.5em; }
+  .tbl-wrap .fs td:first-child { min-width: 8.5em; }
+  .tbl-wrap .fs.cfplan td:first-child, .tbl-wrap .fs.monthly td:first-child { min-width: 9.5em; }
+  .modesw, .indgrid { grid-template-columns: minmax(0, 1fr) !important; }
+  .qz-ch { grid-template-columns: minmax(0, 1fr); }
+  .jtable td.jdesc { min-width: 150px; }
+  .gradebig { width: 48px; height: 48px; font-size: 22px; }
+}
+
 @media print {
   .tabs, .mast-actions, #toast-root { display: none; }
   body { background: #fff; }

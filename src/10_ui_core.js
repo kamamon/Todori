@@ -7,7 +7,7 @@ const $ = (s, r = document) => r.querySelector(s);
 const UI = {
   tab: 'dash', appId: null, appView: 'pl', appShowTrue: false, appFilter: 'all',
   pfFilter: 'all', pfPage: 0, finTab: 'bs', jMonth: null, cityD: null, newsCat: 'all',
-  modal: null, queue: [], settings: { monthly: true, confirmAdvance: true },
+  modal: null, queue: [], settings: { monthly: true, confirmAdvance: true, learn: true },
   stampAnim: null,
 };
 const ACTIONS = {}, CHANGES = {}, INPUTS = {}, SCREENS = {}, MODALS = {};
@@ -48,6 +48,7 @@ function render() {
   const app = $('#app');
   document.body.classList.toggle('ingame', !!G);
   if (!G) { app.innerHTML = renderStart(); return; }
+  if (G.mode === 'kaisha') { renderK(); return; }
   const tabsEl = $('.tabs');
   const tabScroll = tabsEl ? tabsEl.scrollLeft : 0;
   app.innerHTML = `${renderMast()}${renderStrip()}<div class="body"><nav class="tabs" aria-label="画面の切り替え">${renderTabs()}</nav><main id="main">${renderScreen()}</main></div>`;
@@ -125,11 +126,17 @@ function renderTabs() {
 }
 
 /* ---------- モーダル ---------- */
-function showModal(name, args = {}) { UI.modal = { name, args }; drawModal(); }
+function showModal(name, args = {}) { hideTip(); UI.modal = { name, args }; drawModal(); }
 function closeModal(force) {
   if (!UI.modal) return;
   const m = MODALS[UI.modal.name];
   if (!force && m && m.locked && m.locked(UI.modal.args)) return;
+  // 用語カード・用語集は、開く前に見ていたモーダルへ戻る
+  if ((UI.modal.name === 'term' || UI.modal.name === 'glossary') && UI.mstack && UI.mstack.length) {
+    const prev = UI.mstack.pop();
+    showModal(prev.name, prev.args);
+    return;
+  }
   UI.modal = null;
   if (UI.queue.length) { const n = UI.queue.shift(); showModal(n.name, n.args); return; }
   drawModal();
@@ -137,7 +144,7 @@ function closeModal(force) {
 }
 function drawModal() {
   const root = $('#modal-root');
-  if (!UI.modal) { root.innerHTML = ''; document.body.style.overflow = ''; return; }
+  if (!UI.modal) { root.innerHTML = ''; document.body.style.overflow = ''; UI.mstack = []; return; }
   const fn = MODALS[UI.modal.name];
   let html;
   try { html = fn(UI.modal.args); } catch (err) { console.error(err); html = `<div class="modal narrow"><div class="mb">表示エラー：${esc(err.message)}</div><div class="mf">${btn('閉じる', 'closeModal', { force: 1 })}</div></div>`; }
@@ -216,15 +223,17 @@ async function unpackSave(s) {
   }
   return s;
 }
-function saveMeta() { return JSON.stringify({ bank: G.bankName, ceo: G.ceoName, m: G.m, ta: totalAssets(), at: Date.now(), over: !!G.over }); }
+function saveMeta() { return isK() ? ksSaveMeta() : JSON.stringify({ bank: G.bankName, ceo: G.ceoName, m: G.m, ta: totalAssets(), at: Date.now(), over: !!G.over }); }
 async function autosave() {
   if (!G) return;
+  const L = lsKeys();
   const packed = await packSave(serialize());
-  UI.saved = lsSet(LS.auto, packed) && lsSet(LS.meta('a'), saveMeta());
+  UI.saved = lsSet(L.auto, packed) && lsSet(L.meta('a'), saveMeta());
 }
 async function saveSlot(i) {
+  const L = lsKeys();
   const packed = await packSave(serialize());
-  const ok = lsSet(LS.slot(i), packed) && lsSet(LS.meta(i), saveMeta());
+  const ok = lsSet(L.slot(i), packed) && lsSet(L.meta(i), saveMeta());
   toast(ok ? `スロット${i}に保存しました` : '保存できませんでした（ブラウザの保存領域を使えません）', ok ? '' : 'bad');
   if (UI.modal && UI.modal.name === 'menu') drawModal();
 }
@@ -233,10 +242,8 @@ async function loadFrom(key) {
     const raw = await unpackSave(lsGet(key));
     if (!raw) { toast('セーブデータがありません', 'bad'); return false; }
     deserialize(raw);
-    UI.tab = 'dash'; UI.appId = null; UI.modal = null; UI.queue = [];
-    drawModal(); render(); window.scrollTo({ top: 0 });
-    toast(`${G.bankName}（${ymLabel(G.m)}）を読み込みました`);
-    if (G.pendingDividend) showModal('yearEnd', { fy: G.pendingDividend.fy });
+    afterLoad();
+    toast(`${isK() ? G.coName : G.bankName}（${ymLabel(G.m)}）を読み込みました`);
     return true;
   } catch (e) {
     console.error(e);
@@ -244,11 +251,19 @@ async function loadFrom(key) {
     return false;
   }
 }
+/* 読み込んだ後の画面の準備（銀行・会社の両方） */
+function afterLoad() {
+  UI.appId = null; UI.modal = null; UI.queue = []; UI.guideSel = null;
+  if (isK()) { UI.tab = 'k_dash'; UI.kFy = null; UI.kJm = null; UI.start.mode = 'kaisha'; } else { UI.tab = 'dash'; UI.start.mode = 'bank'; }
+  drawModal(); render(); window.scrollTo({ top: 0 });
+  if (isK()) { if (G.closing) showModal('kClose'); else if (G.over) showModal('kOver'); }
+  else if (G.pendingDividend) showModal('yearEnd', { fy: G.pendingDividend.fy });
+}
 function exportSave() {
   const blob = new Blob([serialize()], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `toudori_${G.bankName}_${ymOf(G.m).y}-${String(ymOf(G.m).mo).padStart(2, '0')}.json`;
+  a.download = `${isK() ? 'shacho' : 'toudori'}_${isK() ? G.coName : G.bankName}_${ymOf(G.m).y}-${String(ymOf(G.m).mo).padStart(2, '0')}.json`;
   document.body.appendChild(a);
   a.click();
   a.remove();
@@ -259,10 +274,8 @@ function importSave(file) {
   r.onload = () => {
     try {
       deserialize(String(r.result));
-      UI.tab = 'dash'; UI.modal = null; UI.queue = [];
-      drawModal(); render(); window.scrollTo({ top: 0 }); autosave();
+      afterLoad(); autosave();
       toast('セーブファイルを読み込みました');
-      if (G.pendingDividend) showModal('yearEnd', { fy: G.pendingDividend.fy });
     } catch (e) { toast('読み込めませんでした：' + e.message, 'bad'); }
   };
   r.readAsText(file);
@@ -271,6 +284,9 @@ function applyTheme(t) {
   if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
   else document.documentElement.removeAttribute('data-theme');
 }
+
+/* 遊び方：会社経営モード（またはその開始画面）では会社の遊び方を開く */
+function helpName() { return isK() || (!G && UI.start && UI.start.mode === 'kaisha') ? 'kHelp' : 'help'; }
 
 /* ---------- 月の進行 ---------- */
 function requestAdvance() {
@@ -307,21 +323,21 @@ function runAdvance() {
 Object.assign(ACTIONS, {
   tab: d => { UI.tab = d.tab; render(); window.scrollTo({ top: 0 }); },
   go: d => { UI.tab = d.tab; if (d.app) UI.appId = d.app; if (d.dist) UI.cityD = d.dist; if (d.fin) UI.finTab = d.fin; UI.modal = null; drawModal(); render(); window.scrollTo({ top: 0 }); },
-  advance: () => requestAdvance(),
+  advance: () => (isK() ? ksRequestAdvance() : requestAdvance()),
   advanceNow: () => runAdvance(),
   closeModal: d => closeModal(!!(d && d.force)),
   scrim: (d, el, e) => { if (e.target === el) closeModal(); },
   menu: () => showModal('menu'),
-  help: () => showModal('help', { sec: 0 }),
-  helpSec: d => showModal('help', { sec: +d.sec }),
+  help: () => showModal(helpName(), { sec: 0 }),
+  helpSec: d => showModal(helpName(), { sec: +d.sec }),
   saveSlot: d => saveSlot(+d.slot),
-  loadSlot: d => loadFrom(LS.slot(+d.slot)),
-  loadAuto: () => loadFrom(LS.auto),
+  loadSlot: d => loadFrom(lsKeys().slot(+d.slot)),
+  loadAuto: () => loadFrom(lsKeys().auto),
   exportSave: () => exportSave(),
   importSave: () => $('#importFile').click(),
   theme: d => { lsSet(LS.theme, d.v); applyTheme(d.v); drawModal(); },
   newGameConfirm: () => confirmBox('新しいゲームを始める', '現在のゲームは自動保存の内容が上書きされます。始める前に必要ならスロットに保存してください。', '新しく始める', 'newGameGo', {}, true),
-  newGameGo: () => { G = null; UI.modal = null; UI.queue = []; drawModal(); render(); window.scrollTo({ top: 0 }); },
+  newGameGo: () => { if (G) UI.start.mode = isK() ? 'kaisha' : 'bank'; G = null; UI.modal = null; UI.queue = []; drawModal(); render(); window.scrollTo({ top: 0 }); },
 });
 Object.assign(CHANGES, {
   importFile: el => { if (el.files && el.files[0]) importSave(el.files[0]); el.value = ''; },
