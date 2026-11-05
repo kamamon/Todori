@@ -11,7 +11,7 @@ const allFiles = fs.readdirSync(src).filter(f => /^20c_cat_.*\.js$/.test(f)).sor
 const base = fs.readFileSync(path.join(src, '20a_ks_equip.js'), 'utf8').replace(/^(const|let) /gm, 'var ');
 const ENG = ['shop', 'rest', 'mfg', 'build', 'trade', 'pro', 'subs', 'cap', 'trans'];
 const BM = ['mfg', 'con', 'whl', 'ret', 'food', 'trn', 're', 'it', 'med', 'htl', 'agr'];
-const LAWS = ['machine', 'fall', 'chem', 'haccp', 'alcohol', 'kyoka', 'privacy', 'kiken'];
+const LAWS = ['machine', 'fall', 'chem', 'haccp', 'alcohol', 'kyoka', 'privacy', 'kiken', 'rad', 'export'];
 const P_KEYS = {
   shop: ['stores', 'cust', 'spend', 'gm', 'inv', 'card', 'ins', 'rent', 'fit', 'eqc', 'dep', 'staff', 'wage', 'days', 'util', 'waste', 'svc', 'eqn', 'rn'],
   rest: ['shops', 'cust', 'spend', 'fq', 'rent', 'fit', 'eqc', 'dep', 'staff', 'wage', 'days', 'card', 'eqn', 'rn'],
@@ -20,9 +20,11 @@ const P_KEYS = {
   trade: ['gm', 'inv', 'custN', 'custSize', 'kinds', 'terms2', 'trucks', 'fx', 'risk', 'staff', 'wage', 'rent', 'wh', 'rn'],
   pro: ['rate', 'wage', 'n', 'sales', 'exp', 'sub', 'product', 'rent', 'terms', 'eqn', 'rn'],
   subs: ['users', 'arpu', 'ad', 'gmv', 'take', 'churn', 'cac', 'cpu', 'fixed', 'capPer', 'dev', 'devWage', 'ops', 'trend', 'b2b', 'rn'],
-  cap: ['unit', 'units', 'per', 'price', 'occ', 'var', 'anc', 'spu', 'wage', 'ar', 'terms', 'kwh', 'elastic', 'rn'],
+  cap: ['unit', 'units', 'per', 'price', 'occ', 'var', 'anc', 'spu', 'wage', 'ar', 'terms', 'kwh', 'elastic', 'rn', 'fuel', 'levy', 'om', 'capPay', 'nuke'],
   trans: ['mode', 'lf', 'util', 'ops', 'fees', 'infra', 'infraAssets', 'ar', 'terms', 'crewWage', 'opsWage', 'market', 'rn'],
 };
+// どの事業の型にも書ける：accF（労災の起きやすさの倍率）、accSet（労災の文の組。'plant' は発電所・タンク基地など）
+const P_COMMON = ['accF', 'accSet'];
 const ITEM_KEYS = ['d', 'prod', 'cust', 'p', 'eq', 'aux', 'laws', 'lic', 'season', 'icon', 'scale', 'bm'];
 const GROUP_KEYS = ['sec', 'grp', 'eng', 'bm', 'icon', 'season', 'd', 'prod', 'cust', 'p', 'eq', 'aux', 'laws', 'lic', 'items', 'scale'];
 
@@ -76,7 +78,9 @@ for (const f of allFiles) {
       if (names.has(nm)) errs.push(`${w}: 業種名が重複（${names.get(nm)}）`); else names.set(nm, f);
       for (const k of Object.keys(ov)) if (!ITEM_KEYS.includes(k)) errs.push(`${w}: 上書きできないキー ${k}`);
       const p = Object.assign({}, g.p || {}, ov.p || {});
-      for (const k of Object.keys(p)) if (!(P_KEYS[g.eng] || []).includes(k)) errs.push(`${w}: ${g.eng} に p.${k} はない`);
+      for (const k of Object.keys(p)) if (!(P_KEYS[g.eng] || []).includes(k) && !P_COMMON.includes(k)) errs.push(`${w}: ${g.eng} に p.${k} はない`);
+      if (p.accSet && !['plant'].includes(p.accSet)) errs.push(`${w}: p.accSet「${p.accSet}」がない`);
+      if (p.accF !== undefined && !(p.accF > 0 && p.accF <= 3)) errs.push(`${w}: p.accF は 0〜3`);
       const eq = ov.eq || g.eq;
       const aux = ov.aux || g.aux;
       const season = ov.season || g.season;

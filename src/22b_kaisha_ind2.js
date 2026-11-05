@@ -48,6 +48,11 @@ function ksCalibRun(u, k, months, warm, hqFixed = 0) {
     G.hist = true; G.repT = 1; G.over = null; G.closing = null;
     const S = ksS(cu), E = KS_ENGINE[S.eng];
     if (k !== 1) E.scale(cu, k);
+    // 工事：始める前から抱えている工事も同じ倍率にする（工期が長いと、測る期間に古い大きさの工事の完成が入り、倍率を見誤る）
+    if (k !== 1 && S.eng === 'build') for (const p of cu.op.projects || []) if (!p.fin) {
+      for (const f of ['contract', 'cost', 'costToDate', 'recv']) p[f] = (p[f] || 0) * k;
+      for (const f of Object.keys(p.parts || {})) p.parts[f] *= k;
+    }
     let sales = 0, cost = 0;
     for (let i = 0; i < months; i++) {
       G.flow = {}; G.flowC = {}; G.flowU = {}; G.flowCU = {}; G.cfm = {}; G.jcur = {};
@@ -79,7 +84,9 @@ function ksCalibEmp(u, target, hqFixed = 0) {
   const S = ksS(u), E = KS_ENGINE[S.eng];
   if (!E.scale) return 1;
   const vol = !!E.volLever;
-  const months = S.eng === 'build' ? 33 : 15, warm = S.eng === 'build' ? 9 : 3;
+  // 工事は売上の波が大きく、原子力は定期検査で止まる月があるので、長めに測る
+  const long = S.eng === 'build' || ksP(u).nuke;
+  const months = long ? 33 : 15, warm = long ? 9 : 3;
   // 設備の重い事業（ビル・船・発電所など）は、借入の利息と返済の分だけ利益率を高めに合わせる（資産÷売上が0.8を超える分×1.5%）
   const tg = r => target + 0.015 * Math.max(0, r.assets / Math.max(1, r.annual) - 0.8);
   // 目標との差 d(k) = 利益率 − 目標 を合わせる
@@ -374,11 +381,15 @@ KS_ENGINE.cap = {
     if (!n) return { mgAdj: 0, kpi: { units: 0, occ: 0, sales: 0 } };
     const nd = this.need(u);
     const staffF = Math.min(1, (u.staff.staff || 0) / Math.max(1, nd.staff));
-    let occ, sales;
+    let occ, sales, off = 0;
     if (P.per === 'mwh') {
-      occ = clamp(P.occ * ctx.season * ksNoise(0.08), 0.02, 0.95);
-      const mkt = 0.75 + 0.25 * G.eco.matIdx;
-      sales = n * 730 * occ * op.price * mkt;
+      // 原子力は、13か月ごとの定期検査と、規制・裁判による長い停止のあいだ発電しない
+      off = P.nuke ? this.nukeOff(u) : 0;
+      occ = off ? 0 : clamp(P.occ * ctx.season * ksNoise(P.nuke ? 0.02 : 0.08), 0.02, 0.97);
+      // 市場で売る電気（elastic が大きい）は、燃料の値段につれて単価が動く
+      const mkt = (0.75 + 0.25 * G.eco.matIdx) * (1 + (P.elastic || 0) * 0.5 * ((G.eco.oil || 1) - 1));
+      // 基本料金（容量の対価）：発電しなくても、契約した相手から毎月受け取る
+      sales = n * 730 * occ * op.price * mkt + (P.capPay ? n * P.capPay * ksPrice() : 0);
     } else {
       const adsF = 1 + 0.05 * (1 - Math.exp(-op.ads / Math.max(1e4, this.revenueAt(u, P.occ) * 0.015))) - 0.025;
       occ = clamp(op.occ0 * ctx.season * ksEcoF(P.per === 'day' ? 0.9 : 0.4) * (op.price / Math.max(1, op.ref * ksPrice())) ** (-P.elastic) * op.rep * adsF * this.premium(u) * ksUpF(u) * ksStartRamp(u) * ksNoise(0.03), 0.03, 0.97);
@@ -390,13 +401,19 @@ KS_ENGINE.cap = {
     const ar = sales * P.ar;
     ksSaleCash(sales - ar);
     if (ar > 0) ksSaleCredit(ar, P.terms);
-    // 変動費：稼働した単位ごと（清掃・アメニティ・食材など）。発電は燃料など（標準の利用率のときの額に比例）
-    const varCost = P.per === 'mwh' ? n * P.var * occ / Math.max(0.05, P.occ) : occupied * P.var;
-    ksPayCash('svcExp', varCost * ksPrice(), 'svcExp');
+    // 変動費：稼働した単位ごと（清掃・アメニティ・食材など）。発電は1MWhあたりの燃料費など（燃料が油・ガスなら原油の値段につれて動く）
+    const fuelF = P.fuel === 'oil' ? (G.eco.oil || 1) : 1;
+    const varCost = P.per === 'mwh' ? n * 730 * occ * P.var * fuelF : occupied * P.var;
+    ksPayCash(P.per === 'mwh' && P.fuel ? 'fuel' : 'svcExp', varCost * ksPrice(), P.per === 'mwh' && P.fuel ? 'purchPay' : 'svcExp');
+    // 発電量に比例するそのほかの負担（使用済燃料の再処理などの拠出金）と、設備の大きさに比例する固定の運転・保守の委託費
+    if (P.levy) ksPayCash('svcExp', n * 730 * occ * P.levy, 'svcExp');
+    if (P.om) ksPayCash('subcon', n * P.om * ksPrice(), 'purchPay');
     if (P.kwh) ksPayCash('util', n * P.kwh * (P.per === 'month' ? (0.35 + 0.65 * occ) : 1) * 24 * ksPrice() * ksEnF(u), 'expense');
     const fac = this.facilities(u);
     const costAll = sum(fac, a => a.cost);
     ksPayCash('repairs', costAll * 0.001 * ksPrice() * (1 + this.oldR(u)), 'repairs');
+    // 定期検査の月は、点検・部品の交換の費用がかさむ
+    if (off === 1 && u.op.offWhy === 'insp') ksPayCash('repairs', costAll * 0.004 * ksPrice(), 'repairs');
     ksPayCash('insur', costAll * 0.0003, 'expense');
     ksPayCash('ads', op.ads, 'ads');
     const sc = Math.sqrt(u.sc || 1);
@@ -405,7 +422,25 @@ KS_ENGINE.cap = {
     if ([6, 9, 12, 2].includes(ctx.mo)) ksPayCash('dues', costAll * 0.0035, 'dues');
     const ageY = fac.length ? sum(fac, a => (G.m - a.acqM) / 12) / fac.length : 0;
     op.rep = clamp(op.rep + 0.01 * ((staffF - 1) * 1.5 - (ageY > 20 ? 0.3 : 0)) - ksRepPull(op.rep), 0.7, 1.3);
-    return { mgAdj: 0, kpi: { units: n, occ, occupied, price: op.price, sales, revPer: sales / Math.max(1, n), staffF, ageY } };
+    return { mgAdj: 0, kpi: { units: n, occ, occupied, price: op.price, sales, revPer: sales / Math.max(1, n), staffF, ageY, off: off ? (op.offWhy || 'insp') : '', nextInsp: P.nuke ? op.inspAt : undefined, stopUntil: op.stopUntil } };
+  },
+  /* 原子力の停止：定期検査（13か月ごとに2か月）と、規制委員会の審査・裁判所の仮処分による長い停止（めったにない） */
+  nukeOff(u) {
+    const op = u.op;
+    if (op.inspAt === undefined) op.inspAt = G.m + randInt(1, 13);
+    if (op.stopUntil > G.m) { op.offWhy = 'stop'; return 1; }
+    if (op.stopUntil !== undefined && op.stopUntil <= G.m) { op.stopUntil = undefined; ksNews(`${ksUName(u)}：止めていた原子炉の運転を再開しました`, 'good'); }
+    if (!G.hist && chance(0.002)) {
+      const why = pick([['原子力規制委員会の検査で安全上の不備を指摘され、対策が終わるまで', 'stop'], ['地元の住民が申し立てた運転差止めの仮処分を裁判所が認め、', 'stop']]);
+      op.stopUntil = G.m + randInt(6, 15);
+      op.offWhy = why[1];
+      ksNews(`${ksUName(u)}：${why[0]}原子炉を止めます（${op.stopUntil - G.m}か月ほど）。発電しなくても、人件費・減価償却費・維持費はかかります`, 'bad');
+      return 1;
+    }
+    while (G.m >= op.inspAt + 2) op.inspAt += 13;
+    if (G.m >= op.inspAt) { op.offWhy = 'insp'; return 1; }
+    op.offWhy = '';
+    return 0;
   },
   auto(u) { const op = u.op; op.price = Math.round(op.ref * ksPrice()); const nd = this.need(u); ksAutoStaff(u, 'staff', nd.staff); ksAutoStaff(u, 'office', nd.office); },
   stockCount() { return []; },
@@ -419,8 +454,8 @@ KS_ENGINE.cap = {
     const sc = Math.sqrt(u.sc || 1);
     const fixed = ksUnitFixedEst(u) + ksUnitDep(u) + costAll * (0.001 + 0.0003 + 0.0035 / 3) + op.ads + (10e4 + 8e4) * sc;
     const occ = P.occ;
-    const varC = P.per === 'mwh' ? n * P.var : n * occ * P.var + (P.kwh ? n * P.kwh * 24 * (P.per === 'month' ? 0.35 + 0.65 * occ : 1) : 0);
-    const need = (fixed + varC) / Math.max(0.05, 1 - target - 0.004);
+    const varC = P.per === 'mwh' ? n * 730 * occ * ((P.var || 0) + (P.levy || 0)) + n * (P.om || 0) : n * occ * P.var + (P.kwh ? n * P.kwh * 24 * (P.per === 'month' ? 0.35 + 0.65 * occ : 1) : 0);
+    const need = (fixed + varC - (P.capPay ? n * P.capPay : 0)) / Math.max(0.05, 1 - target - 0.004);
     const unitRev = n * occ * this.daysF(u) * (P.per === 'mwh' ? 1 : 1);
     const ancRev = n * occ * op.anc;
     op.ref = op.price = Math.max(1, Math.round(clamp((need - ancRev) / Math.max(1, unitRev), op.ref * 0.4, op.ref * 2.5)));

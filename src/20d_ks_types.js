@@ -43,7 +43,7 @@ function ksRolesFor(eng, P) {
     case 'trade': return [R('sales', rn[0] || '営業', P.wage[0], 'salary', { desc: '新しい取引先を開拓する。' }), R('logi', rn[1] || '倉庫・配送', P.wage[1], 'salary', { bonus: 1.5, desc: 'トラック1台につき1.1人が目安。足りないと配送が回らない。' }), R('office', rn[2] || '事務', P.wage[2], 'salary', { desc: '受発注と経理。' })];
     case 'pro': return [R('eng', rn[0] || 'エンジニア', P.wage, 'labor', { desc: '1人で月1人月の仕事ができる。給与は労務費（売上原価）。' }), R('sales', rn[1] || '営業・管理', 33e4, 'salary', { desc: '案件を取ってくる。給与は給料手当（販管費）。' })];
     case 'subs': return [R('dev', rn[0] || '開発・制作', P.devWage, 'labor', { desc: 'サービス・コンテンツを作り、良くする。給与は労務費（売上原価）。' }), R('ops', rn[1] || '運用・営業', 30e4, 'salary', { desc: '利用者の獲得と問い合わせ・運用。' })];
-    case 'cap': return [R('staff', rn[0] || 'スタッフ', P.wage, 'labor', { desc: `施設を動かす人。能力1${P.unit}あたり${P.spu}人が目安。給与は労務費（売上原価）。` }), R('office', rn[1] || '営業・管理', 30e4, 'salary', { desc: '営業・予約・経理。' })];
+    case 'cap': return [R('staff', rn[0] || 'スタッフ', P.wage, 'labor', { desc: `施設を動かす人。能力1${P.unit}あたり${P.spu}人が目安。給与は労務費（売上原価）。` }), R('office', rn[1] || '営業・管理', 30e4, 'salary', { desc: P.per === 'mwh' ? '電気の販売の契約・経理・総務。' : '営業・予約・経理。' })];
     case 'trans': return [R('crew', rn[0] || '乗務員', P.crewWage, 'labor', { desc: '車両・機体・船を動かす。足りないと運休が出る。給与は労務費（運送原価）。' }), R('ops', rn[1] || '運行管理・整備', P.opsWage, 'labor', { desc: '運行の管理・整備・地上の仕事。' }), R('office', '営業・管理', 30e4, 'salary', { desc: '営業と経理。' })];
     default: return [];
   }
