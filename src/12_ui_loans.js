@@ -3,39 +3,41 @@
  *  12_ui_loans.js : 頭取室・融資審査（稟議書）・与信管理
  * ========================================================= */
 
-/* ---------- 企業の決算書表示 ---------- */
+/* ---------- 企業の決算書表示 ----------
+ * 行 = [表示名, 値, 書式, 行キー（ガイドで光らせる）, 用語キー] */
 const FS_ROWS = {
   pl: [
-    ['売上高', s => s.S, 'sum'], ['売上原価', s => s.COGS], ['売上総利益', s => s.GP, 'sum'],
-    ['販売費及び一般管理費', s => s.SGA + s.DEP], ['うち減価償却費', s => s.DEP, 'i2'],
-    ['営業利益', s => s.OPI, 'sum'], ['営業外収益', s => s.NONOP], ['営業外費用（支払利息）', s => s.INT],
-    ['経常利益', s => s.ORD, 'sum'], ['特別損益', s => s.EXTRA], ['税引前当期純利益', s => s.PRETAX, 'sum'],
-    ['法人税等', s => s.TAX], ['当期純利益', s => s.NI, 'grand'],
+    ['売上高', s => s.S, 'sum', 'sales', 'sales'], ['売上原価', s => s.COGS, '', 'cogs', 'cogs'], ['売上総利益', s => s.GP, 'sum', 'gp', 'gp'],
+    ['販売費及び一般管理費', s => s.SGA + s.DEP, '', 'sga', 'sga'], ['うち減価償却費', s => s.DEP, 'i2', 'dep', 'dep'],
+    ['営業利益', s => s.OPI, 'sum', 'opi', 'opi'], ['営業外収益', s => s.NONOP, '', 'nonop', 'nonopInc'], ['営業外費用（支払利息）', s => s.INT, '', 'int', 'interest'],
+    ['経常利益', s => s.ORD, 'sum', 'ord', 'ord'], ['特別損益', s => s.EXTRA, '', 'extra', 'extra'], ['税引前当期純利益', s => s.PRETAX, 'sum', 'pretax', 'pretax'],
+    ['法人税等', s => s.TAX, '', 'tax', 'tax'], ['当期純利益', s => s.NI, 'grand', 'ni', 'ni'],
   ],
   bs: [
-    ['資産の部', null, 'head'], ['現金預金', s => s.CASH, 'i1'], ['売上債権（受取手形・売掛金）', s => s.AR, 'i1'], ['棚卸資産', s => s.INV, 'i1'],
-    ['その他流動資産（仮払金等）', s => s.OCA, 'i1'], ['流動資産合計', s => s.CA, 'sum'], ['有形固定資産', s => s.PPE, 'i1'], ['うち土地', s => s.LAND, 'i2'],
-    ['投資その他の資産', s => s.INVEST, 'i1'], ['固定資産合計', s => s.FA, 'sum'], ['資産合計', s => s.TA, 'grand'],
-    ['負債・純資産の部', null, 'head'], ['仕入債務（支払手形・買掛金）', s => s.AP, 'i1'], ['短期借入金', s => s.STD, 'i1'], ['その他流動負債', s => s.OCL, 'i1'],
-    ['流動負債合計', s => s.CL, 'sum'], ['長期借入金', s => s.LTD, 'i1'], ['負債合計', s => s.TL, 'sum'], ['資本金', s => s.CAP, 'i1'],
-    ['利益剰余金', s => s.RE, 'i1'], ['純資産合計', s => s.EQ, 'sum'], ['負債・純資産合計', s => s.TL + s.EQ, 'grand'],
+    ['資産の部', null, 'head'], ['現金預金', s => s.CASH, 'i1', 'cash', 'cash'], ['売上債権（受取手形・売掛金）', s => s.AR, 'i1', 'ar', 'ar'], ['棚卸資産', s => s.INV, 'i1', 'inv', 'inv'],
+    ['その他流動資産（仮払金等）', s => s.OCA, 'i1', 'oca', 'prepaid'], ['流動資産合計', s => s.CA, 'sum', 'ca', 'ca'], ['有形固定資産', s => s.PPE, 'i1', 'ppe', 'ppe'], ['うち土地', s => s.LAND, 'i2', 'land', 'land'],
+    ['投資その他の資産', s => s.INVEST, 'i1', 'invest', 'invest'], ['固定資産合計', s => s.FA, 'sum', 'fa', 'fa'], ['資産合計', s => s.TA, 'grand', 'ta', 'ta'],
+    ['負債・純資産の部', null, 'head'], ['仕入債務（支払手形・買掛金）', s => s.AP, 'i1', 'ap', 'ap'], ['短期借入金', s => s.STD, 'i1', 'std', 'std'], ['その他流動負債', s => s.OCL, 'i1', 'ocl', ''],
+    ['流動負債合計', s => s.CL, 'sum', 'cl', 'cl'], ['長期借入金', s => s.LTD, 'i1', 'ltd', 'ltd'], ['負債合計', s => s.TL, 'sum', 'tl', ''], ['資本金', s => s.CAP, 'i1', 'capital', 'capital'],
+    ['利益剰余金', s => s.RE, 'i1', 're', 're'], ['純資産合計', s => s.EQ, 'sum', 'eq', 'eq'], ['負債・純資産合計', s => s.TL + s.EQ, 'grand', 'tle', ''],
   ],
   cf: [
-    ['営業活動によるキャッシュ・フロー', null, 'head'], ['当期純利益', (s, c) => s.NI, 'i1'], ['減価償却費', (s, c) => s.DEP, 'i1'],
-    ['売上債権の増減', (s, c) => c.dAR, 'i1'], ['棚卸資産の増減', (s, c) => c.dINV, 'i1'], ['仕入債務の増減', (s, c) => c.dAP, 'i1'],
-    ['その他の増減', (s, c) => c.dOther, 'i1'], ['営業活動によるCF', (s, c) => c.ocf, 'sum'],
-    ['投資活動によるキャッシュ・フロー', null, 'head'], ['設備投資', (s, c) => -c.capex, 'i1'], ['その他の投資', (s, c) => c.dInvest, 'i1'], ['投資活動によるCF', (s, c) => c.icf, 'sum'],
-    ['財務活動によるキャッシュ・フロー', null, 'head'], ['借入金の増減', (s, c) => c.dSTD + c.dLTD, 'i1'], ['配当金の支払', (s, c) => -s.DIV, 'i1'], ['財務活動によるCF', (s, c) => c.fcf, 'sum'],
-    ['現金の増減', (s, c) => c.dCash, 'grand'], ['期首現金', (s, c) => c.begin, 'i1'], ['期末現金', (s, c) => c.end, 'i1'],
+    ['営業活動によるキャッシュ・フロー', null, 'head'], ['当期純利益', (s, c) => s.NI, 'i1', 'cfNi', 'ni'], ['減価償却費', (s, c) => s.DEP, 'i1', 'cfDep', 'dep'],
+    ['売上債権の増減', (s, c) => c.dAR, 'i1', 'cfAr', 'ar'], ['棚卸資産の増減', (s, c) => c.dINV, 'i1', 'cfInv', 'inv'], ['仕入債務の増減', (s, c) => c.dAP, 'i1', 'cfAp', 'ap'],
+    ['その他の増減', (s, c) => c.dOther, 'i1', 'cfOther', ''], ['営業活動によるCF', (s, c) => c.ocf, 'sum', 'ocf', 'cfo'],
+    ['投資活動によるキャッシュ・フロー', null, 'head'], ['設備投資', (s, c) => -c.capex, 'i1', 'capex', 'ppe'], ['その他の投資', (s, c) => c.dInvest, 'i1', 'cfInvest', 'invest'], ['投資活動によるCF', (s, c) => c.icf, 'sum', 'icf', 'cfi'],
+    ['財務活動によるキャッシュ・フロー', null, 'head'], ['借入金の増減', (s, c) => c.dSTD + c.dLTD, 'i1', 'cfDebt', 'debt'], ['配当金の支払', (s, c) => -s.DIV, 'i1', 'cfDiv', ''], ['財務活動によるCF', (s, c) => c.fcf, 'sum', 'cfFin', 'cff'],
+    ['現金の増減', (s, c) => c.dCash, 'grand', 'dCash', ''], ['期首現金', (s, c) => c.begin, 'i1', 'begin', ''], ['期末現金', (s, c) => c.end, 'i1', 'end', 'cash'],
   ],
 };
+/* [表示名, 値, 単位, 業界平均のキー, 用語キー（行キーを兼ねる）] */
 const RATIO_ROWS = [
-  ['収益性', null], ['売上高総利益率', r => r.gpm, '%', 'gpm'], ['売上高営業利益率', r => r.opm, '%', 'opm'], ['売上高経常利益率', r => r.ordm, '%', 'ordm'], ['総資産経常利益率（ROA）', r => r.roa, '%'],
-  ['安全性', null], ['自己資本比率', r => r.eqR, '%', 'eqR'], ['流動比率', r => r.cr, '%', 'cr'], ['当座比率', r => r.qr, '%'], ['固定長期適合率', r => r.fixLong, '%'],
-  ['返済能力', null], ['債務償還年数', r => r.dsy, '年'], ['インタレスト・カバレッジ・レシオ', r => r.icr, '倍'], ['借入金月商倍率', r => r.debtMonths, 'か月'], ['営業キャッシュ・フロー', r => r.ocf, '千円'],
-  ['効率性', null], ['売上債権回転日数', r => r.arDays, '日', 'arDays'], ['棚卸資産回転日数', r => r.invDays, '日', 'invDays'], ['仕入債務回転日数', r => r.apDays, '日', 'apDays'], ['総資産回転率', r => r.turn, '回'],
-  ['粉飾チェックの視点', null], ['売上高の伸び', r => r.salesG, '%'], ['売上債権の伸び', r => r.arG, '%'], ['営業CF÷当期純利益', r => r.ocfNi, '倍'],
-  ['減価償却率', r => r.depRate, '%', 'depRate'], ['税負担率（法人税等÷税引前利益）', r => r.taxRate, '%', 'taxRate'], ['その他流動資産÷売上高', r => r.ocaS, '%'], ['支払利息÷有利子負債', r => r.impliedInt, '%'],
+  ['収益性', null], ['売上高総利益率', r => r.gpm, '%', 'gpm', 'gpm'], ['売上高営業利益率', r => r.opm, '%', 'opm', 'opm'], ['売上高経常利益率', r => r.ordm, '%', 'ordm', 'ordm'], ['総資産経常利益率（ROA）', r => r.roa, '%', '', 'roa'],
+  ['安全性', null], ['自己資本比率', r => r.eqR, '%', 'eqR', 'eqR'], ['流動比率', r => r.cr, '%', 'cr', 'cr'], ['当座比率', r => r.qr, '%', '', 'qr'], ['固定長期適合率', r => r.fixLong, '%', '', 'fixLong'],
+  ['返済能力', null], ['債務償還年数', r => r.dsy, '年', '', 'dsy'], ['インタレスト・カバレッジ・レシオ', r => r.icr, '倍', '', 'icr'], ['借入金月商倍率', r => r.debtMonths, 'か月', '', 'debtMonths'], ['営業キャッシュ・フロー', r => r.ocf, '千円', '', 'cfo'],
+  ['効率性', null], ['売上債権回転日数', r => r.arDays, '日', 'arDays', 'arDays'], ['棚卸資産回転日数', r => r.invDays, '日', 'invDays', 'invDays'], ['仕入債務回転日数', r => r.apDays, '日', 'apDays', 'apDays'], ['総資産回転率', r => r.turn, '回', '', 'turn'],
+  ['粉飾チェックの視点', null], ['売上高の伸び', r => r.salesG, '%', '', 'salesG'], ['売上債権の伸び', r => r.arG, '%', '', ''], ['営業CF÷当期純利益', r => r.ocfNi, '倍', '', 'ocfNi'],
+  ['減価償却率', r => r.depRate, '%', 'depRate', 'depRate'], ['税負担率（法人税等÷税引前利益）', r => r.taxRate, '%', 'taxRate', 'taxRate'], ['その他流動資産÷売上高', r => r.ocaS, '%', '', 'ocaS'], ['支払利息÷有利子負債', r => r.impliedInt, '%', '', 'impliedInt'],
 ];
 let FS_BIG = false; // 大企業の決算書は百万円単位で表示する
 const fmtFS = v => (FS_BIG ? fmtM(v) : fmtK(v));
@@ -47,45 +49,58 @@ function fmtRatio(v, unit) {
   return (v < 0 ? '△' : '') + fmtNum(Math.abs(v), d) + (unit === '%' ? '%' : unit === '千円' ? '' : unit);
 }
 
-function companyFS(co, view, showTrue, n = 3) {
-  FS_BIG = !!co.big;
-  const years = co.years.slice(-(n + 1));
-  const disp = years.slice(1);
-  const found = co.fraud && co.fraud.found;
-  const pick = y => (showTrue ? y.T : repOf(y));
-  const heads = disp.map(y => `<th>${fiscalLabelFor(y.endM)}</th>`).join('');
-  const diffHead = found ? `<th>差異（実態−提出）</th>` : '';
+/* 決算書の表（ys は古い順。先頭は前期比較用）。ctx はガイドの行ハイライトの対象 */
+function fsTableOf(ys, view, opt = {}) {
+  const disp = ys.slice(1);
+  const ctx = opt.ctx || '';
+  const focus = guideRows(ctx, view);
+  const rowCls = (cls, key) => `${cls || ''}${key && focus.includes(key) ? ' focus' : ''}`;
+  const label = (name, tk) => (tk ? term(esc(name), tk) : esc(name));
+  const heads = (opt.heads || disp.map(y => y._label || '')).map(h => `<th>${h}</th>`).join('');
   if (view === 'ratio') {
-    const avg = industryAvg(co.ind);
-    const rs = disp.map((y, i) => ratiosOf(pick(y), pick(years[i])));
-    const body = RATIO_ROWS.map(([name, f, unit, avgKey]) => {
+    const avg = industryAvg(opt.ind);
+    const rs = disp.map((s, i) => ratiosOf(s, ys[i]));
+    const body = RATIO_ROWS.map(([name, f, unit, avgKey, tk]) => {
       if (!f) return `<tr class="head"><td colspan="${disp.length + 2}">${name}</td></tr>`;
       const cells = rs.map(r => `<td>${fmtRatio(f(r), unit)}</td>`).join('');
-      return `<tr class="i1"><td>${name}</td>${cells}<td class="muted">${avgKey && avg[avgKey] !== undefined ? fmtRatio(avg[avgKey], unit) : '―'}</td></tr>`;
+      return `<tr class="${rowCls('i1', tk)}"><td>${label(name, tk)}</td>${cells}<td class="muted">${avgKey && avg[avgKey] !== undefined ? fmtRatio(avg[avgKey], unit) : '―'}</td></tr>`;
     }).join('');
-    return `<div class="tbl-wrap"><table class="fs"><thead><tr><th>指標${showTrue ? '（実態）' : ''}</th>${heads}<th>業界平均</th></tr></thead><tbody>${body}</tbody></table></div><p class="note">業界平均は中小企業の目安。金額は${FS_BIG ? '百万円' : '千円'}単位。</p>`;
+    return `<div class="tbl-wrap"><table class="fs"><thead><tr><th>指標${opt.trueLabel ? '（実態）' : ''}</th>${heads}<th>業界平均</th></tr></thead><tbody>${body}</tbody></table></div><p class="note">業界平均は中小企業の目安。金額は${FS_BIG ? '百万円' : '千円'}単位。</p>`;
   }
   const rows = FS_ROWS[view];
-  const body = rows.map(([name, f, cls]) => {
-    if (!f) return `<tr class="head"><td colspan="${disp.length + 1 + (found ? 1 : 0)}">${name}</td></tr>`;
-    const vals = disp.map((y, i) => {
-      const s = pick(y);
-      const c = view === 'cf' ? cfOf(s, pick(years[i])) : null;
-      return f(s, c);
-    });
+  const body = rows.map(([name, f, cls, key, tk]) => {
+    if (!f) return `<tr class="head"><td colspan="${disp.length + 1 + (opt.diff ? 1 : 0)}">${name}</td></tr>`;
+    const vals = disp.map((s, i) => f(s, view === 'cf' ? cfOf(s, ys[i]) : null));
     const cells = vals.map(v => `<td class="${v < 0 ? 'neg' : ''}">${fmtFS(v)}</td>`).join('');
-    let diff = '';
-    if (found) {
-      const last = disp[disp.length - 1], prevY = years[years.length - 2];
-      const tv = f(last.T, view === 'cf' ? cfOf(last.T, prevY.T) : null);
-      const rv = f(repOf(last), view === 'cf' ? cfOf(repOf(last), repOf(prevY)) : null);
+    return `<tr class="${rowCls(cls, key)}"><td>${label(name, tk)}</td>${cells}${opt.diff ? opt.diff(f, view) : ''}</tr>`;
+  }).join('');
+  return `<div class="tbl-wrap"><table class="fs"><thead><tr><th>（単位：${FS_BIG ? '百万円' : '千円'}）${opt.trueLabel ? '<span class="true">実態</span>' : ''}</th>${heads}${opt.diff ? '<th>差異（実態−提出）</th>' : ''}</tr></thead><tbody>${body}</tbody></table></div>`;
+}
+
+function companyFS(co, view, showTrue, n = 3, ctx = 'app') {
+  FS_BIG = !!co.big;
+  const years = co.years.slice(-(n + 1));
+  const found = co.fraud && co.fraud.found;
+  const pick = y => (showTrue ? y.T : repOf(y));
+  const ys = years.map(pick);
+  const heads = years.slice(1).map(y => fiscalLabelFor(y.endM));
+  let diff = null;
+  if (found && view !== 'ratio') {
+    diff = (f, v) => {
+      const last = years[years.length - 1], prevY = years[years.length - 2];
+      const tv = f(last.T, v === 'cf' ? cfOf(last.T, prevY.T) : null);
+      const rv = f(repOf(last), v === 'cf' ? cfOf(repOf(last), repOf(prevY)) : null);
       const d = tv - rv;
       const th = FS_BIG ? 1e6 : 1000;
-      diff = `<td class="${Math.abs(d) >= th ? 'diff' : 'muted'}">${Math.abs(d) >= th ? fmtFS(d) : '―'}</td>`;
-    }
-    return `<tr class="${cls || ''}"><td>${name}</td>${cells}${diff}</tr>`;
-  }).join('');
-  return `<div class="tbl-wrap"><table class="fs"><thead><tr><th>（単位：${FS_BIG ? '百万円' : '千円'}）${showTrue ? '<span class="true">実態</span>' : ''}</th>${heads}${diffHead}</tr></thead><tbody>${body}</tbody></table></div>`;
+      return `<td class="${Math.abs(d) >= th ? 'diff' : 'muted'}">${Math.abs(d) >= th ? fmtFS(d) : '―'}</td>`;
+    };
+  }
+  return fsTableOf(ys, view, { ctx, heads, ind: co.ind, trueLabel: showTrue, diff });
+}
+/* 審査ガイド（稟議書・融資先の詳細で使う） */
+function companyGuide(co, showTrue, ctx) {
+  const ys = co.years.slice(-4).map(y => (showTrue ? y.T : repOf(y)));
+  return fsGuidePanel(fsGuideSteps(ys, co.ind), ctx);
 }
 
 /* ---------- 頭取室 ---------- */
@@ -116,6 +131,7 @@ function inboxItems() {
   }
   const gap = G.loans.filter(L => isActiveLoan(L) && sysClass(L) > L.cls).length;
   if (gap) items.push({ ico: '査', cls: 'warn', t1: `自己査定：システム判定より甘い区分の先が${gap}件`, t2: '承継した貸出には前経営陣の甘い査定が残っています。検査で指摘される前に見直しましょう', act: btn('見直す', 'pfGap', {}, 'sm') });
+  if (G.budget && G.budget.status === 'draft') items.push({ ico: '予', t1: `第${G.budget.fy + 1}期の予算を決める`, t2: '貸出・預金・経費の目標を決めて予算を立てます。4月末までに決めなければ予算案のまま決まります', act: btn('予算へ', 'go', { tab: 'finance', fin: 'budget' }, 'sm') });
   const rev = G.inbox.filter(x => x.type === 'review').length;
   if (rev) items.push({ ico: '決', t1: `決算書の検証待ち ${rev}先`, t2: '融資先から新しい決算書が届いています。内容を確認し債務者区分を見直します', act: btn('確認する', 'go', { tab: 'portfolio' }, 'sm') });
   // 警告
@@ -282,8 +298,9 @@ function ringiBiz(app, co) {
   const fs = `<div class="row between" style="margin-bottom:6px"><div class="subtabs" role="tablist" style="margin:0;border:0">${views.map(([k, l]) => `<button type="button" data-act="appView" data-v="${k}" aria-pressed="${UI.appView === k}">${l}</button>`).join('')}</div>
     ${found ? `<label class="inline small"><input type="checkbox" data-ch="appTrue" ${UI.appShowTrue ? 'checked' : ''}> 実態の数値で表示</label>` : ''}</div>
     ${companyFS(co, UI.appView, found && UI.appShowTrue)}`;
+  const guide = UI.settings.learn !== false ? companyGuide(co, found && UI.appShowTrue, 'app') : '';
   return `<section><h3>申込の概要</h3>${outline}</section>
-  <section><h3>決算書（直近3期）</h3>${found ? `<div class="callout bad" style="margin-bottom:10px"><b>粉飾が判明：</b>${esc(FRAUD_TYPES[co.fraud.type].name)}。提出された決算書は実態と異なります。「実態の数値で表示」で修正後の決算を確認できます。</div>` : ''}${fs}</section>
+  <section><h3>決算書（直近3期）</h3>${found ? `<div class="callout bad" style="margin-bottom:10px"><b>粉飾が判明：</b>${esc(FRAUD_TYPES[co.fraud.type].name)}。提出された決算書は実態と異なります。「実態の数値で表示」で修正後の決算を確認できます。</div>` : ''}${guide}${fs}</section>
   <section><h3>調査</h3>${invPanel(app, INV_BIZ, co)}</section>
   <section><h3>行内格付と採算</h3>${gradePanel(app, co)}</section>
   <section><h3>融資条件</h3>${app.status === 'pending' ? termsBiz(app) : decidedTerms(app)}</section>
@@ -444,7 +461,7 @@ function refreshEval() {
 }
 
 Object.assign(ACTIONS, {
-  pickApp: d => { UI.appId = d.id; UI.appShowTrue = false; UI.appOpen = true; render(); if (window.innerWidth < 960) window.scrollTo({ top: 0 }); },
+  pickApp: d => { UI.appId = d.id; UI.appShowTrue = false; UI.appOpen = true; UI.guideSel = null; render(); if (window.innerWidth < 960) window.scrollTo({ top: 0 }); },
   appBack: () => { UI.appOpen = false; render(); },
   pfGap: () => { UI.tab = 'portfolio'; UI.pfFilter = 'gap'; UI.pfPage = 0; render(); window.scrollTo({ top: 0 }); },
   appFilter: d => { UI.appFilter = d.v; UI.appId = null; render(); },
@@ -670,7 +687,7 @@ MODALS.loan = a => {
       ${found ? `<div class="callout bad" style="margin:8px 0">粉飾が判明しています（${esc(FRAUD_TYPES[co.fraud.type].name)}）。</div>` : ''}
       ${G.sys.credit >= 2 && fraudFlags(co).length ? `<div class="flagbox" style="margin:8px 0"><b class="small">粉飾検知モジュール</b><ul>${fraudFlags(co).map(f => `<li>${esc(f.t)}</li>`).join('')}</ul></div>` : ''}
       <div class="row between" style="margin:8px 0"><div class="subtabs" style="margin:0;border:0">${views.map(([k, l]) => `<button type="button" data-act="loanView" data-v="${k}" aria-pressed="${a.view === k}">${l}</button>`).join('')}</div>${found ? `<label class="inline small"><input type="checkbox" data-ch="loanTrue" ${a.showTrue ? 'checked' : ''}> 実態の数値で表示</label>` : ''}</div>
-      ${companyFS(co, a.view, found && a.showTrue, n)}
+      ${UI.settings.learn !== false && rev ? companyGuide(co, found && a.showTrue, 'loan') : ''}${companyFS(co, a.view, found && a.showTrue, n, 'loan')}
       <h3 style="font-size:15px;margin:14px 0 8px">期中モニタリング（調査）</h3>
       <p class="note">審査部の余力 ${fmtNum(creditCapLeft(), 1)}人日。新しい決算書が届くと調査結果はリセットされます。</p>
       ${monitorPanel(co)}`;
