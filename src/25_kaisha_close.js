@@ -107,13 +107,16 @@ function ksMakeQuiz(step) {
   }
   if (step === 'tax') {
     const t = ksTaxCalc();
+    const kin = t.kintou ?? 7e4;
+    const rateTxt = t.foreign ? `${t.foreign}の法人税率は約${fmtNum(t.rate * 100, 1)}%` : t.rate ? `資本金が1億円を超えるので中小法人の軽減税率はなく、税率は約${fmtNum(t.rate * 100, 1)}%` : '所得のうち800万円までは25%、超える部分は34%';
+    const adj = [t.fines ? `罰金 ${ksYenX(t.fines)} は税金の計算では費用にならないので所得に足し戻す` : '', t.excl ? `子会社などからの受取配当のうち ${ksYenX(t.excl)} は益金不算入（二重の課税を避けるため所得から除く）` : '', t.loss ? `過去の赤字（繰越欠損金）${ksYenX(t.loss)} を差し引く` : ''].filter(Boolean);
     if (t.taxable > 0) {
-      const ch = ksAmtChoices(t.tax, [Math.max(0, t.pretax) * 0.25 + 7e4, Math.max(0, t.pretax) * 0.3, t.income, 7e4]);
-      return { q: `税引前当期純利益は ${ksYenX(t.pretax)}${t.fines ? `（うち罰金 ${ksYenX(t.fines)} は税金の計算では費用にならないので、所得に足し戻す）` : ''}${t.loss ? `、過去の赤字（繰越欠損金）が ${ksYenX(t.loss)}` : ''}です。所得のうち800万円までは25%、超える部分は34%、さらに住民税の均等割7万円がかかります。法人税等はいくら？`, choices: ch.map(ksYenX), correct: 0,
-        explain: `所得 ${ksYenX(t.taxable)}${t.loss ? `（利益から繰越欠損金を差し引いた額）` : ''} × 税率 ＝ ${ksYenX(t.income)}、均等割 7万円を加えて <b>${ksYenX(t.tax)}</b>。納めるのは5月なので、それまでは未払法人税等（負債）です。` };
+      const ch = ksAmtChoices(t.tax, [Math.max(0, t.pretax) * 0.25 + kin, Math.max(0, t.pretax) * 0.3, t.income, kin]);
+      return { q: `税引前当期純利益は ${ksYenX(t.pretax)} です。${adj.length ? adj.join('。') + '。' : ''}${rateTxt}、さらに住民税の均等割${ksYenX(kin)}がかかります。法人税等はいくら？`, choices: ch.map(ksYenX), correct: 0,
+        explain: `所得 ${ksYenX(t.taxable)}${adj.length ? '（税引前利益に、上の調整をした額）' : ''} × 税率 ＝ ${ksYenX(t.income)}、均等割 ${ksYenX(kin)} を加えて <b>${ksYenX(t.tax)}</b>。納めるのは5月なので、それまでは未払法人税等（負債）です。` };
     }
-    return { q: `今期の税引前当期純利益は ${ksYenX(t.pretax)}${t.pretax > 0 ? `ですが、過去の赤字（繰越欠損金）${ksYenX(t.loss)}で相殺されます` : '（赤字）です'}。法人税等はいくらでしょう？`, choices: ['0円（もうけがないので税金はかからない）', '7万円（住民税の均等割だけはかかる）', `△${ksYenX(Math.abs(t.pretax) * 0.25)}（税金が戻ってくる）`, ksYenX(Math.abs(t.pretax) * 0.25)], correct: 1,
-      explain: `所得がなければ法人税はかかりませんが、住民税の<b>均等割（7万円）</b>は赤字でもかかります。今期の赤字 ${ksYenX(t.lossAfter)} は繰越欠損金として、来期以降の利益と相殺できます。` };
+    return { q: `今期の税引前当期純利益は ${ksYenX(t.pretax)}${t.pretax > 0 ? `ですが、${adj.length ? adj.join('・') : '過去の赤字で相殺されます'}` : '（赤字）です'}。法人税等はいくらでしょう？`, choices: ['0円（もうけがないので税金はかからない）', `${ksYenX(kin)}（住民税の均等割だけはかかる）`, `△${ksYenX(Math.abs(t.pretax) * 0.25)}（税金が戻ってくる）`, ksYenX(Math.abs(t.pretax) * 0.25)], correct: 1,
+      explain: `所得がなければ法人税はかかりませんが、住民税の<b>均等割（${ksYenX(kin)}）</b>は赤字でもかかります（資本金と従業員の数で決まる）。${t.lossAfter ? `今期の赤字 ${ksYenX(t.lossAfter)} は繰越欠損金として、来期以降の利益と相殺できます。` : ''}` };
   }
   return null;
 }
@@ -174,7 +177,7 @@ function ksStepData(step) {
   }
   if (step === 'tax') {
     const t = c.data.tax || ksTaxCalc();
-    return kv([['税引前当期純利益（ここまでの決算整理の後）', `<span class="${t.pretax < 0 ? 'neg' : ''}">${ksYenX(t.pretax)}</span>`], ['繰越欠損金（過去の赤字）', ksYenX(t.loss)]]);
+    return kv([['税引前当期純利益（ここまでの決算整理の後）', `<span class="${t.pretax < 0 ? 'neg' : ''}">${ksYenX(t.pretax)}</span>`], ['繰越欠損金（過去の赤字）', ksYenX(t.loss)], t.excl ? [term('受取配当等の益金不算入', 'ekikinFusannyu'), `${ksYenX(t.excl)}（子会社などからの配当のうち、所得から除く額）`] : null, ['住民税の均等割', ksYenX(t.kintou ?? 7e4)], t.rate ? ['税率', `${t.foreign ? `${esc(t.foreign)}の法人税` : '資本金1億円超（中小法人の軽減なし）'} 約${fmtNum(t.rate * 100, 1)}%`] : null].filter(Boolean));
   }
   return '';
 }

@@ -268,7 +268,8 @@ function ksLawMonth(ctx) {
   for (const a of L.absent) ksPost('law_cover', [['misc', Math.round(a.wage * 0.35), 0], ['cash', 0, Math.round(a.wage * 0.35)]], { cf: 'exp', u: a.u || 'HQ', key: a.u || 'HQ' });
   L.fixMul = 1 + (L.fixMul - 1) * 0.96;
   // 最低賃金の改定（10月）
-  if (ctx.mo === 10) {
+  if (ctx.mo === 10 && G.loc && typeof ksMinWageRevise === 'function') ksMinWageRevise();
+  else if (ctx.mo === 10) {
     L.minWage = Math.round(L.minWage * (1 + uni(0.035, 0.05)));
     if (ksPartRoles().length) {
       const gap = ksMinWageGap();

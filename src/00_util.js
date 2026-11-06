@@ -22,6 +22,19 @@ function randn() {
   const v = rand();
   return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
 }
+/* 拡張（災害・出来事・立入検査・地価など）の乱数は別の並び（G.rs2）。本体の乱数の並びを変えないため */
+function rand2() {
+  if (!G) return Math.random();
+  if (G.rs2 === undefined) G.rs2 = ((G.seed | 0) ^ 0x5bd1e995) | 0;
+  const a = (G.rs2 + 0x6D2B79F5) | 0;
+  G.rs2 = a;
+  let t = Math.imul(a ^ (a >>> 15), 1 | a);
+  t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+}
+const uni2 = (a, b) => a + (b - a) * rand2();
+const chance2 = p => rand2() < p;
+const pick2 = arr => arr[Math.floor(rand2() * arr.length)];
 const uni = (a, b) => a + (b - a) * rand();
 const randInt = (a, b) => Math.floor(uni(a, b + 1));
 const chance = p => rand() < p;

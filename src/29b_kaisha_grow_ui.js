@@ -55,8 +55,10 @@ function ksUpgRows(cat, u) {
       <td class="n">${st ? status : av.ok ? btn('実施する', 'kUpgDo', { id: U.id, u: unit ? unit.id : '' }, 'sm primary') : status}</td></tr>`;
   }).join('');
 }
+function ksGrowNoUnit() { return `<div class="empty">この会社は自分では事業をしていません（持株会社）。事業の投資・海外展開は、子会社の画面で行います。${typeof ksSubs === 'function' && G.group && ksSubs(G).length ? `<div class="row" style="justify-content:center;gap:6px;flex-wrap:wrap;margin-top:8px">${ksSubs(G).map(s => btn(esc(s.name), 'kView', { v: s.id }, 'sm')).join('')}</div>` : ''}</div>`; }
 function ksUpgHtml() {
   const u = ksGrowUnit();
+  if (!u) return ksGrowNoUnit();
   const cats = Object.entries(KS_UPG_CATS).map(([c, n]) => { const rows = ksUpgRows(c, u); return rows ? `<h3 class="fsh">${esc(n)}</h3><div class="tbl-wrap"><table class="t"><thead><tr><th>投資</th><th class="n">費用</th><th class="n"></th></tr></thead><tbody>${rows}</tbody></table></div>` : ''; }).join('');
   return `<div class="row between" style="margin-bottom:6px"><p class="small" style="margin:0">設備やシステムのように長く使うものは資産になり、何年かで償却します。認証・広告・制度づくりは、払ったときの費用です。効果は事業の数字（需要・ロス・電気代・労災など）に表れます。</p>${ksUnitSelect('kGrowU', u)}</div>${cats}`;
 }
@@ -80,7 +82,7 @@ ACTIONS.kUpgGo = d => {
 /* ---------- 海外展開 ---------- */
 function ksIntlHtml() {
   const u = ksGrowUnit();
-  if (!u) return '';
+  if (!u) return ksGrowNoUnit();
   const g = G.grow;
   const rows = Object.entries(KS_REGIONS).map(([r, R]) => {
     const st = ksIntlStage(u, r);
@@ -93,7 +95,12 @@ function ksIntlHtml() {
       const cost = Math.round(S2.cost(u));
       act = `<div class="small">次：${esc(S2.n(u))}<br>${fmtYen(cost)}${S2.mon ? `・毎月 ${fmtYen(Math.round(S2.mon(u)))}` : ''}</div>${nx.ok ? btn('進める', 'kIntlDo', { u: u.id, r }, 'sm primary') : `<span class="small muted">${esc(nx.why)}</span>`}`;
     } else act = '<span class="small muted">最後の段階</span>';
-    return `<tr><td><b>${esc(R.n)}</b></td><td>${cur}</td><td class="n">${act}</td></tr>`;
+    let ccTxt = '';
+    if (typeof ksIntlCountries === 'function' && G.loc) {
+      if (st) { const c0 = x.cc || KS_REG_COUNTRY_DEFAULT[r]; ccTxt = `<div class="small muted">進出先：${esc((KS_COUNTRIES[c0] || {}).n || '')}</div>`; }
+      else { const c1 = ksIntlCC(r); ccTxt = `<label class="small">進出先 <select data-ch="kIntlCC" data-r="${r}" aria-label="${esc(R.n)}の進出先">${ksIntlCountries(r).map(cc => `<option value="${cc}"${cc === c1 ? ' selected' : ''}>${esc(KS_COUNTRIES[cc].n)}</option>`).join('')}</select></label>`; }
+    }
+    return `<tr><td><b>${esc(R.n)}</b>${ccTxt}</td><td>${cur}</td><td class="n">${act}</td></tr>`;
   }).join('');
   const hedge = [[0, 'しない'], [0.3, '3割'], [0.5, '5割'], [0.8, '8割']].map(([v, l]) => `<button type="button" data-act="kHedge" data-v="${v}" aria-pressed="${g.hedge === v}">${l}</button>`).join('');
   return `<div class="row between" style="margin-bottom:6px"><p class="small" style="margin:0">輸出 → 海外営業所 → 現地の拠点（工場・店舗）と段階を踏みます。海外の売上は外国の通貨で受け取るので、円安なら円での売上が増え、円高なら減ります。</p>${ksUnitSelect('kGrowU', u)}</div>
@@ -102,6 +109,7 @@ function ksIntlHtml() {
     ${panel(term('為替予約', 'fxHedge'), `<div class="seg" role="radiogroup">${hedge}</div><p class="small" style="margin:6px 0 0">外貨で受け取る代金のうち、予約した分は売ったときのレートで円にできます。為替差損益が小さくなる代わりに、円安の得もなくなります。</p>`)}</div>`;
 }
 ACTIONS.kHedge = d => { G.grow.hedge = +d.v; render(); };
+CHANGES.kIntlCC = el => { G.loc.intlCC = G.loc.intlCC || {}; G.loc.intlCC[el.dataset.r] = el.value; render(); autosave(); };
 ACTIONS.kIntlDo = d => {
   const u = ksUnit(d.u);
   const nx = ksIntlNext(u, d.r);

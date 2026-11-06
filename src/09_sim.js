@@ -528,7 +528,7 @@ function bankClass(ta = totalAssets()) {
 }
 
 /* ---------- セーブ／ロード ---------- */
-function serialize() { return JSON.stringify(G); }
+function serialize() { return JSON.stringify(typeof ksRoot === 'function' && G && G.mode === 'kaisha' ? ksRoot() : G); }
 function deserialize(json) {
   const s = JSON.parse(json);
   if (s && s.mode === 'kaisha') return ksDeserialize(s);

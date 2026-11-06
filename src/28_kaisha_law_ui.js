@@ -30,7 +30,7 @@ ksInbox = () => {
   const due = ksLawTasks().filter(x => x.st === 'due');
   if (over.length) out.push({ ico: '法', cls: 'warn', t1: `法令で決められたことが${over.length}件、期限切れになっています`, t2: over.map(x => x.name).join('・'), act: btn('法令と安全へ', 'kGo', { tab: 'k_law' }, 'sm') });
   if (due.length) out.push({ ico: '法', t1: `今月までの法令の手続き：${due.map(x => x.name).join('・')}`, t2: '期限を過ぎると違反になります', act: btn('法令と安全へ', 'kGo', { tab: 'k_law' }, 'sm') });
-  if (ksPartRoles().length && ksMinWageGap() > 0) out.push({ ico: '賃', cls: 'bad', t1: `パート・アルバイトの時給が最低賃金（${G.law.minWage}円）を下回っています`, t2: '差額を払う義務があり、労働基準監督署に申告されることもあります', act: btn('時給を引き上げる', 'kLawRaise', {}, 'sm primary') });
+  if (ksPartRoles().length && ksMinWageGap() > 0) out.push({ ico: '賃', cls: 'bad', t1: `パート・アルバイトの時給が最低賃金（${typeof ksMinWageOf === 'function' ? ksMinWageOf(ksPartRoles().slice().sort((a, b) => (ksMinWageOf(b.u) - ksPartHourly(b)) - (ksMinWageOf(a.u) - ksPartHourly(a)))[0].u) : G.law.minWage}円）を下回っています`, t2: '差額を払う義務があり、労働基準監督署に申告されることもあります', act: btn('時給を引き上げる', 'kLawRaise', {}, 'sm primary') });
   const ot = G.law.otNow;
   if (ot > 80 || (ot > 45 && !G.law.special)) out.push({ ico: '時', cls: 'warn', t1: `残業が1人あたり月${fmtNum(ot, 0)}時間になっています`, t2: ot > 80 ? '過労死ライン（月80〜100時間）に近い水準です。人を増やすか仕事の量を調整しましょう' : '月45時間を超えるには36協定の特別条項が必要です', act: btn('法令と安全へ', 'kGo', { tab: 'k_law' }, 'sm') });
   return out;
@@ -63,7 +63,9 @@ KS_SCREENS.k_law = () => {
   const otRows = ksActiveUnits().length > 1 && L.otU ? ksActiveUnits().filter(u => L.otU[u.id] !== undefined).map(u => [`　${esc(ksUName(u))}`, `${fmtNum(L.otU[u.id], 0)}時間`]) : [];
   const otPanel = `${kv([[ksActiveUnits().length > 1 ? '残業（いちばん長い事業・1人・月）' : '残業（1人・月の見込み）', `<b class="${otCls}">${fmtNum(ot, 0)}時間</b>`], ...otRows, ['36協定', (L.doneFy.r36 ?? -99) >= fyOf(G.m) ? `届出済み（${L.special ? '特別条項あり：月100時間未満・年720時間まで' : '特別条項なし：月45時間まで'}）` : '<span class="neg">今年度の届出がない</span>'], ['直近6か月', L.otHist.length ? L.otHist.map(h => `${Math.round(h)}`).join('・') + '時間' : '―']])}
     <p class="note">${term('時間外労働の上限', 'otLimit')}は原則月45時間。特別条項があっても月100時間未満、2〜6か月平均80時間以内。人手不足（${otu ? `${ksActiveUnits().length > 1 ? esc(ksUName(otu)) + 'は' : ''}${otWhy[ksS(otu).eng] || '人員'}` : '人員'}）で残業が増えます。長い残業が続くと、過労による労災（脳・心臓疾患や精神障害）が起きやすくなります。</p>`;
-  const mw = ksPartRoles().length ? panel('最低賃金', `${kv([['汐見県の最低賃金', `時給${L.minWage}円（毎年10月に改定）`], ...ksPartRoles().map(x => [`${esc(x.n)}の時給`, `<b class="${ksPartHourly(x) < L.minWage ? 'neg' : ''}">${fmtNum(ksPartHourly(x), 0)}円</b>（月${x.hours}時間）`])])}
+  const mwOf = x => (typeof ksMinWageOf === 'function' ? ksMinWageOf(x ? x.u : null) : L.minWage);
+  const mwPrefs = typeof ksUnitPref === 'function' ? [...new Set(ksPartRoles().map(x => ksUnitPref(x.u)))] : [];
+  const mw = ksPartRoles().length ? panel('最低賃金', `${kv([...(mwPrefs.length ? mwPrefs.map(p => [`${esc(ksPrefName(p))}の最低賃金`, `時給${Math.round(KS_PREFS[p].mw * (G.loc.mwIdx || 1))}円（毎年10月ごろに改定）`]) : [['最低賃金', `時給${L.minWage}円（毎年10月に改定）`]]), ...ksPartRoles().map(x => [`${esc(x.n)}の時給`, `<b class="${ksPartHourly(x) < mwOf(x) ? 'neg' : ''}">${fmtNum(ksPartHourly(x), 0)}円</b>（月${x.hours}時間）`])])}
       <div class="row" style="margin-top:8px">${btn('時給を最低賃金＋10円まで引き上げる', 'kLawRaise', {}, ksMinWageGap() > 0 ? 'primary sm' : 'sm', { disabled: ksMinWageGap() <= -10 })}</div><p class="note">${term('最低賃金', 'minWage')}を下回ると、差額の支払い義務と罰金（50万円以下）。改定のたびに人件費が上がるので、値上げや効率化で吸収できるかが課題です。</p>`) : '';
   const insp = L.insp.slice(0, 10).map(x => `<tr><td>${ymLabel(x.m)}</td><td>${LAW_AG[x.ag].n}<div class="small muted">${esc(x.kind)}${x.why ? `（申告：${esc(x.why)}）` : ''}</div></td><td>${x.finds.length ? x.finds.map(f => `${esc((LAW_ITEMS[f.item] || { s: '安全衛生の取り組み' }).s)}${f.fixed ? '<span class="small muted">（是正済み）</span>' : ''}`).join('・') : '<span class="muted">指摘なし</span>'}</td>
     <td>${x.status === 'open' ? `${tag(`期限 ${ymLabel(x.due)}`, 'warn')} ${btn('対応する', 'kInspOpen', { id: x.id }, 'sm')}` : x.status === 'soken' ? tag('送検・命令', 'bad') : tag('完了', 'ok')}</td></tr>`).join('');
@@ -81,6 +83,7 @@ KS_SCREENS.k_law = () => {
       ${panel('安全と保険の方針', `<div class="stack" style="gap:8px">${pol}</div>`)}
       ${panel('労働時間', otPanel)}
       ${mw}
+      ${typeof ksLawTLHtml === 'function' ? ksLawTLHtml() : ''}
       ${panel('この会社に関わる法令', learn)}
     </div></div>`;
 };
