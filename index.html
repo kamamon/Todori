@@ -958,6 +958,25 @@ details.custom > summary { cursor: pointer; font-weight: 700; font-size: 13px; c
 .cu-nums { gap: 8px; }
 .cu-body select { max-width: 100%; }
 
+/* 始め方の画面：グループの会社（就任の時点の子会社・孫会社・関連会社）。組織図と同じ線で、下の会社を字下げする */
+.sgtree, .sgkids { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.sgkids { margin: 6px 0 0 12px; padding-left: 10px; border-left: 2px solid var(--rule-strong); }
+.sgnode { min-width: 0; }
+.sgco { display: grid; gap: 2px; padding: 7px 10px 8px; border: 1px solid var(--rule-strong); border-radius: var(--r-m); background: var(--sheet); min-width: 0; }
+.sgco.root { border: 2px solid var(--vault); }
+.sgco.aff { border-style: dashed; background: var(--sheet-2); }
+.sgco.unit { background: var(--sheet-2); }
+.sgco-t { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; min-width: 0; }
+.sgco-t b { font-size: 14px; overflow-wrap: anywhere; }
+.sgco-d { min-width: 0; overflow-wrap: anywhere; }
+.sgco-a { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+.sg-form { display: grid; gap: 12px; }
+.sg-form > .field, .sg-form .grid > .field { margin: 0; }
+.sgkids .sgkids .sgkids .sgkids { margin-left: 4px; padding-left: 8px; } /* 深い段は字下げを少なく */
+.sg-grid { gap: 8px 14px; }
+.sg-grid select, .sg-grid input { width: 100%; }
+.typelist.sg-types { max-height: 260px; margin-top: 6px; }
+
 @media (max-width: 760px) {
   .jmap, .wmap { gap: 2px; }
   .jt .jn.n3 { letter-spacing: -.14em; font-size: .92em; }
@@ -1195,6 +1214,11 @@ details.custom > summary { cursor: pointer; font-weight: 700; font-size: 13px; c
   .orgfold[aria-expanded="true"] { min-height: 40px; }
   .orgtools .seg { flex: 1 1 100%; }
   .orgkids { margin-left: 6px; padding-left: 8px; }
+  /* 始め方の画面のグループの会社：ボタンは名前と説明の下に並べる */
+  .sgco { padding: 8px 10px; }
+  .sgco-a { margin-top: 6px; }
+  .sgkids { margin-left: 4px; padding-left: 8px; }
+  .sgkids .sgkids .sgkids .sgkids { margin-left: 2px; padding-left: 6px; }
 
   /* ---- 地図 ---- */
   .jmap-wrap { margin: 8px -4px 6px; }
@@ -7013,7 +7037,10 @@ async function autosave() {
   if (!G) return;
   const L = lsKeys();
   const packed = await packSave(serialize());
-  UI.saved = lsSet(L.auto, packed) && lsSet(L.meta('a'), saveMeta());
+  const ok = lsSet(L.auto, packed) && lsSet(L.meta('a'), saveMeta());
+  // 保存できなかったら一度だけ知らせる（会社がとても多いと、ブラウザの保存領域に入りきらないことがある）
+  if (!ok && UI.saved !== false) toast('自動保存できませんでした（このブラウザの保存領域がいっぱいか、保存が許可されていません）。メニューで使っていないセーブを消すか、「ファイルに書き出す」で保存してください', 'bad');
+  UI.saved = ok;
 }
 async function saveSlot(i) {
   const L = lsKeys();
@@ -7120,6 +7147,8 @@ Object.assign(ACTIONS, {
   saveSlot: d => saveSlot(+d.slot),
   loadSlot: d => loadFrom(lsKeys().slot(+d.slot)),
   loadAuto: () => loadFrom(lsKeys().auto),
+  delSlot: d => confirmBox('セーブを消す', `スロット${+d.slot}のセーブを消します。元には戻せません。`, '消す', 'delSlotGo', { slot: +d.slot }, true),
+  delSlotGo: d => { const L = lsKeys(); try { localStorage.removeItem(L.slot(+d.slot)); localStorage.removeItem(L.meta(+d.slot)); } catch (e) { /* 消せないときはそのまま */ } toast(`スロット${+d.slot}のセーブを消しました`); showModal('menu'); },
   exportSave: () => exportSave(),
   importSave: () => $('#importFile').click(),
   theme: d => { lsSet(LS.theme, d.v); applyTheme(d.v); drawModal(); },
@@ -8940,7 +8969,7 @@ MODALS.menu = () => {
     let meta = null;
     try { meta = JSON.parse(lsGet(L.meta(i)) || 'null'); } catch (e) { meta = null; }
     const desc = !meta ? '<span class="muted">空き</span>' : gmode ? `${esc(meta.co)}・${ymLabel(meta.m)}・署長 ${esc(meta.ceo)}` : kmode ? `${esc(meta.co)}・${ymLabel(meta.m)}・${esc(meta.desc || '')}` : `${esc(meta.bank)}・${ymLabel(meta.m)}・総資産${fmtYen(meta.ta)}`;
-    return `<tr><td class="nowrap">${i === 'a' ? '自動保存' : 'スロット' + i}</td><td class="small">${desc}</td><td class="n">${i === 'a' ? '' : btn('保存', 'saveSlot', { slot: i }, 'sm', { disabled: !G })} ${btn('読込', i === 'a' ? 'loadAuto' : 'loadSlot', { slot: i }, 'sm', { disabled: !meta })}</td></tr>`;
+    return `<tr><td class="nowrap">${i === 'a' ? '自動保存' : 'スロット' + i}</td><td class="small">${desc}</td><td class="n">${i === 'a' ? '' : btn('保存', 'saveSlot', { slot: i }, 'sm', { disabled: !G })} ${btn('読込', i === 'a' ? 'loadAuto' : 'loadSlot', { slot: i }, 'sm', { disabled: !meta })}${i === 'a' || !meta ? '' : ` ${btn('消す', 'delSlot', { slot: i }, 'sm ghost')}`}</td></tr>`;
   };
   const theme = lsGet(LS.theme) || 'auto';
   const body = `<h3 style="font-size:14px;margin:0 0 6px">セーブとロード（${gmode ? '法令を守らせる' : kmode ? '会社を経営する' : '銀行を経営する'}）</h3><table class="t compact"><tbody>${slot('a')}${slot(1)}${slot(2)}${slot(3)}</tbody></table>
@@ -17486,12 +17515,15 @@ function ksExecPayFor(annual) { return clamp(Math.round((25e4 + Math.sqrt(Math.m
 function ksCompanyDesc(us) {
   us = us || ksActiveUnits();
   const ns = us.map(u => ksS(u).name);
+  if (ns.length >= 5) return `${ns.slice(0, 3).join('・')}など${ns.length}事業`; // 事業が多いときは、初めの3つと数
   return ns.length <= 1 ? (ns[0] || '') : ns.length === 2 ? `${ns[0]}と${ns[1]}` : `${ns.slice(0, -1).join('・')}と${ns[ns.length - 1]}`;
 }
 /* 開始時の事業のリスト：o.units = [{ type, sc, n }]（o.ind は以前の6業種の id） */
 function ksStartList(o) {
   const raw = o.units && o.units.length ? o.units : [{ type: KS_LEGACY_TYPE[o.ind] || o.ind }];
-  return raw.map(x => (typeof x === 'string' ? { type: x } : x)).filter(x => KS_TYPES[x.type]).slice(0, 5);
+  // 事業の数に上限はない（同じ業種は1つにまとめる）
+  const seen = new Set();
+  return raw.map(x => (typeof x === 'string' ? { type: x } : x)).filter(x => KS_TYPES[x.type] && !seen.has(x.type) && seen.add(x.type));
 }
 function ksNewGame(o) {
   const seed = (o.seed ?? Math.floor(Math.random() * 2 ** 31)) | 0;
@@ -19332,7 +19364,7 @@ KS_SCREENS.k_dash = () => {
   const lastFS = ksLastFY();
   const g = G.grade;
   const prof = kv([
-    ['事業', `${esc(I.label)}${ksActiveUnits().length > 1 ? `（${ksActiveUnits().length}事業）` : `（${esc(I.name)}）`}`],
+    ['事業', `${esc(I.label)}${ksActiveUnits().length >= 5 ? '' : ksActiveUnits().length > 1 ? `（${ksActiveUnits().length}事業）` : `（${esc(I.name)}）`}`],
     ['創業', `${G.founded}年（${ksFyLabel(fyOf(G.m))}）`],
     ['資本金', fmtYen(ksB('capital'))],
     ['従業員', !ksActiveUnits().length ? (G.group && G.group.hq ? `本社 ${fmtNum(G.group.hq.staff, 0)}人（持株会社）` : '0人') : `${fmtNum(ksHeadcount(), 0)}人（${ksActiveUnits().length > 1 ? ksActiveUnits().map(u => `${esc(ksUName(u))} ${fmtNum(ksUnitHead(u), 0)}人`).join('・') : ksS(ksMainUnit()).roles.map(r => `${r.n.replace(/（.*?）/, '')} ${fmtNum(ksMainUnit().staff[r.id] || 0, 0)}人`).join('・')}）`],
@@ -20081,6 +20113,7 @@ MODALS.kIntro = () => {
   const st = ksLastFY();
   const body = `<p style="margin:0 0 10px">${ymLabel(G.m)}、${esc(G.ceo)}さんが${esc(G.coName)}の社長に就任しました。${G.founded}年創業、${esc(I.label)}を営む会社です。</p>
     ${st ? `<p class="small" style="margin:0 0 10px">前期（${ksFyLabel(st.fy)}）の${ksSalesName()}は${fmtYen(st.pl.sales)}、経常利益は${fmtYen(st.pl.ord)}、銀行の格付は${G.grade}。会社の状態は「${KS_COND[G.cond].n}」です。</p>` : ''}
+    ${typeof ksSubs === 'function' && ksSubs(G).length ? `<p class="small" style="margin:0 0 10px">グループの会社：${(() => { const ss = ksSubs(G); const nA = ss.filter(s => s.aff).length; const nD = ss.filter(s => s.parent).length; return `子会社${ss.length - nA}社${nA ? `・関連会社${nA}社` : ''}${nD ? `（うち、子会社の下の会社${nD}社）` : ''}`; })()}。<b>グループ</b>の画面で、組織図と各社の決算書、連結決算書を見られます。</p>` : ''}
     <ol><li><b>決算書</b>で、先代が作った過去${ksFYList().length}期分の決算書を読む（損益計算書・貸借対照表）。</li>
     <li><b>資金と銀行</b>で、資金繰り表と借入金を確かめる。お金が尽きたら会社は終わりです。</li>
     <li><b>現場</b>で、事業ごとに値段・人員・設備を決める。新しい事業を始めることもできます。</li>
@@ -20229,7 +20262,7 @@ function ksStartStore() {
 function ksStartTypeRow(S, k) {
   const sel = k.units.some(x => x.type === S.name);
   return `<li class="stype${sel ? ' on' : ''}"><span class="indico" aria-hidden="true">${esc(S.icon)}</span><span class="stype-t"><b>${esc(S.name)}</b><span class="small muted">${esc(S.grp)}・${esc(KS_ENG_INFO[S.eng].n)}</span></span>
-    <span class="stype-a">${btn(sel ? '選択中' : 'これにする', 'kStPick', { v: S.name }, `sm${sel ? '' : ' primary'}`, { disabled: sel })}${!sel && k.units.length < 3 ? btn('＋加える', 'kStAdd', { v: S.name }, 'sm') : ''}</span></li>`;
+    <span class="stype-a">${btn(sel ? '選択中' : 'これにする', 'kStPick', { v: S.name }, `sm${sel ? '' : ' primary'}`, { disabled: sel })}${!sel ? btn('＋加える', 'kStAdd', { v: S.name }, 'sm') : ''}</span></li>`;
 }
 function ksStartTypesHtml(k) {
   const list = ksSearchTypes(k.q, k.sec, k.eng, 40);
@@ -20252,12 +20285,13 @@ function renderStartK() {
   const setup = `<section class="setup" aria-labelledby="setupTitle">
     <div class="setup-head"><h2 id="setupTitle">始め方</h2>${cont}</div>
     ${startModeSwitch()}
-    <div class="field"><span>事業（${fmtNum(KS_TYPE_LIST.length, 0)}の業種から。3つまで組み合わせられます）</span><ul class="sunits">${chosen}</ul></div>
+    <div class="field"><span>事業（${fmtNum(KS_TYPE_LIST.length, 0)}の業種から。いくつでも組み合わせられます）</span><ul class="sunits">${chosen}</ul></div>
     <div class="field"><span>おすすめ</span><div class="chips">${picks}</div></div>
     <div class="field"><span>業種を探す</span><div class="row" style="gap:6px;flex-wrap:wrap"><input type="search" id="kstQ" value="${esc(k.q)}" data-in="kStQ" placeholder="例：レーザー、データセンター、航空、海運、新聞、介護" style="flex:1;min-width:12em" aria-label="業種を探す">
       <select data-ch="kStSec" aria-label="産業"><option value="">すべての産業</option>${secs}</select><select data-ch="kStEng" aria-label="事業の型"><option value="">すべての型</option>${engs}</select></div>
       <div id="kstList" class="stypes-wrap">${ksStartTypesHtml(k)}</div></div>
     <div class="field"><span>引き継ぐ会社の状態</span><div class="seg" role="radiogroup">${conds}</div><span class="small muted">${esc(KS_COND[k.cond].desc)}</span></div>
+    ${typeof ksSgHtml === 'function' ? ksSgHtml(k) : ''}
     ${typeof ksCustomHtml === 'function' ? ksCustomHtml(k) : ''}
     <div class="grid g2" style="gap:12px"><div class="field"><span>任期</span><div class="seg" role="radiogroup">${terms}</div></div>
     <label class="field"><span>シード（同じ数字なら同じ展開）</span><input type="text" id="kstSeed" value="${esc(k.seed)}" placeholder="空欄でランダム" inputmode="numeric"></label></div>
@@ -20269,7 +20303,7 @@ function renderStartK() {
     <h1>辞令</h1><div class="gametitle">社長 ― 会社経営と決算書のシミュレーション</div>
     <div class="body-text"><label><input type="text" id="kstCeo" value="${esc(k.ceo)}" placeholder="氏名" maxlength="12" aria-label="あなたの氏名"></label>　殿<br>
     貴殿を <label><input type="text" id="kstCo" value="${esc(k.coEdited ? k.coName : ksDefaultCoName(k.units[0].type))}" maxlength="18" aria-label="会社の名前" style="width:12em"></label> の代表取締役社長に選任する。<br>
-    ${esc(desc)}を営む当社の経営を先代から引き継ぎ、日々の数字と毎年の決算書を自らの手で作り、取引銀行の信頼を得て、会社を健全に成長させること。<br>
+    ${esc(desc)}を営む当社の経営を先代から引き継ぎ、日々の数字と毎年の決算書を自らの手で作り、取引銀行の信頼を得て、会社を健全に成長させること。${(k.grp || []).length ? `あわせて、グループ会社${k.grp.length}社を統括し、企業グループとして発展させること。` : ''}<br>
     任期は${warekiYear(2027)}1月から${termTxt}。</div>
     <div class="issuer">${warekiYear(2027)}1月1日<br>株主総会・取締役会</div>
     <div class="start">${btn('就任する', 'kStart', {}, 'primary')}${btn('ファイルから読み込む', 'importSave')}${btn('遊び方', 'help')}</div>
@@ -20279,7 +20313,7 @@ function renderStartK() {
 Object.assign(ACTIONS, {
   stMode: d => { if (UI.start.mode === 'gyosei') gyStartStore(); else if (UI.start.mode === 'kaisha') ksStartStore(); else if (typeof startStoreInputs === 'function') startStoreInputs(); UI.start.mode = d.v; render(); },
   kStPick: d => { ksStartStore(); const k = UI.start.k; k.units = [{ type: d.v, sc: 1 }]; if (!k.coEdited) k.coName = ''; render(); },
-  kStAdd: d => { ksStartStore(); const k = UI.start.k; if (k.units.length < 3 && !k.units.some(x => x.type === d.v)) k.units.push({ type: d.v, sc: 1 }); render(); },
+  kStAdd: d => { ksStartStore(); const k = UI.start.k; if (!k.units.some(x => x.type === d.v)) k.units.push({ type: d.v, sc: 1 }); render(); },
   kStDel: d => { ksStartStore(); const k = UI.start.k; if (k.units.length > 1) k.units.splice(+d.i, 1); render(); },
   kStSc: d => { ksStartStore(); const k = UI.start.k; if (k.units[+d.i]) k.units[+d.i].sc = +d.v; render(); },
   kStCond: d => { ksStartStore(); UI.start.k.cond = d.v; render(); },
@@ -20294,6 +20328,7 @@ Object.assign(ACTIONS, {
     const o = { units: k.units.map(x => ({ type: x.type, sc: x.sc })), coName: co, ceo, cond: k.cond, term: k.term };
     if (Number.isFinite(seedN)) o.seed = seedN;
     if (typeof ksCustomOptions === 'function') Object.assign(o, ksCustomOptions(k));
+    if (typeof ksSgOptions === 'function') { const sg = ksSgOptions(k); if (sg.length) o.startGroup = sg; } // 就任の時点のグループの会社
     if (typeof KS_ROOT !== 'undefined') KS_ROOT = null;
     if (o.form === 'gk') co = co.replace(/株式会社/, '合同会社'); else if (o.form === 'yk') co = co.replace(/株式会社/, '有限会社');
     o.coName = co;
@@ -23740,12 +23775,12 @@ function ksDescendants(id, root = ksRoot()) {
 /* 親会社から見た実質の持分（持分の掛け算） */
 function ksEffOwn(s, root = ksRoot()) {
   let f = s.own, p = s.parent, n = 0;
-  while (p && p !== 'root' && n++ < 8) { const o = ksSubById(p, root); if (!o) break; f *= o.own; p = o.parent; }
+  while (p && p !== 'root' && n++ < 200) { const o = ksSubById(p, root); if (!o) break; f *= o.own; p = o.parent; }
   return f;
 }
 function ksRecDepth(s, root = ksRoot()) {
   let d = 0, p = s.parent;
-  while (p && p !== 'root' && d < 8) { const o = ksSubById(p, root); if (!o) break; d++; p = o.parent; }
+  while (p && p !== 'root' && d < 200) { const o = ksSubById(p, root); if (!o) break; d++; p = o.parent; }
   return d;
 }
 /* 持ち主の個別の帳簿の、この会社の株式の額（関係会社株式） */
@@ -24481,7 +24516,7 @@ function ksSubAutoAdmin() {
   if (G.budget && G.budget.status === 'draft') ksBudgetApprove(true);
 }
 function ksGroupTrim(st) {
-  if (st.months.length > 30) st.months.splice(0, st.months.length - 30);
+  if (st.months.length > 24) st.months.splice(0, st.months.length - 24); // 今期と前期の分（会社が多くてもセーブが大きくなりすぎないように）
   if (st.journal.length > 4) st.journal.splice(0, st.journal.length - 4);
   if (st.news.length > 40) st.news.length = 40;
 }
@@ -24721,7 +24756,7 @@ function ksGroupConsolidate(fy) {
       affs.push({ id: s.id, n: s.name, own: s.own, inv, emv, inc: Math.round(s.own * D[s.id].ni - D[s.id].amort), cc: s.cc });
     } else {
       nciBS += Math.round((1 - s.own) * eOf(s));
-      elim.push({ t: '投資と資本の相殺消去', why: `${ksOwnerNameOf(s, root)}の持つ${s.name}の株式（${fmtYen(inv)}）と、${s.name}の${s.kind === 'acq' ? '取得のときの' : ''}資本を消す${s.gw ? '。差はのれん' : ''}${s.own < 1 ? '。ほかの株主の持分は非支配株主持分' : ''}`, bs: { subShares: -inv, gw: gwLeft[s.id] }, eq: true });
+      elim.push({ t: '投資と資本の相殺消去', why: `${ksOwnerNameOf(s, root)}の持つ${s.name}の株式（${fmtYen(inv)}）と、${s.name}の${s.kind === 'acq' ? '取得のときの' : s.kind === 'start' ? '就任の時点の' : ''}資本を消す${s.gw ? '。差はのれん' : ''}${s.own < 1 ? '。ほかの株主の持分は非支配株主持分' : ''}`, bs: { subShares: -inv, gw: gwLeft[s.id] }, eq: true });
     }
     fctrBS += Math.round(fctr[s.id] * ksEffOwn(s, root));
     s._next = { reTr: reEnd[s.id], gwCum: s.gwCum + D[s.id].amort };
@@ -24827,6 +24862,8 @@ function ksExtInit(o = {}) {
     ksGroupInit();
     if (o.form && KS_FORMS[o.form]) G.form = o.form;
     if (typeof ksCustomApply === 'function') ksCustomApply(o);
+    // 就任の時点のグループ（始め方の画面で決めた子会社・孫会社・関連会社）
+    if (o.startGroup && o.startGroup.length && !o.load && typeof ksStartGroupBuild === 'function') ksStartGroupBuild(o.startGroup);
   }
 }
 function ksExtMonth(ctx, res) {
@@ -24931,7 +24968,8 @@ function ksNewGameCustom(o) {
     G = null;
     const S = KS_TYPES[x.type];
     const base = (o.coName || '').replace(/株式会社|ホールディングス|合同会社|有限会社/g, '').trim() || '汐見';
-    ksNewGame({ units: [x], coName: `${base}${pick(KS_CO_CORE[S.eng] || ['産業'])}株式会社`, ceo: `${pick(['佐藤', '鈴木', '高橋', '田中', '伊藤'])} ${pick(['健', '誠', '茂', '洋子', '直美'])}`, seed: (seed + i * 7919) | 0, cond: o.cond, term: 0, asSub: true, pref: o.pref });
+    const core = pick(KS_CO_CORE[S.eng] || ['産業']);
+    ksNewGame({ units: [x], coName: base.endsWith(core) ? `${base}株式会社` : `${base}${core}株式会社`, ceo: `${pick(['佐藤', '鈴木', '高橋', '田中', '伊藤'])} ${pick(['健', '誠', '茂', '洋子', '直美'])}`, seed: (seed + i * 7919) | 0, cond: o.cond, term: 0, asSub: true, pref: o.pref });
     subs.push(G);
   });
   const total = Math.round(sum(subs, st => ksWith(st, ksEquity)));
@@ -24946,7 +24984,7 @@ function ksNewGameCustom(o) {
   G.openingFS = ksOpeningFS();
   if (typeof ksLawInit === 'function') ksLawInit();
   if (typeof ksGrowInit === 'function') ksGrowInit();
-  ksExtInit(Object.assign({}, o, { custom: null }));
+  ksExtInit(Object.assign({}, o, { custom: null, startGroup: null }));
   const g = G.group;
   g.hd = true; g.hdM = G.m;
   subs.forEach((st, i) => {
@@ -24959,16 +24997,25 @@ function ksNewGameCustom(o) {
   // 関係会社株式は、子会社の純資産（帳簿の額）の合計（株式移転）。今月の損益の分の差は資本準備金で調整
   const carry = Math.round(sum(g.subs, s => s.eq0));
   if (carry !== total) ksPost('hdAdj', carry > total ? [['subShares', carry - total, 0], ['capSurplus', 0, carry - total]] : [['capSurplus', total - carry, 0], ['subShares', 0, total - carry]], { u: 'HQ', desc: '子会社の株式の額の調整（株式移転）' });
-  const groupHead = sum(g.subs, s => ksWith(s.st, ksHeadcount));
+  G.customNote = `持株会社（事業会社${g.subs.length}社）で始めました`;
+  // 就任の時点のグループ（始め方の画面で決めた子会社・孫会社。事業会社の下にも置ける）
+  if (o.startGroup && o.startGroup.length && typeof ksStartGroupBuild === 'function') {
+    const umap = {};
+    list.forEach((x, i) => { if (g.subs[i]) umap['u:' + x.type] = g.subs[i].id; });
+    ksStartGroupBuild(o.startGroup, umap);
+  }
+  // 持株会社の本社と、直下の100%子会社からの経営指導料（本社の費用をまかなえる料率に）
+  const direct = ksSubs(G).filter(s => !s.parent && !s.aff && s.own >= 0.9999);
+  const groupHead = sum(ksCSubs(G), s => ksWith(s.st, ksHeadcount));
   g.hq = { staff: clamp(Math.round(groupHead * 0.01), 2, 300), wage: 45e4 };
-  const groupSales = sum(g.subs, s => ksWith(s.st, ksAnnualSales));
+  const groupSales = sum(direct, s => ksWith(s.st, ksAnnualSales));
   const rate = clamp(+((g.hq.staff * g.hq.wage * 1.15 + G.execPay * 1.15) * 12 * 1.15 / Math.max(1, groupSales)).toFixed(3), 0.01, 0.05);
-  for (const s of g.subs) s.fee = rate;
-  G.execPay = ksExecPayFor(groupSales);
+  for (const s of direct) s.fee = rate;
+  G.execPay = ksExecPayFor(sum(ksCSubs(G), s => ksWith(s.st, ksAnnualSales)));
   ksBudgetDraft(); ksBudgetApprove(true);
   G.startedM = G.m;
-  G.customNote = `持株会社（子会社${g.subs.length}社）で始めました`;
-  ksNews(`${G.ceo}氏が${G.coName}の代表取締役社長に就任。${g.subs.map(s => s.name).join('・')}を子会社に持つ持株会社`, 'info');
+  const top = ksSubs(G).filter(s => !s.parent);
+  ksNews(`${G.ceo}氏が${G.coName}の代表取締役社長に就任。${top.slice(0, 5).map(s => s.name).join('・')}${top.length > 5 ? `など${top.length}社` : ''}を子会社に持つ持株会社`, 'info');
   return G;
 }
 
@@ -26378,7 +26425,7 @@ KS_SCREENS.k_group = () => {
     <div class="subtabs" role="tablist">${subs.map(([k, l]) => `<button type="button" data-act="kGrpSec" data-v="${k}" aria-pressed="${sec === k}">${l}</button>`).join('')}</div>${body}`;
 };
 ACTIONS.kGrpSec = d => { UI.kGrpSec = d.v; render(); };
-function ksKindName(s) { return s.aff ? '関連会社（持分法）' : ({ new: '設立した子会社', jv: '合弁会社', split: '分社化した子会社', acq: '買収した子会社', hd: '事業子会社' }[s.kind] || '子会社'); }
+function ksKindName(s) { return s.aff ? '関連会社（持分法）' : s.kind === 'start' ? (s.own < 1 ? '就任の時からの合弁会社' : '就任の時からの子会社') : ({ new: '設立した子会社', jv: '合弁会社', split: '分社化した子会社', acq: '買収した子会社', hd: '事業子会社' }[s.kind] || '子会社'); }
 /* ---------- 組織図の折りたたみ（会社が増えても見やすいように） ----------
  * 会社ごとに「くわしい数字とボタン」を開く／たたむ。子会社の下の会社（孫会社）の枝を開く／たたむ。
  * 表示のしかた：くわしく（すべて開く）・1行ずつ（会社を1行に）・子会社だけ（孫会社の枝もたたむ）。
@@ -26413,7 +26460,7 @@ function ksOrgShow(s, root = G) {
   if (v.last && v.last !== s.id && v.c[v.last] === 1) delete v.c[v.last];
   v.last = null;
   if (!ksOrgCardOpen(s, root)) { v.c[s.id] = 1; v.last = s.id; }
-  for (let p = s.parent, i = 0; p && p !== 'root' && i < 8; i++) { const o = ksSubById(p, root); if (o && !ksOrgKidsOpen(o, root)) v.k[p] = 1; p = o && o.parent; }
+  for (let p = s.parent, i = 0; p && p !== 'root' && i < 200; i++) { const o = ksSubById(p, root); if (o && !ksOrgKidsOpen(o, root)) v.k[p] = 1; p = o && o.parent; }
 }
 ACTIONS.kOrgMode = d => { const v = ksOrgView(); v.mode = d.v; v.c = {}; v.k = {}; v.last = null; render(); autosave(); };
 
@@ -26444,7 +26491,8 @@ function ksOrgNode(s, root) {
   const open = ksOrgKidsOpen(s, root);
   const all = ksDescendants(s.id, root);
   const nC = kids.filter(x => !x.aff).length, nA = kids.length - nC;
-  const word = ksRecDepth(s, root) === 0 ? '孫会社' : 'ひ孫会社';
+  const dep = ksRecDepth(s, root);
+  const word = dep === 0 ? '孫会社' : dep === 1 ? 'ひ孫会社' : '下の会社';
   const what = [nC ? `${word} ${nC}社` : '', nA ? `関連会社 ${nA}社` : ''].filter(Boolean).join('・') + (all.length > kids.length ? `（その下にも${all.length - kids.length}社）` : '');
   const tot = open ? '' : `<span class="ob-sum"><span>今期の売上 計 ${fmtYen(all.filter(x => !x.aff).reduce((a, x) => a + ksWith(x.st, ksYTD).sales, 0))}</span></span>`;
   const bar = `<button type="button" class="orgfold" data-act="kOrgKids" data-id="${esc(s.id)}" aria-expanded="${open}" aria-controls="ok-${esc(s.id)}"><span class="ob-chev" aria-hidden="true"></span><span>${what}${open ? '' : 'を表示'}</span>${tot}</button>`;
@@ -27849,6 +27897,489 @@ Object.assign(TERMS, {
   gappei: { n: '合併', c: 'book', s: '2つ以上の会社が1つになること。', b: '吸収合併では存続会社が消滅会社の権利と義務をまとめて引き継ぎ、新設合併では新しい会社がすべてを引き継ぎます。株主総会の特別決議・債権者保護手続・登記が要ります。親会社が100%子会社を吸収するとき、子会社の純資産と、持っていた子会社株式の帳簿価額の差は「抱合せ株式消滅差損益」（特別損益）になります。', see: ['renketsu'] },
   tsuikaShutoku: { n: '持分の追加取得', c: 'book', s: '支配している子会社の株を、さらに買い増すこと。', b: '連結では、支配が続いている子会社の株の売り買いは資本の取引として扱います。払った額と、減った非支配株主持分の差は、のれんでも損益でもなく資本剰余金にします（2013年の会計基準の改正から）。関連会社の株を買い増して支配を得たとき（段階取得）は、前から持っていた株を時価で測りなおし、差を損益にします。', see: ['nci', 'mochibunho'] },
 });
+
+/* ---- 29m_kaisha_startgroup.js ---- */
+/* =========================================================
+ *  29m_kaisha_startgroup.js : 就任の時点のグループ（始め方の画面で決める子会社・孫会社・関連会社）
+ *   ・国内で事業のある会社：先代のころからの会社として、過去4期分の決算書と帳簿つきでつくる
+ *   ・事業のない国内の会社（中間持株会社）と海外の会社：就任の時に設立したばかりの会社
+ *   ・持ち主（親会社・子会社）は、その会社の株式を、就任の時点の純資産の持分の額で持つ
+ *     （株主から株式の現物出資を受けた形：関係会社株式／資本準備金）。のれんは出ない
+ *   ・下の会社から順に（孫会社 → 子会社 → 親会社）記帳するので、子会社の純資産には孫会社の株式が入る
+ *   ・会社の数・深さ・事業の数に上限はない
+ *   （画面は 29n_kaisha_startgroup_ui.js）
+ * ========================================================= */
+
+/* 1社の設定（金額は円。0・空は「そのまま」または自動）
+ *   { id, name, owner: 'root'｜'u:業種'（持株会社で始めるときの事業会社）｜ほかの会社の id,
+ *     own, cc, pref（0なら親会社と同じ）, units: [{ type, sc }], cond, capital, cash, debt（null なら そのまま） } */
+const KS_SG_OWNS = [1, 0.8, 0.6, 0.51, 0.49, 0.4, 0.3, 0.2];
+const KS_SG_SCALES = [0.5, 1, 2, 4];
+/* 下に会社を持てるか（国内の連結子会社だけ。ゲームの中の設立と同じ決まり） */
+function ksSgCanOwn(e) { return !!e && (e.cc || 'jp') === 'jp' && +e.own > 0.5; }
+/* 事業が要るか（国内の連結子会社は、事業がなくても中間持株会社として持てる） */
+function ksSgNeedsUnit(e) { return !ksSgCanOwn(e); }
+function ksSgUnits(e) {
+  const seen = new Set();
+  return ((e && e.units) || []).filter(x => x && KS_TYPES[x.type] && !seen.has(x.type) && seen.add(x.type)).map(x => ({ type: x.type, sc: KS_SG_SCALES.includes(+x.sc) ? +x.sc : 1 }));
+}
+function ksSgIsU(id) { return typeof id === 'string' && id.startsWith('u:'); }
+/* 持ち主を直す：持てない会社（関連会社・海外）・なくなった会社・自分の下の会社が持ち主なら、上にたどる（なければ親会社） */
+function ksSgNormalize(list, uKeys = new Set()) {
+  const byId = new Map(list.map(e => [e.id, e]));
+  const reaches = (from, target) => {
+    for (let p = from, n = 0; p && p !== 'root' && !ksSgIsU(p) && n <= list.length; n++) {
+      if (p === target) return true;
+      const q = byId.get(p);
+      p = q ? q.owner : null;
+    }
+    return false;
+  };
+  for (let pass = 0; pass < 2; pass++) {
+    for (const e of list) {
+      let oid = e.owner || 'root';
+      const seen = new Set([e.id]);
+      while (oid !== 'root') {
+        if (ksSgIsU(oid)) { if (!uKeys.has(oid)) oid = 'root'; break; }
+        const o = byId.get(oid);
+        if (!o || seen.has(oid)) { oid = 'root'; break; }
+        if (ksSgCanOwn(o) && !reaches(o.owner, e.id)) break;
+        seen.add(oid);
+        oid = o.owner || 'root';
+      }
+      e.owner = oid;
+    }
+  }
+  return list;
+}
+/* 親会社から数えた深さ（親会社の直下 0・その下 1…。持株会社の事業会社の下は 1 から） */
+function ksSgDepth(e, byId) {
+  let d = 0;
+  for (let p = e.owner, n = 0; p && p !== 'root' && n <= byId.size + 1; n++) {
+    d++;
+    if (ksSgIsU(p)) break;
+    const q = byId.get(p);
+    if (!q) break;
+    p = q.owner;
+  }
+  return d;
+}
+/* 木の順（親の次にその下の会社）に並べる：[{ e, depth }] */
+function ksSgTree(list, tops = ['root']) {
+  const out = [];
+  const kids = new Map();
+  for (const e of list) { const k = e.owner || 'root'; if (!kids.has(k)) kids.set(k, []); kids.get(k).push(e); }
+  const walk = (pid, d) => { for (const e of kids.get(pid) || []) { if (out.some(x => x.e === e)) continue; out.push({ e, depth: d }); walk(e.id, d + 1); } };
+  for (const t of tops) walk(t, ksSgIsU(t) ? 1 : 0);
+  for (const e of list) if (!out.some(x => x.e === e)) out.push({ e, depth: 0 }); // 念のため（持ち主の見つからない会社）
+  return out;
+}
+/* 社名：国内の会社は会社の種類（株式会社など）を入れる */
+function ksSgFixName(name, cc) {
+  let n = String(name || '').replace(/\s+/g, ' ').trim().slice(0, 40);
+  if (!n) return '';
+  if ((cc || 'jp') === 'jp' && !/株式会社|合同会社|有限会社/.test(n)) n += '株式会社';
+  return n;
+}
+function ksSgAutoName(e, used) {
+  const us = ksSgUnits(e);
+  const S = us.length ? KS_TYPES[us[0].type] : null;
+  let core = S ? (KS_CO_CORE[S.eng] || []).filter(x => x !== 'ホールディングス') : ['ホールディングス', 'グループ', '興産', '開発'];
+  if (!core.length) core = ['産業'];
+  const C = (e.cc || 'jp') !== 'jp' && typeof KS_COUNTRIES !== 'undefined' ? KS_COUNTRIES[e.cc] : null;
+  const mk = b => (C ? `${ksCityBase()}${b}${C.n}` : `${ksCityBase()}${b}株式会社`);
+  for (const b of [pick(core), ...core]) if (!used.has(mk(b))) return mk(b);
+  for (const x of ['第二', '東日本', '西日本', '北', '南', '中央', 'ネクスト', '新']) for (const b of core) if (!used.has(mk(x + b))) return mk(x + b);
+  for (let i = 2; i < 1e5; i++) if (!used.has(mk(core[0] + i))) return mk(core[0] + i);
+  return mk(core[0]);
+}
+function ksSgCeo() { return `${pick(['佐藤', '鈴木', '高橋', '田中', '伊藤', '渡辺', '山本', '中村', '小林', '加藤'])} ${pick(['健', '誠', '茂', '洋子', '直美', '修', '恵', '隆', '和也', '真理'])}`; }
+/* 設定をそろえる（画面から来た値・セーブの値のどちらでも） */
+function ksSgClean(e) {
+  const cc = e.cc && e.cc !== 'jp' && typeof KS_COUNTRIES !== 'undefined' && KS_COUNTRIES[e.cc] ? e.cc : 'jp';
+  const num = v => (Number.isFinite(+v) && +v > 0 ? Math.round(+v) : 0);
+  const debt = e.debt === null || e.debt === undefined || e.debt === '' || !Number.isFinite(+e.debt) ? null : Math.max(0, Math.round(+e.debt));
+  return { id: String(e.id), name: e.name || '', owner: e.owner || 'root', own: clamp(+e.own || 1, 0.2, 1), cc, pref: typeof KS_PREFS !== 'undefined' && KS_PREFS[+e.pref] ? +e.pref : 0, units: ksSgUnits(e), cond: KS_COND[e.cond] ? e.cond : 'normal', capital: num(e.capital), cash: num(e.cash), debt };
+}
+/* 持ち主の会社の受け入れた株式の分だけ、その会社の記録（取得の額）を増やし、さらに上の持ち主の帳簿にも記帳する（すでにある記録が持ち主のとき） */
+function ksSgBump(id, delta, root) {
+  for (let s = ksSubById(id, root), n = 0; s && delta > 0 && n < 1000; n++) {
+    ksRecInv(s);
+    s.eq0 += delta;
+    const d = Math.round(s.own * delta);
+    s.inv += d;
+    const ost = ksOwnerSt(s, root);
+    if (!ost || d <= 0) break;
+    ksWith(ost, () => ksPost('startSub', [['subShares', d, 0], ['capSurplus', 0, d]], { u: 'HQ', desc: `就任の時点のグループ：${s.name}が受け入れた株式の分の、${s.name}の株式の増加（現物出資）` }));
+    delta = d;
+    s = s.parent ? ksSubById(s.parent, root) : null;
+  }
+}
+
+/* 就任の時点のグループをつくる（G は親会社。就任の処理の最後に呼ぶ）
+ *   umap：持株会社で始めるときの、事業ごとの子会社（'u:業種' → 記録の id） */
+function ksStartGroupBuild(raw, umap = {}) {
+  const root = G;
+  if (!root || root.isSub || !Array.isArray(raw) || !raw.length) return null;
+  ksGroupInit();
+  const g = root.group;
+  ksGroupMigrate(root);
+  const uKeys = new Set(Object.keys(umap));
+  let list = ksSgNormalize(raw.filter(e => e && e.id !== undefined && e.id !== null).map(ksSgClean), uKeys);
+  // 事業のない海外の会社・関連会社はつくらない（下に会社を持てないので、ほかの会社には影響しない）
+  list = list.filter(e => e.units.length || !ksSgNeedsUnit(e));
+  if (!list.length) return null;
+  const byId = new Map(list.map(e => [e.id, e]));
+  const order = ksSgTree(list, ['root', ...uKeys]).map(x => x.e);
+  for (const e of order) e.depth = ksSgDepth(e, byId);
+  // 社名（入れた名前を先に。グループの中で同じ名前にならないように）
+  const used = new Set([root.coName, ...g.subs.map(s => s.name)]);
+  for (const e of order) { const n = ksSgFixName(e.name, e.cc); e.name = n && !used.has(n) ? n : ''; if (e.name) used.add(e.name); }
+  for (const e of order) if (!e.name) { e.name = ksSgAutoName(e, used); used.add(e.name); }
+  const pref0 = root.loc ? root.loc.hq : KS_HOME_PREF;
+  const seed0 = root.seed | 0;
+  // 1) 会社をつくる（上の会社から）
+  const made = new Map();
+  order.forEach((e, i) => {
+    const id = 'S' + (++g.seq);
+    const seed = (seed0 + 104729 * (i + 1) + 13) | 0;
+    const ceo = ksSgCeo();
+    const hist = e.cc === 'jp' && e.units.length > 0;
+    let st;
+    if (hist) {
+      // 先代のころからの会社（過去4期分の決算書と帳簿）
+      G = null;
+      try { ksNewGame({ units: e.units, coName: e.name, ceo, seed, cond: e.cond, term: 0, asSub: true, pref: e.pref || pref0 }); st = G; } finally { G = root; }
+      st.isSub = true; st.subId = id; st.termYears = 0; st.news = []; st.pendingModals = [];
+      st.eco = JSON.parse(JSON.stringify(root.eco));
+      if (e.capital || e.cash || e.debt !== null) ksWith(st, () => ksCustomApply({ custom: { capital: e.capital, cash: e.cash, debt: e.debt } }));
+    } else {
+      // 就任の時に設立したばかりの会社（海外の会社・事業のない中間持株会社）。現預金は、立ち上げの設備を買った後の額
+      const plans = e.units.map(x => ksSubStartPlan(x.type, x.sc)).filter(Boolean);
+      const capex = sum(plans, p => p.capex);
+      const left = e.cash > 0 ? e.cash : plans.length ? sum(plans, p => p.work) : 5e7;
+      const total = Math.round((capex + left) / 1e4) * 1e4;
+      const capital = Math.min(total, e.capital > 0 ? e.capital : clamp(Math.round(total / 2 / 1e7) * 1e7, 1e7, 1e8));
+      st = ksFreshCompany({ coName: e.name, ceo, cash: total, capital, seed, cc: e.cc, pref: e.pref || pref0, subId: id, execPay: clamp(Math.round(total / 400 / 1e4) * 1e4, 40e4, 150e4) });
+      ksWith(st, () => {
+        for (const x of e.units) ksSubStartUnit(x.type, x.sc);
+        if (e.debt > 0) ksCustomApply({ custom: { debt: e.debt } });
+        ksSetODLimit();
+        ksBudgetDraft(); ksBudgetApprove(true);
+      });
+    }
+    ksGroupTrim(st);
+    made.set(e.id, { e, st, id, hist });
+  });
+  // 2) 下の会社から順に、持ち主の帳簿に株式を記帳し、記録をつくる
+  const ownerIdOf = e => (e.owner === 'root' ? 'root' : ksSgIsU(e.owner) ? umap[e.owner] : made.get(e.owner).id);
+  const stOf = oid => {
+    if (oid === 'root') return root;
+    for (const x of made.values()) if (x.id === oid) return x.st;
+    const s = ksSubById(oid, root);
+    return s ? s.st : root;
+  };
+  const recs = new Map();
+  for (const e of order.slice().sort((a, b) => b.depth - a.depth)) {
+    const x = made.get(e.id), st = x.st;
+    let eq = Math.round(ksWith(st, () => ksEquity() - ksMonthPLNow()));
+    if (eq <= 0) {
+      const add = Math.round((1e7 - eq) / 1e5) * 1e5;
+      ksWith(st, () => ksPost('custCash', [['cash', add, 0], ['capSurplus', 0, add]], { u: 'HQ', cf: 'equity', desc: '債務超過を解消するための株主の出資（資本準備金）' }));
+      eq += add;
+    }
+    const aff = e.own <= 0.5;
+    const inv = Math.round(e.own * eq);
+    const oid = ownerIdOf(e);
+    const ownerSt = stOf(oid);
+    ksWith(ownerSt, () => ksPost('startSub', [['subShares', inv, 0], ['capSurplus', 0, inv]], { u: 'HQ', desc: `就任の時点のグループ：${st.coName}の株式（持分${Math.round(e.own * 100)}%・純資産 ${fmtYen(eq)}の持分の額）を、株主からの現物出資として受け入れた` }));
+    // 持株会社の事業会社（すでにある記録）が持ち主なら、その会社の記録と、上の持ち主の帳簿も増やす
+    if (ksSgIsU(e.owner) && oid) ksSgBump(oid, inv, root);
+    const cc = e.cc;
+    const fx0 = cc === 'jp' ? 1 : ksFxNow(ksCurOf(cc), root.eco);
+    const partner = e.own < 1 ? `${pick(CO_PREFIX)}${pick(['商事', '物産', '産業', 'ホールディングス'])}` : null;
+    const rec = { id: x.id, st, own: e.own, kind: 'start', since: root.m, eq0: eq, adds: 0, reTr: 0, gw: 0, gwCum: 0, cc, fx0, fee: aff || e.own < 1 ? 0 : 0.01, payout: 0.3, auto: true, name: st.coName, partner, inv, aff, fresh: !x.hist };
+    if (oid !== 'root') rec.parent = oid;
+    st.parentName = ownerSt.coName;
+    recs.set(e.id, rec);
+  }
+  for (const e of order) g.subs.push(recs.get(e.id));
+  ksGroupMigrate(root);
+  ksSetODLimit();
+  ksBudgetDraft(); ksBudgetApprove(true);
+  const all = order.map(e => recs.get(e.id));
+  const nC = all.filter(s => !s.aff).length, nA = all.length - nC, deep = all.filter(s => s.parent).length;
+  const txt = `${nC ? `子会社${nC}社` : ''}${nC && nA ? '・' : ''}${nA ? `関連会社${nA}社` : ''}${deep ? `（うち、子会社の下の会社${deep}社）` : ''}`;
+  root.customNote = [root.customNote, `グループ：${txt}`].filter(Boolean).join('・');
+  ksNews(`就任の時点のグループ：${txt}。各社の株式は、就任の時点の純資産の持分の額で記帳しました`, 'info');
+  return all;
+}
+
+/* ---- 29n_kaisha_startgroup_ui.js ---- */
+/* =========================================================
+ *  29n_kaisha_startgroup_ui.js : 始め方の画面の「グループの会社」（就任の時点の子会社・孫会社・関連会社）
+ *   ・組織の木：親会社の下に子会社、その下に孫会社…（いくつでも、何段でも）
+ *   ・会社ごとの設定：社名・株式を持つ会社・持分・国と所在地・事業（いくつでも）と規模・会社の状態・資本金・現預金・借入金
+ *   ・持株会社で始めるときは、事業ごとの子会社（事業会社）の下にも会社を置ける
+ *   （つくる処理は 29m_kaisha_startgroup.js）
+ * ========================================================= */
+
+function ksSgList(k) { if (!Array.isArray(k.grp)) k.grp = []; return k.grp; }
+function ksSgIsHD(k) { const c = k.cu; return !!(c && c.on && c.form === 'hd'); }
+function ksSgUKeys(k) { return ksSgIsHD(k) ? new Set(k.units.map(x => 'u:' + x.type)) : new Set(); }
+function ksSgFix(k) { return ksSgNormalize(ksSgList(k), ksSgUKeys(k)); }
+/* 親会社の名前（就任するときと同じ直し方） */
+function ksSgRootName(k) {
+  let co = ((k.coEdited ? k.coName : '') || '').trim() || ksDefaultCoName(k.units[0].type);
+  if (!/株式会社|有限会社|合同会社/.test(co)) co = '株式会社' + co;
+  const c = k.cu || {};
+  if (c.on && c.form === 'hd') return co.includes('ホールディングス') ? co : `${co.replace(/株式会社/g, '').trim()}ホールディングス株式会社`;
+  if (c.on && c.form === 'gk') return co.replace(/株式会社/, '合同会社');
+  if (c.on && c.form === 'yk') return co.replace(/株式会社/, '有限会社');
+  return co;
+}
+function ksSgRootPref(k) { const c = k.cu || {}; return c.on && KS_PREFS[+c.pref] ? +c.pref : KS_HOME_PREF; }
+/* 会社の呼び名（名前を入れていなければ、事業から） */
+function ksSgName(e) { return e.name && e.name.trim() ? ksSgFixName(e.name, e.cc) : ''; }
+function ksSgShort(e) {
+  const n = ksSgName(e);
+  if (n) return n;
+  const u = (e.units || [])[0];
+  return u ? `${u.type.replace(/（.*?）/g, '')}の会社` : '事業のない会社';
+}
+/* 持株会社で始めるときの、事業ごとの子会社（事業会社）の呼び名 */
+function ksSgUName(type) { return `${type.replace(/（.*?）/g, '')}の事業会社`; }
+const KS_SG_SCN = { 0.5: '小', 1: '中', 2: '大', 4: '特大' };
+function ksSgOwnTag(e) {
+  const p = Math.round(e.own * 100);
+  return e.own >= 0.9999 ? tag('100%子会社', 'ok') : e.own > 0.5 ? tag(`合弁 ${p}%`) : tag(`関連会社 ${p}%`, 'warn');
+}
+function ksSgHist(e) { return (e.cc || 'jp') === 'jp' && (e.units || []).length > 0; }
+function ksSgDesc(e, k) {
+  const us = (e.units || []).map(x => `${x.type}（${KS_SG_SCN[x.sc] || '中'}）`);
+  const place = (e.cc || 'jp') !== 'jp' ? KS_COUNTRIES[e.cc].n : (KS_PREFS[+e.pref] || KS_PREFS[ksSgRootPref(k)]).n;
+  const kind = ksSgHist(e) ? `過去4期の決算書つき・${KS_COND[e.cond] ? KS_COND[e.cond].n : '普通'}` : '就任の時に設立';
+  return [us.length ? us.join('・') : '事業なし（株式を持つ会社）', place, kind].join('／');
+}
+/* 何段目の会社か（親会社の直下 0） */
+function ksSgDepthOf(e, k) { return ksSgDepth(e, new Map(ksSgList(k).map(x => [x.id, x]))); }
+function ksSgAddLabel(d) { return d === 0 ? '＋孫会社' : d === 1 ? '＋ひ孫会社' : '＋下の会社'; }
+
+/* ---------- 始め方の画面の欄 ---------- */
+function ksSgHtml(k) {
+  ksSgFix(k);
+  const list = ksSgList(k);
+  const hd = ksSgIsHD(k);
+  const seen = new Set();
+  const kidsOf = pid => list.filter(e => (e.owner || 'root') === pid && !seen.has(e.id));
+  const node = (e, d) => {
+    seen.add(e.id);
+    const can = ksSgCanOwn(e);
+    const kids = kidsOf(e.id);
+    const nm = ksSgName(e);
+    const acts = `${btn('設定', 'kSgEdit', { id: e.id }, 'sm')}${can ? btn(ksSgAddLabel(d), 'kSgAdd', { owner: e.id }, 'sm') : ''}${btn('外す', 'kSgDel', { id: e.id }, 'sm ghost')}`;
+    return `<li class="sgnode"><div class="sgco${e.own <= 0.5 ? ' aff' : ''}">
+      <div class="sgco-t">${nm ? `<b>${esc(nm)}</b>` : `<b class="muted">${esc(ksSgShort(e))}</b><span class="small muted">名前は自動</span>`}${ksSgOwnTag(e)}${(e.cc || 'jp') !== 'jp' ? tag(KS_COUNTRIES[e.cc].n) : ''}</div>
+      <div class="sgco-d small muted">${esc(ksSgDesc(e, k))}</div>
+      <div class="sgco-a">${acts}</div></div>
+      ${kids.length ? `<ul class="sgkids">${kids.map(x => node(x, d + 1)).join('')}</ul>` : ''}</li>`;
+  };
+  const uRows = hd ? k.units.map(x => {
+    const kids = kidsOf('u:' + x.type);
+    return `<li class="sgnode"><div class="sgco unit">
+      <div class="sgco-t"><b class="muted">${esc(ksSgUName(x.type))}</b><span class="small muted">名前は自動</span>${tag('100%子会社', 'ok')}</div>
+      <div class="sgco-d small muted">${esc(`${x.type}（${KS_SG_SCN[x.sc] || '中'}）`)}／事業ごとに分けた子会社（過去4期の決算書つき）</div>
+      <div class="sgco-a">${btn('＋孫会社', 'kSgAdd', { owner: 'u:' + x.type }, 'sm')}</div></div>
+      ${kids.length ? `<ul class="sgkids">${kids.map(e => node(e, 1)).join('')}</ul>` : ''}</li>`;
+  }).join('') : '';
+  const top = kidsOf('root');
+  const direct = top.map(e => node(e, 0)).join('');
+  const nC = list.filter(e => e.own > 0.5).length, nA = list.length - nC;
+  const count = list.length ? `（${[nC ? `子会社など${nC}社` : '', nA ? `関連会社${nA}社` : ''].filter(Boolean).join('・')}）` : '';
+  const rootDesc = hd ? '持株会社（事業は事業会社に分けて持つ）' : ksCompanyDesc(k.units.map(x => ({ type: x.type, n: null, sc: 1 })));
+  return `<div class="field sgfield"><span>グループの会社${count}</span>
+    <ul class="sgtree"><li class="sgnode"><div class="sgco root">
+      <div class="sgco-t"><b>${esc(ksSgRootName(k))}</b>${tag('あなたが社長になる会社')}</div>
+      <div class="sgco-d small muted">${esc(rootDesc)}</div>
+      <div class="sgco-a">${btn('＋子会社を加える', 'kSgAdd', { owner: 'root' }, 'sm primary')}</div></div>
+      ${uRows || direct ? `<ul class="sgkids">${uRows}${direct}</ul>` : ''}</li></ul>
+    <span class="small muted">子会社・孫会社・関連会社を、いくつでも、何段でも加えられます。国内で事業のある会社は、先代のころからの会社として過去4期分の決算書つきで始まります。海外の会社と、事業のない会社（株式を持つだけの中間持株会社）は、就任の時に設立したばかりの会社です。${list.length ? '' : '加えなければ、1社で始めます。'}</span></div>`;
+}
+
+/* ---------- 会社の設定（ダイアログ） ---------- */
+function ksSgBlank(owner) { return { id: null, name: '', owner: owner || 'root', own: 1, cc: 'jp', pref: 0, units: [], cond: 'normal', capital: '', cash: '', debt: '' }; }
+/* いま入力欄にある値を下書きに入れる（ボタンを押す前に入れた字を失わないように） */
+function ksSgStoreInputs() {
+  const D = UI.sg;
+  if (!D) return;
+  const n = $('#sgName');
+  if (n) D.e.name = n.value;
+  for (const el of document.querySelectorAll('#modal-root [data-ch="kSgNum"]')) D.e[el.dataset.k] = el.value;
+}
+function ksSgRedraw() {
+  const l = $('#sgList');
+  const y = l ? l.scrollTop : 0;
+  drawModal();
+  const l2 = $('#sgList');
+  if (l2 && y) l2.scrollTop = y;
+}
+function ksSgTypesHtml(D) {
+  const list = D.q && D.q.trim() ? ksSearchTypes(D.q, '', '', 40) : ksStartPicks().map(n => KS_TYPES[n]).filter(Boolean);
+  if (!list.length) return '<div class="empty">見つかりません。言葉を変えて探してください</div>';
+  return list.map(S => {
+    const on = D.e.units.some(x => x.type === S.name);
+    return `<button type="button" class="typeopt${on ? ' on' : ''}" data-act="kSgUAdd" data-v="${esc(S.name)}" aria-pressed="${on}"><span class="indico" aria-hidden="true">${esc(S.icon)}</span><span><b>${esc(S.name)}</b><span class="small muted">${esc(S.grp)}・${esc(KS_ENG_INFO[S.eng].n)}${on ? '・加えた（もう一度押すと外す）' : ''}</span></span></button>`;
+  }).join('');
+}
+/* 株式を持つ会社に選べるもの：親会社・事業会社（持株会社のとき）・国内の連結子会社（自分と自分の下の会社は除く） */
+function ksSgOwnerOptions(k, D) {
+  const list = ksSgList(k);
+  const below = new Set();
+  if (D.id) {
+    below.add(D.id);
+    let grew = true;
+    while (grew) { grew = false; for (const e of list) if (!below.has(e.id) && below.has(e.owner)) { below.add(e.id); grew = true; } }
+  }
+  const opts = [['root', `${ksSgRootName(k)}（親会社）`]];
+  if (ksSgIsHD(k)) for (const x of k.units) opts.push(['u:' + x.type, `${ksSgUName(x.type)}（持株会社の子会社）`]);
+  const tops = ksSgIsHD(k) ? ['root', ...k.units.map(x => 'u:' + x.type)] : ['root'];
+  for (const { e, depth } of ksSgTree(list, tops)) {
+    if (below.has(e.id) || !ksSgCanOwn(e)) continue;
+    opts.push([e.id, `${'　'.repeat(Math.min(depth, 6))}${ksSgShort(e)}`]);
+  }
+  return opts;
+}
+function ksSgPrefSelect(k, cur) {
+  const p0 = ksSgRootPref(k);
+  const opts = Object.entries(KS_PREF_REG).map(([r, rn]) => `<optgroup label="${esc(rn)}">${Object.values(KS_PREFS).filter(P => P.reg === r).map(P => `<option value="${P.c}"${P.c === +cur ? ' selected' : ''}>${esc(P.n)}</option>`).join('')}</optgroup>`).join('');
+  return `<select data-ch="kSgPref" aria-label="所在地"><option value="0"${+cur ? '' : ' selected'}>親会社と同じ（${esc(KS_PREFS[p0].n)}）</option>${opts}</select>`;
+}
+MODALS.kSg = () => {
+  const k = ksStartDefaults();
+  const D = UI.sg;
+  if (!D) return modalFrame('会社の設定', '<p>設定がありません</p>', btn('閉じる', 'closeModal'));
+  const e = D.e;
+  const list = ksSgList(k);
+  const hist = ksSgHist(e);
+  const foreign = e.cc !== 'jp';
+  const C = foreign ? KS_COUNTRIES[e.cc] : null;
+  const owners = ksSgOwnerOptions(k, D);
+  if (!owners.some(o => o[0] === e.owner)) e.owner = 'root';
+  const ownerName = (owners.find(o => o[0] === e.owner) || owners[0])[1].trim();
+  const kids = D.id ? list.filter(x => x.owner === D.id) : [];
+  const needUnit = ksSgNeedsUnit(e) && !e.units.length;
+  const chosen = e.units.map((x, i) => { const S = KS_TYPES[x.type]; return `<li class="sunit"><span class="indico" aria-hidden="true">${esc(S.icon)}</span><span class="stype-t"><b>${esc(S.name)}</b><span class="small muted">${esc(S.d || KS_ENG_INFO[S.eng].desc)}</span></span>
+    <span class="stype-a"><span class="seg sm" role="radiogroup" aria-label="規模">${KS_SG_SCALES.map(v => `<button type="button" data-act="kSgSc" data-i="${i}" data-v="${v}" aria-pressed="${x.sc === v}">${KS_SG_SCN[v]}</button>`).join('')}</span>${btn('外す', 'kSgUDel', { i }, 'sm ghost')}</span></li>`; }).join('');
+  const ccOpts = [['jp', '日本'], ...Object.entries(KS_COUNTRIES).map(([c, x]) => [c, x.n])].map(([v, l]) => `<option value="${v}"${e.cc === v ? ' selected' : ''}>${esc(l)}</option>`).join('');
+  const own = KS_SG_OWNS.map(v => `<button type="button" data-act="kSgOwn" data-v="${v}" aria-pressed="${Math.abs(e.own - v) < 1e-9}">${Math.round(v * 100)}%</button>`).join('');
+  const conds = Object.entries(KS_COND).map(([c, X]) => `<button type="button" data-act="kSgCond" data-v="${c}" aria-pressed="${e.cond === c}">${X.n}</button>`).join('');
+  const num = (key, label) => `<label class="field"><span>${label}</span><input type="number" inputmode="numeric" min="0" step="100" data-ch="kSgNum" data-k="${key}" value="${esc(e[key])}" placeholder="${hist ? 'そのまま' : '自動'}"></label>`;
+  const notes = [];
+  if (kids.length && !ksSgCanOwn(e)) notes.push(`<div class="callout warn small">${foreign ? '海外の会社' : '関連会社'}は下に会社を持てないので、この会社の下の${kids.length}社は「${esc(ownerName)}」の直下に移ります。</div>`);
+  if (needUnit) notes.push(`<div class="callout warn small">${foreign ? '海外の会社' : '関連会社'}には、事業が1つ以上要ります。下の一覧から選んでください。</div>`);
+  const intro = foreign ? '海外の会社は、就任の時に設立したばかりの現地法人です（過去の決算書はありません）。'
+    : hist ? '先代のころからの会社として、過去4期分の決算書と帳簿つきで始まります。'
+    : '事業を選ぶと、先代のころからの会社として過去4期分の決算書つきで始まります。事業がなければ、株式を持つだけの会社（中間持株会社）として就任の時に設立します。';
+  const body = `<div class="sg-form"><p class="small" style="margin:0">${intro}株式を持つ会社は、この会社の株式を、就任の時点の純資産の持分の額で持ちます。</p>
+    <div class="grid g2 sg-grid">
+      <label class="field"><span>社名</span><input type="text" id="sgName" data-ch="kSgName" value="${esc(e.name)}" maxlength="40" placeholder="空欄なら自動で決まります"></label>
+      <label class="field"><span>株式を持つ会社</span><select data-ch="kSgOwner">${owners.map(([v, l]) => `<option value="${esc(v)}"${e.owner === v ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select></label>
+    </div>
+    <div class="field"><span>持分（議決権）</span><div class="seg wrap" role="radiogroup" aria-label="持分">${own}</div><span class="small muted">${e.own > 0.5 ? `51%以上は連結子会社（全部を連結）。${e.own < 1 ? `残りの${Math.round((1 - e.own) * 100)}%はほかの会社が持つ合弁会社です。` : ''}` : '50%以下は関連会社（持分法で、利益の持分だけを取り込む）。経営は相手の会社が主導し、下に会社は持てません。'}</span></div>
+    <div class="grid g2 sg-grid">
+      <label class="field"><span>国</span><select data-ch="kSgCc" aria-label="国">${ccOpts}</select></label>
+      ${foreign ? `<div class="field"><span>${esc(C.n)}</span><span class="small">現地法人（就任の時に設立）。法人税 約${C.cit}%・ワーカーの月給 約${fmtNum(C.wk, 0)}ドル。海外の会社は下に会社を持てません。</span></div>` : `<label class="field"><span>所在地</span>${ksSgPrefSelect(k, e.pref)}</label>`}
+    </div>
+    ${notes.join('')}
+    <div class="field"><span>事業（いくつでも${ksSgCanOwn(e) ? '。なくてもよい' : ''}）</span>${chosen ? `<ul class="sunits">${chosen}</ul>` : `<div class="small muted">${ksSgCanOwn(e) ? '事業がなければ、ほかの会社の株式を持つだけの会社（中間持株会社）になります。' : 'まだ選んでいません。'}</div>`}</div>
+    <div class="field"><span>業種を探して加える</span><input type="search" id="sgQ" value="${esc(D.q)}" data-in="kSgQ" placeholder="例：ソフトウェア、物流、介護、ホテル" aria-label="業種を探す">
+      <div id="sgList" class="typelist sm sg-types">${ksSgTypesHtml(D)}</div></div>
+    ${hist ? `<div class="field"><span>会社の状態</span><div class="seg" role="radiogroup" aria-label="会社の状態">${conds}</div><span class="small muted">${esc(KS_COND[e.cond].desc)}</span></div>` : ''}
+    <div class="grid g3 cu-nums">${num('capital', '資本金（万円）')}${num('cash', '現預金（万円）')}${num('debt', '借入金（万円）')}</div>
+    <span class="small muted" style="margin-top:-6px">${hist ? '空欄の項目は、選んだ会社の状態のまま。入れた額に合わせて、増資・減資・配当・借入・繰上返済の仕訳をします。' : '現預金は、立ち上げの設備を買った後に残る額。空欄なら、半年ほどの運転資金を株主が出資します。借入金を入れると、その額を銀行から借りて始めます。'}</span></div>`;
+  const foot = btn('やめる', 'closeModal') + btn(D.id ? 'この設定にする' : 'この会社を加える', 'kSgSave', {}, 'primary', { disabled: needUnit });
+  const where = e.owner === 'root' ? '親会社の直下' : `${ownerName}の下`;
+  return modalFrame(D.id ? '会社の設定を変える' : '会社を加える', body, foot, { size: 'wide', sub: `就任の時点のグループ（${esc(where)}）` });
+};
+Object.assign(ACTIONS, {
+  kSgAdd: d => { ksStartStore(); const k = ksStartDefaults(); ksSgFix(k); UI.sg = { id: null, e: ksSgBlank(d.owner), q: '' }; showModal('kSg'); },
+  kSgEdit: d => {
+    ksStartStore();
+    const e = ksSgList(ksStartDefaults()).find(x => x.id === d.id);
+    if (!e) return;
+    UI.sg = { id: e.id, e: Object.assign({}, e, { units: e.units.map(x => Object.assign({}, x)) }), q: '' };
+    showModal('kSg');
+  },
+  kSgDel: d => {
+    ksStartStore();
+    const list = ksSgList(ksStartDefaults());
+    const i = list.findIndex(x => x.id === d.id);
+    if (i < 0) return;
+    const e = list[i];
+    for (const x of list) if (x.owner === e.id) x.owner = e.owner; // 下の会社は、外した会社の持ち主の下に移す
+    list.splice(i, 1);
+    render();
+  },
+  kSgOwn: d => { ksSgStoreInputs(); UI.sg.e.own = +d.v; ksSgRedraw(); },
+  kSgCond: d => { ksSgStoreInputs(); UI.sg.e.cond = d.v; ksSgRedraw(); },
+  kSgSc: d => { ksSgStoreInputs(); const x = UI.sg.e.units[+d.i]; if (x) x.sc = +d.v; ksSgRedraw(); },
+  kSgUDel: d => { ksSgStoreInputs(); UI.sg.e.units.splice(+d.i, 1); ksSgRedraw(); },
+  kSgUAdd: d => {
+    ksSgStoreInputs();
+    const us = UI.sg.e.units;
+    const i = us.findIndex(x => x.type === d.v);
+    if (i >= 0) us.splice(i, 1); else if (KS_TYPES[d.v]) us.push({ type: d.v, sc: 1 });
+    ksSgRedraw();
+  },
+  kSgSave: () => {
+    ksSgStoreInputs();
+    const k = ksStartDefaults(), D = UI.sg;
+    const list = ksSgList(k);
+    const e = D.e;
+    if (ksSgNeedsUnit(e) && !e.units.length) { toast(`${e.cc !== 'jp' ? '海外の会社' : '関連会社'}には、事業が1つ以上要ります`, 'bad'); return; }
+    const nm = ksSgName(e);
+    if (nm && (nm === ksSgRootName(k) || list.some(x => x.id !== D.id && ksSgName(x) === nm))) { toast('グループの中に同じ社名の会社があります。別の名前にしてください', 'bad'); return; }
+    e.name = (e.name || '').trim();
+    if (D.id) { const i = list.findIndex(x => x.id === D.id); if (i >= 0) list[i] = e; else list.push(e); }
+    else { k.grpSeq = (k.grpSeq || 0) + 1; e.id = 'g' + k.grpSeq; while (list.some(x => x.id === e.id)) e.id = 'g' + (++k.grpSeq); list.push(e); }
+    ksSgFix(k);
+    UI.sg = null;
+    closeModal();
+  },
+});
+Object.assign(CHANGES, {
+  kSgName: el => { if (UI.sg) UI.sg.e.name = el.value; },
+  kSgNum: el => { if (UI.sg) UI.sg.e[el.dataset.k] = el.value; },
+  kSgOwner: el => { ksSgStoreInputs(); UI.sg.e.owner = el.value; ksSgRedraw(); },
+  kSgCc: el => { ksSgStoreInputs(); UI.sg.e.cc = el.value; ksSgRedraw(); },
+  kSgPref: el => { if (UI.sg) UI.sg.e.pref = +el.value; },
+});
+INPUTS.kSgQ = el => { if (!UI.sg) return; UI.sg.q = el.value; const b = $('#sgList'); if (b) { b.innerHTML = ksSgTypesHtml(UI.sg); b.scrollTop = 0; } };
+
+/* 就任するときに渡す設定（金額は円に） */
+function ksSgOptions(k) {
+  ksSgFix(k);
+  const man = v => { const s = String(v ?? '').trim(); const n = parseFloat(s.replace(/[^0-9.]/g, '')); return s !== '' && Number.isFinite(n) ? Math.round(n) * 1e4 : null; };
+  return ksSgList(k).map(e => ({ id: e.id, name: e.name, owner: e.owner, own: e.own, cc: e.cc, pref: +e.pref || 0, units: e.units.map(x => ({ type: x.type, sc: x.sc })), cond: e.cond, capital: man(e.capital) || 0, cash: man(e.cash) || 0, debt: man(e.debt) }));
+}
+/* 会社が多いときは、「つくっています」と出してから始める（画面が止まって見えないように） */
+const ksSgStart0 = ACTIONS.kStart;
+ACTIONS.kStart = d => {
+  const k = ksStartDefaults();
+  const n = ksSgList(k).length;
+  if (n + k.units.length < 6) return ksSgStart0(d);
+  if (UI.sgBusy) return;
+  ksStartStore();
+  UI.sgBusy = true;
+  const b = document.querySelector('[data-act="kStart"]');
+  if (b) { b.disabled = true; b.textContent = '準備しています…'; }
+  toast(`${n ? `グループの会社（${n}社）と` : ''}過去の決算書をつくっています…`);
+  const go = () => {
+    try { ksSgStart0(d); } catch (err) { console.error(err); toast('始められませんでした：' + err.message, 'bad'); render(); } finally { UI.sgBusy = false; }
+    for (const t of document.querySelectorAll('#toast-root .toast')) if (/つくっています/.test(t.textContent)) t.remove();
+  };
+  if (typeof requestAnimationFrame === 'function') requestAnimationFrame(() => setTimeout(go, 0)); else setTimeout(go, 30);
+};
 
 /* ---- 30_gyosei_core.js ---- */
 /* =========================================================
