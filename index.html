@@ -973,6 +973,32 @@ details.custom > summary { cursor: pointer; font-weight: 700; font-size: 13px; c
 .orgnode { display: grid; gap: 6px; align-content: start; min-width: 0; }
 .orgkids { display: grid; gap: 6px; margin-left: 12px; padding-left: 10px; border-left: 2px solid var(--rule-strong); }
 .orgbox.aff { border-style: dashed; background: var(--sheet-2); }
+/* 組織図の折りたたみ：会社の名前の行を押すと、くわしい数字とボタンを開く／たたむ。孫会社の枝も開く／たたむ */
+.orgtools { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 0 0 12px; }
+.orgtools-hint { flex: 1 1 240px; }
+.ob-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "t chev" "sum chev"; align-items: center; column-gap: 8px; row-gap: 2px; width: 100%; min-height: 30px; margin: 0; padding: 2px 0; border: 0; border-radius: 4px; background: none; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.ob-head .ob-t { grid-area: t; margin: 0; }
+.ob-head .ob-sum { grid-area: sum; }
+.ob-head .ob-chev { grid-area: chev; }
+.ob-head:hover b { text-decoration: underline; text-decoration-color: var(--vault); text-underline-offset: 3px; }
+.ob-head:focus-visible, .orgfold:focus-visible { outline: 2px solid var(--vault); outline-offset: 2px; }
+.ob-sum { display: flex; flex-wrap: wrap; gap: 0 12px; font-size: 12px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.ob-chev { display: grid; place-items: center; width: 24px; height: 24px; flex: none; color: var(--ink-3); }
+.ob-chev::before { content: ''; width: 7px; height: 7px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: translateY(-2px) rotate(45deg); transition: transform .15s ease; }
+[aria-expanded="false"] > .ob-chev::before { transform: translateX(-2px) rotate(-45deg); }
+.ob-body { display: grid; gap: 4px; margin-top: 4px; padding-top: 6px; border-top: 1px dotted var(--rule); }
+.orgbox.sub.shut { padding-top: 6px; padding-bottom: 6px; }
+.orgfold { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; width: 100%; min-height: 30px; margin: 0; padding: 4px 10px 4px 4px; border: 1px dashed var(--rule-strong); border-radius: var(--r-s); background: var(--sheet-2); font: inherit; font-size: 12.5px; color: var(--ink-2); text-align: left; cursor: pointer; }
+.orgfold:hover { border-color: var(--vault); color: var(--vault-ink); }
+.orgfold[aria-expanded="true"] { border-style: solid; border-color: transparent; background: none; padding-top: 2px; padding-bottom: 2px; min-height: 26px; }
+.orgfold .ob-chev { width: 20px; height: 20px; }
+/* 1行ずつ・子会社だけ：会社を縦に並べて、木の形（字下げ）で見る */
+.orgsubs.dense { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+@media (min-width: 761px) {
+  .orgsubs.dense .orgbox.shut .ob-head { grid-template-columns: minmax(0, 1fr) auto auto; grid-template-areas: "t sum chev"; }
+  .orgsubs.dense .orgbox.shut .ob-sum { justify-content: flex-end; }
+}
+@media (prefers-reduced-motion: reduce) { .ob-chev::before { transition: none; } }
 
 /* =========================================================
  *  スマホ：読みやすい文字と、指で押しやすいボタン
@@ -1161,6 +1187,14 @@ details.custom > summary { cursor: pointer; font-weight: 700; font-size: 13px; c
   #toast-root { top: calc(8px + var(--band)); bottom: auto; left: calc(12px + var(--sal)); right: calc(12px + var(--sar)); max-width: none; gap: 6px; pointer-events: none; }
   #toast-root .toast:nth-last-child(n+3) { display: none; }
   .toast { padding: 10px 14px; box-shadow: 0 10px 24px -10px rgba(0, 0, 0, .55); }
+
+  /* ---- グループの組織図 ---- */
+  .ob-head { min-height: 44px; }
+  .ob-sum { font-size: 13px; }
+  .orgfold { min-height: 42px; font-size: 13.5px; }
+  .orgfold[aria-expanded="true"] { min-height: 40px; }
+  .orgtools .seg { flex: 1 1 100%; }
+  .orgkids { margin-left: 6px; padding-left: 8px; }
 
   /* ---- 地図 ---- */
   .jmap-wrap { margin: 8px -4px 6px; }
@@ -26345,6 +26379,44 @@ KS_SCREENS.k_group = () => {
 };
 ACTIONS.kGrpSec = d => { UI.kGrpSec = d.v; render(); };
 function ksKindName(s) { return s.aff ? '関連会社（持分法）' : ({ new: '設立した子会社', jv: '合弁会社', split: '分社化した子会社', acq: '買収した子会社', hd: '事業子会社' }[s.kind] || '子会社'); }
+/* ---------- 組織図の折りたたみ（会社が増えても見やすいように） ----------
+ * 会社ごとに「くわしい数字とボタン」を開く／たたむ。子会社の下の会社（孫会社）の枝を開く／たたむ。
+ * 表示のしかた：くわしく（すべて開く）・1行ずつ（会社を1行に）・子会社だけ（孫会社の枝もたたむ）。
+ * 会社ごとに開いた／たたんだ状態は、表示のしかたを選び直すまで残す（ゲームのデータに保存） */
+const KS_ORG_AUTO_LINE = 5;   // 会社がこの数以上なら、はじめは1行ずつ
+function ksOrgView(root = G) {
+  const g = root.group;
+  if (!g.view || typeof g.view !== 'object') g.view = {};
+  if (!g.view.c) g.view.c = {};
+  if (!g.view.k) g.view.k = {};
+  return g.view;
+}
+function ksOrgMode(root = G) {
+  const v = ksOrgView(root);
+  return v.mode || (ksSubs(root).length >= KS_ORG_AUTO_LINE ? 'line' : 'full');
+}
+function ksOrgCardOpen(s, root = G) {
+  const v = ksOrgView(root);
+  return s.id in v.c ? !!v.c[s.id] : ksOrgMode(root) === 'full';
+}
+function ksOrgKidsOpen(s, root = G) {
+  const v = ksOrgView(root);
+  return s.id in v.k ? !!v.k[s.id] : ksOrgMode(root) !== 'top';
+}
+ACTIONS.kOrgCard = d => { const s = ksSubById(d.id); if (!s) return; ksOrgView().c[s.id] = ksOrgCardOpen(s) ? 0 : 1; render(); autosave(); };
+ACTIONS.kOrgKids = d => { const s = ksSubById(d.id); if (!s) return; ksOrgView().k[s.id] = ksOrgKidsOpen(s) ? 0 : 1; render(); autosave(); };
+/* 新しくグループに入った会社は、たたむ表示のときでも開いて見せる（上の会社の枝も開く）。
+ * 前に同じように開いて見せた会社は、表示のしかたに戻す */
+function ksOrgShow(s, root = G) {
+  if (!s || !root.group) return;
+  const v = ksOrgView(root);
+  if (v.last && v.last !== s.id && v.c[v.last] === 1) delete v.c[v.last];
+  v.last = null;
+  if (!ksOrgCardOpen(s, root)) { v.c[s.id] = 1; v.last = s.id; }
+  for (let p = s.parent, i = 0; p && p !== 'root' && i < 8; i++) { const o = ksSubById(p, root); if (o && !ksOrgKidsOpen(o, root)) v.k[p] = 1; p = o && o.parent; }
+}
+ACTIONS.kOrgMode = d => { const v = ksOrgView(); v.mode = d.v; v.c = {}; v.k = {}; v.last = null; render(); autosave(); };
+
 function ksSubCard(s) {
   const st = s.st;
   const ytd = ksWith(st, ksYTD);
@@ -26353,16 +26425,30 @@ function ksSubCard(s) {
   const head = ksWith(st, ksHeadcount);
   const flag = s.cc && s.cc !== 'jp' ? `<span class="tag">${esc(KS_COUNTRIES[s.cc].n)}</span>` : '';
   const sched = (ksRoot().group.mergers || []).find(x => x.from === s.id);
-  return `<div class="orgbox sub${s.aff ? ' aff' : ''}${st.over ? ' bad' : ''}"><div class="ob-t"><b>${esc(s.name)}</b>${flag}${s.aff ? '<span class="tag">持分法</span>' : ''}${sched ? `<span class="tag warn">${ymLabel(sched.m)}に合併</span>` : ''}</div>
+  const open = ksOrgCardOpen(s);
+  const tags = `<span class="tag">${Math.round(s.own * 100)}%</span>${flag}${s.aff ? '<span class="tag">持分法</span>' : ''}${sched ? `<span class="tag warn">${ymLabel(sched.m)}に合併</span>` : ''}${st.over ? '<span class="tag bad">破産</span>' : ''}`;
+  const sum = `<span class="ob-sum"><span>売上 ${fmtYen(ytd.sales)}</span><span>経常 <span class="${ytd.ord < 0 ? 'neg' : ''}">${fmtYen(ytd.ord)}</span></span><span>現預金 ${fmtYen(cash)}</span></span>`;
+  const headBtn = `<button type="button" class="ob-head" data-act="kOrgCard" data-id="${esc(s.id)}" aria-expanded="${open}" aria-controls="ob-${esc(s.id)}" title="${open ? 'たたむ' : 'くわしく見る'}">
+      <span class="ob-t"><b>${esc(s.name)}</b>${tags}</span>${open ? '' : sum}<span class="ob-chev" aria-hidden="true"></span></button>`;
+  const body = open ? `<div class="ob-body" id="ob-${esc(s.id)}">
     <div class="small muted">${esc(ksKindName(s))}・持分${Math.round(s.own * 100)}%${s.partner ? `（${s.aff ? '経営の主導' : 'ほかの株主'}：${esc(s.partner)}）` : ''}</div>
     <div class="small">${esc(ksWith(st, ksCompanyDesc) || '事業なし')}</div>
     <dl class="kv sm"><dt>今期の売上（月次）</dt><dd>${fmtYen(ytd.sales)}</dd><dt>今期の経常利益</dt><dd class="${ytd.ord < 0 ? 'neg' : ''}">${fmtYen(ytd.ord)}</dd><dt>現預金</dt><dd>${fmtYen(cash)}</dd><dt>従業員</dt><dd>${head}人</dd>${L ? `<dt>前期の純利益</dt><dd class="${L.pl.ni < 0 ? 'neg' : ''}">${fmtYen(L.pl.ni)}</dd>` : ''}</dl>
-    <div class="row" style="gap:4px;flex-wrap:wrap">${s.aff ? btn('決算書を見る', 'kAffView', { id: s.id }, 'sm') : btn('この会社に入る', 'kView', { v: s.id }, 'sm primary')}${btn('資金と取引', 'kSubFin', { id: s.id }, 'sm')}${btn('再編・社名', 'kSubOps', { id: s.id }, 'sm')}</div></div>`;
+    <div class="row" style="gap:4px;flex-wrap:wrap">${s.aff ? btn('決算書を見る', 'kAffView', { id: s.id }, 'sm') : btn('この会社に入る', 'kView', { v: s.id }, 'sm primary')}${btn('資金と取引', 'kSubFin', { id: s.id }, 'sm')}${btn('再編・社名', 'kSubOps', { id: s.id }, 'sm')}</div></div>` : '';
+  return `<div class="orgbox sub${open ? '' : ' shut'}${s.aff ? ' aff' : ''}${st.over ? ' bad' : ''}">${headBtn}${body}</div>`;
 }
-/* 会社とその下の会社（木の形） */
+/* 会社とその下の会社（木の形）。下の会社がある会社には、枝を開く／たたむ帯をつける */
 function ksOrgNode(s, root) {
   const kids = ksSubsOf(s.id, root);
-  return `<div class="orgnode">${ksSubCard(s)}${kids.length ? `<div class="orgkids">${kids.map(x => ksOrgNode(x, root)).join('')}</div>` : ''}</div>`;
+  if (!kids.length) return `<div class="orgnode">${ksSubCard(s)}</div>`;
+  const open = ksOrgKidsOpen(s, root);
+  const all = ksDescendants(s.id, root);
+  const nC = kids.filter(x => !x.aff).length, nA = kids.length - nC;
+  const word = ksRecDepth(s, root) === 0 ? '孫会社' : 'ひ孫会社';
+  const what = [nC ? `${word} ${nC}社` : '', nA ? `関連会社 ${nA}社` : ''].filter(Boolean).join('・') + (all.length > kids.length ? `（その下にも${all.length - kids.length}社）` : '');
+  const tot = open ? '' : `<span class="ob-sum"><span>今期の売上 計 ${fmtYen(all.filter(x => !x.aff).reduce((a, x) => a + ksWith(x.st, ksYTD).sales, 0))}</span></span>`;
+  const bar = `<button type="button" class="orgfold" data-act="kOrgKids" data-id="${esc(s.id)}" aria-expanded="${open}" aria-controls="ok-${esc(s.id)}"><span class="ob-chev" aria-hidden="true"></span><span>${what}${open ? '' : 'を表示'}</span>${tot}</button>`;
+  return `<div class="orgnode">${ksSubCard(s)}${bar}${open ? `<div class="orgkids" id="ok-${esc(s.id)}">${kids.map(x => ksOrgNode(x, root)).join('')}</div>` : ''}</div>`;
 }
 function ksGrpOrgHtml() {
   const root = G, g = root.group;
@@ -26375,11 +26461,15 @@ function ksGrpOrgHtml() {
     <div class="small">${esc(ksCompanyDesc() || '子会社の株式を持ち、グループを経営する')}</div>
     <dl class="kv sm"><dt>関係会社株式</dt><dd>${fmtYen(ksB('subShares'))}</dd><dt>子会社への貸付金</dt><dd>${fmtYen(ksB('icLoan'))}</dd><dt>現預金</dt><dd>${fmtYen(ksB('cash'))}</dd>${L ? `<dt>前期の純利益（個別）</dt><dd class="${L.pl.ni < 0 ? 'neg' : ''}">${fmtYen(L.pl.ni)}</dd>` : ''}</dl>
     <div class="row" style="gap:4px"><span class="small muted">子会社 ${ksCSubs(root).filter(x => !x.parent).length}社・孫会社 ${ksCSubs(root).filter(x => x.parent).length}社・関連会社 ${subs.filter(x => x.aff).length}社</span></div></div>`;
-  const chart = subs.length ? `<div class="orgchart">${top}<div class="orgline" aria-hidden="true"></div><div class="orgsubs">${top1.map(x => ksOrgNode(x, root)).join('')}</div></div>`
+  const mode = ksOrgMode(root);
+  const tools = subs.length >= 2 ? `<div class="orgtools"><span class="small muted">表示</span><div class="seg sm" role="radiogroup" aria-label="子会社の表示のしかた">${[['full', 'くわしく'], ['line', '1行ずつ'], ['top', '子会社だけ']].map(([k, l]) => `<button type="button" data-act="kOrgMode" data-v="${k}" aria-pressed="${mode === k}">${l}</button>`).join('')}</div>
+    <span class="small muted orgtools-hint">会社の名前を押すと、くわしい数字とボタンを開いたり、たたんだりできます。</span></div>` : '';
+  const chart = subs.length ? `${tools}<div class="orgchart">${top}<div class="orgline" aria-hidden="true"></div><div class="orgsubs${mode === 'full' ? '' : ' dense'}">${top1.map(x => ksOrgNode(x, root)).join('')}</div></div>`
     : `<div class="orgchart">${top}</div><div class="empty">まだ子会社はありません。「グループをつくる」から、子会社の設立・分社化・買収・持株会社への移行ができます。</div>`;
   const gone = ksSubAll(root).filter(s => s.gone && s.out && ['sold', 'failed', 'merged', 'with'].includes(s.out.why));
   const goneTxt = s => { const o = s.out; return o.why === 'sold' ? `${ymLabel(o.m)}に${fmtYen(o.price)}で売却` : o.why === 'merged' ? `${ymLabel(o.m)}に${esc(o.into === 'root' ? root.coName : (ksSubById(o.into, root) || {}).name || '')}に吸収合併` : o.why === 'with' ? `${ymLabel(o.m)}に持ち主の会社と一緒にグループから外れた` : `${ymLabel(o.m)}に破産`; };
-  const goneHtml = gone.length ? panel('グループから外れた会社', `<ul class="small" style="margin:0;padding-left:1.2em">${gone.map(s => `<li>${esc(s.name)}：${goneTxt(s)}</li>`).join('')}</ul>`) : '';
+  const goneList = `<ul class="small" style="margin:0;padding-left:1.2em">${gone.map(s => `<li>${esc(s.name)}：${goneTxt(s)}</li>`).join('')}</ul>`;
+  const goneHtml = gone.length ? panel('グループから外れた会社', gone.length > 3 ? `<details><summary class="small">${gone.length}社を表示</summary>${goneList}</details>` : goneList) : '';
   const mg = (g.mergers || []).map(x => { const c = ksSubById(x.from, root); const into = x.into === 'root' ? root.coName : (ksSubById(x.into, root) || {}).name; return c ? `<li>${esc(into)}が${esc(c.name)}を吸収合併（効力発生日 ${ymLabel(x.m)}1日）${btn('取りやめる', 'kMergeCancel', { id: x.id }, 'sm ghost')}</li>` : ''; }).join('');
   const mgHtml = mg ? panel('予定している合併', `<ul class="small" style="margin:0;padding-left:1.2em">${mg}</ul><p class="note">合併は、期首（4月1日）に効力が生じます。それまでに株主総会の承認と、債権者保護手続（官報の公告と1か月の異議の期間）を行います。</p>`) : '';
   const kpi = cons ? panel(`連結の成績（${ksFyLabel(cons.fy)}）`, kv([['連結売上高', fmtYen(cons.pl.sales)], ['連結営業利益', ksNum(cons.pl.opi)], ['親会社株主に帰属する当期純利益', ksNum(cons.pl.niParent)], ['非支配株主に帰属する当期純利益', ksNum(cons.pl.niNci)], ['連結純資産（うち非支配株主持分）', `${fmtYen(cons.bs.EQ)}（${fmtYen(cons.bs.nci)}）`], ['連結の自己資本比率', cons.bs.TA ? fmtPct((cons.bs.EQ - cons.bs.nci) / cons.bs.TA * 100, 1) : '―']]) + `<div class="row" style="margin-top:6px">${btn('連結決算書を見る', 'kGrpSec', { v: 'cons' }, 'sm')}</div>`) : '';
@@ -26571,6 +26661,7 @@ ACTIONS.kGFGo = () => {
   const r = ksGroupFound({ type: F.type, sc: F.sc, own: F.own, cash: amt, cc: F.cc, pref: F.pref, owner: F.owner || 'root', name: name ? (/株式会社|合同会社|有限会社/.test(name) || F.cc !== 'jp' ? name : name + '株式会社') : '' });
   if (!r.ok) { toast(r.why, 'bad'); return; }
   toast(`${r.s.name}を設立しました`);
+  ksOrgShow(r.s);
   UI.kGF = null; UI.kGrpSec = 'org';
   render(); autosave();
 };
@@ -26590,6 +26681,7 @@ ACTIONS.kSplitGo2 = () => {
   const r = ksGroupSplit(S.u, { cash: S.cash ?? pv.cashS });
   if (!r.ok) { toast(r.why, 'bad'); closeModal(true); return; }
   toast(`${r.s.name}に分社化しました`);
+  ksOrgShow(r.s);
   UI.kSplit = null; UI.kGrpSec = 'org';
   closeModal(true); render(); autosave();
 };
@@ -26634,7 +26726,7 @@ ACTIONS.kGTBuyGo = d => {
   const t = (G.group.targets || []).find(x => x.id === d.id);
   const r = ksGroupBuy(t, +d.o);
   toast(r.ok ? `${r.s.name}を${r.s.aff ? '関連会社' : '子会社'}にしました` : r.why, r.ok ? '' : 'bad');
-  if (r.ok) UI.kGrpSec = 'org';
+  if (r.ok) { UI.kGrpSec = 'org'; ksOrgShow(r.s); }
   closeModal(true); render(); autosave();
 };
 

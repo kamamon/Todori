@@ -960,6 +960,32 @@ details.custom > summary { cursor: pointer; font-weight: 700; font-size: 13px; c
 .orgnode { display: grid; gap: 6px; align-content: start; min-width: 0; }
 .orgkids { display: grid; gap: 6px; margin-left: 12px; padding-left: 10px; border-left: 2px solid var(--rule-strong); }
 .orgbox.aff { border-style: dashed; background: var(--sheet-2); }
+/* 組織図の折りたたみ：会社の名前の行を押すと、くわしい数字とボタンを開く／たたむ。孫会社の枝も開く／たたむ */
+.orgtools { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 0 0 12px; }
+.orgtools-hint { flex: 1 1 240px; }
+.ob-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "t chev" "sum chev"; align-items: center; column-gap: 8px; row-gap: 2px; width: 100%; min-height: 30px; margin: 0; padding: 2px 0; border: 0; border-radius: 4px; background: none; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.ob-head .ob-t { grid-area: t; margin: 0; }
+.ob-head .ob-sum { grid-area: sum; }
+.ob-head .ob-chev { grid-area: chev; }
+.ob-head:hover b { text-decoration: underline; text-decoration-color: var(--vault); text-underline-offset: 3px; }
+.ob-head:focus-visible, .orgfold:focus-visible { outline: 2px solid var(--vault); outline-offset: 2px; }
+.ob-sum { display: flex; flex-wrap: wrap; gap: 0 12px; font-size: 12px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.ob-chev { display: grid; place-items: center; width: 24px; height: 24px; flex: none; color: var(--ink-3); }
+.ob-chev::before { content: ''; width: 7px; height: 7px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: translateY(-2px) rotate(45deg); transition: transform .15s ease; }
+[aria-expanded="false"] > .ob-chev::before { transform: translateX(-2px) rotate(-45deg); }
+.ob-body { display: grid; gap: 4px; margin-top: 4px; padding-top: 6px; border-top: 1px dotted var(--rule); }
+.orgbox.sub.shut { padding-top: 6px; padding-bottom: 6px; }
+.orgfold { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; width: 100%; min-height: 30px; margin: 0; padding: 4px 10px 4px 4px; border: 1px dashed var(--rule-strong); border-radius: var(--r-s); background: var(--sheet-2); font: inherit; font-size: 12.5px; color: var(--ink-2); text-align: left; cursor: pointer; }
+.orgfold:hover { border-color: var(--vault); color: var(--vault-ink); }
+.orgfold[aria-expanded="true"] { border-style: solid; border-color: transparent; background: none; padding-top: 2px; padding-bottom: 2px; min-height: 26px; }
+.orgfold .ob-chev { width: 20px; height: 20px; }
+/* 1行ずつ・子会社だけ：会社を縦に並べて、木の形（字下げ）で見る */
+.orgsubs.dense { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+@media (min-width: 761px) {
+  .orgsubs.dense .orgbox.shut .ob-head { grid-template-columns: minmax(0, 1fr) auto auto; grid-template-areas: "t sum chev"; }
+  .orgsubs.dense .orgbox.shut .ob-sum { justify-content: flex-end; }
+}
+@media (prefers-reduced-motion: reduce) { .ob-chev::before { transition: none; } }
 
 /* =========================================================
  *  スマホ：読みやすい文字と、指で押しやすいボタン
@@ -1148,6 +1174,14 @@ details.custom > summary { cursor: pointer; font-weight: 700; font-size: 13px; c
   #toast-root { top: calc(8px + var(--band)); bottom: auto; left: calc(12px + var(--sal)); right: calc(12px + var(--sar)); max-width: none; gap: 6px; pointer-events: none; }
   #toast-root .toast:nth-last-child(n+3) { display: none; }
   .toast { padding: 10px 14px; box-shadow: 0 10px 24px -10px rgba(0, 0, 0, .55); }
+
+  /* ---- グループの組織図 ---- */
+  .ob-head { min-height: 44px; }
+  .ob-sum { font-size: 13px; }
+  .orgfold { min-height: 42px; font-size: 13.5px; }
+  .orgfold[aria-expanded="true"] { min-height: 40px; }
+  .orgtools .seg { flex: 1 1 100%; }
+  .orgkids { margin-left: 6px; padding-left: 8px; }
 
   /* ---- 地図 ---- */
   .jmap-wrap { margin: 8px -4px 6px; }

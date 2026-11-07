@@ -83,8 +83,37 @@ if (!fs.existsSync(shots)) fs.mkdirSync(shots);
   console.log('設立', JSON.stringify(ids));
   const B = ids.find(x => x.own === 1);
   if (B) await found('ラーメン', '1', B.id, 6000);
+  // 5社目：会社が増えると、はじめは1行ずつの表示（新しい会社は開いて見せる）
+  await found('弁当', '1', null, 30000);
   await page.click('.tab[data-tab="k_group"]'); await wait(60);
   await click('[data-act="kGrpSec"][data-v="org"]', 'org');
+  await screenErr('org'); await hscroll('org'); await shot('org_line');
+  const fold = async () => page.evaluate(() => ({
+    mode: (document.querySelector('[data-act="kOrgMode"][aria-pressed="true"]') || {}).dataset?.v,
+    cards: document.querySelectorAll('.orgbox.sub').length, shut: document.querySelectorAll('.orgbox.sub.shut').length,
+    bodies: document.querySelectorAll('.ob-body').length, kids: document.querySelectorAll('.orgkids').length,
+    bars: [...document.querySelectorAll('.orgfold')].map(b => b.getAttribute('aria-expanded') + ':' + b.textContent.trim()),
+  }));
+  let f = await fold();
+  console.log('折りたたみ（5社）', JSON.stringify(f));
+  if (f.mode !== 'line') errors.push(`5社で1行ずつになっていない（${f.mode}）`);
+  if (f.bodies !== 1) errors.push(`新しい会社だけ開いているはずが ${f.bodies}社開いている`);
+  // 子会社だけ：孫会社の枝がたたまれる → 枝を開く
+  await click('[data-act="kOrgMode"][data-v="top"]', 'mode top');
+  f = await fold();
+  if (f.kids !== 0 || !f.bars.some(x => x.startsWith('false:孫会社'))) errors.push(`子会社だけの表示で孫会社がたたまれない ${JSON.stringify(f)}`);
+  await shot('org_top');
+  await click('.orgfold[aria-expanded="false"]', 'open branch');
+  f = await fold();
+  if (f.kids !== 1) errors.push('孫会社の枝が開かない');
+  // 会社の行を押して開く／たたむ
+  const head = await page.$('.orgbox.sub.shut .ob-head');
+  if (head) { await head.click(); await wait(100); f = await fold(); if (f.bodies !== 1) errors.push(`会社の行を押しても開かない（${f.bodies}）`); await page.click('.orgbox.sub:not(.shut) .ob-head'); await wait(100); f = await fold(); if (f.bodies !== 0) errors.push('会社の行を押してもたたまれない'); }
+  await hscroll('org fold');
+  // くわしく：すべて開く
+  await click('[data-act="kOrgMode"][data-v="full"]', 'mode full');
+  f = await fold();
+  if (f.shut !== 0 || f.bodies !== f.cards) errors.push(`くわしくで全部開かない ${JSON.stringify(f)}`);
   await screenErr('org'); await hscroll('org'); await shot('org');
   const st1 = await page.evaluate(() => window.Toudori.G.group.subs.map(s => `${s.name}${s.parent ? '←' + s.parent : ''}${s.aff ? '（持分法）' : ''}`));
   console.log('構成', st1.join(' / '));
