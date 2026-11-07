@@ -1362,12 +1362,15 @@ function ksExecPayFor(annual) { return clamp(Math.round((25e4 + Math.sqrt(Math.m
 function ksCompanyDesc(us) {
   us = us || ksActiveUnits();
   const ns = us.map(u => ksS(u).name);
+  if (ns.length >= 5) return `${ns.slice(0, 3).join('・')}など${ns.length}事業`; // 事業が多いときは、初めの3つと数
   return ns.length <= 1 ? (ns[0] || '') : ns.length === 2 ? `${ns[0]}と${ns[1]}` : `${ns.slice(0, -1).join('・')}と${ns[ns.length - 1]}`;
 }
 /* 開始時の事業のリスト：o.units = [{ type, sc, n }]（o.ind は以前の6業種の id） */
 function ksStartList(o) {
   const raw = o.units && o.units.length ? o.units : [{ type: KS_LEGACY_TYPE[o.ind] || o.ind }];
-  return raw.map(x => (typeof x === 'string' ? { type: x } : x)).filter(x => KS_TYPES[x.type]).slice(0, 5);
+  // 事業の数に上限はない（同じ業種は1つにまとめる）
+  const seen = new Set();
+  return raw.map(x => (typeof x === 'string' ? { type: x } : x)).filter(x => KS_TYPES[x.type] && !seen.has(x.type) && seen.add(x.type));
 }
 function ksNewGame(o) {
   const seed = (o.seed ?? Math.floor(Math.random() * 2 ** 31)) | 0;

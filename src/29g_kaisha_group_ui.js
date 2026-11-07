@@ -51,7 +51,7 @@ KS_SCREENS.k_group = () => {
     <div class="subtabs" role="tablist">${subs.map(([k, l]) => `<button type="button" data-act="kGrpSec" data-v="${k}" aria-pressed="${sec === k}">${l}</button>`).join('')}</div>${body}`;
 };
 ACTIONS.kGrpSec = d => { UI.kGrpSec = d.v; render(); };
-function ksKindName(s) { return s.aff ? '関連会社（持分法）' : ({ new: '設立した子会社', jv: '合弁会社', split: '分社化した子会社', acq: '買収した子会社', hd: '事業子会社' }[s.kind] || '子会社'); }
+function ksKindName(s) { return s.aff ? '関連会社（持分法）' : s.kind === 'start' ? (s.own < 1 ? '就任の時からの合弁会社' : '就任の時からの子会社') : ({ new: '設立した子会社', jv: '合弁会社', split: '分社化した子会社', acq: '買収した子会社', hd: '事業子会社' }[s.kind] || '子会社'); }
 /* ---------- 組織図の折りたたみ（会社が増えても見やすいように） ----------
  * 会社ごとに「くわしい数字とボタン」を開く／たたむ。子会社の下の会社（孫会社）の枝を開く／たたむ。
  * 表示のしかた：くわしく（すべて開く）・1行ずつ（会社を1行に）・子会社だけ（孫会社の枝もたたむ）。
@@ -86,7 +86,7 @@ function ksOrgShow(s, root = G) {
   if (v.last && v.last !== s.id && v.c[v.last] === 1) delete v.c[v.last];
   v.last = null;
   if (!ksOrgCardOpen(s, root)) { v.c[s.id] = 1; v.last = s.id; }
-  for (let p = s.parent, i = 0; p && p !== 'root' && i < 8; i++) { const o = ksSubById(p, root); if (o && !ksOrgKidsOpen(o, root)) v.k[p] = 1; p = o && o.parent; }
+  for (let p = s.parent, i = 0; p && p !== 'root' && i < 200; i++) { const o = ksSubById(p, root); if (o && !ksOrgKidsOpen(o, root)) v.k[p] = 1; p = o && o.parent; }
 }
 ACTIONS.kOrgMode = d => { const v = ksOrgView(); v.mode = d.v; v.c = {}; v.k = {}; v.last = null; render(); autosave(); };
 
@@ -117,7 +117,8 @@ function ksOrgNode(s, root) {
   const open = ksOrgKidsOpen(s, root);
   const all = ksDescendants(s.id, root);
   const nC = kids.filter(x => !x.aff).length, nA = kids.length - nC;
-  const word = ksRecDepth(s, root) === 0 ? '孫会社' : 'ひ孫会社';
+  const dep = ksRecDepth(s, root);
+  const word = dep === 0 ? '孫会社' : dep === 1 ? 'ひ孫会社' : '下の会社';
   const what = [nC ? `${word} ${nC}社` : '', nA ? `関連会社 ${nA}社` : ''].filter(Boolean).join('・') + (all.length > kids.length ? `（その下にも${all.length - kids.length}社）` : '');
   const tot = open ? '' : `<span class="ob-sum"><span>今期の売上 計 ${fmtYen(all.filter(x => !x.aff).reduce((a, x) => a + ksWith(x.st, ksYTD).sales, 0))}</span></span>`;
   const bar = `<button type="button" class="orgfold" data-act="kOrgKids" data-id="${esc(s.id)}" aria-expanded="${open}" aria-controls="ok-${esc(s.id)}"><span class="ob-chev" aria-hidden="true"></span><span>${what}${open ? '' : 'を表示'}</span>${tot}</button>`;

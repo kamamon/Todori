@@ -53,12 +53,12 @@ function ksDescendants(id, root = ksRoot()) {
 /* 親会社から見た実質の持分（持分の掛け算） */
 function ksEffOwn(s, root = ksRoot()) {
   let f = s.own, p = s.parent, n = 0;
-  while (p && p !== 'root' && n++ < 8) { const o = ksSubById(p, root); if (!o) break; f *= o.own; p = o.parent; }
+  while (p && p !== 'root' && n++ < 200) { const o = ksSubById(p, root); if (!o) break; f *= o.own; p = o.parent; }
   return f;
 }
 function ksRecDepth(s, root = ksRoot()) {
   let d = 0, p = s.parent;
-  while (p && p !== 'root' && d < 8) { const o = ksSubById(p, root); if (!o) break; d++; p = o.parent; }
+  while (p && p !== 'root' && d < 200) { const o = ksSubById(p, root); if (!o) break; d++; p = o.parent; }
   return d;
 }
 /* 持ち主の個別の帳簿の、この会社の株式の額（関係会社株式） */
@@ -794,7 +794,7 @@ function ksSubAutoAdmin() {
   if (G.budget && G.budget.status === 'draft') ksBudgetApprove(true);
 }
 function ksGroupTrim(st) {
-  if (st.months.length > 30) st.months.splice(0, st.months.length - 30);
+  if (st.months.length > 24) st.months.splice(0, st.months.length - 24); // 今期と前期の分（会社が多くてもセーブが大きくなりすぎないように）
   if (st.journal.length > 4) st.journal.splice(0, st.journal.length - 4);
   if (st.news.length > 40) st.news.length = 40;
 }
@@ -1034,7 +1034,7 @@ function ksGroupConsolidate(fy) {
       affs.push({ id: s.id, n: s.name, own: s.own, inv, emv, inc: Math.round(s.own * D[s.id].ni - D[s.id].amort), cc: s.cc });
     } else {
       nciBS += Math.round((1 - s.own) * eOf(s));
-      elim.push({ t: '投資と資本の相殺消去', why: `${ksOwnerNameOf(s, root)}の持つ${s.name}の株式（${fmtYen(inv)}）と、${s.name}の${s.kind === 'acq' ? '取得のときの' : ''}資本を消す${s.gw ? '。差はのれん' : ''}${s.own < 1 ? '。ほかの株主の持分は非支配株主持分' : ''}`, bs: { subShares: -inv, gw: gwLeft[s.id] }, eq: true });
+      elim.push({ t: '投資と資本の相殺消去', why: `${ksOwnerNameOf(s, root)}の持つ${s.name}の株式（${fmtYen(inv)}）と、${s.name}の${s.kind === 'acq' ? '取得のときの' : s.kind === 'start' ? '就任の時点の' : ''}資本を消す${s.gw ? '。差はのれん' : ''}${s.own < 1 ? '。ほかの株主の持分は非支配株主持分' : ''}`, bs: { subShares: -inv, gw: gwLeft[s.id] }, eq: true });
     }
     fctrBS += Math.round(fctr[s.id] * ksEffOwn(s, root));
     s._next = { reTr: reEnd[s.id], gwCum: s.gwCum + D[s.id].amort };
@@ -1140,6 +1140,8 @@ function ksExtInit(o = {}) {
     ksGroupInit();
     if (o.form && KS_FORMS[o.form]) G.form = o.form;
     if (typeof ksCustomApply === 'function') ksCustomApply(o);
+    // 就任の時点のグループ（始め方の画面で決めた子会社・孫会社・関連会社）
+    if (o.startGroup && o.startGroup.length && !o.load && typeof ksStartGroupBuild === 'function') ksStartGroupBuild(o.startGroup);
   }
 }
 function ksExtMonth(ctx, res) {
@@ -1244,7 +1246,8 @@ function ksNewGameCustom(o) {
     G = null;
     const S = KS_TYPES[x.type];
     const base = (o.coName || '').replace(/株式会社|ホールディングス|合同会社|有限会社/g, '').trim() || '汐見';
-    ksNewGame({ units: [x], coName: `${base}${pick(KS_CO_CORE[S.eng] || ['産業'])}株式会社`, ceo: `${pick(['佐藤', '鈴木', '高橋', '田中', '伊藤'])} ${pick(['健', '誠', '茂', '洋子', '直美'])}`, seed: (seed + i * 7919) | 0, cond: o.cond, term: 0, asSub: true, pref: o.pref });
+    const core = pick(KS_CO_CORE[S.eng] || ['産業']);
+    ksNewGame({ units: [x], coName: base.endsWith(core) ? `${base}株式会社` : `${base}${core}株式会社`, ceo: `${pick(['佐藤', '鈴木', '高橋', '田中', '伊藤'])} ${pick(['健', '誠', '茂', '洋子', '直美'])}`, seed: (seed + i * 7919) | 0, cond: o.cond, term: 0, asSub: true, pref: o.pref });
     subs.push(G);
   });
   const total = Math.round(sum(subs, st => ksWith(st, ksEquity)));
@@ -1259,7 +1262,7 @@ function ksNewGameCustom(o) {
   G.openingFS = ksOpeningFS();
   if (typeof ksLawInit === 'function') ksLawInit();
   if (typeof ksGrowInit === 'function') ksGrowInit();
-  ksExtInit(Object.assign({}, o, { custom: null }));
+  ksExtInit(Object.assign({}, o, { custom: null, startGroup: null }));
   const g = G.group;
   g.hd = true; g.hdM = G.m;
   subs.forEach((st, i) => {
@@ -1272,15 +1275,24 @@ function ksNewGameCustom(o) {
   // 関係会社株式は、子会社の純資産（帳簿の額）の合計（株式移転）。今月の損益の分の差は資本準備金で調整
   const carry = Math.round(sum(g.subs, s => s.eq0));
   if (carry !== total) ksPost('hdAdj', carry > total ? [['subShares', carry - total, 0], ['capSurplus', 0, carry - total]] : [['capSurplus', total - carry, 0], ['subShares', 0, total - carry]], { u: 'HQ', desc: '子会社の株式の額の調整（株式移転）' });
-  const groupHead = sum(g.subs, s => ksWith(s.st, ksHeadcount));
+  G.customNote = `持株会社（事業会社${g.subs.length}社）で始めました`;
+  // 就任の時点のグループ（始め方の画面で決めた子会社・孫会社。事業会社の下にも置ける）
+  if (o.startGroup && o.startGroup.length && typeof ksStartGroupBuild === 'function') {
+    const umap = {};
+    list.forEach((x, i) => { if (g.subs[i]) umap['u:' + x.type] = g.subs[i].id; });
+    ksStartGroupBuild(o.startGroup, umap);
+  }
+  // 持株会社の本社と、直下の100%子会社からの経営指導料（本社の費用をまかなえる料率に）
+  const direct = ksSubs(G).filter(s => !s.parent && !s.aff && s.own >= 0.9999);
+  const groupHead = sum(ksCSubs(G), s => ksWith(s.st, ksHeadcount));
   g.hq = { staff: clamp(Math.round(groupHead * 0.01), 2, 300), wage: 45e4 };
-  const groupSales = sum(g.subs, s => ksWith(s.st, ksAnnualSales));
+  const groupSales = sum(direct, s => ksWith(s.st, ksAnnualSales));
   const rate = clamp(+((g.hq.staff * g.hq.wage * 1.15 + G.execPay * 1.15) * 12 * 1.15 / Math.max(1, groupSales)).toFixed(3), 0.01, 0.05);
-  for (const s of g.subs) s.fee = rate;
-  G.execPay = ksExecPayFor(groupSales);
+  for (const s of direct) s.fee = rate;
+  G.execPay = ksExecPayFor(sum(ksCSubs(G), s => ksWith(s.st, ksAnnualSales)));
   ksBudgetDraft(); ksBudgetApprove(true);
   G.startedM = G.m;
-  G.customNote = `持株会社（子会社${g.subs.length}社）で始めました`;
-  ksNews(`${G.ceo}氏が${G.coName}の代表取締役社長に就任。${g.subs.map(s => s.name).join('・')}を子会社に持つ持株会社`, 'info');
+  const top = ksSubs(G).filter(s => !s.parent);
+  ksNews(`${G.ceo}氏が${G.coName}の代表取締役社長に就任。${top.slice(0, 5).map(s => s.name).join('・')}${top.length > 5 ? `など${top.length}社` : ''}を子会社に持つ持株会社`, 'info');
   return G;
 }

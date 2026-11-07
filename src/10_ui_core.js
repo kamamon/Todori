@@ -294,7 +294,10 @@ async function autosave() {
   if (!G) return;
   const L = lsKeys();
   const packed = await packSave(serialize());
-  UI.saved = lsSet(L.auto, packed) && lsSet(L.meta('a'), saveMeta());
+  const ok = lsSet(L.auto, packed) && lsSet(L.meta('a'), saveMeta());
+  // 保存できなかったら一度だけ知らせる（会社がとても多いと、ブラウザの保存領域に入りきらないことがある）
+  if (!ok && UI.saved !== false) toast('自動保存できませんでした（このブラウザの保存領域がいっぱいか、保存が許可されていません）。メニューで使っていないセーブを消すか、「ファイルに書き出す」で保存してください', 'bad');
+  UI.saved = ok;
 }
 async function saveSlot(i) {
   const L = lsKeys();
@@ -401,6 +404,8 @@ Object.assign(ACTIONS, {
   saveSlot: d => saveSlot(+d.slot),
   loadSlot: d => loadFrom(lsKeys().slot(+d.slot)),
   loadAuto: () => loadFrom(lsKeys().auto),
+  delSlot: d => confirmBox('セーブを消す', `スロット${+d.slot}のセーブを消します。元には戻せません。`, '消す', 'delSlotGo', { slot: +d.slot }, true),
+  delSlotGo: d => { const L = lsKeys(); try { localStorage.removeItem(L.slot(+d.slot)); localStorage.removeItem(L.meta(+d.slot)); } catch (e) { /* 消せないときはそのまま */ } toast(`スロット${+d.slot}のセーブを消しました`); showModal('menu'); },
   exportSave: () => exportSave(),
   importSave: () => $('#importFile').click(),
   theme: d => { lsSet(LS.theme, d.v); applyTheme(d.v); drawModal(); },

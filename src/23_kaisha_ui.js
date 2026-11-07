@@ -182,7 +182,7 @@ KS_SCREENS.k_dash = () => {
   const lastFS = ksLastFY();
   const g = G.grade;
   const prof = kv([
-    ['事業', `${esc(I.label)}${ksActiveUnits().length > 1 ? `（${ksActiveUnits().length}事業）` : `（${esc(I.name)}）`}`],
+    ['事業', `${esc(I.label)}${ksActiveUnits().length >= 5 ? '' : ksActiveUnits().length > 1 ? `（${ksActiveUnits().length}事業）` : `（${esc(I.name)}）`}`],
     ['創業', `${G.founded}年（${ksFyLabel(fyOf(G.m))}）`],
     ['資本金', fmtYen(ksB('capital'))],
     ['従業員', !ksActiveUnits().length ? (G.group && G.group.hq ? `本社 ${fmtNum(G.group.hq.staff, 0)}人（持株会社）` : '0人') : `${fmtNum(ksHeadcount(), 0)}人（${ksActiveUnits().length > 1 ? ksActiveUnits().map(u => `${esc(ksUName(u))} ${fmtNum(ksUnitHead(u), 0)}人`).join('・') : ksS(ksMainUnit()).roles.map(r => `${r.n.replace(/（.*?）/, '')} ${fmtNum(ksMainUnit().staff[r.id] || 0, 0)}人`).join('・')}）`],
@@ -931,6 +931,7 @@ MODALS.kIntro = () => {
   const st = ksLastFY();
   const body = `<p style="margin:0 0 10px">${ymLabel(G.m)}、${esc(G.ceo)}さんが${esc(G.coName)}の社長に就任しました。${G.founded}年創業、${esc(I.label)}を営む会社です。</p>
     ${st ? `<p class="small" style="margin:0 0 10px">前期（${ksFyLabel(st.fy)}）の${ksSalesName()}は${fmtYen(st.pl.sales)}、経常利益は${fmtYen(st.pl.ord)}、銀行の格付は${G.grade}。会社の状態は「${KS_COND[G.cond].n}」です。</p>` : ''}
+    ${typeof ksSubs === 'function' && ksSubs(G).length ? `<p class="small" style="margin:0 0 10px">グループの会社：${(() => { const ss = ksSubs(G); const nA = ss.filter(s => s.aff).length; const nD = ss.filter(s => s.parent).length; return `子会社${ss.length - nA}社${nA ? `・関連会社${nA}社` : ''}${nD ? `（うち、子会社の下の会社${nD}社）` : ''}`; })()}。<b>グループ</b>の画面で、組織図と各社の決算書、連結決算書を見られます。</p>` : ''}
     <ol><li><b>決算書</b>で、先代が作った過去${ksFYList().length}期分の決算書を読む（損益計算書・貸借対照表）。</li>
     <li><b>資金と銀行</b>で、資金繰り表と借入金を確かめる。お金が尽きたら会社は終わりです。</li>
     <li><b>現場</b>で、事業ごとに値段・人員・設備を決める。新しい事業を始めることもできます。</li>
@@ -1079,7 +1080,7 @@ function ksStartStore() {
 function ksStartTypeRow(S, k) {
   const sel = k.units.some(x => x.type === S.name);
   return `<li class="stype${sel ? ' on' : ''}"><span class="indico" aria-hidden="true">${esc(S.icon)}</span><span class="stype-t"><b>${esc(S.name)}</b><span class="small muted">${esc(S.grp)}・${esc(KS_ENG_INFO[S.eng].n)}</span></span>
-    <span class="stype-a">${btn(sel ? '選択中' : 'これにする', 'kStPick', { v: S.name }, `sm${sel ? '' : ' primary'}`, { disabled: sel })}${!sel && k.units.length < 3 ? btn('＋加える', 'kStAdd', { v: S.name }, 'sm') : ''}</span></li>`;
+    <span class="stype-a">${btn(sel ? '選択中' : 'これにする', 'kStPick', { v: S.name }, `sm${sel ? '' : ' primary'}`, { disabled: sel })}${!sel ? btn('＋加える', 'kStAdd', { v: S.name }, 'sm') : ''}</span></li>`;
 }
 function ksStartTypesHtml(k) {
   const list = ksSearchTypes(k.q, k.sec, k.eng, 40);
@@ -1102,12 +1103,13 @@ function renderStartK() {
   const setup = `<section class="setup" aria-labelledby="setupTitle">
     <div class="setup-head"><h2 id="setupTitle">始め方</h2>${cont}</div>
     ${startModeSwitch()}
-    <div class="field"><span>事業（${fmtNum(KS_TYPE_LIST.length, 0)}の業種から。3つまで組み合わせられます）</span><ul class="sunits">${chosen}</ul></div>
+    <div class="field"><span>事業（${fmtNum(KS_TYPE_LIST.length, 0)}の業種から。いくつでも組み合わせられます）</span><ul class="sunits">${chosen}</ul></div>
     <div class="field"><span>おすすめ</span><div class="chips">${picks}</div></div>
     <div class="field"><span>業種を探す</span><div class="row" style="gap:6px;flex-wrap:wrap"><input type="search" id="kstQ" value="${esc(k.q)}" data-in="kStQ" placeholder="例：レーザー、データセンター、航空、海運、新聞、介護" style="flex:1;min-width:12em" aria-label="業種を探す">
       <select data-ch="kStSec" aria-label="産業"><option value="">すべての産業</option>${secs}</select><select data-ch="kStEng" aria-label="事業の型"><option value="">すべての型</option>${engs}</select></div>
       <div id="kstList" class="stypes-wrap">${ksStartTypesHtml(k)}</div></div>
     <div class="field"><span>引き継ぐ会社の状態</span><div class="seg" role="radiogroup">${conds}</div><span class="small muted">${esc(KS_COND[k.cond].desc)}</span></div>
+    ${typeof ksSgHtml === 'function' ? ksSgHtml(k) : ''}
     ${typeof ksCustomHtml === 'function' ? ksCustomHtml(k) : ''}
     <div class="grid g2" style="gap:12px"><div class="field"><span>任期</span><div class="seg" role="radiogroup">${terms}</div></div>
     <label class="field"><span>シード（同じ数字なら同じ展開）</span><input type="text" id="kstSeed" value="${esc(k.seed)}" placeholder="空欄でランダム" inputmode="numeric"></label></div>
@@ -1119,7 +1121,7 @@ function renderStartK() {
     <h1>辞令</h1><div class="gametitle">社長 ― 会社経営と決算書のシミュレーション</div>
     <div class="body-text"><label><input type="text" id="kstCeo" value="${esc(k.ceo)}" placeholder="氏名" maxlength="12" aria-label="あなたの氏名"></label>　殿<br>
     貴殿を <label><input type="text" id="kstCo" value="${esc(k.coEdited ? k.coName : ksDefaultCoName(k.units[0].type))}" maxlength="18" aria-label="会社の名前" style="width:12em"></label> の代表取締役社長に選任する。<br>
-    ${esc(desc)}を営む当社の経営を先代から引き継ぎ、日々の数字と毎年の決算書を自らの手で作り、取引銀行の信頼を得て、会社を健全に成長させること。<br>
+    ${esc(desc)}を営む当社の経営を先代から引き継ぎ、日々の数字と毎年の決算書を自らの手で作り、取引銀行の信頼を得て、会社を健全に成長させること。${(k.grp || []).length ? `あわせて、グループ会社${k.grp.length}社を統括し、企業グループとして発展させること。` : ''}<br>
     任期は${warekiYear(2027)}1月から${termTxt}。</div>
     <div class="issuer">${warekiYear(2027)}1月1日<br>株主総会・取締役会</div>
     <div class="start">${btn('就任する', 'kStart', {}, 'primary')}${btn('ファイルから読み込む', 'importSave')}${btn('遊び方', 'help')}</div>
@@ -1129,7 +1131,7 @@ function renderStartK() {
 Object.assign(ACTIONS, {
   stMode: d => { if (UI.start.mode === 'gyosei') gyStartStore(); else if (UI.start.mode === 'kaisha') ksStartStore(); else if (typeof startStoreInputs === 'function') startStoreInputs(); UI.start.mode = d.v; render(); },
   kStPick: d => { ksStartStore(); const k = UI.start.k; k.units = [{ type: d.v, sc: 1 }]; if (!k.coEdited) k.coName = ''; render(); },
-  kStAdd: d => { ksStartStore(); const k = UI.start.k; if (k.units.length < 3 && !k.units.some(x => x.type === d.v)) k.units.push({ type: d.v, sc: 1 }); render(); },
+  kStAdd: d => { ksStartStore(); const k = UI.start.k; if (!k.units.some(x => x.type === d.v)) k.units.push({ type: d.v, sc: 1 }); render(); },
   kStDel: d => { ksStartStore(); const k = UI.start.k; if (k.units.length > 1) k.units.splice(+d.i, 1); render(); },
   kStSc: d => { ksStartStore(); const k = UI.start.k; if (k.units[+d.i]) k.units[+d.i].sc = +d.v; render(); },
   kStCond: d => { ksStartStore(); UI.start.k.cond = d.v; render(); },
@@ -1144,6 +1146,7 @@ Object.assign(ACTIONS, {
     const o = { units: k.units.map(x => ({ type: x.type, sc: x.sc })), coName: co, ceo, cond: k.cond, term: k.term };
     if (Number.isFinite(seedN)) o.seed = seedN;
     if (typeof ksCustomOptions === 'function') Object.assign(o, ksCustomOptions(k));
+    if (typeof ksSgOptions === 'function') { const sg = ksSgOptions(k); if (sg.length) o.startGroup = sg; } // 就任の時点のグループの会社
     if (typeof KS_ROOT !== 'undefined') KS_ROOT = null;
     if (o.form === 'gk') co = co.replace(/株式会社/, '合同会社'); else if (o.form === 'yk') co = co.replace(/株式会社/, '有限会社');
     o.coName = co;

@@ -945,6 +945,25 @@ details.custom > summary { cursor: pointer; font-weight: 700; font-size: 13px; c
 .cu-nums { gap: 8px; }
 .cu-body select { max-width: 100%; }
 
+/* 始め方の画面：グループの会社（就任の時点の子会社・孫会社・関連会社）。組織図と同じ線で、下の会社を字下げする */
+.sgtree, .sgkids { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.sgkids { margin: 6px 0 0 12px; padding-left: 10px; border-left: 2px solid var(--rule-strong); }
+.sgnode { min-width: 0; }
+.sgco { display: grid; gap: 2px; padding: 7px 10px 8px; border: 1px solid var(--rule-strong); border-radius: var(--r-m); background: var(--sheet); min-width: 0; }
+.sgco.root { border: 2px solid var(--vault); }
+.sgco.aff { border-style: dashed; background: var(--sheet-2); }
+.sgco.unit { background: var(--sheet-2); }
+.sgco-t { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; min-width: 0; }
+.sgco-t b { font-size: 14px; overflow-wrap: anywhere; }
+.sgco-d { min-width: 0; overflow-wrap: anywhere; }
+.sgco-a { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+.sg-form { display: grid; gap: 12px; }
+.sg-form > .field, .sg-form .grid > .field { margin: 0; }
+.sgkids .sgkids .sgkids .sgkids { margin-left: 4px; padding-left: 8px; } /* 深い段は字下げを少なく */
+.sg-grid { gap: 8px 14px; }
+.sg-grid select, .sg-grid input { width: 100%; }
+.typelist.sg-types { max-height: 260px; margin-top: 6px; }
+
 @media (max-width: 760px) {
   .jmap, .wmap { gap: 2px; }
   .jt .jn.n3 { letter-spacing: -.14em; font-size: .92em; }
@@ -1182,6 +1201,11 @@ details.custom > summary { cursor: pointer; font-weight: 700; font-size: 13px; c
   .orgfold[aria-expanded="true"] { min-height: 40px; }
   .orgtools .seg { flex: 1 1 100%; }
   .orgkids { margin-left: 6px; padding-left: 8px; }
+  /* 始め方の画面のグループの会社：ボタンは名前と説明の下に並べる */
+  .sgco { padding: 8px 10px; }
+  .sgco-a { margin-top: 6px; }
+  .sgkids { margin-left: 4px; padding-left: 8px; }
+  .sgkids .sgkids .sgkids .sgkids { margin-left: 2px; padding-left: 6px; }
 
   /* ---- 地図 ---- */
   .jmap-wrap { margin: 8px -4px 6px; }
