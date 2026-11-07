@@ -12,7 +12,10 @@ Object.assign(UI, { kGrpSec: 'org', kGrpFy: null, kGF: null, kSplit: null, kHdRe
 function ksGroupMastHtml() {
   const root = ksRoot();
   if (!root || !root.group || !ksSubAll(root).length) return '';
-  const opts = [['root', `${root.coName}（親会社）`], ...ksSubs(root).map(s => [s.id, `${s.name}（子会社 ${Math.round(s.own * 100)}%）`])];
+  const tree = [];
+  const walk = (pid, d) => { for (const s of ksCSubs(root).filter(x => ksRecOwnerId(x) === pid)) { tree.push([s.id, `${'　'.repeat(d)}${s.name}（${d ? '孫会社' : '子会社'} ${Math.round(s.own * 100)}%）`]); walk(s.id, d + 1); } };
+  walk('root', 0);
+  const opts = [['root', `${root.coName}（親会社）`], ...tree];
   const cur = ksIsSubView() ? G.subId : 'root';
   return `<label class="entsw"><span class="sr">表示する会社</span><select data-ch="kView" aria-label="表示する会社">${opts.map(([v, l]) => `<option value="${v}"${v === cur ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select></label>`;
 }
@@ -20,7 +23,7 @@ function ksSubBanner() {
   if (!ksIsSubView()) return '';
   const s = ksSubById(G.subId);
   if (!s) return '';
-  return `<div class="subbanner" role="note"><b>子会社の画面</b>：${esc(s.name)}（${esc(ksRoot().coName)}の${s.own >= 0.9999 ? '100%子会社' : `持分${Math.round(s.own * 100)}%`}${s.cc && s.cc !== 'jp' ? `・${esc(KS_COUNTRIES[s.cc].n)}の現地法人。帳簿は設立のときのレートで円に直した額` : ''}）。${s.auto ? '経営は子会社の社長に任せています（自動）' : 'あなたが直接経営しています'}。月末の締めは、グループ全体で進みます。
+  return `<div class="subbanner" role="note"><b>${s.parent ? '孫会社' : '子会社'}の画面</b>：${esc(s.name)}（${esc(ksOwnerNameOf(s))}の${s.own >= 0.9999 ? '100%子会社' : `持分${Math.round(s.own * 100)}%`}${s.cc && s.cc !== 'jp' ? `・${esc(KS_COUNTRIES[s.cc].n)}の現地法人。帳簿は設立のときのレートで円に直した額` : ''}）。${s.auto ? '経営は子会社の社長に任せています（自動）' : 'あなたが直接経営しています'}。月末の締めは、グループ全体で進みます。
     ${btn(s.auto ? '自分で経営する' : '子会社の社長に任せる', 'kSubAuto', { id: s.id }, 'sm')}${btn('親会社に戻る', 'kView', { v: 'root' }, 'sm primary')}</div>`;
 }
 CHANGES.kView = el => ksSwitchView(el.value);
@@ -48,7 +51,7 @@ KS_SCREENS.k_group = () => {
     <div class="subtabs" role="tablist">${subs.map(([k, l]) => `<button type="button" data-act="kGrpSec" data-v="${k}" aria-pressed="${sec === k}">${l}</button>`).join('')}</div>${body}`;
 };
 ACTIONS.kGrpSec = d => { UI.kGrpSec = d.v; render(); };
-function ksKindName(s) { return { new: '設立した子会社', jv: '合弁会社', split: '分社化した子会社', acq: '買収した子会社' }[s.kind] || '子会社'; }
+function ksKindName(s) { return s.aff ? '関連会社（持分法）' : ({ new: '設立した子会社', jv: '合弁会社', split: '分社化した子会社', acq: '買収した子会社', hd: '事業子会社' }[s.kind] || '子会社'); }
 function ksSubCard(s) {
   const st = s.st;
   const ytd = ksWith(st, ksYTD);
@@ -56,28 +59,40 @@ function ksSubCard(s) {
   const cash = ksWith(st, () => ksB('cash'));
   const head = ksWith(st, ksHeadcount);
   const flag = s.cc && s.cc !== 'jp' ? `<span class="tag">${esc(KS_COUNTRIES[s.cc].n)}</span>` : '';
-  return `<div class="orgbox sub${st.over ? ' bad' : ''}"><div class="ob-t"><b>${esc(s.name)}</b>${flag}</div>
-    <div class="small muted">${esc(ksKindName(s))}・持分${Math.round(s.own * 100)}%${s.partner ? `（相手：${esc(s.partner)}）` : ''}</div>
+  const sched = (ksRoot().group.mergers || []).find(x => x.from === s.id);
+  return `<div class="orgbox sub${s.aff ? ' aff' : ''}${st.over ? ' bad' : ''}"><div class="ob-t"><b>${esc(s.name)}</b>${flag}${s.aff ? '<span class="tag">持分法</span>' : ''}${sched ? `<span class="tag warn">${ymLabel(sched.m)}に合併</span>` : ''}</div>
+    <div class="small muted">${esc(ksKindName(s))}・持分${Math.round(s.own * 100)}%${s.partner ? `（${s.aff ? '経営の主導' : 'ほかの株主'}：${esc(s.partner)}）` : ''}</div>
     <div class="small">${esc(ksWith(st, ksCompanyDesc) || '事業なし')}</div>
-    <dl class="kv sm"><dt>今期の売上（月次）</dt><dd>${fmtYen(ytd.sales)}</dd><dt>今期の経常利益</dt><dd class="${ytd.ord < 0 ? 'neg' : ''}">${fmtYen(ytd.ord)}</dd><dt>現預金</dt><dd>${fmtYen(cash)}</dd><dt>従業員</dt><dd>${head}人</dd><dt>銀行の格付</dt><dd>${st.grade || '―'}</dd>${L ? `<dt>前期の純利益</dt><dd class="${L.pl.ni < 0 ? 'neg' : ''}">${fmtYen(L.pl.ni)}</dd>` : ''}</dl>
-    <div class="row" style="gap:4px;flex-wrap:wrap">${btn('この会社に入る', 'kView', { v: s.id }, 'sm primary')}${btn('資金と取引', 'kSubFin', { id: s.id }, 'sm')}</div></div>`;
+    <dl class="kv sm"><dt>今期の売上（月次）</dt><dd>${fmtYen(ytd.sales)}</dd><dt>今期の経常利益</dt><dd class="${ytd.ord < 0 ? 'neg' : ''}">${fmtYen(ytd.ord)}</dd><dt>現預金</dt><dd>${fmtYen(cash)}</dd><dt>従業員</dt><dd>${head}人</dd>${L ? `<dt>前期の純利益</dt><dd class="${L.pl.ni < 0 ? 'neg' : ''}">${fmtYen(L.pl.ni)}</dd>` : ''}</dl>
+    <div class="row" style="gap:4px;flex-wrap:wrap">${s.aff ? btn('決算書を見る', 'kAffView', { id: s.id }, 'sm') : btn('この会社に入る', 'kView', { v: s.id }, 'sm primary')}${btn('資金と取引', 'kSubFin', { id: s.id }, 'sm')}${btn('再編・社名', 'kSubOps', { id: s.id }, 'sm')}</div></div>`;
+}
+/* 会社とその下の会社（木の形） */
+function ksOrgNode(s, root) {
+  const kids = ksSubsOf(s.id, root);
+  return `<div class="orgnode">${ksSubCard(s)}${kids.length ? `<div class="orgkids">${kids.map(x => ksOrgNode(x, root)).join('')}</div>` : ''}</div>`;
 }
 function ksGrpOrgHtml() {
   const root = G, g = root.group;
+  ksGroupMigrate(root);
   const subs = ksSubs(root);
+  const top1 = ksSubsOf('root', root);
   const L = ksLastFY();
   const cons = g.cons[ksFyOfLast()];
   const top = `<div class="orgbox parent"><div class="ob-t"><b>${esc(root.coName)}</b><span class="tag">${ksIsPureHD(root) ? '純粋持株会社' : g.hd ? '事業持株会社' : '親会社'}</span><span class="tag">${esc(ksFormName(root))}</span></div>
     <div class="small">${esc(ksCompanyDesc() || '子会社の株式を持ち、グループを経営する')}</div>
-    <dl class="kv sm"><dt>関係会社株式</dt><dd>${fmtYen(ksB('subShares'))}</dd><dt>子会社への貸付金</dt><dd>${fmtYen(ksB('icLoan'))}</dd><dt>現預金</dt><dd>${fmtYen(ksB('cash'))}</dd>${L ? `<dt>前期の純利益（個別）</dt><dd class="${L.pl.ni < 0 ? 'neg' : ''}">${fmtYen(L.pl.ni)}</dd>` : ''}</dl></div>`;
-  const chart = subs.length ? `<div class="orgchart">${top}<div class="orgline" aria-hidden="true"></div><div class="orgsubs">${subs.map(ksSubCard).join('')}</div></div>`
+    <dl class="kv sm"><dt>関係会社株式</dt><dd>${fmtYen(ksB('subShares'))}</dd><dt>子会社への貸付金</dt><dd>${fmtYen(ksB('icLoan'))}</dd><dt>現預金</dt><dd>${fmtYen(ksB('cash'))}</dd>${L ? `<dt>前期の純利益（個別）</dt><dd class="${L.pl.ni < 0 ? 'neg' : ''}">${fmtYen(L.pl.ni)}</dd>` : ''}</dl>
+    <div class="row" style="gap:4px"><span class="small muted">子会社 ${ksCSubs(root).filter(x => !x.parent).length}社・孫会社 ${ksCSubs(root).filter(x => x.parent).length}社・関連会社 ${subs.filter(x => x.aff).length}社</span></div></div>`;
+  const chart = subs.length ? `<div class="orgchart">${top}<div class="orgline" aria-hidden="true"></div><div class="orgsubs">${top1.map(x => ksOrgNode(x, root)).join('')}</div></div>`
     : `<div class="orgchart">${top}</div><div class="empty">まだ子会社はありません。「グループをつくる」から、子会社の設立・分社化・買収・持株会社への移行ができます。</div>`;
-  const gone = ksSubAll(root).filter(s => s.gone);
-  const goneHtml = gone.length ? panel('売却・破産した子会社', `<ul class="small" style="margin:0;padding-left:1.2em">${gone.map(s => `<li>${esc(s.name)}：${s.out.why === 'sold' ? `${ymLabel(s.out.m)}に${fmtYen(s.out.price)}で売却` : `${ymLabel(s.out.m)}に破産`}</li>`).join('')}</ul>`) : '';
+  const gone = ksSubAll(root).filter(s => s.gone && s.out && ['sold', 'failed', 'merged', 'with'].includes(s.out.why));
+  const goneTxt = s => { const o = s.out; return o.why === 'sold' ? `${ymLabel(o.m)}に${fmtYen(o.price)}で売却` : o.why === 'merged' ? `${ymLabel(o.m)}に${esc(o.into === 'root' ? root.coName : (ksSubById(o.into, root) || {}).name || '')}に吸収合併` : o.why === 'with' ? `${ymLabel(o.m)}に持ち主の会社と一緒にグループから外れた` : `${ymLabel(o.m)}に破産`; };
+  const goneHtml = gone.length ? panel('グループから外れた会社', `<ul class="small" style="margin:0;padding-left:1.2em">${gone.map(s => `<li>${esc(s.name)}：${goneTxt(s)}</li>`).join('')}</ul>`) : '';
+  const mg = (g.mergers || []).map(x => { const c = ksSubById(x.from, root); const into = x.into === 'root' ? root.coName : (ksSubById(x.into, root) || {}).name; return c ? `<li>${esc(into)}が${esc(c.name)}を吸収合併（効力発生日 ${ymLabel(x.m)}1日）${btn('取りやめる', 'kMergeCancel', { id: x.id }, 'sm ghost')}</li>` : ''; }).join('');
+  const mgHtml = mg ? panel('予定している合併', `<ul class="small" style="margin:0;padding-left:1.2em">${mg}</ul><p class="note">合併は、期首（4月1日）に効力が生じます。それまでに株主総会の承認と、債権者保護手続（官報の公告と1か月の異議の期間）を行います。</p>`) : '';
   const kpi = cons ? panel(`連結の成績（${ksFyLabel(cons.fy)}）`, kv([['連結売上高', fmtYen(cons.pl.sales)], ['連結営業利益', ksNum(cons.pl.opi)], ['親会社株主に帰属する当期純利益', ksNum(cons.pl.niParent)], ['非支配株主に帰属する当期純利益', ksNum(cons.pl.niNci)], ['連結純資産（うち非支配株主持分）', `${fmtYen(cons.bs.EQ)}（${fmtYen(cons.bs.nci)}）`], ['連結の自己資本比率', cons.bs.TA ? fmtPct((cons.bs.EQ - cons.bs.nci) / cons.bs.TA * 100, 1) : '―']]) + `<div class="row" style="margin-top:6px">${btn('連結決算書を見る', 'kGrpSec', { v: 'cons' }, 'sm')}</div>`) : '';
-  const pol = subs.length ? panel('グループの方針', `<label class="inline"><input type="checkbox" data-ch="kGrpSupport" ${g.policy.support ? 'checked' : ''}> 子会社の資金が足りなくなりそうなら、親会社が貸し付けて支える（海外子会社は増資）</label>
-    <p class="note">親会社の貸付金は「関係会社長期貸付金」、子会社の側は「関係会社長期借入金」。連結決算では、グループの中の貸し借りとして消します。${g.hd ? `<br>持株会社の本社：${g.hq.staff}人（経営企画・経理・人事・法務）。費用は子会社からの経営指導料でまかないます。` : ''}</p>`) : '';
-  return `${chart}<div class="grid g2" style="margin-top:10px">${kpi}${pol}</div>${goneHtml}`;
+  const pol = subs.length ? panel('グループの方針', `<label class="inline"><input type="checkbox" data-ch="kGrpSupport" ${g.policy.support ? 'checked' : ''}> 子会社の資金が足りなくなりそうなら、親会社が貸し付けて支える（海外の子会社は直接の親会社が増資）</label>
+    <p class="note">親会社の貸付金は「関係会社長期貸付金」、子会社の側は「関係会社長期借入金」。連結決算では、グループの中の貸し借りとして消します。関連会社は、経営を主導するほかの株主が資金を手当てします。${g.hd ? `<br>持株会社の本社：${g.hq.staff}人（経営企画・経理・人事・法務）。費用は子会社からの経営指導料でまかないます。` : ''}</p>`) : '';
+  return `${chart}<div class="grid g2" style="margin-top:10px">${kpi}${pol}</div>${mgHtml}${goneHtml}`;
 }
 CHANGES.kGrpSupport = el => { G.group.policy.support = el.checked; render(); };
 
@@ -91,16 +106,17 @@ MODALS.kSubFin = () => {
   const foreign = s.cc && s.cc !== 'jp';
   const feeOpts = [0, 0.005, 0.01, 0.015, 0.02, 0.03, 0.05].map(v => `<option value="${v}"${Math.abs(s.fee - v) < 1e-6 ? ' selected' : ''}>${(v * 100).toFixed(1)}%</option>`).join('');
   const poOpts = [0, 0.2, 0.3, 0.5, 0.8, 1].map(v => `<option value="${v}"${Math.abs(s.payout - v) < 1e-6 ? ' selected' : ''}>${Math.round(v * 100)}%</option>`).join('');
-  const body = `<p style="margin:0 0 8px"><b>${esc(s.name)}</b>（${esc(ksKindName(s))}・持分${Math.round(s.own * 100)}%）</p>
-    ${kv([['子会社の現預金', fmtYen(ksWith(s.st, () => ksB('cash')))], ['親会社からの借入金', fmtYen(icl)], ['親会社の持つ株式（取得の額）', fmtYen(Math.round(s.own * (s.eq0 + s.adds) + s.gw))], ['子会社の純資産', fmtYen(Math.round(ksWith(s.st, ksEquity)))], s.gw ? ['のれん（連結）', `${fmtYen(s.gw)}（10年で償却。済み ${fmtYen(s.gwCum)}）`] : null].filter(Boolean))}
+  const on = ksOwnerNameOf(s);
+  const body = `<p style="margin:0 0 8px"><b>${esc(s.name)}</b>（${esc(ksKindName(s))}・${esc(on)}の持分${Math.round(s.own * 100)}%）</p>
+    ${kv([['この会社の現預金', fmtYen(ksWith(s.st, () => ksB('cash')))], s.aff ? null : ['親会社からの借入金', fmtYen(icl)], [`${on}の持つ株式（取得の額）`, fmtYen(ksRecInv(s))], ['この会社の純資産', fmtYen(Math.round(ksWith(s.st, ksEquity)))], s.gw ? [s.aff ? '投資差額（のれん相当額）' : 'のれん（連結）', `${fmtYen(s.gw)}（10年で償却。済み ${fmtYen(s.gwCum)}）`] : null].filter(Boolean))}
     <div class="grid g2" style="gap:10px;margin-top:8px">
-      <label class="field"><span>経営指導料（子会社の売上に対する料率・毎月）</span><select data-ch="kSFFee">${feeOpts}</select><span class="small muted">親会社は${ksIsPureHD() ? '営業収益' : '営業外収益（経営指導料収入）'}、子会社は販管費（支払経営指導料）。${foreign ? '海外子会社への料率が高すぎると、移転価格税制で課税されることがある' : '高すぎると子会社の利益を不当に移していると見られることがある'}。</span></label>
+      ${s.aff ? '' : `<label class="field"><span>経営指導料（子会社の売上に対する料率・毎月）</span><select data-ch="kSFFee">${feeOpts}</select><span class="small muted">親会社は${ksIsPureHD() ? '営業収益' : '営業外収益（経営指導料収入）'}、子会社は販管費（支払経営指導料）。${foreign ? '海外子会社への料率が高すぎると、移転価格税制で課税されることがある' : '高すぎると子会社の利益を不当に移していると見られることがある'}。</span></label>`}
       <label class="field"><span>配当性向（前期の純利益に対する配当の割合・毎年6月）</span><select data-ch="kSFPay">${poOpts}</select><span class="small muted">親会社の受取配当金は、税金の計算で益金に入れない（${s.own >= 0.9999 ? '完全子法人なので全額' : s.own > 1 / 3 ? '関連法人なので全額' : '一部'}${foreign ? '。海外子会社は95%' : ''}）。</span></label>
     </div>
     <div class="field" style="margin-top:8px"><span>金額（万円）</span><input type="number" min="100" step="100" value="${Math.round(F.amt / 1e4)}" data-ch="kSFAmt" style="width:160px"></div>
-    <div class="row" style="gap:6px;flex-wrap:wrap">${btn('増資する（出資を増やす）', 'kSFInject', {}, 'sm')}${foreign ? '' : btn('貸し付ける', 'kSFLend', {}, 'sm')}${icl > 0 ? btn('貸付金を返してもらう', 'kSFRepay', {}, 'sm') : ''}${btn('株式を売る', 'kSFSell', {}, 'sm danger')}</div>
+    <div class="row" style="gap:6px;flex-wrap:wrap">${btn('増資する（出資を増やす）', 'kSFInject', {}, 'sm')}${foreign || s.aff ? '' : btn('貸し付ける', 'kSFLend', {}, 'sm')}${icl > 0 ? btn('貸付金を返してもらう', 'kSFRepay', {}, 'sm') : ''}${btn('株式を売る', 'kSFSell', {}, 'sm danger')}</div>
     <p class="note">増資：親会社は関係会社株式が増え、子会社は資本金・資本準備金が増える（連結では消し合う）。${s.own < 1 ? '合弁会社なので、相手の会社も持分に応じて出資します。' : ''}貸付：利息は毎月、市場の金利（短期プライムレート＋0.5%）で受け取ります。</p>`;
-  return modalFrame('子会社との資金と取引', body, btn('閉じる', 'closeModal'), { size: 'narrow' });
+  return modalFrame(s.aff ? '関連会社との資金と取引' : '子会社との資金と取引', body, btn('閉じる', 'closeModal'), { size: 'narrow' });
 };
 CHANGES.kSFFee = el => { const s = ksSubById(UI.kSF.id); s.fee = +el.value; drawModal(); };
 CHANGES.kSFPay = el => { const s = ksSubById(UI.kSF.id); s.payout = +el.value; drawModal(); };
@@ -111,8 +127,9 @@ ACTIONS.kSFRepay = () => { if (ksClosingBlock()) return; const s = ksSubById(UI.
 ACTIONS.kSFSell = () => {
   const s = ksSubById(UI.kSF.id);
   const price = niceAmount(ksSubValue(s) * s.own);
-  const carry = Math.round(s.own * (s.eq0 + s.adds) + s.gw);
-  confirmBox(`${esc(s.name)}の株式を売る`, `買い手の提示額は <b>${fmtYen(price)}</b>、親会社の帳簿の額（取得の額）は ${fmtYen(carry)} です。差 <b>${fmtYen(price - carry)}</b> が関係会社株式売却${price >= carry ? '益（特別利益）' : '損（特別損失）'}になります。連結決算では、子会社の取得の後の利益をすでに取り込んでいるので、売却損益は別の額に修正されます。${ksIcLoanBal(s.id) ? '<br>子会社への貸付金は、売るときに返してもらいます。' : ''}`, '売却する', 'kSFSellGo', { id: s.id }, true);
+  const carry = ksRecInv(s);
+  const kids = ksDescendants(s.id);
+  confirmBox(`${esc(s.name)}の株式を売る`, `買い手の提示額は <b>${fmtYen(price)}</b>、${esc(ksOwnerNameOf(s))}の帳簿の額（取得の額）は ${fmtYen(carry)} です。${kids.length ? `<br>${kids.map(x => esc(x.name)).join('・')}も、一緒にグループから外れます。` : ''}差 <b>${fmtYen(price - carry)}</b> が関係会社株式売却${price >= carry ? '益（特別利益）' : '損（特別損失）'}になります。連結決算では、子会社の取得の後の利益をすでに取り込んでいるので、売却損益は別の額に修正されます。${ksIcLoanBal(s.id) ? '<br>子会社への貸付金は、売るときに返してもらいます。' : ''}`, '売却する', 'kSFSellGo', { id: s.id }, true);
 };
 ACTIONS.kSFSellGo = d => { if (ksClosingBlock()) return; const r = ksGroupSell(d.id); toast(r.ok ? '株式を売却しました' : r.why, r.ok ? '' : 'bad'); UI.kSF = null; closeModal(true); render(); autosave(); };
 
@@ -188,7 +205,11 @@ function ksGrpMakeHtml() {
   const us = ksActiveUnits();
   const cash = ksB('cash');
   // 子会社の設立
-  const F = UI.kGF || (UI.kGF = { q: '', type: null, sc: 1, own: 1, cc: 'jp', pref: G.loc ? G.loc.hq : 22, amt: null, name: '' });
+  const F = UI.kGF || (UI.kGF = { q: '', type: null, sc: 1, own: 1, cc: 'jp', pref: G.loc ? G.loc.hq : 22, amt: null, name: '', owner: 'root' });
+  const owners = [['root', `${G.coName}（親会社）`], ...ksCSubs().filter(x => !x.cc || x.cc === 'jp').map(x => [x.id, `${x.name}（孫会社として）`])];
+  if (!owners.some(o => o[0] === (F.owner || 'root'))) F.owner = 'root';
+  const ownerSt = F.owner && F.owner !== 'root' ? ksSubById(F.owner).st : G;
+  const ocash = ksWith(ownerSt, () => ksB('cash'));
   const plan = F.type ? ksSubStartPlan(F.type, F.sc) : null;
   const need = plan ? plan.need : 0;
   const amt = F.amt || (plan ? Math.round(need * F.own / 1e6) * 1e6 : 0);
@@ -196,19 +217,20 @@ function ksGrpMakeHtml() {
   const ccOpts = [['jp', '日本'], ...Object.entries(KS_COUNTRIES).map(([k, x]) => [k, x.n])].map(([v, l]) => `<option value="${v}"${F.cc === v ? ' selected' : ''}>${esc(l)}</option>`).join('');
   const prefOpts = Object.values(KS_PREFS).map(p => `<option value="${p.c}"${+F.pref === p.c ? ' selected' : ''}>${esc(p.n)}</option>`).join('');
   const C = F.cc !== 'jp' ? KS_COUNTRIES[F.cc] : null;
-  const found = panel('子会社を設立する（新しい事業）', `<p class="small" style="margin:0 0 6px">新しい会社をつくって出資し（${term('関係会社株式', 'subShares')}）、その会社で事業を始めます。合弁にすると、相手の会社も持分に応じて出資します。海外に設立すると現地法人になり、その国の税率と法律が適用されます。</p>
+  const found = panel('子会社・関連会社を設立する（新しい事業）', `<p class="small" style="margin:0 0 6px">新しい会社をつくって出資し（${term('関係会社株式', 'subShares')}）、その会社で事業を始めます。合弁にすると、相手の会社も持分に応じて出資します。持分が50%以下なら、経営は相手が主導する${term('関連会社', 'mochibunho')}（持分法）になります。子会社が出資すると<b>孫会社</b>になります。海外に設立すると現地法人になり、その国の税率と法律が適用されます。</p>
+    <label class="field"><span>出資する会社</span><select data-ch="kGFowner">${owners.map(([v, l]) => `<option value="${v}"${(F.owner || 'root') === v ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select></label>
     <input type="search" value="${esc(F.q)}" data-in="kGFq" placeholder="業種を探す（例：ソフトウェア、物流、介護）" style="width:100%" aria-label="業種を探す">
     <div id="kGFlist" class="typelist sm">${ksGFListHtml(list, F)}</div>
     ${F.type ? `<div class="callout" style="margin-top:6px"><b>${esc(F.type)}</b>${plan ? `<br><span class="small">立ち上げの設備 ${fmtYen(plan.capex)}・軌道に乗るまでの運転資金の目安 ${fmtYen(plan.work)}・合計の目安 <b>${fmtYen(need)}</b></span>` : ''}</div>` : ''}
     <div class="grid g2" style="gap:8px;margin-top:6px">
       <div class="field"><span>規模</span><div class="seg" role="radiogroup">${[[0.5, '小さく'], [1, 'ふつう'], [2, '大きく']].map(([v, l]) => `<button type="button" data-act="kGFsc" data-v="${v}" aria-pressed="${F.sc === v}">${l}</button>`).join('')}</div></div>
-      <div class="field"><span>持分（議決権）</span><div class="seg" role="radiogroup">${[[1, '100%'], [0.8, '80%'], [0.6, '60%'], [0.51, '51%']].map(([v, l]) => `<button type="button" data-act="kGFown" data-v="${v}" aria-pressed="${F.own === v}">${l}</button>`).join('')}</div></div>
+      <div class="field"><span>持分（議決権）</span><div class="seg wrap" role="radiogroup">${[[1, '100%'], [0.8, '80%'], [0.6, '60%'], [0.51, '51%'], [0.49, '49%'], [0.4, '40%'], [0.3, '30%'], [0.2, '20%']].map(([v, l]) => `<button type="button" data-act="kGFown" data-v="${v}" aria-pressed="${F.own === v}">${l}</button>`).join('')}</div><span class="small muted">${F.own > 0.5 ? '50%超：連結子会社（全部を連結）' : '50%以下：関連会社（持分法で、利益の持分だけを取り込む）'}</span></div>
       <label class="field"><span>設立する国</span><select data-ch="kGFcc">${ccOpts}</select></label>
       ${F.cc === 'jp' ? `<label class="field"><span>所在地</span><select data-ch="kGFpref">${prefOpts}</select></label>` : `<div class="field"><span>${esc(C.n)}</span><span class="small">法人税 約${C.cit}%・${esc(C.vat)}・配当の源泉税 ${C.wht}%・ワーカーの月給 約${fmtNum(C.wk, 0)}ドル</span></div>`}
-      <label class="field"><span>親会社の出資額（万円）</span><input type="number" min="100" step="100" value="${Math.round(amt / 1e4)}" data-ch="kGFamt" style="width:150px"></label>
+      <label class="field"><span>出資額（万円）</span><input type="number" min="100" step="100" value="${Math.round(amt / 1e4)}" data-ch="kGFamt" style="width:150px"></label>
       <label class="field"><span>会社の名前（空欄で自動）</span><input type="text" value="${esc(F.name)}" data-ch="kGFname" maxlength="24"></label>
     </div>
-    <div class="row" style="margin-top:6px">${btn('設立する', 'kGFGo', {}, 'primary', { disabled: !F.type || amt <= 0 || amt > cash })}<span class="small muted">現預金 ${fmtYen(cash)}${F.own < 1 ? `・合弁の相手の出資 ${fmtYen(Math.round(amt / F.own - amt))}` : ''}</span></div>`);
+    <div class="row" style="margin-top:6px">${btn('設立する', 'kGFGo', {}, 'primary', { disabled: !F.type || amt <= 0 || amt > ocash })}<span class="small muted">${esc(ownerSt.coName)}の現預金 ${fmtYen(ocash)}${F.own < 1 ? `・相手の出資 ${fmtYen(Math.round(amt / F.own - amt))}` : ''}</span></div>`);
   // 分社化
   const S = UI.kSplit || (UI.kSplit = { u: us[0] ? us[0].id : null, cash: null });
   const pv = S.u ? ksGroupSplitPreview(S.u) : null;
@@ -223,7 +245,7 @@ function ksGrpMakeHtml() {
   // 買収
   const g = G.group;
   const tg = g.targets || [];
-  const ma = panel('株式を買って子会社にする（買収）', `<p class="small" style="margin:0 0 6px">他社の株式の過半数を買うと、その会社は子会社になります（事業の譲受と違い、会社ごと手に入れる）。払った額と、取得した持分の純資産の差は、連結決算で${term('のれん', 'goodwill')}になります。まずデューデリジェンス（買収の前の調査）で、過去の決算書を確かめましょう。</p>
+  const ma = panel('株式を買って子会社にする（買収・資本参加）', `<p class="small" style="margin:0 0 6px">他社の株式の過半数を買うと、その会社は子会社になります（事業の譲受と違い、会社ごと手に入れる）。20〜49%なら資本参加で、関連会社（持分法）になります。払った額と、取得した持分の純資産の差は、連結決算で${term('のれん', 'goodwill')}になります。まずデューデリジェンス（買収の前の調査）で、過去の決算書を確かめましょう。</p>
     ${btn(`買収の候補を探す（仲介会社への着手金 ${fmtYen(KS_MA_FEE)}）`, 'kGTFind', {}, 'sm')}
     ${tg.length ? `<div class="tbl-wrap" style="margin-top:6px"><table class="t compact"><thead><tr><th>会社</th><th>業種</th><th class="n">調査</th></tr></thead><tbody>${tg.map(t => ksGTRow(t)).join('')}</tbody></table></div>` : ''}`);
   // 持株会社
@@ -246,13 +268,14 @@ CHANGES.kGFcc = el => { UI.kGF.cc = el.value; render(); };
 CHANGES.kGFpref = el => { UI.kGF.pref = +el.value; };
 CHANGES.kGFamt = el => { const v = parseFloat(el.value); if (isFinite(v) && v > 0) { UI.kGF.amt = Math.round(v) * 1e4; render(); } };
 CHANGES.kGFname = el => { UI.kGF.name = el.value; };
+CHANGES.kGFowner = el => { UI.kGF.owner = el.value; UI.kGF.amt = null; render(); };
 ACTIONS.kGFGo = () => {
   if (ksClosingBlock()) return;
   const F = UI.kGF;
   const plan = ksSubStartPlan(F.type, F.sc);
   const amt = F.amt || Math.round(plan.need * F.own / 1e6) * 1e6;
   const name = (F.name || '').trim();
-  const r = ksGroupFound({ type: F.type, sc: F.sc, own: F.own, cash: amt, cc: F.cc, pref: F.pref, name: name ? (/株式会社|合同会社|有限会社/.test(name) || F.cc !== 'jp' ? name : name + '株式会社') : '' });
+  const r = ksGroupFound({ type: F.type, sc: F.sc, own: F.own, cash: amt, cc: F.cc, pref: F.pref, owner: F.owner || 'root', name: name ? (/株式会社|合同会社|有限会社/.test(name) || F.cc !== 'jp' ? name : name + '株式会社') : '' });
   if (!r.ok) { toast(r.why, 'bad'); return; }
   toast(`${r.s.name}を設立しました`);
   UI.kGF = null; UI.kGrpSec = 'org';
@@ -290,8 +313,9 @@ function ksGTRow(t) {
   if (!t.st) return `<tr><td>${esc(t.co)}</td><td class="small">${esc(t.type)}</td><td class="n">${btn('デューデリジェンス', 'kGTDD', { id: t.id }, 'sm')}</td></tr>`;
   const q = t.q;
   return `<tr><td><b>${esc(t.co)}</b><div class="small">売上 ${fmtYen(q.sales)}・営業利益 ${fmtYen(q.opi)}・純資産 ${fmtYen(q.eq)}・借入金 ${fmtYen(q.debt)}・格付 ${q.grade}・従業員${q.head}人</div></td><td class="small">${esc(t.type)}</td>
-    <td class="n">${btn('決算書を見る', 'kGTView', { id: t.id }, 'sm')}<div class="small" style="margin-top:4px">${[[1, '100%'], [0.67, '67%'], [0.51, '51%']].map(([o, l]) => btn(`${l} ${fmtYen(niceAmount(q.price100 * o * (o >= 0.67 ? 1 : 0.97)))}`, 'kGTBuy', { id: t.id, o }, 'sm')).join('')}</div></td></tr>`;
+    <td class="n">${btn('決算書を見る', 'kGTView', { id: t.id }, 'sm')}<div class="small" style="margin-top:4px">${[[1, '100%'], [0.67, '67%'], [0.51, '51%'], [0.34, '34%'], [0.2, '20%']].map(([o, l]) => btn(`${l} ${fmtYen(ksGTPrice(q, o))}`, 'kGTBuy', { id: t.id, o }, 'sm')).join('')}</div></td></tr>`;
 }
+function ksGTPrice(q, o) { return niceAmount(q.price100 * o * (o >= 0.67 ? 1 : o > 0.5 ? 0.97 : 0.9)); }
 ACTIONS.kGTFind = () => { if (ksClosingBlock()) return; ksGroupFindTargets(); toast('買収の候補が見つかりました'); render(); autosave(); };
 ACTIONS.kGTDD = d => { if (ksClosingBlock()) return; const t = (G.group.targets || []).find(x => x.id === d.id); if (!t) return; ksGroupDD(t); toast(`デューデリジェンスの費用 ${fmtYen(t.ddFee)}`); render(); autosave(); };
 ACTIONS.kGTView = d => showModal('kGTView', { id: d.id });
@@ -308,15 +332,15 @@ ACTIONS.kGTBuy = d => {
   const t = (G.group.targets || []).find(x => x.id === d.id);
   if (!t || !t.st) return;
   const own = +d.o;
-  const price = niceAmount(t.q.price100 * own * (own >= 0.67 ? 1 : 0.97));
+  const price = ksGTPrice(t.q, own);
   const gw = Math.max(0, price - own * t.q.eq);
-  confirmBox(`${esc(t.co)}の株式の${Math.round(own * 100)}%を買う`, `価格 <b>${fmtYen(price)}</b>（取得する持分の純資産 ${fmtYen(Math.round(own * t.q.eq))}・のれん 約${fmtYen(gw)}）。${ksB('cash') < price ? `<br><b class="neg">現預金（${fmtYen(ksB('cash'))}）が足りません。資金と銀行の画面で、買収の資金を借りてから買いましょう。</b>` : ''}${own < 1 ? `<br>残りの${Math.round((1 - own) * 100)}%は今の株主が持ち続け、連結決算の非支配株主持分になります。` : ''}`, '買う', 'kGTBuyGo', { id: t.id, o: own });
+  confirmBox(`${esc(t.co)}の株式の${Math.round(own * 100)}%を買う`, `価格 <b>${fmtYen(price)}</b>（取得する持分の純資産 ${fmtYen(Math.round(own * t.q.eq))}・${own > 0.5 ? 'のれん' : '投資差額'} 約${fmtYen(gw)}）。${own <= 0.5 ? '<br>持分が50%以下なので子会社にはならず、持分法の関連会社になります（経営は今の株主が主導）。' : ''}${ksB('cash') < price ? `<br><b class="neg">現預金（${fmtYen(ksB('cash'))}）が足りません。資金と銀行の画面で、買収の資金を借りてから買いましょう。</b>` : ''}${own < 1 && own > 0.5 ? `<br>残りの${Math.round((1 - own) * 100)}%は今の株主が持ち続け、連結決算の非支配株主持分になります。` : ''}`, '買う', 'kGTBuyGo', { id: t.id, o: own });
 };
 ACTIONS.kGTBuyGo = d => {
   if (ksClosingBlock()) return;
   const t = (G.group.targets || []).find(x => x.id === d.id);
   const r = ksGroupBuy(t, +d.o);
-  toast(r.ok ? `${r.s.name}を子会社にしました` : r.why, r.ok ? '' : 'bad');
+  toast(r.ok ? `${r.s.name}を${r.s.aff ? '関連会社' : '子会社'}にしました` : r.why, r.ok ? '' : 'bad');
   if (r.ok) UI.kGrpSec = 'org';
   closeModal(true); render(); autosave();
 };
@@ -329,7 +353,8 @@ function ksGrpFormHtml() {
   const conv = f === 'gk' ? `<div class="row" style="margin-top:6px">${btn('株式会社に組織変更する（約40万円・債権者保護手続1か月）', 'kFormConv', { to: 'kk' }, 'sm primary')}</div>`
     : f === 'yk' ? `<div class="row" style="margin-top:6px">${btn('商号を株式会社に変えて移行する（約20万円）', 'kFormConv', { to: 'kk' }, 'sm primary')}</div>` : '';
   const gov = kv([['資本金', fmtYen(G.bal.capital || 0)], ['負債の合計', fmtYen(Math.round(ksLiab()))], ['大会社（資本金5億円以上または負債200億円以上）', big ? '<b>大会社</b>：会計監査人の監査・内部統制の基本方針の決議が要る' : 'いいえ'], ['法人税の税率', (G.bal.capital || 0) > 1e8 ? '資本金1億円超：税率は約30.6%（外形標準課税を含む目安。中小法人の軽減税率は使えない）' : '中小法人：所得800万円までは約25%、超える部分は約34%（目安）'], ['住民税の均等割', fmtYen(ksKintou(G))]]);
-  return `<div class="grid g2">${panel('会社の形（会社法）', `<div class="tbl-wrap"><table class="t compact"><tbody>${rows}</tbody></table></div>${conv}`)}${panel('いまの会社の区分', gov + '<p class="note">資本金を増やすと信用は上がりますが、1億円を超えると中小法人の税の優遇がなくなり、5億円以上は大会社として会計監査人が必要になります。</p>')}</div>`;
+  return `<div class="grid g2">${panel('会社の形（会社法）', `<div class="tbl-wrap"><table class="t compact"><tbody>${rows}</tbody></table></div>${conv}`)}${panel('いまの会社の区分', gov + '<p class="note">資本金を増やすと信用は上がりますが、1億円を超えると中小法人の税の優遇がなくなり、5億円以上は大会社として会計監査人が必要になります。</p>')}</div>
+    <div class="grid g2" style="margin-top:10px">${panel('社名（商号）を変える', ksRenameHtml('root'))}</div>`;
 }
 ACTIONS.kFormConv = d => {
   if (ksClosingBlock()) return;
@@ -346,7 +371,8 @@ ACTIONS.kFormConv = d => {
 function ksGrpLearnHtml() {
   return `<div class="grid g2">${panel('子会社・関連会社', `<ul class="small" style="margin:0;padding-left:1.2em">
     <li><b>子会社</b>：議決権の過半数を持つなど、経営を支配している会社。連結決算に全部を取り込む（全部連結）。</li>
-    <li><b>関連会社</b>：20%以上を持ち、重要な影響を与える会社。持分法で、利益のうち持分の分だけを取り込む（このゲームでは扱わない）。</li>
+    <li><b>関連会社</b>：20%以上を持ち、重要な影響を与える会社。合算はせず${term('持分法', 'mochibunho')}で、利益のうち持分の分だけを「持分法による投資損益」として取り込む。</li>
+    <li><b>孫会社</b>：子会社の子会社。親会社から見た持分は掛け算（80%×60%＝48%）でも、子会社を通じて支配しているので連結する。</li>
     <li><b>合弁会社</b>：他の会社と一緒に出資してつくる会社。過半数を持てば子会社で、相手の持分は非支配株主持分。</li></ul>`)}
     ${panel('持株会社（ホールディングス）', `<p class="small" style="margin:0">子会社の株式を持ち、グループの経営（戦略・人事・資金・監査）に専念する会社。自分で事業をしない会社を純粋持株会社、事業もする会社を事業持株会社という。事業ごとに会社を分けると、責任と成績がはっきりし、買収や売却もしやすくなる。持株会社の収入は、子会社からの<b>経営指導料</b>と<b>配当</b>。</p>`)}
     ${panel('お金と税金', `<ul class="small" style="margin:0;padding-left:1.2em">
@@ -358,6 +384,8 @@ function ksGrpLearnHtml() {
     <li><b>会社分割</b>：事業を他の会社（新しくつくる会社＝新設分割、ある会社＝吸収分割）に移す。</li>
     <li><b>株式移転</b>：新しく持株会社をつくり、今の会社がその100%子会社になる。</li>
     <li><b>株式交換</b>：他社の株主に自社の株式を渡して、その会社を100%子会社にする。</li>
+    <li><b>${term('合併', 'gappei')}</b>：2つの会社が1つになる。吸収合併では、存続する会社が消える会社の資産・負債・従業員・契約をまとめて引き継ぐ。</li>
+    <li><b>${term('持分の追加取得', 'tsuikaShutoku')}</b>：子会社の残りの株を買う。連結では、のれんは増やさず、非支配株主持分との差を資本剰余金にする。</li>
     <li>どれも原則として株主総会の特別決議（3分の2以上）、反対する株主の買取請求、債権者保護手続（官報の公告と1か月以上の異議の期間）が要る。</li></ul>`)}</div>`;
 }
 

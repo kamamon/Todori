@@ -47,7 +47,7 @@ INPUTS.kOpLive = el => { const o = el.parentElement.querySelector('output'); if 
 Object.assign(ACTIONS, {
   kOpToggle: d => { const u = ksUnit(d.u); if (u) { u.op[d.k] = !u.op[d.k]; render(); } },
   kOpSet: d => { const u = ksUnit(d.u); if (u) { u.op[d.k] = isFinite(+d.v) && d.v !== '' && typeof d.v !== 'boolean' && /^-?[0-9.]+$/.test(d.v) ? +d.v : d.v; render(); } },
-  kUnitSel: d => { UI.kUnit = d.u; render(); window.scrollTo({ top: 0 }); },
+  kUnitSel: d => { UI.kUnit = d.u; render(); scrollToMain(); },
 });
 
 /* ---------- 人員 ---------- */
@@ -365,7 +365,7 @@ Object.assign(ACTIONS, {
   kShopStore: d => { const u = ksUnit(d.u); ksCapexOpen(KS_ENGINE.shop.plan(u)); },
   kShopRenov: d => { const u = ksUnit(d.u); const P = ksP(u); ksCapexOpen({ title: `${d.s}の改装`, desc: '売場を新しくすると、客足が戻ります（古い店ほど効果が大きい）。', items: [{ n: `${d.s}の改装工事`, acct: 'bldg', cost: Math.round(P.fit * 0.4 * ksPrice()), life: 15, part: 'S', u: u.id }], fx: 'shopRenov', arg: { u: u.id, s: d.s } }); },
   kShopEq: d => { const u = ksUnit(d.u); const P = ksP(u); ksCapexOpen({ title: `${d.s}の設備の更新`, desc: '新しい設備にすると、電気代・修理代・廃棄が減ります。', items: [{ n: `${d.s}の${(P.eqn && P.eqn[0]) || '店の設備'}`, acct: 'equip', cost: Math.round(P.eqc * ksPrice()), life: 6, part: 'S', u: u.id }], fx: 'shopEq', arg: { u: u.id, s: d.s } }); },
-  kGoUnit: d => { UI.tab = 'k_ops'; UI.kUnit = d.u; UI.modal = null; drawModal(); render(); window.scrollTo({ top: 0 }); },
+  kGoUnit: d => { UI.tab = 'k_ops'; UI.kUnit = d.u; UI.modal = null; drawModal(); render(); scrollToMain(); },
 });
 
 /* =========================================================

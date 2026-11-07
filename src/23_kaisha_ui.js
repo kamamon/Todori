@@ -708,11 +708,11 @@ KS_SCREENS.k_learn = () => {
   ${learn}
   <div class="grid g2" style="margin-top:16px">
     ${panel('簿記の5つの要素', `<table class="t compact"><tbody>
-      <tr><td><b>資産</b></td><td>会社が持っている財産（現金・売掛金・在庫・建物など）</td><td>増えたら借方</td></tr>
-      <tr><td><b>負債</b></td><td>返さなければならないもの（買掛金・借入金など）</td><td>増えたら貸方</td></tr>
-      <tr><td><b>純資産</b></td><td>資産−負債。株主が出したお金（資本金）と利益の蓄え</td><td>増えたら貸方</td></tr>
-      <tr><td><b>収益</b></td><td>純資産を増やす原因（売上高・受取利息など）</td><td>発生したら貸方</td></tr>
-      <tr><td><b>費用</b></td><td>純資産を減らす原因（仕入・給料・家賃・減価償却費など）</td><td>発生したら借方</td></tr></tbody></table>
+      <tr><td class="nowrap"><b>資産</b></td><td>会社が持っている財産（現金・売掛金・在庫・建物など）</td><td class="nowrap">増えたら借方</td></tr>
+      <tr><td class="nowrap"><b>負債</b></td><td>返さなければならないもの（買掛金・借入金など）</td><td class="nowrap">増えたら貸方</td></tr>
+      <tr><td class="nowrap"><b>純資産</b></td><td>資産−負債。株主が出したお金（資本金）と利益の蓄え</td><td class="nowrap">増えたら貸方</td></tr>
+      <tr><td class="nowrap"><b>収益</b></td><td>純資産を増やす原因（売上高・受取利息など）</td><td class="nowrap">発生したら貸方</td></tr>
+      <tr><td class="nowrap"><b>費用</b></td><td>純資産を減らす原因（仕入・給料・家賃・減価償却費など）</td><td class="nowrap">発生したら借方</td></tr></tbody></table>
       <p class="small" style="margin:8px 0 0">例：商品を10万円で売り、代金は翌月もらう →（借方）売掛金 10万円 ／（貸方）売上高 10万円。${btn('仕訳帳を見る', 'kGo', { tab: 'k_books' }, 'sm linkish')}</p>`)}
     ${panel('帳簿から決算書、そして銀行へ', `<div class="flowline big">${cycle.map(s => `<span class="fl">${s}</span>`).join('<span class="arr" aria-hidden="true">→</span>')}</div>
       <p class="small" style="margin:8px 0 0">毎月の取引は自動で仕訳され、月末に月次決算（速報）がまとまります。3月末には実地棚卸・減価償却・引当金・未払と前払・税金の決算整理を行い、正式な決算書が完成します。銀行はその決算書で格付を決め、金利や貸せる金額が変わります。</p>`)}
@@ -733,8 +733,8 @@ KS_SCREENS.k_news = () => {
 
 /* ---------- アクション ---------- */
 Object.assign(ACTIONS, {
-  kGo: d => { UI.tab = d.tab; UI.modal = null; UI.queue = []; drawModal(); render(); if (d.sec === 'view') { const el = $('#bankview'); if (el) el.scrollIntoView({ block: 'start' }); } else window.scrollTo({ top: 0 }); },
-  kGoFs: d => { UI.tab = 'k_fs'; UI.kFsView = d.v; UI.kFy = d.v === 'month' && G.months.some(x => fyOf(x.m) === fyOf(G.m)) ? fyOf(G.m) : ksFyOfLast(); UI.modal = null; drawModal(); render(); window.scrollTo({ top: 0 }); },
+  kGo: d => { UI.tab = d.tab; UI.modal = null; UI.queue = []; drawModal(); render(); if (d.sec === 'view') { const el = $('#bankview'); if (el) el.scrollIntoView({ block: 'start' }); } else scrollToMain(); },
+  kGoFs: d => { UI.tab = 'k_fs'; UI.kFsView = d.v; UI.kFy = d.v === 'month' && G.months.some(x => fyOf(x.m) === fyOf(G.m)) ? fyOf(G.m) : ksFyOfLast(); UI.modal = null; drawModal(); render(); scrollToMain(); },
   kFy: d => { UI.kFy = +d.v; render(); },
   kFsView: d => { UI.kFsView = d.v; render(); },
   kCoView: d => { UI.coFsView = d.v; UI.guideSel = null; render(); },
@@ -824,7 +824,7 @@ MODALS.kMonth = a => {
     <label class="inline small" style="margin-top:12px"><input type="checkbox" data-ch="setting" data-key="monthly" ${UI.settings.monthly ? 'checked' : ''}> 毎月この報告を表示する</label>`;
   return modalFrame(`${ymLabel(x.m)}の月次決算`, body, btn('仕訳帳を見る', 'kJournalFrom', { m: x.m }) + btn('閉じる', 'closeModal', {}, 'primary'), { size: 'wide', sub: `${warekiLabel(x.m)}末の締め` });
 };
-ACTIONS.kJournalFrom = d => { UI.tab = 'k_books'; UI.kBooks = 'journal'; UI.kJm = +d.m; UI.modal = null; UI.queue = UI.queue.filter(q => q.name === 'kClose' || q.name === 'kTerm' || q.name === 'kOver'); drawModal(); render(); window.scrollTo({ top: 0 }); if (UI.queue.length) { const n = UI.queue.shift(); showModal(n.name, n.args); } };
+ACTIONS.kJournalFrom = d => { UI.tab = 'k_books'; UI.kBooks = 'journal'; UI.kJm = +d.m; UI.modal = null; UI.queue = UI.queue.filter(q => q.name === 'kClose' || q.name === 'kTerm' || q.name === 'kOver'); drawModal(); render(); scrollToMain(); if (UI.queue.length) { const n = UI.queue.shift(); showModal(n.name, n.args); } };
 
 /* ---------- 融資の申込 ---------- */
 const KS_TERMS_M = [[6, '6か月（手形貸付）'], [12, '1年（手形貸付）'], [36, '3年'], [60, '5年'], [84, '7年'], [120, '10年']];

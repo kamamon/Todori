@@ -403,7 +403,7 @@ function ksLocF(u, key) {
     if (key === 'demand') return ['shop', 'rest'].includes(eng) ? Math.pow(r, 0.3) : 1;
     return 1;
   }
-  const P = KS_PREFS[G.loc.units[u.id]], R = KS_PREFS[G.loc.home || G.loc.hq];
+  const P = KS_PREFS[G.loc.units[u.id]], R = KS_PREFS[(G.loc.uhome && G.loc.uhome[u.id]) || G.loc.home || G.loc.hq];
   if (!P || !R || P === R) return 1;
   if (key === 'wage') return Math.pow(P.wage / R.wage, 0.7);
   if (key === 'rent') return Math.pow(P.land.com / R.land.com, 0.2);

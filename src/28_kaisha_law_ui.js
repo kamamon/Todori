@@ -206,7 +206,7 @@ Object.assign(ACTIONS, {
     G.quiz.asked++; if (ok) G.quiz.correct++;
     drawModal();
   },
-  kRosaiNext: () => { UI.kRosai.i++; drawModal(); const mb = document.querySelector('.modal .mb'); if (mb) mb.scrollTop = 0; },
+  kRosaiNext: () => { UI.kRosai.i++; drawModal(); modalTop(); },
   kRosaiDone: () => {
     const R = UI.kRosai;
     const ch = Object.assign({ pay: 'rosai', comp: 'pay', report: 'report' }, R.ch);

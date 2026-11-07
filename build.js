@@ -9,6 +9,15 @@ const js = fs.readdirSync(dir).filter(f => /^\d\d[a-z]?_.*\.js$/.test(f)).sort()
   const seen = {};
   for (const f of fs.readdirSync(dir).filter(f => /^\d\d[a-z]?_.*\.js$/.test(f))) for (const m of fs.readFileSync(path.join(dir, f), 'utf8').matchAll(/^function ([A-Za-z0-9_$]+)\(/gm)) { if (seen[m[1]]) console.warn(`警告：関数 ${m[1]} が ${seen[m[1]]} と ${f} の両方にある`); seen[m[1]] = f; }
 }
+// 構文の誤りがあると、ゲーム全体が開かなくなる。まとめる前に1ファイルずつ確かめて、どこが悪いかを示す
+{
+  const vm = require('vm');
+  let bad = 0;
+  for (const f of fs.readdirSync(dir).filter(f => /^\d\d[a-z]?_.*\.js$/.test(f)).sort()) {
+    try { new vm.Script(fs.readFileSync(path.join(dir, f), 'utf8'), { filename: f }); } catch (e) { bad++; console.error(`構文エラー：${f}：${e.message}\n${String(e.stack || '').split('\n').slice(0, 3).join('\n')}`); }
+  }
+  if (bad) { console.error('index.html は作り直していません'); process.exit(1); }
+}
 const css = fs.readFileSync(path.join(dir, 'style.css'), 'utf8');
 // img/ にある場面の画像（Canvaで生成）を登録する。ファイル名（拡張子なし）がキー
 const imgDir = path.join(__dirname, 'img');

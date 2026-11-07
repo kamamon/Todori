@@ -282,7 +282,7 @@ Object.assign(ACTIONS, {
     drawModal();
   },
   kCloseOpt: d => { const c = G.closing; const step = c.steps[c.view]; c.opt[step] = Object.assign({}, c.opt[step], { [d.k]: +d.v }); drawModal(); },
-  kCloseView: d => { const c = G.closing; c.view = Math.min(+d.i, c.i); drawModal(); const mb = document.querySelector('.modal .mb'); if (mb) mb.scrollTop = 0; },
+  kCloseView: d => { const c = G.closing; c.view = Math.min(+d.i, c.i); drawModal(); modalTop(); },
   kCloseNext: () => {
     const c = G.closing;
     const step = c.steps[c.i];
@@ -294,6 +294,7 @@ Object.assign(ACTIONS, {
     drawModal();
     const mb = document.querySelector('.modal .mb');
     if (mb) mb.scrollTop = 0;
+    modalTop();
     render();
     scheduleSave();
   },

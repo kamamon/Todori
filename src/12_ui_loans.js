@@ -463,7 +463,7 @@ function refreshEval() {
 Object.assign(ACTIONS, {
   pickApp: d => { UI.appId = d.id; UI.appShowTrue = false; UI.appOpen = true; UI.guideSel = null; render(); if (window.innerWidth < 960) window.scrollTo({ top: 0 }); },
   appBack: () => { UI.appOpen = false; render(); },
-  pfGap: () => { UI.tab = 'portfolio'; UI.pfFilter = 'gap'; UI.pfPage = 0; render(); window.scrollTo({ top: 0 }); },
+  pfGap: () => { UI.tab = 'portfolio'; UI.pfFilter = 'gap'; UI.pfPage = 0; render(); scrollToMain(); },
   appFilter: d => { UI.appFilter = d.v; UI.appId = null; render(); },
   appView: d => { UI.appView = d.v; render(); },
   invest: d => {
