@@ -44,7 +44,61 @@ function panel(title, body, opt = {}) {
 function kv(rows) { return `<dl class="kv">${rows.filter(Boolean).map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>`; }
 
 /* ---------- 描画 ---------- */
+/* 描き直しても、横に滑らせた位置（主要な数字・タブ・表・地図）とダイアログの位置を保つ */
+const KEEP_SCROLL = ['.strip', '.tabs', '.subtabs', '.jmap-wrap', '.tbl-wrap', '.unitbar'];
+function keepScrollSave() {
+  const v = {};
+  for (const sel of KEEP_SCROLL) document.querySelectorAll('#app ' + sel).forEach((el, i) => { if (el.scrollLeft || el.scrollTop) v[sel + '#' + i] = [el.scrollLeft, el.scrollTop]; });
+  return { tab: UI.tab, v };
+}
+function keepScrollRestore(k) {
+  for (const sel of KEEP_SCROLL) {
+    if (k.tab !== UI.tab && sel !== '.strip' && sel !== '.tabs') continue;
+    document.querySelectorAll('#app ' + sel).forEach((el, i) => { const v = k.v[sel + '#' + i]; if (v) { el.scrollLeft = v[0]; el.scrollTop = v[1]; } });
+  }
+}
+/* 横に滑らせる帯の中で、選んでいるもの（いまのタブ・小見出し）が隠れていたら見える所まで動かす */
+function revealPicked(bar, picked) {
+  if (!bar || !picked || bar.scrollWidth <= bar.clientWidth + 1) return;
+  const r = picked.getBoundingClientRect(), rb = bar.getBoundingClientRect();
+  if (r.left < rb.left) bar.scrollLeft -= rb.left - r.left + 24;
+  else if (r.right > rb.right) bar.scrollLeft += r.right - rb.right + 24;
+}
+/* 最後の列にボタンや入力欄がある表は、スマホでは1行ずつのカードに組み替える（CSS の .t.stk）。
+ * そのために、各セルに列の見出しを data-l として付けておく */
+function markStackTables(root) {
+  if (!root) return;
+  root.querySelectorAll('.tbl-wrap > table.t:not(.jtable)').forEach(t => {
+    const body = t.tBodies[0];
+    if (!body) return;
+    const rows = [...body.rows];
+    const act = c => c && c.querySelector('button, select, input');
+    if (!rows.some(r => r.cells.length > 2 && act(r.cells[r.cells.length - 1]))) return;
+    if (rows.some(r => [...r.cells].some(c => c.rowSpan > 1))) return;
+    const labels = [];
+    const head = t.tHead && t.tHead.rows[0];
+    if (head) for (const th of head.cells) for (let k = 0; k < (th.colSpan || 1); k++) labels.push(th.textContent.trim());
+    for (const r of rows) { let i = 0; for (const c of r.cells) { if (labels[i] && !c.hasAttribute('data-l')) c.setAttribute('data-l', labels[i]); i += c.colSpan || 1; } }
+    t.classList.add('stk');
+    t.parentElement.classList.add('stk-wrap');
+  });
+}
 function render() {
+  const k = keepScrollSave();
+  renderApp();
+  markStackTables($('#app'));
+  keepScrollRestore(k);
+  revealPicked($('#app .tabs'), $('#app .tabs [aria-current="page"]'));
+  document.querySelectorAll('#app .subtabs').forEach(b => revealPicked(b, b.querySelector('[aria-pressed="true"]')));
+}
+/* 画面を切り替えたあとの位置。スマホでタブの帯より下まで読み進めていたときは、帯のすぐ下（新しい画面の先頭）へ */
+function scrollToMain() {
+  const body = $('#app .body'), tabs = $('#app .tabs');
+  if (!body || !tabs || window.innerWidth > 760) { window.scrollTo({ top: 0 }); return; }
+  const y = body.getBoundingClientRect().top + window.scrollY - (parseFloat(getComputedStyle(tabs).top) || 0);
+  window.scrollTo({ top: window.scrollY > y ? y : 0 });
+}
+function renderApp() {
   const app = $('#app');
   document.body.classList.toggle('ingame', !!G);
   if (!G) { app.innerHTML = renderStart(); return; }
@@ -127,7 +181,7 @@ function renderTabs() {
 }
 
 /* ---------- モーダル ---------- */
-function showModal(name, args = {}) { hideTip(); UI.modal = { name, args }; drawModal(); }
+function showModal(name, args = {}) { hideTip(); UI.modal = { name, args }; UI.mDrawn = null; drawModal(); }
 function closeModal(force) {
   if (!UI.modal) return;
   const m = MODALS[UI.modal.name];
@@ -145,16 +199,27 @@ function closeModal(force) {
 }
 function drawModal() {
   const root = $('#modal-root');
-  if (!UI.modal) { root.innerHTML = ''; document.body.style.overflow = ''; UI.mstack = []; return; }
+  if (!UI.modal) { root.innerHTML = ''; document.body.style.overflow = ''; UI.mstack = []; UI.mDrawn = null; return; }
   const fn = MODALS[UI.modal.name];
   let html;
   try { html = fn(UI.modal.args); } catch (err) { console.error(err); html = `<div class="modal narrow"><div class="mb">表示エラー：${esc(err.message)}</div><div class="mf">${btn('閉じる', 'closeModal', { force: 1 })}</div></div>`; }
+  // 同じダイアログを描き直すときは、読んでいた位置を保つ（ボタンを押すたびに先頭へ戻らないように）
+  const old = root.querySelector('.modal');
+  const keepY = old && UI.mDrawn === UI.modal.name ? old.scrollTop : 0;
+  const keepX = old && UI.mDrawn === UI.modal.name ? [...old.querySelectorAll('.tbl-wrap')].map(w => w.scrollLeft) : [];
   root.innerHTML = `<div class="scrim" data-act="scrim">${html}</div>`;
+  UI.mDrawn = UI.modal.name;
+  markStackTables(root);
+  const nm = root.querySelector('.modal');
+  if (nm && keepY) nm.scrollTop = keepY;
+  if (nm && keepX.length) nm.querySelectorAll('.tbl-wrap').forEach((w, i) => { if (keepX[i]) w.scrollLeft = keepX[i]; });
   document.body.style.overflow = 'hidden';
   const f = root.querySelector('[data-autofocus]') || root.querySelector('.mf .btn.primary') || root.querySelector('.modal button');
   if (f) f.focus({ preventScroll: true });
   if (UI.stampAnim) afterRender();
 }
+/* 次の段階へ進んだダイアログは先頭から読む */
+function modalTop() { const m = document.querySelector('#modal-root .modal'); if (m) m.scrollTop = 0; }
 function modalFrame(title, body, foot, opt = {}) {
   return `<div class="modal ${opt.size || ''}" role="dialog" aria-modal="true" aria-label="${esc(opt.label || title.replace(/<[^>]+>/g, ''))}">
     <div class="mh"><div><h2>${title}</h2>${opt.sub ? `<div class="sub">${opt.sub}</div>` : ''}</div>${opt.noClose ? '' : '<button type="button" class="xbtn" data-act="closeModal" aria-label="閉じる">×</button>'}</div>
@@ -324,8 +389,8 @@ function runAdvance() {
 
 /* ---------- 共通アクション ---------- */
 Object.assign(ACTIONS, {
-  tab: d => { UI.tab = d.tab; render(); window.scrollTo({ top: 0 }); },
-  go: d => { UI.tab = d.tab; if (d.app) UI.appId = d.app; if (d.dist) UI.cityD = d.dist; if (d.fin) UI.finTab = d.fin; UI.modal = null; drawModal(); render(); window.scrollTo({ top: 0 }); },
+  tab: d => { UI.tab = d.tab; render(); scrollToMain(); },
+  go: d => { UI.tab = d.tab; if (d.app) UI.appId = d.app; if (d.dist) UI.cityD = d.dist; if (d.fin) UI.finTab = d.fin; UI.modal = null; drawModal(); render(); scrollToMain(); },
   advance: () => (isG() ? gyRequestAdvance() : isK() ? ksRequestAdvance() : requestAdvance()),
   advanceNow: () => runAdvance(),
   closeModal: d => closeModal(!!(d && d.force)),

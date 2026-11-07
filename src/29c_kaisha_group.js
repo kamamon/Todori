@@ -31,6 +31,129 @@ function ksSubs(root = ksRoot()) { return root && root.group ? root.group.subs.f
 function ksSubAll(root = ksRoot()) { return root && root.group ? root.group.subs : []; }
 function ksSubById(id, root = ksRoot()) { return ksSubAll(root).find(s => s.id === id) || null; }
 function ksGroupOn(root = ksRoot()) { return ksSubs(root).length > 0; }
+/* 連結子会社だけ（持分法の関連会社を除く） */
+function ksCSubs(root = ksRoot()) { return ksSubs(root).filter(s => !s.aff); }
+/* 記録の直接の持ち主（'root' か会社の id）・持ち主の会社の状態 */
+function ksRecOwnerId(s) { return s.parent || 'root'; }
+function ksOwnerSt(s, root = ksRoot()) {
+  if (!s.parent || s.parent === 'root') return root;
+  const o = ksSubById(s.parent, root);
+  return o && !o.gone ? o.st : null;
+}
+function ksOwnerName(s, root = ksRoot()) { const st = ksOwnerSt(s, root); return st ? st.coName : ''; }
+/* 持ち主の名前（グループから外れた記録にも使える） */
+function ksOwnerNameOf(s, root = ksRoot()) { if (!s.parent || s.parent === 'root') return root.coName; const o = ksSubById(s.parent, root); return o ? o.name : ''; }
+function ksSubsOf(ownerId, root = ksRoot()) { return ksSubs(root).filter(s => ksRecOwnerId(s) === ownerId); }
+function ksDescendants(id, root = ksRoot()) {
+  const out = [];
+  const walk = pid => { for (const x of ksSubs(root)) if (x.parent === pid && !out.includes(x)) { out.push(x); walk(x.id); } };
+  walk(id);
+  return out;
+}
+/* 親会社から見た実質の持分（持分の掛け算） */
+function ksEffOwn(s, root = ksRoot()) {
+  let f = s.own, p = s.parent, n = 0;
+  while (p && p !== 'root' && n++ < 8) { const o = ksSubById(p, root); if (!o) break; f *= o.own; p = o.parent; }
+  return f;
+}
+function ksRecDepth(s, root = ksRoot()) {
+  let d = 0, p = s.parent;
+  while (p && p !== 'root' && d < 8) { const o = ksSubById(p, root); if (!o) break; d++; p = o.parent; }
+  return d;
+}
+/* 持ち主の個別の帳簿の、この会社の株式の額（関係会社株式） */
+function ksRecInv(s) { if (s.inv === undefined) s.inv = Math.round(s.own * (s.eq0 + s.adds) + (s.gw || 0) - (s.negGw || 0)); return s.inv; }
+/* 以前の版のセーブデータの記録を、今の形にそろえる */
+function ksGroupMigrate(root = G) {
+  if (!root || !root.group) return;
+  const g = root.group;
+  g.cadj = g.cadj || []; g.capAdj = g.capAdj || []; g.mergers = g.mergers || [];
+  for (const s of g.subs) {
+    ksRecInv(s);
+    if (s.aff === undefined) s.aff = false;
+    // 負ののれんは、連結だけの修正（g.cadj）で特別利益にする
+    if (s.negGw && !s.negDone && !g.cons[fyOf(s.since)]) { g.cadj.push({ fy: fyOf(s.since), m: s.since, owner: ksRecOwnerId(s), id: s.id, t: '負ののれん発生益', why: `${s.name}の純資産より安く買えた差は、買った期の特別利益`, pl: { exg: s.negGw } }); s.negDone = true; }
+  }
+}
+
+/* ---------- いまの時点の数字（取引のときの計算に使う） ---------- */
+/* 今月すでに記帳した損益（月の途中の分は、子会社の月次の締めの後に連結に入る） */
+function ksMonthPLNow() { return sum(Object.entries(G.flow || {}), ([k, v]) => (KS_ACCT[k] && KS_ACCT[k].t === 'R' ? v : KS_ACCT[k] && KS_ACCT[k].t === 'X' ? -v : 0)); }
+function ksIcDivTotTo(s, fy, toM) {
+  const o = ((ksRoot().group.ic || {})[fy] || {})[s.id];
+  if (!o) return 0;
+  if (o.divTotM) return sum(Object.entries(o.divTotM).filter(([mm]) => +mm <= toM), ([, v]) => v);
+  return o.divTot || 0;
+}
+/* 今期の先月までの損益（換算後）と、月ごとの純利益 */
+function ksRecSnap(s) {
+  const root = ksRoot();
+  const fy = fyOf(root.m), toM = root.m - 1;
+  const pl = ksGroupSubPL(s, fy, toM);
+  const kf = s.cc && s.cc !== 'jp' ? mm => ksSubK(s, mm) : null;
+  const niM = {};
+  for (const x of s.st.months) if (fyOf(x.m) === fy && x.m >= s.since && x.m <= toM) niM[x.m] = ksPLNi(ksPLLines(ksEntPLAcct(s.st, fy, x.m, x.m, kf)));
+  return { fy, toM, pl, niM, ni: ksPLNi(pl) };
+}
+/* 記録の今の数字：NAh＝取得のときのレートの純資産（eq0＋adds＋取得後の利益）、NAtr＝今のレートの純資産、gwLeft＝のれんの残り */
+function ksRecNow(s) {
+  const root = ksRoot();
+  const S = ksRecSnap(s);
+  const reTr = s.reTr + S.ni - ksIcDivTotTo(s, S.fy, S.toM);
+  const eqL = ksWith(s.st, () => ksEquity() - ksMonthPLNow());
+  const amort = ksGwAmortFY(s, S.fy, S.toM);
+  return { S, reTr, NAh: Math.round(s.eq0 + s.adds + reTr), NAtr: Math.round(eqL * ksSubK(s, root.m)), amort, gwLeft: Math.round((s.gw || 0) - (s.gwCum || 0) - amort) };
+}
+/* 会社とその下の会社を合わせた、株主に帰属する純資産（取得のときのレート） */
+function ksRecEh(c, root = ksRoot()) {
+  let E = ksRecNow(c).NAh;
+  for (const x of ksSubsOf(c.id, root)) {
+    const X = ksRecNow(x);
+    E += (x.aff ? x.own * X.NAh : x.own * ksRecEh(x, root)) + X.gwLeft - ksRecInv(x);
+  }
+  return E;
+}
+/* 売却・破産のときの、連結の損益の修正（個別の帳簿価額 − 連結の帳簿価額） */
+function ksRecSaleAdj(s) {
+  const N = ksRecNow(s);
+  return Math.round(ksRecInv(s) - (s.own * (s.aff ? N.NAh : ksRecEh(s)) + N.gwLeft));
+}
+/* 記録を閉じる（売却・破産・合併）。今期の先月までの損益を残す */
+function ksRecClose(s, why, o = {}) {
+  const root = ksRoot();
+  const S = ksRecSnap(s);
+  s.reTr += S.ni - ksIcDivTotTo(s, S.fy, S.toM);
+  const amort = ksGwAmortFY(s, S.fy, S.toM);
+  s.gwCum += amort;
+  s.out = { why, m: root.m, fy: S.fy, last: S.toM, price: o.price || 0, pl: S.pl, niM: S.niM, adj: o.adj || 0, amort, reTr: s.reTr, into: o.into || null };
+  s.gone = true;
+  s.goneM = root.m;
+}
+/* 持分が変わるとき：先月までの記録を別に残し（同じ会社の前の期間）、この記録は今月からの新しい期間にする */
+function ksRecReopen(s, why) {
+  const root = ksRoot(), g = root.group;
+  const S = ksRecSnap(s);
+  const amort = ksGwAmortFY(s, S.fy, S.toM);
+  const old = Object.assign({}, s, { id: `${s.id}@${root.m}`, base: s.base || s.id, st: null, gone: true, goneM: root.m });
+  old.reTr = s.reTr + S.ni - ksIcDivTotTo(s, S.fy, S.toM);
+  old.gwCum = s.gwCum + amort;
+  old.out = { why, m: root.m, fy: S.fy, last: S.toM, pl: S.pl, niM: S.niM, amort, reTr: old.reTr, adj: 0 };
+  const ic = g.ic[S.fy];
+  if (ic && ic[s.id]) { ic[old.id] = ic[s.id]; delete ic[s.id]; }
+  g.subs.splice(g.subs.indexOf(s), 0, old);
+  return { old, gwRem: Math.max(0, Math.round(s.gw - old.gwCum)), gwMonths: Math.max(0, (s.gwFrom ?? s.since) + Math.round((s.gwLife || 10) * 12) - root.m) };
+}
+/* 親会社からの貸付金を清算する（子会社の現預金で返し、足りない分は新しい株主が肩代わりして返す） */
+function ksGroupLoanSettle(s) {
+  const root = ksRoot(), g = root.group;
+  if (ksIcLoanBal(s.id, root) <= 0) return;
+  ksGroupRepay(s, ksIcLoanBal(s.id, root), true);
+  const rem = ksIcLoanBal(s.id, root);
+  if (rem > 0) {
+    ksWith(root, () => ksPost('icRecv', [['cash', rem, 0], ['icLoan', 0, rem]], { u: 'HQ', cf: 'fin', desc: `${s.name}への貸付金の回収（新しい株主による返済）` }));
+    g.loans = (g.loans || []).filter(L => L.sub !== s.id);
+  }
+}
 /* 純粋持株会社（自分の事業がなく、子会社の株式を持って経営を指導する） */
 function ksIsPureHD(st = G) { return !!(st && st.group && st.group.hd && !(st.units || []).some(u => !u.closedM)); }
 function ksGroupInit() {
@@ -42,7 +165,7 @@ function ksViewEntity(id) {
   const root = ksRoot();
   if (!id || id === 'root') { G = root; KS_ROOT = null; return true; }
   const s = ksSubById(id, root);
-  if (!s || s.gone) return false;
+  if (!s || s.gone || s.aff) return false;
   KS_ROOT = root;
   G = s.st;
   return true;
@@ -99,9 +222,14 @@ function ksCityBase() { return typeof CITY_NAME !== 'undefined' ? CITY_NAME.repl
 function ksSubNameFor(type, cc) {
   const S = KS_TYPES[type];
   const c = S ? KS_CO_CORE[S.eng] : null;
-  const base = c ? pick(c.filter(x => x !== 'ホールディングス')) : '産業';
-  if (cc && cc !== 'jp' && typeof KS_COUNTRIES !== 'undefined' && KS_COUNTRIES[cc]) return `${ksCityBase()}${base}${KS_COUNTRIES[cc].n}`;
-  return `${ksCityBase()}${base}株式会社`;
+  const cands = c ? c.filter(x => x !== 'ホールディングス') : ['産業'];
+  const root = ksRoot();
+  const used = new Set(root && root.group ? [root.coName, ...root.group.subs.map(x => x.name)] : []);
+  const mk = b => (cc && cc !== 'jp' && typeof KS_COUNTRIES !== 'undefined' && KS_COUNTRIES[cc] ? `${ksCityBase()}${b}${KS_COUNTRIES[cc].n}` : `${ksCityBase()}${b}株式会社`);
+  // グループの中で同じ名前にならないようにする
+  for (const b of [pick(cands), ...cands]) if (!used.has(mk(b))) return mk(b);
+  for (const x of ['第二', '東日本', '西日本', '北', '南', 'ネクスト']) if (!used.has(mk(cands[0] + x))) return mk(`${x}${cands[0]}`);
+  return mk(cands[0] + (root && root.group ? root.group.seq : ''));
 }
 /* 新しい事業を子会社の中で始める（G は子会社）。立ち上げの設備を買い、事業を加える */
 function ksSubStartUnit(type, sc) {
@@ -139,27 +267,37 @@ function ksSubStartPlan(type, sc) {
   finally { G.rs = snap.rs; G.seq = snap.seq; G.assets.length = snap.nA; }
 }
 
-/* ---------- 子会社を設立する ---------- */
-/* o: { type, sc, own (0.5〜1), cash（親会社の出資額）, capital, name, cc, pref } */
+/* ---------- 子会社・関連会社を設立する ---------- */
+/* o: { type, sc, own (0.2〜1。50%以下は持分法の関連会社), cash（出資額）, capital, name, cc, pref, owner（出資する会社：'root' か国内の子会社の id）, partner } */
 function ksGroupFound(o) {
   ksGroupInit();
-  const root = G;
+  const root = ksRoot();
   const g = root.group;
-  const own = clamp(+o.own || 1, 0.51, 1);
+  ksGroupMigrate(root);
+  const ownerId = o.owner && o.owner !== 'root' ? o.owner : 'root';
+  const os = ownerId === 'root' ? null : ksSubById(ownerId, root);
+  if (os && (os.gone || os.aff || (os.cc && os.cc !== 'jp'))) return { ok: false, why: '出資できるのは、親会社か国内の連結子会社です' };
+  const ownerSt = os ? os.st : root;
+  const own = clamp(+o.own || 1, 0.2, 1);
+  const aff = own <= 0.5;
   const invest = Math.round(o.cash);
-  if (invest <= 0 || ksB('cash') < invest) return { ok: false, why: '出資するお金が足りません' };
+  if (invest <= 0 || ksWith(ownerSt, () => ksB('cash')) < invest) return { ok: false, why: '出資するお金が足りません' };
   const total = Math.round(invest / own); // 合弁なら、相手の会社も持分に応じて出資する
   const id = 'S' + (++g.seq);
   const cc = o.cc || 'jp';
   const fx0 = cc === 'jp' ? 1 : ksFxNow(ksCurOf(cc), root.eco);
-  // 海外子会社の帳簿は、設立のときのレートで円に直した現地通貨で記帳する（同じ額なので換算の差は出ない）
+  // 海外の会社の帳簿は、設立のときのレートで円に直した現地通貨で記帳する（同じ額なので換算の差は出ない）
   const st = ksFreshCompany({ coName: o.name || ksSubNameFor(o.type, cc), cash: total, capital: Math.min(o.capital || total, total), seed: (root.rs ^ (g.seq * 40503)) | 0, cc, pref: o.pref, subId: id, execPay: clamp(Math.round(o.cash / 400 / 1e4) * 1e4, 40e4, 150e4) });
+  st.parentName = ownerSt.coName;
   let unit = null;
   if (o.type) ksWith(st, () => { unit = ksSubStartUnit(o.type, o.sc).u; });
-  ksPost('subFound', [['subShares', invest, 0], ['cash', 0, invest]], { u: 'HQ', cf: 'capex', desc: `子会社の設立（${st.coName}）への出資` });
-  const s = { id, st, own, kind: own < 1 ? 'jv' : 'new', since: root.m, eq0: total, adds: 0, reTr: 0, gw: 0, gwCum: 0, cc, fx0, fee: own < 1 ? 0 : 0.01, payout: 0.3, auto: true, name: st.coName, partner: own < 1 ? (o.partner || `${pick(CO_PREFIX)}${pick(['商事', '物産', '産業'])}`) : null };
+  ksWith(ownerSt, () => ksPost('subFound', [['subShares', invest, 0], ['cash', 0, invest]], { u: 'HQ', cf: 'capex', desc: `${aff ? '関連会社' : '子会社'}の設立（${st.coName}）への出資` }));
+  const partner = own < 1 ? (o.partner || `${pick(CO_PREFIX)}${pick(['商事', '物産', '産業'])}`) : null;
+  const s = { id, st, own, kind: aff ? 'aff' : own < 1 ? 'jv' : 'new', since: root.m, eq0: total, adds: 0, reTr: 0, gw: 0, gwCum: 0, cc, fx0, fee: own < 1 ? 0 : 0.01, payout: 0.3, auto: true, name: st.coName, partner, inv: invest, aff };
+  if (ownerId !== 'root') s.parent = ownerId;
   g.subs.push(s);
-  ksNews(`${st.coName}を設立しました（出資 ${fmtYen(invest)}${own < 1 ? `・持分${Math.round(own * 100)}%、残りは${s.partner}が出資する合弁会社` : '・100%子会社'}）${unit ? `。${ksS(unit).name}を始めます` : ''}`, 'good');
+  const by = ownerId === 'root' ? '' : `${ownerSt.coName}が出資して、孫会社として`;
+  ksWith(root, () => ksNews(`${by}${st.coName}を設立しました（出資 ${fmtYen(invest)}${aff ? `・持分${Math.round(own * 100)}%。経営は${partner}が主導し、持分法の関連会社になります` : own < 1 ? `・持分${Math.round(own * 100)}%、残りは${partner}が出資する合弁会社` : '・100%子会社'}）${unit ? `。${ksS(unit).name}を始めます` : ''}`, 'good'));
   return { ok: true, s };
 }
 
@@ -419,29 +557,33 @@ function ksGroupDD(t) {
   t.ddFee = fee;
   return t;
 }
-/* 株式を買う。own：取得する持分（0.51〜1） */
+/* 株式を買う。own：取得する持分（0.2〜1。50%以下は持分法の関連会社） */
 function ksGroupBuy(t, own) {
   ksGroupInit();
   const root = G, g = root.group;
+  ksGroupMigrate(root);
   if (!t.st) return { ok: false, why: '先にデューデリジェンスが必要です' };
-  own = clamp(+own || 1, 0.51, 1);
-  const price = niceAmount(t.q.price100 * own * (own >= 0.67 ? 1 : 0.97));
+  own = clamp(+own || 1, 0.2, 1);
+  const aff = own <= 0.5;
+  // 支配権のつかない少ない持分は、少し安く買える
+  const price = niceAmount(t.q.price100 * own * (own >= 0.67 ? 1 : own > 0.5 ? 0.97 : 0.9));
   if (ksB('cash') < price) return { ok: false, why: '買収の資金が足りません' };
   const id = 'S' + (++g.seq);
   const st = t.st;
   st.isSub = true; st.subId = id; st.parentName = root.coName;
   // 取得の時点の純資産（今月すでに記帳した損益は、取得後の損益として連結に入るので除く）
-  const eq = Math.round(ksWith(st, () => ksEquity() - sum(Object.entries(G.flow || {}), ([k, v]) => (KS_ACCT[k].t === 'R' ? v : KS_ACCT[k].t === 'X' ? -v : 0))));
-  ksPost('subBuy', [['subShares', price, 0], ['cash', 0, price]], { u: 'HQ', cf: 'capex', desc: `株式の取得（${t.co}を子会社に）` });
+  const eq = Math.round(ksWith(st, () => ksEquity() - ksMonthPLNow()));
+  ksPost('subBuy', [['subShares', price, 0], ['cash', 0, price]], { u: 'HQ', cf: 'capex', desc: `株式の取得（${t.co}を${aff ? '関連会社' : '子会社'}に）` });
   const gw = Math.max(0, price - own * eq), negGw = Math.max(0, own * eq - price);
-  const s = { id, st, own, kind: 'acq', since: root.m, eq0: eq, adds: 0, reTr: 0, gw: Math.round(gw), negGw: Math.round(negGw), gwCum: 0, cc: 'jp', fx0: 1, fee: 0.005, payout: 0.3, auto: true, name: st.coName, price, partner: own < 1 ? '旧株主（創業家）' : null };
+  const s = { id, st, own, kind: aff ? 'aff' : 'acq', since: root.m, eq0: eq, adds: 0, reTr: 0, gw: Math.round(gw), negGw: Math.round(negGw), negDone: true, gwCum: 0, cc: 'jp', fx0: 1, fee: aff ? 0 : 0.005, payout: 0.3, auto: true, name: st.coName, price, partner: own < 1 ? '旧株主（創業家）' : null, inv: price, aff };
   g.subs.push(s);
+  if (negGw) g.cadj.push({ fy: fyOf(root.m), m: root.m, owner: 'root', id, t: aff ? '持分法による投資利益（負ののれん相当額）' : '負ののれん発生益', why: `${st.coName}の純資産の持分より安く買えた差は、買った期の${aff ? '持分法による投資利益' : '特別利益'}`, pl: aff ? { noi: Math.round(negGw) } : { exg: Math.round(negGw) } });
   g.targets = (g.targets || []).filter(x => x !== t);
-  ksNews(`${t.co}の株式の${Math.round(own * 100)}%を${fmtYen(price)}で取得し、子会社にしました（純資産 ${fmtYen(eq)}・のれん ${fmtYen(gw)}${negGw ? `・負ののれん ${fmtYen(negGw)}` : ''}）`, 'good');
+  ksNews(`${t.co}の株式の${Math.round(own * 100)}%を${fmtYen(price)}で取得し、${aff ? '持分法の関連会社' : '子会社'}にしました（純資産 ${fmtYen(eq)}・${aff ? '投資差額' : 'のれん'} ${fmtYen(gw)}${negGw ? `・負ののれん ${fmtYen(negGw)}` : ''}）`, 'good');
   return { ok: true, s, price, gw };
 }
 
-/* ---------- 子会社の株式を売る ---------- */
+/* ---------- 子会社・関連会社の株式を売る ---------- */
 function ksSubValue(s) {
   const L = ksWith(s.st, ksLastFY);
   const bfs = L ? ksWith(s.st, () => ksToBankFS(L)) : null;
@@ -450,66 +592,63 @@ function ksSubValue(s) {
   return Math.round(Math.max(eq * 0.9, eq + opi * 3) * ksSubK(s, ksRoot().m));
 }
 function ksGroupSell(id) {
-  const root = G, g = root.group;
+  const root = ksRoot(), g = root.group;
+  ksGroupMigrate(root);
   const s = ksSubById(id, root);
-  if (!s || s.gone) return { ok: false, why: '子会社がありません' };
+  if (!s || s.gone) return { ok: false, why: '会社がありません' };
   if (root.closing) return { ok: false, why: '決算整理の途中です' };
+  const seller = ksOwnerSt(s, root);
+  if (!seller) return { ok: false, why: '株式を持つ会社がありません' };
   const price = niceAmount(ksSubValue(s) * s.own);
-  const carry = Math.round(s.own * (s.eq0 + s.adds) + s.gw);
-  const icl = Math.round(sum((g.loans || []).filter(L => L.sub === id), L => L.bal));
+  const carry = ksRecInv(s);
+  const adj = ksRecSaleAdj(s);
+  const tree = [s, ...ksDescendants(s.id, root)];
   // 親会社からの貸付金は、売るときに返してもらう
-  if (icl > 0) ksGroupRepay(s, icl, true);
+  for (const x of tree) ksGroupLoanSettle(x);
   const lines = [['cash', price, 0], ['subShares', 0, carry]];
   if (price > carry) lines.push(['subGain', 0, price - carry]); else if (price < carry) lines.push(['subLoss', carry - price, 0]);
-  ksPost('subSell', lines, { u: 'HQ', cf: 'capex', desc: `子会社の株式の売却（${s.name}）` });
-  ksGroupDeconsolidate(s, 'sold', price);
-  ksNews(`${s.name}の株式を${fmtYen(price)}で売却しました（帳簿価額 ${fmtYen(carry)}・売却${price >= carry ? '益' : '損'} ${fmtYen(Math.abs(price - carry))}）`, price >= carry ? 'good' : 'bad');
+  ksWith(seller, () => ksPost('subSell', lines, { u: 'HQ', cf: 'capex', desc: `${s.aff ? '関連会社' : '子会社'}の株式の売却（${s.name}）` }));
+  for (const x of tree) ksRecClose(x, x === s ? 'sold' : 'with', x === s ? { price, adj } : {});
+  const by = seller === root ? '' : `（${seller.coName}が持っていた株式）`;
+  ksWith(root, () => ksNews(`${s.name}の株式${by}を${fmtYen(price)}で売却しました（帳簿価額 ${fmtYen(carry)}・売却${price >= carry ? '益' : '損'} ${fmtYen(Math.abs(price - carry))}）${tree.length > 1 ? `。${tree.slice(1).map(x => x.name).join('・')}もグループから外れます` : ''}`, price >= carry ? 'good' : 'bad'));
   return { ok: true, price, carry };
-}
-/* 連結から外す（売却・破産）。連結の利益剰余金との差を、売却損益の連結修正として記録する */
-function ksGroupDeconsolidate(s, why, price) {
-  const root = ksRoot();
-  const fy = fyOf(root.m);
-  const pl = ksGroupSubPL(s, fy, root.m);
-  const ni = ksPLNi(pl);
-  s.reTr += ni - ksIcDivTot(s, fy);
-  const amort = ksGwAmortFY(s, fy, root.m);
-  s.gwCum += amort;
-  s.out = { why, m: root.m, fy, price, pl, adj: Math.round(-s.own * s.reTr + s.gwCum), amort, reTr: s.reTr };
-  s.gone = true;
-  s.goneM = root.m;
 }
 
 /* ---------- 親子の取引（増資・貸付・返済） ---------- */
 function ksGroupInject(id, amt) {
-  const root = G, s = ksSubById(id, root);
-  if (!s || s.gone) return { ok: false, why: '子会社がありません' };
+  const root = ksRoot(), s = ksSubById(id, root);
+  if (!s || s.gone) return { ok: false, why: '会社がありません' };
+  const owner = ksOwnerSt(s, root);
+  if (!owner) return { ok: false, why: '株式を持つ会社がありません' };
   amt = Math.round(amt);
-  if (ksB('cash') < amt) return { ok: false, why: '現預金が足りません' };
+  if (amt <= 0 || ksWith(owner, () => ksB('cash')) < amt) return { ok: false, why: '現預金が足りません' };
   const total = Math.round(amt / s.own);
   const k = ksSubK(s, root.m);
-  ksPost('subAdd', [['subShares', amt, 0], ['cash', 0, amt]], { u: 'HQ', cf: 'capex', desc: `子会社（${s.name}）の増資の引受け` });
+  ksRecInv(s);
+  ksWith(owner, () => ksPost('subAdd', [['subShares', amt, 0], ['cash', 0, amt]], { u: 'HQ', cf: 'capex', desc: `${s.aff ? '関連会社' : '子会社'}（${s.name}）の増資の引受け` }));
   ksWith(s.st, () => {
     const loc = Math.round(total / k);
     const cap = Math.round(loc / 2);
-    ksPost('capIn', [['cash', loc, 0], ['capital', 0, cap], ['capSurplus', 0, loc - cap]], { u: 'HQ', cf: 'equity', desc: `増資（親会社${s.own < 1 ? 'と合弁の相手' : ''}が引き受け）` });
+    ksPost('capIn', [['cash', loc, 0], ['capital', 0, cap], ['capSurplus', 0, loc - cap]], { u: 'HQ', cf: 'equity', desc: `増資（${owner.coName}${s.own < 1 ? 'とほかの株主' : ''}が引き受け）` });
   });
   s.adds += total;
-  ksNews(`${s.name}に${fmtYen(amt)}を増資しました${s.own < 1 ? `（合弁の相手も持分に応じて${fmtYen(total - amt)}を出資）` : ''}`, 'good');
+  s.inv += amt;
+  ksWith(root, () => ksNews(`${s.name}に${fmtYen(amt)}を増資しました${s.own < 1 ? `（ほかの株主も持分に応じて${fmtYen(total - amt)}を出資）` : ''}`, 'good'));
   return { ok: true };
 }
 function ksGroupLend(id, amt, auto) {
-  const root = G, g = root.group, s = ksSubById(id, root);
+  const root = ksRoot(), g = root.group, s = ksSubById(id, root);
   if (!s || s.gone) return { ok: false, why: '子会社がありません' };
+  if (s.aff) return { ok: false, why: '関連会社には貸し付けません（経営はほかの株主が主導しています）' };
   if (s.cc && s.cc !== 'jp') return { ok: false, why: '海外子会社には、貸付ではなく増資で資金を出します（このゲームでは）' };
   amt = Math.round(amt);
-  if (ksB('cash') < amt) return { ok: false, why: '現預金が足りません' };
+  if (ksWith(root, () => ksB('cash')) < amt) return { ok: false, why: '現預金が足りません' };
   const rate = +(Math.max(0.5, (root.eco.prime || 1.875) + 0.5)).toFixed(2);
-  ksPost('icLend', [['icLoan', amt, 0], ['cash', 0, amt]], { u: 'HQ', cf: 'fin', desc: `子会社（${s.name}）への貸付` });
+  ksWith(root, () => ksPost('icLend', [['icLoan', amt, 0], ['cash', 0, amt]], { u: 'HQ', cf: 'fin', desc: `子会社（${s.name}）への貸付` }));
   ksWith(s.st, () => ksPost('icBorrow', [['cash', amt, 0], ['icDebt', 0, amt]], { u: 'HQ', cf: 'borrow', desc: '親会社からの借入' }));
   g.loans = g.loans || [];
   g.loans.push({ sub: id, bal: amt, rate, m: root.m, auto: !!auto });
-  if (!auto) ksNews(`${s.name}に${fmtYen(amt)}を貸し付けました（年${rate}%）`, 'info');
+  if (!auto) ksWith(root, () => ksNews(`${s.name}に${fmtYen(amt)}を貸し付けました（年${rate}%）`, 'info'));
   return { ok: true, rate };
 }
 function ksGroupRepay(s, amt, quiet) {
@@ -533,43 +672,56 @@ function ksGroupRepay(s, amt, quiet) {
 }
 function ksIcLoanBal(id, root = ksRoot()) { return Math.round(sum(((root.group || {}).loans || []).filter(L => L.sub === id), L => L.bal)); }
 
-/* ---------- 毎月：親子の取引（親会社の月次の前に記帳する） ---------- */
+/* ---------- 毎月：グループの中の取引（親会社の月次の前に記帳する） ---------- */
 function ksIcRec(fy, id) {
   const ic = ksRoot().group.ic;
   const o = ic[fy] || (ic[fy] = {});
-  return o[id] || (o[id] = { feeS: 0, feeN: 0, feeX: 0, int: 0, div: 0, divTot: 0 });
+  const r = o[id] || (o[id] = { feeS: 0, feeN: 0, feeX: 0, int: 0, div: 0, divTot: 0 });
+  r.divM = r.divM || {}; r.divTotM = r.divTotM || {};
+  return r;
 }
 function ksIcDivTot(s, fy) { const o = ((ksRoot().group.ic || {})[fy] || {})[s.id]; return o ? o.divTot : 0; }
+/* 受取配当等の益金不算入の区分を、受け取った会社に記録する */
+function ksDivTaxRec(ownerSt, s, fy, recv) {
+  const box = ownerSt.group ? ownerSt.group.divFY : (ownerSt.divFY = ownerSt.divFY || {});
+  const d = box[fy] || (box[fy] = { full: 0, rel: 0, other: 0, small: 0, foreign: 0 });
+  if (s.cc && s.cc !== 'jp') { if (s.own >= 0.25) d.foreign += recv; else d.other += recv; }
+  else if (s.own >= 0.9999) d.full += recv; else if (s.own > 1 / 3) d.rel += recv; else if (s.own > 0.05) d.other += recv; else d.small += recv;
+}
 function ksGroupPre() {
   const root = G, g = root.group;
+  ksGroupMigrate(root);
   const m = root.m, fy = fyOf(m), mo = calMonth(m);
   g.fx[m] = { usd: root.eco.fx || 148, eur: root.eco.eur || 160 };
   for (const s of ksSubs(root)) {
     const st = s.st;
     if (st.over) continue;
+    const owner = ksOwnerSt(s, root);
+    if (!owner || owner.over) continue;
     const k = ksSubK(s, m);
     const rec = ksIcRec(fy, s.id);
-    // 経営指導料：先月の売上に料率を掛けて、毎月受け取る
+    const ownerHD = ksIsPureHD(owner);
+    // 経営指導料：先月の売上に料率を掛けて、毎月、直接の親会社が受け取る（関連会社からは受け取らない）
     const last = st.months[st.months.length - 1];
     const base = last && last.flow ? last.flow.sales || 0 : 0;
-    const feeL = Math.round(base * (s.fee || 0));
+    const feeL = s.aff ? 0 : Math.round(base * (s.fee || 0));
     if (feeL > 0 && ksWith(st, () => ksB('cash')) > feeL) {
       const fee = Math.round(feeL * k);
-      const acct = ksIsPureHD(root) ? 'sales' : 'feeInc';
-      ksWith(st, () => ksPost('icFee', [['feeExp', feeL, 0], ['cash', 0, feeL]], { u: 'HQ', cf: 'exp', desc: '親会社への経営指導料' }));
-      ksPost('icFee', [['cash', fee, 0], [acct, 0, fee]], { u: 'HQ', cf: 'collect', key: s.id, desc: `子会社（${s.name}）からの経営指導料` });
+      const acct = ownerHD ? 'sales' : 'feeInc';
+      ksWith(st, () => ksPost('icFee', [['feeExp', feeL, 0], ['cash', 0, feeL]], { u: 'HQ', cf: 'exp', desc: `${owner.coName}への経営指導料` }));
+      ksWith(owner, () => ksPost('icFee', [['cash', fee, 0], [acct, 0, fee]], { u: 'HQ', cf: 'collect', key: s.id, desc: `子会社（${s.name}）からの経営指導料` }));
       if (acct === 'sales') rec.feeS += fee; else rec.feeN += fee;
       rec.feeX += fee;
     }
-    // 貸付金の利息
+    // 親会社からの貸付金の利息
     for (const L of (g.loans || []).filter(x => x.sub === s.id && x.bal > 0)) {
       const it = Math.round(L.bal * L.rate / 1200);
       if (it <= 0) continue;
       ksWith(st, () => ksPost('icInt', [['interest', it, 0], ['cash', 0, it]], { u: 'HQ', cf: 'interest', desc: '親会社への利息' }));
-      ksPost('icInt', [['cash', it, 0], ['intInc', 0, it]], { u: 'HQ', cf: 'collect', key: s.id, desc: `子会社（${s.name}）からの利息` });
+      ksWith(root, () => ksPost('icInt', [['cash', it, 0], ['intInc', 0, it]], { u: 'HQ', cf: 'collect', key: s.id, desc: `子会社（${s.name}）からの利息` }));
       rec.int += it;
     }
-    // 配当：6月（子会社の株主総会）に、前期の利益に配当性向を掛けて払う
+    // 配当：6月（株主総会）に、前期の利益に配当性向を掛けて、株主に持分に応じて払う
     if (mo === 6 && s.payout > 0) {
       const L = st.fys[fy - 1];
       const ni = L ? L.pl.ni : 0;
@@ -581,32 +733,30 @@ function ksGroupPre() {
         const res = ksWith(st, () => Math.round(Math.max(0, Math.min(D * 0.1, ksB('capital') / 4 - ksB('capSurplus') - ksB('legalRes')))));
         ksWith(st, () => ksPost('icDiv', [['re', D + res, 0], ['cash', 0, D], ['legalRes', 0, res]], { u: 'HQ', cf: 'equity', desc: '剰余金の配当（株主総会の決議）' }));
         const recv = Math.round(D * s.own * k);
-        const acct = ksIsPureHD(root) ? 'sales' : 'divInc';
-        ksPost('icDiv', [['cash', recv, 0], [acct, 0, recv]], { u: 'HQ', cf: 'collect', key: s.id, desc: `子会社（${s.name}）からの配当` });
+        const acct = ownerHD ? 'sales' : 'divInc';
+        ksWith(owner, () => ksPost('icDiv', [['cash', recv, 0], [acct, 0, recv]], { u: 'HQ', cf: 'collect', key: s.id, desc: `${s.aff ? '関連会社' : '子会社'}（${s.name}）からの配当` }));
         rec.div += recv;
         rec.divTot += Math.round(D * k);
         rec.divS = (rec.divS || 0) + (acct === 'sales' ? recv : 0);
-        // 税金：受取配当等の益金不算入の区分
-        const d = g.divFY[fy] || (g.divFY[fy] = { full: 0, rel: 0, other: 0, small: 0, foreign: 0 });
-        if (s.cc && s.cc !== 'jp') d.foreign += recv; else if (s.own >= 0.9999) d.full += recv; else if (s.own > 1 / 3) d.rel += recv; else if (s.own > 0.05) d.other += recv; else d.small += recv;
+        rec.divM[m] = (rec.divM[m] || 0) + recv;
+        rec.divTotM[m] = (rec.divTotM[m] || 0) + Math.round(D * k);
+        ksDivTaxRec(owner, s, fy, recv);
       }
     }
-    // 資金の支え：子会社の資金が来月までに足りなくなりそうなら、親会社が貸す
-    if (g.policy.support && (!s.cc || s.cc === 'jp')) {
-      const fc = ksWith(st, () => ksForecast(2));
-      const low = Math.min(...fc.map(x => x.bal));
+    if (s.aff) continue;
+    // 資金の支え：子会社の資金が来月までに足りなくなりそうなら、親会社が貸す（海外は直接の親会社が増資）
+    if (g.policy.support) {
+      const fc = ksWith(st, () => ksForecast(3));
+      const low = Math.min(ksWith(st, () => ksB('cash')), ...fc.map(x => x.bal));
       const need = ksWith(st, () => ksMonthlyFixedOut());
-      if (low < need * 0.3) {
-        const amt = niceAmount(need * 1.5 - low);
-        if (ksB('cash') - amt > ksMonthlyFixedOut() * 1.5) ksGroupLend(s.id, amt, true);
-      }
-    } else if (g.policy.support && s.cc && s.cc !== 'jp') {
-      const fc = ksWith(st, () => ksForecast(2));
-      const low = Math.min(...fc.map(x => x.bal));
-      const need = ksWith(st, () => ksMonthlyFixedOut());
-      if (low < need * 0.3) {
-        const amt = niceAmount((need * 2 - low) * k * s.own);
-        if (ksB('cash') - amt > ksMonthlyFixedOut() * 1.5) ksGroupInject(s.id, amt);
+      if (low < need * 0.6) {
+        if (!s.cc || s.cc === 'jp') {
+          const amt = niceAmount(Math.max(need * 2 - low, need));
+          if (ksB('cash') - amt > ksMonthlyFixedOut() * 1.5) ksGroupLend(s.id, amt, true);
+        } else {
+          const amt = niceAmount((need * 2 - low) * k * s.own);
+          if (ksWith(owner, () => ksB('cash') - amt > ksMonthlyFixedOut() * 1.5)) ksGroupInject(s.id, amt);
+        }
       }
     }
     // 余ったお金で、親会社からの借入を返す
@@ -614,7 +764,7 @@ function ksGroupPre() {
     if (lb > 0) {
       const cashS = ksWith(st, () => ksB('cash'));
       const need = ksWith(st, () => ksMonthlyFixedOut());
-      if (cashS > need * 4) ksGroupRepay(s, Math.min(lb, cashS - need * 3), true);
+      if (cashS > need * 6) ksGroupRepay(s, Math.min(lb, cashS - need * 4), true);
     }
   }
   // 持株会社の本社の人件費
@@ -664,20 +814,41 @@ function ksGroupSubMonth(s, eco) {
   });
   if (st.over) ksGroupSubFailed(s);
 }
-/* 子会社の資金が尽きた：破産手続（親会社は株式と貸付金を損失にする） */
+/* 会社の資金が尽きた：破産手続（持ち主は株式を、親会社は貸付金を損失にする。下の会社もグループから外れる） */
 function ksGroupSubFailed(s) {
-  const root = ksRoot();
-  const carry = Math.round(s.own * (s.eq0 + s.adds) + s.gw);
-  const icl = ksIcLoanBal(s.id, root);
-  ksWith(root, () => {
-    const lines = [['subLoss', carry, 0], ['subShares', 0, carry]];
-    if (icl > 0) lines.push(['badDebt', icl, 0], ['icLoan', 0, icl]);
-    ksPost('subFail', lines, { u: 'HQ', desc: `子会社（${s.name}）の破産：株式と貸付金の損失` });
-  });
-  root.group.loans = (root.group.loans || []).filter(L => L.sub !== s.id);
-  ksGroupDeconsolidate(s, 'failed', 0);
-  ksWith(root, () => ksNews(`子会社の${s.name}が資金繰りに行き詰まり、破産しました。株式（${fmtYen(carry)}）${icl ? `と貸付金（${fmtYen(icl)}）` : ''}を損失にしました`, 'bad'));
+  const root = ksRoot(), g = root.group;
+  ksGroupMigrate(root);
+  const owner = ksOwnerSt(s, root) || root;
+  const carry = ksRecInv(s);
+  const adj = ksRecSaleAdj(s);
+  const tree = [s, ...ksDescendants(s.id, root)];
+  ksWith(owner, () => ksPost('subFail', [['subLoss', carry, 0], ['subShares', 0, carry]], { u: 'HQ', desc: `${s.aff ? '関連会社' : '子会社'}（${s.name}）の破産：株式の損失` }));
+  let icl = 0;
+  for (const x of tree) {
+    const b = ksIcLoanBal(x.id, root);
+    if (b > 0) { icl += b; ksWith(root, () => ksPost('subFail', [['badDebt', b, 0], ['icLoan', 0, b]], { u: 'HQ', desc: `子会社（${x.name}）の破産：貸付金の損失` })); }
+    g.loans = (g.loans || []).filter(L => L.sub !== x.id);
+  }
+  for (const x of tree) ksRecClose(x, x === s ? 'failed' : 'with', x === s ? { adj } : {});
+  ksWith(root, () => ksNews(`${s.aff ? '関連会社' : '子会社'}の${s.name}が資金繰りに行き詰まり、破産しました。株式（${fmtYen(carry)}）${icl ? `と貸付金（${fmtYen(icl)}）` : ''}を損失にしました`, 'bad'));
 }
+
+/* ---------- グループの資金の融通（CMS） ----------
+   子会社の月末の支払いに現預金が足りないとき、親会社の「資金の支え」の方針がオンなら、足りない分を親会社が貸す
+   （銀行の緊急融資より先に。国内の連結子会社だけ） */
+let KS_GROUP_RUN = null;
+const ksCashCoverG0 = ksCashCover;
+ksCashCover = function () {
+  const root = KS_GROUP_RUN;
+  if (root && G !== root && G.isSub && G.subId && ksB('cash') < 0) {
+    const s = ksSubById(G.subId, root);
+    if (s && !s.gone && !s.aff && (!s.cc || s.cc === 'jp') && root.group.policy.support) {
+      const amt = niceAmount(-ksB('cash') + ksMonthlyFixedOut() * 0.5);
+      if (root.bal.cash - amt > ksWith(root, ksMonthlyFixedOut)) ksWith(root, () => ksGroupLend(s.id, amt, true));
+    }
+  }
+  return ksCashCoverG0();
+};
 
 /* ---------- グループの月次（親会社 → 子会社の順） ---------- */
 function ksGroupAdvance() {
@@ -690,7 +861,8 @@ function ksGroupAdvance() {
   const eco = JSON.parse(JSON.stringify(root.eco));
   ksGroupPre();
   const rep = ksAdvance();
-  for (const s of ksSubs(root)) ksGroupSubMonth(s, eco);
+  KS_GROUP_RUN = root;
+  try { for (const s of ksSubs(root)) ksGroupSubMonth(s, eco); } finally { KS_GROUP_RUN = null; }
   G = root;
   return rep;
 }
@@ -725,13 +897,14 @@ function ksGroupSubPL(s, fy, toM = 1e9) {
   const from = s.since; // 子会社になる前の損益は入れない（買収・株式移転で取得のときの純資産に含まれている）
   return ksPLLines(ksEntPLAcct(s.st, fy, from, toM, s.cc && s.cc !== 'jp' ? m => ksSubK(s, m) : null));
 }
-/* のれんの償却（10年・月割）。fy の分 */
+/* のれんの償却（10年・月割。gwFrom から gwLife 年）。fy の分 */
 function ksGwAmortFY(s, fy, toM = fy * 12 + 11) {
   if (!s.gw) return 0;
-  const life = (s.gwLife || 10) * 12;
-  const from = Math.max(fy * 12, s.since), to = Math.min(toM, fy * 12 + 11, s.since + life - 1);
+  const life = Math.max(1, Math.round((s.gwLife || 10) * 12));
+  const g0 = s.gwFrom ?? s.since;
+  const from = Math.max(fy * 12, g0, s.since), to = Math.min(toM, fy * 12 + 11, g0 + life - 1);
   const months = Math.max(0, to - from + 1);
-  return Math.round(Math.min(s.gw * months / life, s.gw - s.gwCum));
+  return Math.round(Math.max(0, Math.min(s.gw * months / life, s.gw - s.gwCum)));
 }
 const KS_CONS_BS = [
   ['cash', '現金預金', b => b.cash], ['ar', '売上債権（貸倒引当金控除後）', b => b.ar - b.allow], ['inv', '棚卸資産', b => b.goods + b.mat + b.wip + b.prod + b.cwip],
@@ -744,58 +917,127 @@ const KS_CONS_BS = [
 const KS_CONS_ASSET = ['cash', 'ar', 'inv', 'oca', 'ppe', 'ia', 'gw', 'subShares', 'icLoan', 'io'];
 const KS_CONS_LIAB = ['ap', 'debt', 'icDebt', 'ocl'];
 function ksBSLines(b, k = 1) { const o = {}; for (const [key, , f] of KS_CONS_BS) o[key] = Math.round(f(b) * k); return o; }
-/* 親会社の決算が終わったときに、連結決算書をつくる */
+/* 親会社の決算が終わったときに、連結決算書をつくる
+   ・連結子会社（持分50%超。子会社の下の孫会社も）：合算して、投資と資本・内部取引・貸し借りを消す
+   ・関連会社（持分20〜50%）：合算せず持分法。投資の額を、純資産の持分と投資差額の残りに直し、持分の利益を1行で入れる
+   ・非支配株主の持分：会社ごとに、下の会社の持分を含めた「株主に帰属する利益・純資産」に、ほかの株主の持分を掛ける（利益は月ごと）
+   ・期の途中で持分が変わった会社は、前の期間の記録（gone）と今の記録に分かれている */
 function ksGroupConsolidate(fy) {
   const root = G, g = root.group;
-  const endM = fy * 12 + 11;
-  const subs = g.subs.filter(s => s.since <= endM && (!s.gone || (s.out && s.out.fy === fy)));
-  if (!subs.length) return null;
+  ksGroupMigrate(root);
+  const startM = fy * 12, endM = fy * 12 + 11;
+  const recs = g.subs.filter(s => s.since <= endM && (!s.gone || (s.out && s.out.fy === fy)));
+  if (!recs.length) return null;
   const P = root.fys[fy];
   if (!P) return null;
-  const ents = [];
-  // 親会社
-  const pPL = ksPLLines(ksEntPLAcct(root, fy));
-  const pBS = ksBSLines(P.bs);
-  ents.push({ id: 'root', n: root.coName, own: 1, pl: pPL, bs: pBS, parent: true });
-  const elim = []; // 連結修正仕訳 { t, why, pl:{line:±}, bs:{line:±}, nci, fctr }
-  let nciBS = 0, fctrBS = 0, nciPL = 0, gwBS = 0;
-  for (const s of subs) {
-    const st = s.st;
-    const sold = s.gone && s.out && s.out.fy === fy;
-    const kEnd = ksSubK(s, endM);
-    const pl = sold ? s.out.pl : ksGroupSubPL(s, fy);
-    const ni = ksPLNi(pl);
-    const SB = !sold && st.fys[fy] ? st.fys[fy].bs : null;
-    const bs = SB ? ksBSLines(SB, kEnd) : null;
-    ents.push({ id: s.id, n: s.name, own: s.own, pl, bs, sold, cc: s.cc, kEnd });
-    const rec = ((g.ic[fy] || {})[s.id]) || { feeS: 0, feeN: 0, feeX: 0, int: 0, div: 0, divTot: 0, divS: 0 };
-    // 1) 内部取引の消去（経営指導料・利息・配当）
-    if (rec.feeX) elim.push({ t: '経営指導料の相殺消去', why: `${s.name}が払った経営指導料と、親会社が受け取った分は、グループの外との取引ではないので消す`, pl: { sales: -rec.feeS, noi: -rec.feeN, sga: -rec.feeX } });
-    if (rec.int) elim.push({ t: '貸付金の利息の相殺消去', why: `親会社の受取利息と${s.name}の支払利息を消す`, pl: { noi: -rec.int, noe: -rec.int } });
-    if (rec.div) elim.push({ t: '配当金の相殺消去', why: `${s.name}からの配当は、グループの中でお金が動いただけ。親会社の受取配当金を消し、利益剰余金に戻す${s.own < 1 ? '（非支配株主に払った分は、非支配株主持分を減らす）' : ''}`, pl: { sales: -(rec.divS || 0), noi: -(rec.div - (rec.divS || 0)) } });
-    // 2) のれんの償却・売却時の修正
-    let amort = 0;
-    if (sold) amort = s.out.amort;
-    else { amort = ksGwAmortFY(s, fy); }
-    if (amort) elim.push({ t: 'のれんの償却', why: `${s.name}を買ったときの、のれん（支払った額と純資産の差）を10年で償却する（連結だけの費用）`, pl: { sga: amort } });
-    if (s.kind === 'acq' && s.negGw && fyOf(s.since) === fy) elim.push({ t: '負ののれん発生益', why: `${s.name}の純資産より安く買えた差は、買った期の特別利益`, pl: { exg: s.negGw } });
-    // 3) 子会社の利益の非支配株主への配分
-    const nciNi = Math.round(ni * (1 - s.own));
-    if (s.own < 1) { nciPL += nciNi; elim.push({ t: '非支配株主に帰属する当期純利益', why: `${s.name}の利益のうち、親会社以外の株主（${s.partner || '少数株主'}）の持分${Math.round((1 - s.own) * 100)}%の分`, nciPL: nciNi }); }
-    if (sold) {
-      elim.push({ t: s.out.why === 'sold' ? '子会社株式の売却損益の連結修正' : '子会社の破産の連結修正', why: '個別の決算の売却損益は、取得の額との差。連結では、これまでに連結で取り込んだ利益（とのれんの償却）をのぞいた差になる', pl: s.out.adj >= 0 ? { exg: s.out.adj } : { exl: -s.out.adj } });
-      continue;
+  const lastOf = s => (s.gone ? (s.out.last ?? s.out.m - 1) : endM);
+  const active = (s, m) => m >= s.since && m <= lastOf(s);
+  const ents = [{ id: 'root', n: root.coName, own: 1, pl: ksPLLines(ksEntPLAcct(root, fy)), bs: ksBSLines(P.bs), parent: true }];
+  const pBS = ents[0].bs;
+  const elim = []; // 連結修正仕訳 { t, why, pl:{line:±}, bs:{line:±}, nciPL }
+  // 各社の今期の損益（換算後）・月ごとの純利益・のれんの償却
+  const D = {};
+  for (const s of recs) {
+    const pl = s.gone ? s.out.pl : ksGroupSubPL(s, fy);
+    let niM = {};
+    if (s.gone) niM = s.out.niM || { [lastOf(s)]: ksPLNi(pl) };
+    else {
+      const kf = s.cc && s.cc !== 'jp' ? mm => ksSubK(s, mm) : null;
+      for (const x of s.st.months) if (fyOf(x.m) === fy && x.m >= s.since) niM[x.m] = ksPLNi(ksPLLines(ksEntPLAcct(s.st, fy, x.m, x.m, kf)));
     }
-    // 4) 投資と資本の相殺消去・非支配株主持分・為替換算調整勘定（期末の貸借対照表）
-    const NA = bs ? sum(KS_CONS_ASSET, k2 => bs[k2]) - sum(KS_CONS_LIAB, k2 => bs[k2]) : 0;
-    // 今期の利益剰余金の増減（換算後）を、取得後の利益の記録に加える
-    const reTrEnd = s.reTr + ni - rec.divTot - (s.kind === 'acq' && fyOf(s.since) === fy ? 0 : 0);
-    const fctr = Math.round(NA - (s.eq0 + s.adds) - reTrEnd);
-    const nci = Math.round(NA * (1 - s.own));
-    const gwLeft = Math.round(s.gw - s.gwCum - amort);
-    nciBS += nci; fctrBS += Math.round(fctr * s.own); gwBS += gwLeft;
-    elim.push({ t: '投資と資本の相殺消去', why: `親会社の${s.name}の株式（${fmtYen(Math.round(s.own * (s.eq0 + s.adds) + s.gw))}）と、${s.name}の${s.kind === 'acq' ? '取得のときの' : ''}資本を消す${s.gw ? '。差はのれん' : ''}${s.own < 1 ? '。親会社以外の株主の持分は非支配株主持分' : ''}`, bs: { subShares: -Math.round(s.own * (s.eq0 + s.adds) + s.gw), gw: gwLeft }, eq: true });
-    s._next = { reTr: reTrEnd, gwCum: s.gwCum + amort };
+    const amort = s.gone ? (s.out.amort || 0) : ksGwAmortFY(s, fy);
+    const life = Math.max(1, Math.round((s.gwLife || 10) * 12)), g0 = s.gwFrom ?? s.since;
+    const amM = [];
+    for (let m = startM; m <= endM; m++) if (active(s, m) && m >= g0 && m < g0 + life) amM.push(m);
+    D[s.id] = { pl, ni: ksPLNi(pl), niM, rec: ((g.ic[fy] || {})[s.id]) || {}, amort, amPer: amM.length ? amort / amM.length : 0, amSet: new Set(amM) };
+  }
+  // 合算する会社（連結子会社）
+  for (const s of recs) {
+    if (s.aff) continue;
+    const d = D[s.id];
+    const SB = !s.gone && s.st.fys[fy] ? s.st.fys[fy].bs : null;
+    const kEnd = ksSubK(s, endM);
+    const bs = SB ? ksBSLines(SB, kEnd) : null;
+    if (s.gone && !Object.values(d.pl).some(v => v)) continue;
+    ents.push({ id: s.id, n: s.gone && !['sold', 'failed', 'with'].includes(s.out.why) ? `${s.name}（${ymLabel(lastOf(s))}まで）` : s.name, own: s.own, pl: d.pl, bs, sold: !!s.gone, cc: s.cc, kEnd });
+  }
+  // 1) 内部取引の消去・のれんの償却・持分法の損益・売却の修正
+  for (const s of recs) {
+    const d = D[s.id], rec = d.rec;
+    const on = ksOwnerNameOf(s, root);
+    if (rec.feeX) elim.push({ t: '経営指導料の相殺消去', why: `${s.name}が${on}に払った経営指導料は、グループの外との取引ではないので、受け取った側の収益と払った側の費用を消す`, pl: { sales: -(rec.feeS || 0), noi: -(rec.feeN || 0), sga: -rec.feeX } });
+    if (rec.int) elim.push({ t: '貸付金の利息の相殺消去', why: `親会社の受取利息と${s.name}の支払利息を消す`, pl: { noi: -rec.int, noe: -rec.int } });
+    if (rec.div) elim.push({ t: '配当金の相殺消去', why: `${s.name}から${on}への配当は、グループの中でお金が動いただけ。受取配当金を消す${s.aff ? '（持分法では、そのぶん投資の額が減る）' : s.own < 1 ? '（ほかの株主に払った分は、非支配株主持分を減らす）' : ''}`, pl: { sales: -(rec.divS || 0), noi: -(rec.div - (rec.divS || 0)) } });
+    if (s.aff) {
+      const inc = Math.round(s.own * d.ni - d.amort);
+      if (inc) elim.push({ t: '持分法による投資損益', why: `関連会社の${s.name}の純利益のうち、持分${Math.round(s.own * 100)}%の分${d.amort ? '（投資差額の償却を引く）' : ''}を、1行で営業外の損益に入れる`, pl: inc >= 0 ? { noi: inc } : { noe: -inc } });
+    } else if (d.amort) elim.push({ t: 'のれんの償却', why: `${s.name}を買ったときの、のれん（支払った額と純資産の差）を10年で償却する（連結だけの費用）`, pl: { sga: d.amort } });
+    if (s.gone && s.out.adj && ['sold', 'failed'].includes(s.out.why)) elim.push({ t: s.out.why === 'sold' ? '株式の売却損益の連結修正' : '破産の連結修正', why: '個別の決算の売却損益は、取得の額との差。連結では、これまでに連結で取り込んだ利益（とのれんの償却）を除いた差になる', pl: s.out.adj >= 0 ? { exg: s.out.adj } : { exl: -s.out.adj } });
+  }
+  for (const a of g.cadj.filter(x => x.fy === fy)) elim.push({ t: a.t, why: a.why, pl: a.pl });
+  // 2) 非支配株主に帰属する当期純利益（月ごと）
+  const niOf = pl => ksPLNi(Object.assign({ sales: 0, cogs: 0, sga: 0, noi: 0, noe: 0, exg: 0, exl: 0, tax: 0 }, pl));
+  const adjAt = {};
+  const addAdj = (o, m, v) => { const k = o + '|' + m; adjAt[k] = (adjAt[k] || 0) + v; };
+  for (const a of g.cadj.filter(x => x.fy === fy)) addAdj(a.owner || 'root', a.m, niOf(a.pl));
+  for (const s of recs) if (s.gone && s.out.adj && ['sold', 'failed'].includes(s.out.why)) addAdj(ksRecOwnerId(s), s.out.m, s.out.adj);
+  const order = recs.filter(s => !s.aff).sort((a, b) => ksRecDepth(b, root) - ksRecDepth(a, root));
+  let nciPL = 0;
+  const nciBy = {};
+  for (let m = startM; m <= endM; m++) {
+    const at = {};
+    for (const r of order) {
+      if (!active(r, m)) continue;
+      const b = r.base || r.id;
+      let v = D[r.id].niM[m] || 0;
+      for (const x of recs) {
+        if (ksRecOwnerId(x) !== b || !active(x, m)) continue;
+        const dx = D[x.id];
+        v -= dx.rec.divM ? dx.rec.divM[m] || 0 : (m === startM + 2 ? dx.rec.div || 0 : 0);
+        const am = dx.amSet.has(m) ? dx.amPer : 0;
+        v += (x.aff ? x.own * (dx.niM[m] || 0) : x.own * (at[x.id] || 0)) - am;
+      }
+      v += adjAt[b + '|' + m] || 0;
+      at[r.id] = v;
+      const share = (1 - r.own) * v;
+      nciPL += share;
+      nciBy[r.id] = (nciBy[r.id] || 0) + share;
+    }
+  }
+  for (const s of order) if (s.own < 1 && Math.round(nciBy[s.id] || 0)) elim.push({ t: '非支配株主に帰属する当期純利益', why: `${s.name}の利益（下の会社の持分の利益を含む）のうち、${ksOwnerNameOf(s, root)}以外の株主（${s.partner || '少数株主'}）の持分${Math.round((1 - s.own) * 100)}%の分`, nciPL: Math.round(nciBy[s.id]) });
+  // 3) 期末：投資と資本の相殺消去・持分法の評価・非支配株主持分・為替換算調整勘定
+  const liveRecs = recs.filter(s => !s.gone);
+  const NA = {}, reEnd = {}, gwLeft = {}, fctr = {};
+  for (const s of liveRecs) {
+    const d = D[s.id];
+    const SB = s.st.fys[fy] ? s.st.fys[fy].bs : null;
+    const b = SB ? ksBSLines(SB, ksSubK(s, endM)) : null;
+    NA[s.id] = b ? sum(KS_CONS_ASSET, k => b[k]) - sum(KS_CONS_LIAB, k => b[k]) : 0;
+    reEnd[s.id] = s.reTr + d.ni - (d.rec.divTot || 0);
+    gwLeft[s.id] = Math.round(s.gw - s.gwCum - d.amort);
+    fctr[s.id] = Math.round(NA[s.id] - (s.eq0 + s.adds) - reEnd[s.id]);
+  }
+  const E = {};
+  const eOf = s => {
+    if (E[s.id] !== undefined) return E[s.id];
+    let v = NA[s.id];
+    for (const x of liveRecs) if (ksRecOwnerId(x) === s.id) v += (x.aff ? x.own * NA[x.id] : x.own * eOf(x)) + gwLeft[x.id] - ksRecInv(x);
+    return (E[s.id] = v);
+  };
+  let nciBS = 0, fctrBS = 0;
+  const affs = [];
+  for (const s of liveRecs) {
+    const inv = ksRecInv(s);
+    if (s.aff) {
+      const emv = Math.round(s.own * NA[s.id] + gwLeft[s.id]);
+      elim.push({ t: '持分法による投資の評価', why: `関連会社の${s.name}の株式（取得の額 ${fmtYen(inv)}）を、純資産の持分${Math.round(s.own * 100)}%と投資差額の残りの額（${fmtYen(emv)}）に直す`, bs: { subShares: emv - inv }, eq: true });
+      affs.push({ id: s.id, n: s.name, own: s.own, inv, emv, inc: Math.round(s.own * D[s.id].ni - D[s.id].amort), cc: s.cc });
+    } else {
+      nciBS += Math.round((1 - s.own) * eOf(s));
+      elim.push({ t: '投資と資本の相殺消去', why: `${ksOwnerNameOf(s, root)}の持つ${s.name}の株式（${fmtYen(inv)}）と、${s.name}の${s.kind === 'acq' ? '取得のときの' : ''}資本を消す${s.gw ? '。差はのれん' : ''}${s.own < 1 ? '。ほかの株主の持分は非支配株主持分' : ''}`, bs: { subShares: -inv, gw: gwLeft[s.id] }, eq: true });
+    }
+    fctrBS += Math.round(fctr[s.id] * ksEffOwn(s, root));
+    s._next = { reTr: reEnd[s.id], gwCum: s.gwCum + D[s.id].amort };
   }
   // 債権債務の相殺消去
   const icl = Math.round(pBS.icLoan || 0);
@@ -808,23 +1050,25 @@ function ksGroupConsolidate(fy) {
   const live = ents.filter(e => e.bs);
   const sumBS = {}, consBS = {};
   for (const k of BSK) { sumBS[k] = sum(live, e => e.bs[k] || 0); consBS[k] = sumBS[k] + sum(elim, e => (e.bs && e.bs[k]) || 0); }
-  // 資本は親会社の分だけ。利益剰余金は差額（貸借の一致で確かめる）
-  consBS.capital = pBS.capital; consBS.capSur = pBS.capSur;
+  // 資本は親会社の分だけ（持分の追加取得の差額は資本剰余金）。利益剰余金は差額（貸借の一致で確かめる）
+  const capAdj = Math.round(sum(g.capAdj.filter(x => x.m <= endM), x => x.amt));
+  consBS.capital = pBS.capital; consBS.capSur = pBS.capSur + capAdj; consBS.capAdj = capAdj;
   consBS.nci = nciBS; consBS.fctr = fctrBS;
   const TA = sum(KS_CONS_ASSET, k => consBS[k]), TL = sum(KS_CONS_LIAB, k => consBS[k]);
   consBS.re = Math.round(TA - TL - consBS.capital - consBS.capSur - nciBS - fctrBS);
   consBS.TA = TA; consBS.TL = TL; consBS.EQ = TA - TL;
   const ni = ksPLNi(consPL);
+  nciPL = Math.round(nciPL);
   consPL.ni = ni; consPL.niNci = nciPL; consPL.niParent = ni - nciPL;
   consPL.gp = consPL.sales - consPL.cogs; consPL.opi = consPL.gp - consPL.sga; consPL.ord = consPL.opi + consPL.noi - consPL.noe; consPL.pretax = consPL.ord + consPL.exg - consPL.exl;
   // 確かめ：利益剰余金 ＝ 前期の連結の利益剰余金 ＋ 親会社株主に帰属する当期純利益 − 親会社の配当
   const prev = g.cons[fy - 1];
   const divPaid = Math.round(sum(root.months.filter(x => fyOf(x.m) === fy), x => (x.cf && x.cf.equity) || 0));
   const reExpected = prev ? Math.round(prev.bs.re + consPL.niParent + Math.min(0, divPaid)) : null;
-  const cons = { fy, ents: ents.map(e => ({ id: e.id, n: e.n, own: e.own, pl: e.pl, bs: e.bs, sold: e.sold, cc: e.cc, parent: e.parent })), elim, sumPL, sumBS, pl: consPL, bs: consBS, check: reExpected === null ? null : consBS.re - reExpected };
+  const cons = { fy, ents: ents.map(e => ({ id: e.id, n: e.n, own: e.own, pl: e.pl, bs: e.bs, sold: e.sold, cc: e.cc, parent: e.parent })), elim, sumPL, sumBS, pl: consPL, bs: consBS, affs, check: reExpected === null ? null : consBS.re - reExpected };
   g.cons[fy] = cons;
   // 次の期へ：取得後の利益の記録とのれんの償却累計を進める
-  for (const s of subs) if (s._next) { s.reTr = s._next.reTr; s.gwCum = s._next.gwCum; delete s._next; }
+  for (const s of liveRecs) if (s._next) { s.reTr = s._next.reTr; s.gwCum = s._next.gwCum; delete s._next; }
   return cons;
 }
 
@@ -843,7 +1087,7 @@ const ksTaxCalcG0 = ksTaxCalc;
 ksTaxCalc = function () {
   const t = ksTaxCalcG0();
   const fy = G.closing ? G.closing.fy : fyOf(G.m);
-  const d = G.group && G.group.divFY && G.group.divFY[fy];
+  const d = (G.group && G.group.divFY && G.group.divFY[fy]) || (G.divFY && G.divFY[fy]);
   // 受取配当等の益金不算入：完全子法人（100%）・関連法人（1/3超）は全額、その他（5%超）は50%、5%以下は20%、海外子会社（25%以上）は95%
   const excl = d ? Math.round(d.full + d.rel + d.other * 0.5 + d.small * 0.2 + d.foreign * 0.95) : 0;
   const cc = G.country || 'jp';
@@ -864,10 +1108,11 @@ ksTaxCalc = function () {
 function ksGroupAfterClose(fy) {
   if (G.isSub || !G.group) return;
   if (!G.group.subs.length) return;
+  ksGroupMigrate(G);
   try { ksGroupConsolidate(fy); } catch (e) { console.error(e); }
   for (const s of G.group.subs) if (s.gone && s.out && s.out.fy <= fy) s.out.done = true;
 }
-/* グループの整合性（テスト用）：各社の帳簿と、連結の貸借 */
+/* グループの整合性（テスト用）：各社の帳簿、貸付金、持ち主ごとの関係会社株式 */
 function ksGroupCheck(root = ksRoot()) {
   const e = [];
   for (const s of ksSubs(root)) for (const x of ksWith(s.st, ksCheck)) e.push(`${s.name}：${x}`);
@@ -877,8 +1122,10 @@ function ksGroupCheck(root = ksRoot()) {
     if (Math.abs(icl - (root.bal.icLoan || 0)) > 10) e.push(`関係会社貸付金の明細 ${icl} ≠ 元帳 ${root.bal.icLoan}`);
     const icd = Math.round(sum(ksSubs(root), s => s.st.bal.icDebt || 0));
     if (Math.abs(icd - icl) > 10) e.push(`子会社の関係会社借入金の合計 ${icd} ≠ 親会社の貸付金 ${icl}`);
-    const carry = Math.round(sum(ksSubs(root), s => s.own * (s.eq0 + s.adds) + s.gw));
-    if (Math.abs(carry - (root.bal.subShares || 0)) > 1000) e.push(`関係会社株式 ${root.bal.subShares} ≠ 取得の額の合計 ${carry}`);
+    for (const [oid, st] of [['root', root], ...ksSubs(root).map(s => [s.id, s.st])]) {
+      const carry = Math.round(sum(ksSubs(root).filter(s => ksRecOwnerId(s) === oid), ksRecInv));
+      if (Math.abs(carry - (st.bal.subShares || 0)) > 1000) e.push(`${st.coName}の関係会社株式 ${st.bal.subShares} ≠ 持っている株式の取得の額 ${carry}`);
+    }
   }
   return e;
 }

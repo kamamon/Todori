@@ -67,11 +67,20 @@ function ksMapJpHtml() {
     <div class="mapleg marks"><span><i class="m-hq">本</i>本社</span><span><i class="m-u">2</i>事業所の数</span><span><i class="m-l">土</i>自社の土地</span><span><i class="m-s">子</i>子会社</span><span><i class="m-d">!</i>1年以内の災害</span></div>`;
   return `${foreign ? `<div class="callout warn">この会社は海外（${esc(KS_COUNTRIES[G.country].n)}）の子会社です。日本の地図は参考です。</div>` : ''}
     <div class="grid g-side map-grid"><div>${panel('日本の地図', `<div class="seg wrap sm" role="radiogroup" aria-label="色で示す数字">${metricSeg}</div>
+      ${ksPrefSelectHtml(UI.kMapPref, s => s.hq ? '（本社）' : s.units.length ? `（事業所${s.units.length}）` : '')}
       <div class="jmap-wrap"><div class="jmap${M.warm ? ' warm' : ''}" role="group" aria-label="都道府県の地図">${tiles}</div></div>${legend}
       <p class="note">地価は令和8年の都道府県地価調査の基準地の平均（用途別）、最低賃金は令和8年度の地域別最低賃金（その後の改定を含む）、賃金は賃金構造基本統計調査の平均。ゲームの目安です。</p>`)}</div>
       <div class="stack">${ksMapPrefPanel(UI.kMapPref)}</div></div>`;
 }
 ACTIONS.kMapPref = d => { UI.kMapPref = +d.v; UI.kLand = null; render(); };
+/* 都道府県を一覧から選ぶ（小さい画面でタイルを押しにくいとき） */
+function ksPrefSelectHtml(cur, note) {
+  const byReg = {};
+  for (const p of Object.keys(KS_PREFS).map(Number)) (byReg[KS_PREFS[p].reg] = byReg[KS_PREFS[p].reg] || []).push(p);
+  const opts = Object.entries(KS_PREF_REG).filter(([r]) => byReg[r]).map(([r, rn]) => `<optgroup label="${esc(rn)}">${byReg[r].map(p => `<option value="${p}"${p === cur ? ' selected' : ''}>${esc(KS_PREFS[p].n)}${note ? esc(note(ksSitesIn(p))) : ''}</option>`).join('')}</optgroup>`).join('');
+  return `<label class="field mapsel"><span>都道府県を選ぶ</span><select data-ch="kMapPrefSel">${opts}</select></label>`;
+}
+CHANGES.kMapPrefSel = el => { UI.kMapPref = +el.value; UI.kLand = null; render(); };
 ACTIONS.kMapMetric = d => { UI.kMapMetric = d.v; render(); };
 
 function ksMapPrefPanel(p) {
@@ -150,7 +159,7 @@ ACTIONS.kMapFound = d => {
   UI.kGF = Object.assign(UI.kGF || { q: '', type: null, sc: 1, own: 1, cc: 'jp', pref: G.loc ? G.loc.hq : KS_HOME_PREF, amt: null, name: '' }, { cc: d.cc });
   if (d.p) UI.kGF.pref = +d.p;
   UI.tab = 'k_group'; UI.kGrpSec = 'make';
-  render(); window.scrollTo({ top: 0 });
+  render(); scrollToMain();
 };
 
 /* 新しい事業の場所（新しい事業の画面） */
@@ -306,7 +315,7 @@ function ksMapRiskHtml() {
       ${panel(term('BCP（事業継続計画）', 'bcp'), `<p class="small" style="margin:0 0 6px">災害のときに、何を優先して、どれだけの期間で事業を戻すかを決めた計画。被害と営業の止まる期間を小さくします。</p>${kv([['いまの備え', bcp < 1 ? `被害 ×${fmtNum(bcp, 2)}` : 'ふつう'], ['備えを強める', '方針と人事の画面で、重点実施事項「BCPと防災」か、経営方針「ガバナンス・リスク管理」']])}<div class="row" style="margin-top:6px">${btn('方針と人事へ', 'kGoHr', {}, 'sm')}</div>`)}</div></div>`;
 }
 ACTIONS.kEqIns = () => { G.loc.eqIns = !G.loc.eqIns; toast(G.loc.eqIns ? '地震保険に入りました' : '地震保険をやめました'); render(); autosave(); };
-ACTIONS.kGoHr = () => { UI.tab = 'k_hr'; UI.kHrSec = 'policy'; render(); window.scrollTo({ top: 0 }); };
+ACTIONS.kGoHr = () => { UI.tab = 'k_hr'; UI.kHrSec = 'policy'; render(); scrollToMain(); };
 
 /* ---------- 出来事と災害のお知らせ ---------- */
 MODALS.kEvt = a => {
@@ -334,7 +343,7 @@ MODALS.kDisaster = a => {
     <p class="small muted">${esc(KS_PREF_RISKNOTE[P.reg])}。拠点を分ける、BCPをつくる、保険に入る、といった備えで被害を小さくできます。</p>`;
   return modalFrame(`【災害】${esc(P.n)}の${esc(D.n)}`, body, btn('拠点と地図を見る', 'kDisGo', {}, '') + btn('閉じる', 'closeModal', {}, 'primary'), { sub: ymLabel(G.m) });
 };
-ACTIONS.kDisGo = () => { UI.tab = 'k_map'; UI.kMapSec = 'risk'; closeModal(true); render(); window.scrollTo({ top: 0 }); };
+ACTIONS.kDisGo = () => { UI.tab = 'k_map'; UI.kMapSec = 'risk'; closeModal(true); render(); scrollToMain(); };
 
 /* ---------- 用語 ---------- */
 Object.assign(TERMS, {

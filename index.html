@@ -25,7 +25,7 @@
   --rule-strong: #94a89f;
   --ink: #17242b;
   --ink-2: #4a5a5e;
-  --ink-3: #6f7f82;
+  --ink-3: #5c6c6f;
   --vault: #1d5240;
   --vault-2: #2b6b55;
   --vault-soft: #dbe8e1;
@@ -57,7 +57,7 @@
     color-scheme: dark;
     --paper: #0e1614; --sheet: #15201d; --sheet-2: #1a2824; --sheet-3: #20302b;
     --rule: #2a3b35; --rule-strong: #43594f;
-    --ink: #e2ebe6; --ink-2: #a8b7b1; --ink-3: #85958f;
+    --ink: #e2ebe6; --ink-2: #a8b7b1; --ink-3: #93a39d;
     --vault: #4fa585; --vault-2: #62b897; --vault-soft: #1f3a31; --on-vault: #0d1613; --mast: #12352a; --on-mast: #e6f0eb;
     --brass: #d3a650; --brass-soft: #3a2f18;
     --shu: #ef6a55; --shu-soft: #3d1f1a;
@@ -71,7 +71,7 @@
   color-scheme: dark;
   --paper: #0e1614; --sheet: #15201d; --sheet-2: #1a2824; --sheet-3: #20302b;
   --rule: #2a3b35; --rule-strong: #43594f;
-  --ink: #e2ebe6; --ink-2: #a8b7b1; --ink-3: #85958f;
+  --ink: #e2ebe6; --ink-2: #a8b7b1; --ink-3: #93a39d;
   --vault: #4fa585; --vault-2: #62b897; --vault-soft: #1f3a31; --on-vault: #0d1613; --mast: #12352a; --on-mast: #e6f0eb;
   --brass: #d3a650; --brass-soft: #3a2f18;
   --shu: #ef6a55; --shu-soft: #3d1f1a;
@@ -913,6 +913,7 @@ ul.plain { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; fon
 
 /* 地図（タイル） */
 .map-grid { align-items: start; }
+.mapsel { margin-top: 10px; max-width: 320px; }
 .jmap-wrap { margin: 8px 0 6px; }
 .jmap, .wmap { display: grid; gap: 3px; }
 .jmap { grid-template-columns: repeat(13, minmax(0, 1fr)); grid-template-rows: repeat(12, auto); max-width: 620px; }
@@ -966,6 +967,223 @@ details.custom > summary { cursor: pointer; font-weight: 700; font-size: 13px; c
   ol.cal > li { grid-template-columns: minmax(0, 1fr); gap: 2px; }
   .orgsubs { grid-template-columns: minmax(0, 1fr); }
   .cu-nums { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* グループの木の形（孫会社）・関連会社 */
+.orgnode { display: grid; gap: 6px; align-content: start; min-width: 0; }
+.orgkids { display: grid; gap: 6px; margin-left: 12px; padding-left: 10px; border-left: 2px solid var(--rule-strong); }
+.orgbox.aff { border-style: dashed; background: var(--sheet-2); }
+
+/* =========================================================
+ *  スマホ：読みやすい文字と、指で押しやすいボタン
+ *  幅 760px 以下が対象。押せるものは高さ 40〜48px、入力欄は 16px（iPhone で拡大されない大きさ）。
+ *  「月末を締めて翌月へ」は画面の下に固定して、親指で押せるようにする。
+ * ========================================================= */
+@media (max-width: 760px) {
+  html { scroll-padding-top: calc(var(--band) + 60px); scroll-padding-bottom: calc(86px + var(--sab)); }
+  body { font-size: 15px; line-height: 1.65; }
+
+  /* ---- 上の帯：社名・日付・メニュー ---- */
+  .mast { grid-template-columns: minmax(0, 1fr) auto auto; column-gap: 8px; row-gap: 6px; padding: calc(10px + var(--band0)) 12px 10px; }
+  .mast-brand { grid-column: 1; grid-row: 1; gap: 10px; }
+  .mast-actions { display: contents; }
+  .mast .mbtn[data-act="menu"] { grid-column: 2; grid-row: 1; }
+  .mast .mbtn[data-act="help"] { grid-column: 3; grid-row: 1; }
+  .mbtn { min-height: 40px; padding: 6px 12px; font-size: 14px; border-radius: 8px; }
+  .mast-date { grid-column: 1 / -1; grid-row: 2; flex-wrap: wrap; column-gap: 10px; row-gap: 0; }
+  .mast-date .wareki { font-size: 17px; }
+  .mast-date .sub { font-size: 13px; }
+  .bank-name { font-size: 18px; }
+  .bank-name .bn { white-space: normal; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
+  .bank-sub { font-size: 13px; }
+  .entsw { grid-column: 1 / -1; grid-row: 3; }
+  .entsw select { width: 100%; max-width: none; font-size: 16px; min-height: 42px; padding: 6px 10px; border-radius: 8px; }
+  .btn-advance {
+    position: fixed; z-index: 40;
+    left: calc(12px + var(--sal)); right: calc(12px + var(--sar)); bottom: calc(10px + var(--sab));
+    min-height: 52px; padding: 12px 16px; border-radius: 12px; font-size: 16px; letter-spacing: .04em;
+    background: var(--vault); color: var(--on-vault);
+    box-shadow: 0 12px 28px -12px rgba(10, 20, 17, .7), inset 0 -2px 0 rgba(0, 0, 0, .2);
+  }
+  .btn-advance:hover { background: var(--vault-2); }
+  .btn-advance:disabled { opacity: 1; background: var(--sheet-3); color: var(--ink-3); box-shadow: none; }
+  /* 文字を入力している間は（キーボードと重なるので）隠す */
+  body:has(:is(input[type="text"], input[type="number"], input[type="search"], textarea):focus) .btn-advance { visibility: hidden; }
+  main { padding: 14px 12px calc(96px + var(--sab)); }
+
+  /* ---- 主要な数字：横に滑らせて見る一列 ---- */
+  .strip { display: grid; grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 43%; overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: none; overscroll-behavior-x: contain; }
+  .strip::-webkit-scrollbar { display: none; }
+  .strip > div, .strip > div:nth-child(n) { scroll-snap-align: start; padding: 8px 12px 9px; border-right: 1px solid var(--rule); border-bottom: 0; }
+  .strip > div:last-child { border-right: 0; }
+  .strip .v { font-size: 17px; }
+  .strip .d { overflow: hidden; text-overflow: ellipsis; }
+
+  /* ---- 画面の切り替え（タブ） ---- */
+  .tab { padding: 12px 14px; font-size: 15px; min-height: 48px; }
+  .tab .badge { margin-left: 2px; }
+  .subtabs { margin-bottom: 12px; scrollbar-width: none; }
+  .subtabs::-webkit-scrollbar { display: none; }
+  .subtabs button { min-height: 46px; padding: 10px 14px; font-size: 14px; }
+
+  /* ---- 文字の大きさ ---- */
+  .h1 { font-size: 22px; }
+  .ph h2, .ph h3 { font-size: 16px; }
+  .ph .aside { font-size: 13px; }
+  .pb { padding: 12px; }
+  .small, .note, .unit, .field > span, .kv dt, .kv.sm, .gitem span, .modal .mh .sub, .ld-meta, .esnum span,
+  .appcard .meta, .inbox .t2, .inv .ds, .stage-steps li, .flowline, .ringi-no { font-size: 13px; }
+  .tag, .badge, .newslist .when, .kpi .k, .kpi .d, .inv .cost, .qz-tag, .stamps .lab, .preset span, .modebtn span,
+  .strip .k, .strip .d, .mapleg { font-size: 12px; }
+  .callout, .learnbox, .lookhere p, .flagbox ul, ol.elim, ul.tl, ul.plain, ol.cal ul, .ladder li, .inv .res, .newslist li,
+  .subbanner, .lawitem summary, .formula, .qz-a, .toast { font-size: 14px; }
+  .inbox .t1, .inv .nm, .ctl-l, .eqopt b, .typeopt b, .stype-t b, .unitchip b, .preset b, .appcard .nm, .measbtn b, .ctl-in output { font-size: 15px; }
+  .legend { font-size: 13px; }
+  .tag { padding: 2px 8px; }
+  .badge { min-width: 22px; height: 22px; border-radius: 11px; }
+  .chart text, .chart .glab { font-size: 12px; }
+  #tip { font-size: 13px; max-width: calc(100vw - 24px); white-space: pre-wrap; }
+  .kv { gap: 6px 14px; grid-template-columns: fit-content(46%) minmax(0, 1fr); }
+  .inbox li { padding: 12px; gap: 10px; }
+  .inbox .ico { width: 26px; height: 26px; font-size: 13px; }
+  .inbox li { grid-template-columns: 26px minmax(0, 1fr); }
+  .inbox li > :last-child:not(:nth-child(2)) { grid-column: 2; justify-self: start; }
+  .newslist li { padding: 10px 12px; grid-template-columns: minmax(0, 1fr); gap: 2px; }
+
+  /* ---- ボタンと入力 ---- */
+  /* 続けて押しても画面が拡大されないように。押した瞬間に少し沈ませて、押せたことが分かるように */
+  button, .btn, select, label.inline, summary, [data-act] { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+  :is(.btn, .mbtn, .seg button, .subtabs button, .tab, .chip, .choice, .qz-b, .pcard, .pcheck, .unitchip, .eqopt, .typeopt, .modebtn, .preset, .gitem, .appcard, .jt):active:not(:disabled) { filter: brightness(.93); }
+  .btn-advance:active:not(:disabled) { transform: translateY(1px); filter: brightness(.95); }
+  .row { gap: 10px; }
+  .btn { min-height: 44px; padding: 9px 14px; font-size: 14px; border-radius: 6px; }
+  .btn.sm { min-height: 40px; padding: 6px 12px; font-size: 14px; }
+  .btn.ghost { padding-left: 10px; padding-right: 10px; }
+  .btn.linkish, .linkish { min-height: 0; padding: 6px 2px; }
+  .xbtn { width: 44px; height: 44px; margin: -6px -10px -6px 0; font-size: 26px; display: grid; place-items: center; padding: 0; flex: none; }
+  .seg { flex-wrap: wrap; max-width: 100%; }
+  .seg button, .seg button:last-child { min-height: 42px; padding: 8px 14px; font-size: 14px; flex: 1 0 auto; border-right: 0; border-left: 1px solid var(--rule); margin-left: -1px; border-top: 1px solid var(--rule); margin-top: -1px; }
+  .seg.sm button { min-height: 40px; padding: 6px 11px; font-size: 13px; }
+  .chips { gap: 8px; }
+  .chip { min-height: 38px; padding: 6px 13px; font-size: 14px; }
+  input[type="number"], input[type="text"], input[type="search"], select, textarea { font-size: 16px; min-height: 44px; padding: 8px 10px; border-radius: 6px; }
+  input[type="checkbox"] { width: 22px; height: 22px; flex: none; }
+  label.inline { min-height: 40px; gap: 10px; }
+  input[type="range"] { height: 36px; }
+  .ctl-in { grid-template-columns: minmax(0, 1fr) 5.5em; }
+  .choice, .qz-b { padding: 12px 14px; min-height: 48px; }
+  .pcard, .pcheck { padding: 11px 12px; }
+  .pcheck { gap: 10px; }
+  .pchecks { max-height: none; overflow: visible; gap: 6px; }
+  .wiz button { min-height: 38px; padding: 4px 12px 4px 5px; font-size: 13px; }
+  .wiz .n { width: 24px; height: 24px; font-size: 12px; }
+  .unitchip { padding: 10px 12px; }
+  .eqopt, .typeopt, .gitem { padding: 10px 12px; }
+  .modebtn, .preset { padding: 12px 14px; }
+  .appcard { padding: 12px 14px; }
+  .flowline .fl { padding: 5px 11px; }
+  details > summary { padding: 6px 0; }
+  details.custom > summary { padding: 6px 0; font-size: 14px; }
+  .term { padding: 3px 0; }
+  .eqlist { max-height: 56vh; }
+  .typelist { max-height: 60vh; }
+
+  /* ---- 表：押しつぶさず、横に滑らせて読む。先頭の列は残す ---- */
+  .tbl-wrap { overscroll-behavior-x: contain; }
+  /* 横に続きがあるときは、右（左）の端に影を出す（端まで滑らせると消える） */
+  main { --tbl-bg: var(--paper); }
+  .panel, .modal { --tbl-bg: var(--sheet); }
+  .inv, .guide, .custom-grid, .learnbox, .campopt.on { --tbl-bg: var(--sheet-2); }
+  .tbl-wrap {
+    background:
+      linear-gradient(to right, var(--tbl-bg, var(--sheet)) 45%, transparent) left center / 28px 100% no-repeat local,
+      linear-gradient(to left, var(--tbl-bg, var(--sheet)) 45%, transparent) right center / 28px 100% no-repeat local,
+      radial-gradient(farthest-side at 0 50%, color-mix(in srgb, var(--ink) 20%, transparent), transparent) left center / 12px 100% no-repeat scroll,
+      radial-gradient(farthest-side at 100% 50%, color-mix(in srgb, var(--ink) 20%, transparent), transparent) right center / 12px 100% no-repeat scroll;
+  }
+  table.t { font-size: 14px; }
+  .t th, .t td { padding: 8px 10px; }
+  .t.compact td, .t.compact th { padding: 6px 8px; }
+  .t thead th, .t tr.sec td { font-size: 13px; }
+  /* 狭い列でも1〜2文字ずつ折り返さないように、文字の列は最低5文字分の幅。説明文の入った列は9文字分 */
+  .tbl-wrap .t td:not(.n) { min-width: calc(5em + 20px); }
+  .tbl-wrap .t td:first-child:not(.n) { min-width: calc(7em + 20px); }
+  .tbl-wrap .t td :is(div, p, ul, ol) { min-width: 9em; }
+  .fs { font-size: 13.5px; }
+  .fs th, .fs td { padding: 6px 8px; }
+  .fs thead th, .fs tr.head td, .fs tr.head.subhead td { font-size: 12.5px; }
+  /* 数字の表は、横に滑らせても先頭の列（科目・項目）を残す。説明文の入った表は残さない（画面がふさがるので） */
+  :where(.tbl-wrap) :where(.t:not(.jtable):not(.stk):not(:has(td:first-child :is(div, p, ul))), .fs) :where(tr) > :first-child { position: sticky; left: 0; z-index: 1; background: var(--tbl-bg, var(--sheet)); }
+
+  /* ボタンのある表：1行ずつのカード（見出しは各セルの上に小さく）。ボタンは横に並べて、すぐ押せるように */
+  .tbl-wrap.stk-wrap { overflow: visible; background: none; }
+  .t.stk { display: block; }
+  .t.stk > thead { display: none; }
+  .t.stk > tbody { display: block; }
+  .t.stk > tbody > tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 14px; row-gap: 5px; padding: 11px 2px; border-bottom: 1px solid var(--rule); }
+  .t.stk > tbody > tr > td { display: block; min-width: 0; padding: 0; border: 0; text-align: left; white-space: normal; position: static; background: none; }
+  .t.stk > tbody > tr > td:first-child, .t.stk > tbody > tr > td:last-child { grid-column: 1 / -1; }
+  .t.stk > tbody > tr > td[data-l]:not(:first-child):not(:last-child)::before { content: attr(data-l); display: block; font-size: 12px; color: var(--ink-3); line-height: 1.4; }
+  .t.stk > tbody > tr > td:last-child { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .t.stk > tbody > tr > td:empty { display: none; }
+  .t.stk > tbody > tr > td :is(div, p, ul, ol) { min-width: 0; }
+  .t.stk > tbody > tr.sel, .t.stk > tbody > tr.click:hover { background: var(--vault-soft); }
+
+  /* 仕訳帳：1件ずつ、摘要の下に借方と貸方を並べる */
+  .jtable { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto; column-gap: 8px; min-width: 0; }
+  .jtable thead, .jtable tbody { display: contents; }
+  .jtable tr { display: grid; grid-column: 1 / -1; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto; grid-template-columns: subgrid; align-items: baseline; }
+  .jtable :is(td, th) { padding: 3px 2px; border: 0; min-width: 0; white-space: normal; }
+  .jtable td.n, .jtable th.n { white-space: nowrap; }
+  .jtable thead tr { background: var(--sheet-2); border-bottom: 1px solid var(--rule-strong); }
+  .jtable thead th { position: static; padding-top: 6px; padding-bottom: 6px; }
+  .jtable thead th:first-child { display: none; }
+  .jtable td.jdesc { grid-column: 1 / -1; min-width: 0; max-width: none; border: 0; padding: 12px 2px 4px; }
+  .jtable tr.jend { border-bottom: 1px solid var(--rule); padding-bottom: 8px; }
+  .jtable :is(td, th):nth-last-child(2) { border-left: 1px solid var(--rule); padding-left: 8px; }
+  .jtable tr.total { border-top: 1px solid var(--rule-strong); padding-top: 6px; }
+  .jtable tr.total td:first-child { grid-column: 1 / -1; padding-bottom: 0; }
+
+  /* ---- ダイアログ：画面の下から出るシート ---- */
+  #modal-root .scrim { place-items: end stretch; padding: calc(8px + var(--band)) var(--sar) 0 var(--sal); }
+  .modal, .modal.wide, .modal.narrow {
+    width: 100%; max-height: calc(100vh - 8px); max-height: calc(100dvh - 8px - var(--band));
+    border-radius: 16px 16px 0 0; border-width: 1px 0 0;
+  }
+  .modal .mh { padding: 12px 14px 10px 16px; align-items: center; }
+  .modal .mh h2 { font-size: 18px; line-height: 1.35; }
+  .modal .mb { padding: 14px 16px; }
+  .modal .mf { padding: 10px 12px calc(10px + var(--sab)); gap: 8px; }
+  .modal .mf > .btn { flex: 1 1 auto; min-height: 48px; font-size: 15px; }
+  .modal-art { max-height: 26vh; }
+
+  /* ---- お知らせ：上に出して、下のボタンやダイアログを隠さない。押した指はお知らせを素通りする ---- */
+  #toast-root { top: calc(8px + var(--band)); bottom: auto; left: calc(12px + var(--sal)); right: calc(12px + var(--sar)); max-width: none; gap: 6px; pointer-events: none; }
+  #toast-root .toast:nth-last-child(n+3) { display: none; }
+  .toast { padding: 10px 14px; box-shadow: 0 10px 24px -10px rgba(0, 0, 0, .55); }
+
+  /* ---- 地図 ---- */
+  .jmap-wrap { margin: 8px -4px 6px; }
+  .jt { font-size: 10.5px; }
+  .jt .jn.n3 { letter-spacing: -.16em; font-size: .9em; }
+  .jm i, .mapleg i[class^="m-"] { min-width: 13px; height: 13px; font-size: 9px; }
+  .mapsel { max-width: none; }
+  .mapsel select { width: 100%; }
+
+  /* ---- 開始画面 ---- */
+  .startwrap { padding: 0 10px; }
+  .appoint .start .btn { min-height: 48px; }
+}
+
+/* タブレットなど指で操作する広い画面：押せる所を少し大きく */
+@media (pointer: coarse) and (min-width: 761px) {
+  .btn { min-height: 40px; }
+  .btn.sm { min-height: 34px; }
+  .seg button, .subtabs button { min-height: 40px; }
+  .chip { min-height: 32px; }
+  input[type="number"], input[type="text"], input[type="search"], select { min-height: 40px; font-size: 16px; }
+  input[type="checkbox"] { width: 20px; height: 20px; }
+  .xbtn { min-width: 40px; min-height: 40px; }
 }
 
 </style>
@@ -6511,7 +6729,61 @@ function panel(title, body, opt = {}) {
 function kv(rows) { return `<dl class="kv">${rows.filter(Boolean).map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>`; }
 
 /* ---------- 描画 ---------- */
+/* 描き直しても、横に滑らせた位置（主要な数字・タブ・表・地図）とダイアログの位置を保つ */
+const KEEP_SCROLL = ['.strip', '.tabs', '.subtabs', '.jmap-wrap', '.tbl-wrap', '.unitbar'];
+function keepScrollSave() {
+  const v = {};
+  for (const sel of KEEP_SCROLL) document.querySelectorAll('#app ' + sel).forEach((el, i) => { if (el.scrollLeft || el.scrollTop) v[sel + '#' + i] = [el.scrollLeft, el.scrollTop]; });
+  return { tab: UI.tab, v };
+}
+function keepScrollRestore(k) {
+  for (const sel of KEEP_SCROLL) {
+    if (k.tab !== UI.tab && sel !== '.strip' && sel !== '.tabs') continue;
+    document.querySelectorAll('#app ' + sel).forEach((el, i) => { const v = k.v[sel + '#' + i]; if (v) { el.scrollLeft = v[0]; el.scrollTop = v[1]; } });
+  }
+}
+/* 横に滑らせる帯の中で、選んでいるもの（いまのタブ・小見出し）が隠れていたら見える所まで動かす */
+function revealPicked(bar, picked) {
+  if (!bar || !picked || bar.scrollWidth <= bar.clientWidth + 1) return;
+  const r = picked.getBoundingClientRect(), rb = bar.getBoundingClientRect();
+  if (r.left < rb.left) bar.scrollLeft -= rb.left - r.left + 24;
+  else if (r.right > rb.right) bar.scrollLeft += r.right - rb.right + 24;
+}
+/* 最後の列にボタンや入力欄がある表は、スマホでは1行ずつのカードに組み替える（CSS の .t.stk）。
+ * そのために、各セルに列の見出しを data-l として付けておく */
+function markStackTables(root) {
+  if (!root) return;
+  root.querySelectorAll('.tbl-wrap > table.t:not(.jtable)').forEach(t => {
+    const body = t.tBodies[0];
+    if (!body) return;
+    const rows = [...body.rows];
+    const act = c => c && c.querySelector('button, select, input');
+    if (!rows.some(r => r.cells.length > 2 && act(r.cells[r.cells.length - 1]))) return;
+    if (rows.some(r => [...r.cells].some(c => c.rowSpan > 1))) return;
+    const labels = [];
+    const head = t.tHead && t.tHead.rows[0];
+    if (head) for (const th of head.cells) for (let k = 0; k < (th.colSpan || 1); k++) labels.push(th.textContent.trim());
+    for (const r of rows) { let i = 0; for (const c of r.cells) { if (labels[i] && !c.hasAttribute('data-l')) c.setAttribute('data-l', labels[i]); i += c.colSpan || 1; } }
+    t.classList.add('stk');
+    t.parentElement.classList.add('stk-wrap');
+  });
+}
 function render() {
+  const k = keepScrollSave();
+  renderApp();
+  markStackTables($('#app'));
+  keepScrollRestore(k);
+  revealPicked($('#app .tabs'), $('#app .tabs [aria-current="page"]'));
+  document.querySelectorAll('#app .subtabs').forEach(b => revealPicked(b, b.querySelector('[aria-pressed="true"]')));
+}
+/* 画面を切り替えたあとの位置。スマホでタブの帯より下まで読み進めていたときは、帯のすぐ下（新しい画面の先頭）へ */
+function scrollToMain() {
+  const body = $('#app .body'), tabs = $('#app .tabs');
+  if (!body || !tabs || window.innerWidth > 760) { window.scrollTo({ top: 0 }); return; }
+  const y = body.getBoundingClientRect().top + window.scrollY - (parseFloat(getComputedStyle(tabs).top) || 0);
+  window.scrollTo({ top: window.scrollY > y ? y : 0 });
+}
+function renderApp() {
   const app = $('#app');
   document.body.classList.toggle('ingame', !!G);
   if (!G) { app.innerHTML = renderStart(); return; }
@@ -6594,7 +6866,7 @@ function renderTabs() {
 }
 
 /* ---------- モーダル ---------- */
-function showModal(name, args = {}) { hideTip(); UI.modal = { name, args }; drawModal(); }
+function showModal(name, args = {}) { hideTip(); UI.modal = { name, args }; UI.mDrawn = null; drawModal(); }
 function closeModal(force) {
   if (!UI.modal) return;
   const m = MODALS[UI.modal.name];
@@ -6612,16 +6884,27 @@ function closeModal(force) {
 }
 function drawModal() {
   const root = $('#modal-root');
-  if (!UI.modal) { root.innerHTML = ''; document.body.style.overflow = ''; UI.mstack = []; return; }
+  if (!UI.modal) { root.innerHTML = ''; document.body.style.overflow = ''; UI.mstack = []; UI.mDrawn = null; return; }
   const fn = MODALS[UI.modal.name];
   let html;
   try { html = fn(UI.modal.args); } catch (err) { console.error(err); html = `<div class="modal narrow"><div class="mb">表示エラー：${esc(err.message)}</div><div class="mf">${btn('閉じる', 'closeModal', { force: 1 })}</div></div>`; }
+  // 同じダイアログを描き直すときは、読んでいた位置を保つ（ボタンを押すたびに先頭へ戻らないように）
+  const old = root.querySelector('.modal');
+  const keepY = old && UI.mDrawn === UI.modal.name ? old.scrollTop : 0;
+  const keepX = old && UI.mDrawn === UI.modal.name ? [...old.querySelectorAll('.tbl-wrap')].map(w => w.scrollLeft) : [];
   root.innerHTML = `<div class="scrim" data-act="scrim">${html}</div>`;
+  UI.mDrawn = UI.modal.name;
+  markStackTables(root);
+  const nm = root.querySelector('.modal');
+  if (nm && keepY) nm.scrollTop = keepY;
+  if (nm && keepX.length) nm.querySelectorAll('.tbl-wrap').forEach((w, i) => { if (keepX[i]) w.scrollLeft = keepX[i]; });
   document.body.style.overflow = 'hidden';
   const f = root.querySelector('[data-autofocus]') || root.querySelector('.mf .btn.primary') || root.querySelector('.modal button');
   if (f) f.focus({ preventScroll: true });
   if (UI.stampAnim) afterRender();
 }
+/* 次の段階へ進んだダイアログは先頭から読む */
+function modalTop() { const m = document.querySelector('#modal-root .modal'); if (m) m.scrollTop = 0; }
 function modalFrame(title, body, foot, opt = {}) {
   return `<div class="modal ${opt.size || ''}" role="dialog" aria-modal="true" aria-label="${esc(opt.label || title.replace(/<[^>]+>/g, ''))}">
     <div class="mh"><div><h2>${title}</h2>${opt.sub ? `<div class="sub">${opt.sub}</div>` : ''}</div>${opt.noClose ? '' : '<button type="button" class="xbtn" data-act="closeModal" aria-label="閉じる">×</button>'}</div>
@@ -6791,8 +7074,8 @@ function runAdvance() {
 
 /* ---------- 共通アクション ---------- */
 Object.assign(ACTIONS, {
-  tab: d => { UI.tab = d.tab; render(); window.scrollTo({ top: 0 }); },
-  go: d => { UI.tab = d.tab; if (d.app) UI.appId = d.app; if (d.dist) UI.cityD = d.dist; if (d.fin) UI.finTab = d.fin; UI.modal = null; drawModal(); render(); window.scrollTo({ top: 0 }); },
+  tab: d => { UI.tab = d.tab; render(); scrollToMain(); },
+  go: d => { UI.tab = d.tab; if (d.app) UI.appId = d.app; if (d.dist) UI.cityD = d.dist; if (d.fin) UI.finTab = d.fin; UI.modal = null; drawModal(); render(); scrollToMain(); },
   advance: () => (isG() ? gyRequestAdvance() : isK() ? ksRequestAdvance() : requestAdvance()),
   advanceNow: () => runAdvance(),
   closeModal: d => closeModal(!!(d && d.force)),
@@ -7549,7 +7832,7 @@ function refreshEval() {
 Object.assign(ACTIONS, {
   pickApp: d => { UI.appId = d.id; UI.appShowTrue = false; UI.appOpen = true; UI.guideSel = null; render(); if (window.innerWidth < 960) window.scrollTo({ top: 0 }); },
   appBack: () => { UI.appOpen = false; render(); },
-  pfGap: () => { UI.tab = 'portfolio'; UI.pfFilter = 'gap'; UI.pfPage = 0; render(); window.scrollTo({ top: 0 }); },
+  pfGap: () => { UI.tab = 'portfolio'; UI.pfFilter = 'gap'; UI.pfPage = 0; render(); scrollToMain(); },
   appFilter: d => { UI.appFilter = d.v; UI.appId = null; render(); },
   appView: d => { UI.appView = d.v; render(); },
   invest: d => {
@@ -8623,7 +8906,7 @@ MODALS.menu = () => {
     let meta = null;
     try { meta = JSON.parse(lsGet(L.meta(i)) || 'null'); } catch (e) { meta = null; }
     const desc = !meta ? '<span class="muted">空き</span>' : gmode ? `${esc(meta.co)}・${ymLabel(meta.m)}・署長 ${esc(meta.ceo)}` : kmode ? `${esc(meta.co)}・${ymLabel(meta.m)}・${esc(meta.desc || '')}` : `${esc(meta.bank)}・${ymLabel(meta.m)}・総資産${fmtYen(meta.ta)}`;
-    return `<tr><td>${i === 'a' ? '自動保存' : 'スロット' + i}</td><td class="small">${desc}</td><td class="n">${i === 'a' ? '' : btn('保存', 'saveSlot', { slot: i }, 'sm', { disabled: !G })} ${btn('読込', i === 'a' ? 'loadAuto' : 'loadSlot', { slot: i }, 'sm', { disabled: !meta })}</td></tr>`;
+    return `<tr><td class="nowrap">${i === 'a' ? '自動保存' : 'スロット' + i}</td><td class="small">${desc}</td><td class="n">${i === 'a' ? '' : btn('保存', 'saveSlot', { slot: i }, 'sm', { disabled: !G })} ${btn('読込', i === 'a' ? 'loadAuto' : 'loadSlot', { slot: i }, 'sm', { disabled: !meta })}</td></tr>`;
   };
   const theme = lsGet(LS.theme) || 'auto';
   const body = `<h3 style="font-size:14px;margin:0 0 6px">セーブとロード（${gmode ? '法令を守らせる' : kmode ? '会社を経営する' : '銀行を経営する'}）</h3><table class="t compact"><tbody>${slot('a')}${slot(1)}${slot(2)}${slot(3)}</tbody></table>
@@ -9320,6 +9603,7 @@ const KS_ACCT = {
   gainSale: { n: '固定資産売却益', t: 'R', g: 'exg', tk: 'extra' },
   insRecv: { n: '受取保険金', t: 'R', g: 'exg', tk: 'extra' },
   subGain: { n: '関係会社株式売却益', t: 'R', g: 'exg', tk: 'subShares' },
+  mergeGain: { n: '抱合せ株式消滅差益', t: 'R', g: 'exg', tk: 'gappei' },
   purch: { n: '仕入高', t: 'X', g: 'cogs', tk: 'purch' },
   matPurch: { n: '材料仕入高', t: 'X', g: 'cogs', tk: 'matCost' },
   labor: { n: '労務費', t: 'X', g: 'cogs', tk: 'labor' },
@@ -9362,6 +9646,7 @@ const KS_ACCT = {
   fines: { n: '罰金及び科料', t: 'X', g: 'noe', tk: 'soken' },
   lossSale: { n: '固定資産売却損', t: 'X', g: 'exl', tk: 'extra' },
   subLoss: { n: '関係会社株式売却損・評価損', t: 'X', g: 'exl', tk: 'subShares' },
+  mergeLoss: { n: '抱合せ株式消滅差損', t: 'X', g: 'exl', tk: 'gappei' },
   disaster: { n: '災害による損失', t: 'X', g: 'exl', tk: 'extra' },
   moveExp: { n: '事務所移転費用', t: 'X', g: 'exl', tk: 'extra' },
   compens: { n: '損害賠償金', t: 'X', g: 'exl', tk: 'safetyDuty' },
@@ -19539,11 +19824,11 @@ KS_SCREENS.k_learn = () => {
   ${learn}
   <div class="grid g2" style="margin-top:16px">
     ${panel('簿記の5つの要素', `<table class="t compact"><tbody>
-      <tr><td><b>資産</b></td><td>会社が持っている財産（現金・売掛金・在庫・建物など）</td><td>増えたら借方</td></tr>
-      <tr><td><b>負債</b></td><td>返さなければならないもの（買掛金・借入金など）</td><td>増えたら貸方</td></tr>
-      <tr><td><b>純資産</b></td><td>資産−負債。株主が出したお金（資本金）と利益の蓄え</td><td>増えたら貸方</td></tr>
-      <tr><td><b>収益</b></td><td>純資産を増やす原因（売上高・受取利息など）</td><td>発生したら貸方</td></tr>
-      <tr><td><b>費用</b></td><td>純資産を減らす原因（仕入・給料・家賃・減価償却費など）</td><td>発生したら借方</td></tr></tbody></table>
+      <tr><td class="nowrap"><b>資産</b></td><td>会社が持っている財産（現金・売掛金・在庫・建物など）</td><td class="nowrap">増えたら借方</td></tr>
+      <tr><td class="nowrap"><b>負債</b></td><td>返さなければならないもの（買掛金・借入金など）</td><td class="nowrap">増えたら貸方</td></tr>
+      <tr><td class="nowrap"><b>純資産</b></td><td>資産−負債。株主が出したお金（資本金）と利益の蓄え</td><td class="nowrap">増えたら貸方</td></tr>
+      <tr><td class="nowrap"><b>収益</b></td><td>純資産を増やす原因（売上高・受取利息など）</td><td class="nowrap">発生したら貸方</td></tr>
+      <tr><td class="nowrap"><b>費用</b></td><td>純資産を減らす原因（仕入・給料・家賃・減価償却費など）</td><td class="nowrap">発生したら借方</td></tr></tbody></table>
       <p class="small" style="margin:8px 0 0">例：商品を10万円で売り、代金は翌月もらう →（借方）売掛金 10万円 ／（貸方）売上高 10万円。${btn('仕訳帳を見る', 'kGo', { tab: 'k_books' }, 'sm linkish')}</p>`)}
     ${panel('帳簿から決算書、そして銀行へ', `<div class="flowline big">${cycle.map(s => `<span class="fl">${s}</span>`).join('<span class="arr" aria-hidden="true">→</span>')}</div>
       <p class="small" style="margin:8px 0 0">毎月の取引は自動で仕訳され、月末に月次決算（速報）がまとまります。3月末には実地棚卸・減価償却・引当金・未払と前払・税金の決算整理を行い、正式な決算書が完成します。銀行はその決算書で格付を決め、金利や貸せる金額が変わります。</p>`)}
@@ -19564,8 +19849,8 @@ KS_SCREENS.k_news = () => {
 
 /* ---------- アクション ---------- */
 Object.assign(ACTIONS, {
-  kGo: d => { UI.tab = d.tab; UI.modal = null; UI.queue = []; drawModal(); render(); if (d.sec === 'view') { const el = $('#bankview'); if (el) el.scrollIntoView({ block: 'start' }); } else window.scrollTo({ top: 0 }); },
-  kGoFs: d => { UI.tab = 'k_fs'; UI.kFsView = d.v; UI.kFy = d.v === 'month' && G.months.some(x => fyOf(x.m) === fyOf(G.m)) ? fyOf(G.m) : ksFyOfLast(); UI.modal = null; drawModal(); render(); window.scrollTo({ top: 0 }); },
+  kGo: d => { UI.tab = d.tab; UI.modal = null; UI.queue = []; drawModal(); render(); if (d.sec === 'view') { const el = $('#bankview'); if (el) el.scrollIntoView({ block: 'start' }); } else scrollToMain(); },
+  kGoFs: d => { UI.tab = 'k_fs'; UI.kFsView = d.v; UI.kFy = d.v === 'month' && G.months.some(x => fyOf(x.m) === fyOf(G.m)) ? fyOf(G.m) : ksFyOfLast(); UI.modal = null; drawModal(); render(); scrollToMain(); },
   kFy: d => { UI.kFy = +d.v; render(); },
   kFsView: d => { UI.kFsView = d.v; render(); },
   kCoView: d => { UI.coFsView = d.v; UI.guideSel = null; render(); },
@@ -19655,7 +19940,7 @@ MODALS.kMonth = a => {
     <label class="inline small" style="margin-top:12px"><input type="checkbox" data-ch="setting" data-key="monthly" ${UI.settings.monthly ? 'checked' : ''}> 毎月この報告を表示する</label>`;
   return modalFrame(`${ymLabel(x.m)}の月次決算`, body, btn('仕訳帳を見る', 'kJournalFrom', { m: x.m }) + btn('閉じる', 'closeModal', {}, 'primary'), { size: 'wide', sub: `${warekiLabel(x.m)}末の締め` });
 };
-ACTIONS.kJournalFrom = d => { UI.tab = 'k_books'; UI.kBooks = 'journal'; UI.kJm = +d.m; UI.modal = null; UI.queue = UI.queue.filter(q => q.name === 'kClose' || q.name === 'kTerm' || q.name === 'kOver'); drawModal(); render(); window.scrollTo({ top: 0 }); if (UI.queue.length) { const n = UI.queue.shift(); showModal(n.name, n.args); } };
+ACTIONS.kJournalFrom = d => { UI.tab = 'k_books'; UI.kBooks = 'journal'; UI.kJm = +d.m; UI.modal = null; UI.queue = UI.queue.filter(q => q.name === 'kClose' || q.name === 'kTerm' || q.name === 'kOver'); drawModal(); render(); scrollToMain(); if (UI.queue.length) { const n = UI.queue.shift(); showModal(n.name, n.args); } };
 
 /* ---------- 融資の申込 ---------- */
 const KS_TERMS_M = [[6, '6か月（手形貸付）'], [12, '1年（手形貸付）'], [36, '3年'], [60, '5年'], [84, '7年'], [120, '10年']];
@@ -20041,7 +20326,7 @@ INPUTS.kOpLive = el => { const o = el.parentElement.querySelector('output'); if 
 Object.assign(ACTIONS, {
   kOpToggle: d => { const u = ksUnit(d.u); if (u) { u.op[d.k] = !u.op[d.k]; render(); } },
   kOpSet: d => { const u = ksUnit(d.u); if (u) { u.op[d.k] = isFinite(+d.v) && d.v !== '' && typeof d.v !== 'boolean' && /^-?[0-9.]+$/.test(d.v) ? +d.v : d.v; render(); } },
-  kUnitSel: d => { UI.kUnit = d.u; render(); window.scrollTo({ top: 0 }); },
+  kUnitSel: d => { UI.kUnit = d.u; render(); scrollToMain(); },
 });
 
 /* ---------- 人員 ---------- */
@@ -20359,7 +20644,7 @@ Object.assign(ACTIONS, {
   kShopStore: d => { const u = ksUnit(d.u); ksCapexOpen(KS_ENGINE.shop.plan(u)); },
   kShopRenov: d => { const u = ksUnit(d.u); const P = ksP(u); ksCapexOpen({ title: `${d.s}の改装`, desc: '売場を新しくすると、客足が戻ります（古い店ほど効果が大きい）。', items: [{ n: `${d.s}の改装工事`, acct: 'bldg', cost: Math.round(P.fit * 0.4 * ksPrice()), life: 15, part: 'S', u: u.id }], fx: 'shopRenov', arg: { u: u.id, s: d.s } }); },
   kShopEq: d => { const u = ksUnit(d.u); const P = ksP(u); ksCapexOpen({ title: `${d.s}の設備の更新`, desc: '新しい設備にすると、電気代・修理代・廃棄が減ります。', items: [{ n: `${d.s}の${(P.eqn && P.eqn[0]) || '店の設備'}`, acct: 'equip', cost: Math.round(P.eqc * ksPrice()), life: 6, part: 'S', u: u.id }], fx: 'shopEq', arg: { u: u.id, s: d.s } }); },
-  kGoUnit: d => { UI.tab = 'k_ops'; UI.kUnit = d.u; UI.modal = null; drawModal(); render(); window.scrollTo({ top: 0 }); },
+  kGoUnit: d => { UI.tab = 'k_ops'; UI.kUnit = d.u; UI.modal = null; drawModal(); render(); scrollToMain(); },
 });
 
 /* =========================================================
@@ -21157,7 +21442,7 @@ Object.assign(ACTIONS, {
     drawModal();
   },
   kCloseOpt: d => { const c = G.closing; const step = c.steps[c.view]; c.opt[step] = Object.assign({}, c.opt[step], { [d.k]: +d.v }); drawModal(); },
-  kCloseView: d => { const c = G.closing; c.view = Math.min(+d.i, c.i); drawModal(); const mb = document.querySelector('.modal .mb'); if (mb) mb.scrollTop = 0; },
+  kCloseView: d => { const c = G.closing; c.view = Math.min(+d.i, c.i); drawModal(); modalTop(); },
   kCloseNext: () => {
     const c = G.closing;
     const step = c.steps[c.i];
@@ -21169,6 +21454,7 @@ Object.assign(ACTIONS, {
     drawModal();
     const mb = document.querySelector('.modal .mb');
     if (mb) mb.scrollTop = 0;
+    modalTop();
     render();
     scheduleSave();
   },
@@ -22324,7 +22610,7 @@ Object.assign(ACTIONS, {
     G.quiz.asked++; if (ok) G.quiz.correct++;
     drawModal();
   },
-  kRosaiNext: () => { UI.kRosai.i++; drawModal(); const mb = document.querySelector('.modal .mb'); if (mb) mb.scrollTop = 0; },
+  kRosaiNext: () => { UI.kRosai.i++; drawModal(); modalTop(); },
   kRosaiDone: () => {
     const R = UI.kRosai;
     const ch = Object.assign({ pay: 'rosai', comp: 'pay', report: 'report' }, R.ch);
@@ -23398,6 +23684,129 @@ function ksSubs(root = ksRoot()) { return root && root.group ? root.group.subs.f
 function ksSubAll(root = ksRoot()) { return root && root.group ? root.group.subs : []; }
 function ksSubById(id, root = ksRoot()) { return ksSubAll(root).find(s => s.id === id) || null; }
 function ksGroupOn(root = ksRoot()) { return ksSubs(root).length > 0; }
+/* 連結子会社だけ（持分法の関連会社を除く） */
+function ksCSubs(root = ksRoot()) { return ksSubs(root).filter(s => !s.aff); }
+/* 記録の直接の持ち主（'root' か会社の id）・持ち主の会社の状態 */
+function ksRecOwnerId(s) { return s.parent || 'root'; }
+function ksOwnerSt(s, root = ksRoot()) {
+  if (!s.parent || s.parent === 'root') return root;
+  const o = ksSubById(s.parent, root);
+  return o && !o.gone ? o.st : null;
+}
+function ksOwnerName(s, root = ksRoot()) { const st = ksOwnerSt(s, root); return st ? st.coName : ''; }
+/* 持ち主の名前（グループから外れた記録にも使える） */
+function ksOwnerNameOf(s, root = ksRoot()) { if (!s.parent || s.parent === 'root') return root.coName; const o = ksSubById(s.parent, root); return o ? o.name : ''; }
+function ksSubsOf(ownerId, root = ksRoot()) { return ksSubs(root).filter(s => ksRecOwnerId(s) === ownerId); }
+function ksDescendants(id, root = ksRoot()) {
+  const out = [];
+  const walk = pid => { for (const x of ksSubs(root)) if (x.parent === pid && !out.includes(x)) { out.push(x); walk(x.id); } };
+  walk(id);
+  return out;
+}
+/* 親会社から見た実質の持分（持分の掛け算） */
+function ksEffOwn(s, root = ksRoot()) {
+  let f = s.own, p = s.parent, n = 0;
+  while (p && p !== 'root' && n++ < 8) { const o = ksSubById(p, root); if (!o) break; f *= o.own; p = o.parent; }
+  return f;
+}
+function ksRecDepth(s, root = ksRoot()) {
+  let d = 0, p = s.parent;
+  while (p && p !== 'root' && d < 8) { const o = ksSubById(p, root); if (!o) break; d++; p = o.parent; }
+  return d;
+}
+/* 持ち主の個別の帳簿の、この会社の株式の額（関係会社株式） */
+function ksRecInv(s) { if (s.inv === undefined) s.inv = Math.round(s.own * (s.eq0 + s.adds) + (s.gw || 0) - (s.negGw || 0)); return s.inv; }
+/* 以前の版のセーブデータの記録を、今の形にそろえる */
+function ksGroupMigrate(root = G) {
+  if (!root || !root.group) return;
+  const g = root.group;
+  g.cadj = g.cadj || []; g.capAdj = g.capAdj || []; g.mergers = g.mergers || [];
+  for (const s of g.subs) {
+    ksRecInv(s);
+    if (s.aff === undefined) s.aff = false;
+    // 負ののれんは、連結だけの修正（g.cadj）で特別利益にする
+    if (s.negGw && !s.negDone && !g.cons[fyOf(s.since)]) { g.cadj.push({ fy: fyOf(s.since), m: s.since, owner: ksRecOwnerId(s), id: s.id, t: '負ののれん発生益', why: `${s.name}の純資産より安く買えた差は、買った期の特別利益`, pl: { exg: s.negGw } }); s.negDone = true; }
+  }
+}
+
+/* ---------- いまの時点の数字（取引のときの計算に使う） ---------- */
+/* 今月すでに記帳した損益（月の途中の分は、子会社の月次の締めの後に連結に入る） */
+function ksMonthPLNow() { return sum(Object.entries(G.flow || {}), ([k, v]) => (KS_ACCT[k] && KS_ACCT[k].t === 'R' ? v : KS_ACCT[k] && KS_ACCT[k].t === 'X' ? -v : 0)); }
+function ksIcDivTotTo(s, fy, toM) {
+  const o = ((ksRoot().group.ic || {})[fy] || {})[s.id];
+  if (!o) return 0;
+  if (o.divTotM) return sum(Object.entries(o.divTotM).filter(([mm]) => +mm <= toM), ([, v]) => v);
+  return o.divTot || 0;
+}
+/* 今期の先月までの損益（換算後）と、月ごとの純利益 */
+function ksRecSnap(s) {
+  const root = ksRoot();
+  const fy = fyOf(root.m), toM = root.m - 1;
+  const pl = ksGroupSubPL(s, fy, toM);
+  const kf = s.cc && s.cc !== 'jp' ? mm => ksSubK(s, mm) : null;
+  const niM = {};
+  for (const x of s.st.months) if (fyOf(x.m) === fy && x.m >= s.since && x.m <= toM) niM[x.m] = ksPLNi(ksPLLines(ksEntPLAcct(s.st, fy, x.m, x.m, kf)));
+  return { fy, toM, pl, niM, ni: ksPLNi(pl) };
+}
+/* 記録の今の数字：NAh＝取得のときのレートの純資産（eq0＋adds＋取得後の利益）、NAtr＝今のレートの純資産、gwLeft＝のれんの残り */
+function ksRecNow(s) {
+  const root = ksRoot();
+  const S = ksRecSnap(s);
+  const reTr = s.reTr + S.ni - ksIcDivTotTo(s, S.fy, S.toM);
+  const eqL = ksWith(s.st, () => ksEquity() - ksMonthPLNow());
+  const amort = ksGwAmortFY(s, S.fy, S.toM);
+  return { S, reTr, NAh: Math.round(s.eq0 + s.adds + reTr), NAtr: Math.round(eqL * ksSubK(s, root.m)), amort, gwLeft: Math.round((s.gw || 0) - (s.gwCum || 0) - amort) };
+}
+/* 会社とその下の会社を合わせた、株主に帰属する純資産（取得のときのレート） */
+function ksRecEh(c, root = ksRoot()) {
+  let E = ksRecNow(c).NAh;
+  for (const x of ksSubsOf(c.id, root)) {
+    const X = ksRecNow(x);
+    E += (x.aff ? x.own * X.NAh : x.own * ksRecEh(x, root)) + X.gwLeft - ksRecInv(x);
+  }
+  return E;
+}
+/* 売却・破産のときの、連結の損益の修正（個別の帳簿価額 − 連結の帳簿価額） */
+function ksRecSaleAdj(s) {
+  const N = ksRecNow(s);
+  return Math.round(ksRecInv(s) - (s.own * (s.aff ? N.NAh : ksRecEh(s)) + N.gwLeft));
+}
+/* 記録を閉じる（売却・破産・合併）。今期の先月までの損益を残す */
+function ksRecClose(s, why, o = {}) {
+  const root = ksRoot();
+  const S = ksRecSnap(s);
+  s.reTr += S.ni - ksIcDivTotTo(s, S.fy, S.toM);
+  const amort = ksGwAmortFY(s, S.fy, S.toM);
+  s.gwCum += amort;
+  s.out = { why, m: root.m, fy: S.fy, last: S.toM, price: o.price || 0, pl: S.pl, niM: S.niM, adj: o.adj || 0, amort, reTr: s.reTr, into: o.into || null };
+  s.gone = true;
+  s.goneM = root.m;
+}
+/* 持分が変わるとき：先月までの記録を別に残し（同じ会社の前の期間）、この記録は今月からの新しい期間にする */
+function ksRecReopen(s, why) {
+  const root = ksRoot(), g = root.group;
+  const S = ksRecSnap(s);
+  const amort = ksGwAmortFY(s, S.fy, S.toM);
+  const old = Object.assign({}, s, { id: `${s.id}@${root.m}`, base: s.base || s.id, st: null, gone: true, goneM: root.m });
+  old.reTr = s.reTr + S.ni - ksIcDivTotTo(s, S.fy, S.toM);
+  old.gwCum = s.gwCum + amort;
+  old.out = { why, m: root.m, fy: S.fy, last: S.toM, pl: S.pl, niM: S.niM, amort, reTr: old.reTr, adj: 0 };
+  const ic = g.ic[S.fy];
+  if (ic && ic[s.id]) { ic[old.id] = ic[s.id]; delete ic[s.id]; }
+  g.subs.splice(g.subs.indexOf(s), 0, old);
+  return { old, gwRem: Math.max(0, Math.round(s.gw - old.gwCum)), gwMonths: Math.max(0, (s.gwFrom ?? s.since) + Math.round((s.gwLife || 10) * 12) - root.m) };
+}
+/* 親会社からの貸付金を清算する（子会社の現預金で返し、足りない分は新しい株主が肩代わりして返す） */
+function ksGroupLoanSettle(s) {
+  const root = ksRoot(), g = root.group;
+  if (ksIcLoanBal(s.id, root) <= 0) return;
+  ksGroupRepay(s, ksIcLoanBal(s.id, root), true);
+  const rem = ksIcLoanBal(s.id, root);
+  if (rem > 0) {
+    ksWith(root, () => ksPost('icRecv', [['cash', rem, 0], ['icLoan', 0, rem]], { u: 'HQ', cf: 'fin', desc: `${s.name}への貸付金の回収（新しい株主による返済）` }));
+    g.loans = (g.loans || []).filter(L => L.sub !== s.id);
+  }
+}
 /* 純粋持株会社（自分の事業がなく、子会社の株式を持って経営を指導する） */
 function ksIsPureHD(st = G) { return !!(st && st.group && st.group.hd && !(st.units || []).some(u => !u.closedM)); }
 function ksGroupInit() {
@@ -23409,7 +23818,7 @@ function ksViewEntity(id) {
   const root = ksRoot();
   if (!id || id === 'root') { G = root; KS_ROOT = null; return true; }
   const s = ksSubById(id, root);
-  if (!s || s.gone) return false;
+  if (!s || s.gone || s.aff) return false;
   KS_ROOT = root;
   G = s.st;
   return true;
@@ -23466,9 +23875,14 @@ function ksCityBase() { return typeof CITY_NAME !== 'undefined' ? CITY_NAME.repl
 function ksSubNameFor(type, cc) {
   const S = KS_TYPES[type];
   const c = S ? KS_CO_CORE[S.eng] : null;
-  const base = c ? pick(c.filter(x => x !== 'ホールディングス')) : '産業';
-  if (cc && cc !== 'jp' && typeof KS_COUNTRIES !== 'undefined' && KS_COUNTRIES[cc]) return `${ksCityBase()}${base}${KS_COUNTRIES[cc].n}`;
-  return `${ksCityBase()}${base}株式会社`;
+  const cands = c ? c.filter(x => x !== 'ホールディングス') : ['産業'];
+  const root = ksRoot();
+  const used = new Set(root && root.group ? [root.coName, ...root.group.subs.map(x => x.name)] : []);
+  const mk = b => (cc && cc !== 'jp' && typeof KS_COUNTRIES !== 'undefined' && KS_COUNTRIES[cc] ? `${ksCityBase()}${b}${KS_COUNTRIES[cc].n}` : `${ksCityBase()}${b}株式会社`);
+  // グループの中で同じ名前にならないようにする
+  for (const b of [pick(cands), ...cands]) if (!used.has(mk(b))) return mk(b);
+  for (const x of ['第二', '東日本', '西日本', '北', '南', 'ネクスト']) if (!used.has(mk(cands[0] + x))) return mk(`${x}${cands[0]}`);
+  return mk(cands[0] + (root && root.group ? root.group.seq : ''));
 }
 /* 新しい事業を子会社の中で始める（G は子会社）。立ち上げの設備を買い、事業を加える */
 function ksSubStartUnit(type, sc) {
@@ -23506,27 +23920,37 @@ function ksSubStartPlan(type, sc) {
   finally { G.rs = snap.rs; G.seq = snap.seq; G.assets.length = snap.nA; }
 }
 
-/* ---------- 子会社を設立する ---------- */
-/* o: { type, sc, own (0.5〜1), cash（親会社の出資額）, capital, name, cc, pref } */
+/* ---------- 子会社・関連会社を設立する ---------- */
+/* o: { type, sc, own (0.2〜1。50%以下は持分法の関連会社), cash（出資額）, capital, name, cc, pref, owner（出資する会社：'root' か国内の子会社の id）, partner } */
 function ksGroupFound(o) {
   ksGroupInit();
-  const root = G;
+  const root = ksRoot();
   const g = root.group;
-  const own = clamp(+o.own || 1, 0.51, 1);
+  ksGroupMigrate(root);
+  const ownerId = o.owner && o.owner !== 'root' ? o.owner : 'root';
+  const os = ownerId === 'root' ? null : ksSubById(ownerId, root);
+  if (os && (os.gone || os.aff || (os.cc && os.cc !== 'jp'))) return { ok: false, why: '出資できるのは、親会社か国内の連結子会社です' };
+  const ownerSt = os ? os.st : root;
+  const own = clamp(+o.own || 1, 0.2, 1);
+  const aff = own <= 0.5;
   const invest = Math.round(o.cash);
-  if (invest <= 0 || ksB('cash') < invest) return { ok: false, why: '出資するお金が足りません' };
+  if (invest <= 0 || ksWith(ownerSt, () => ksB('cash')) < invest) return { ok: false, why: '出資するお金が足りません' };
   const total = Math.round(invest / own); // 合弁なら、相手の会社も持分に応じて出資する
   const id = 'S' + (++g.seq);
   const cc = o.cc || 'jp';
   const fx0 = cc === 'jp' ? 1 : ksFxNow(ksCurOf(cc), root.eco);
-  // 海外子会社の帳簿は、設立のときのレートで円に直した現地通貨で記帳する（同じ額なので換算の差は出ない）
+  // 海外の会社の帳簿は、設立のときのレートで円に直した現地通貨で記帳する（同じ額なので換算の差は出ない）
   const st = ksFreshCompany({ coName: o.name || ksSubNameFor(o.type, cc), cash: total, capital: Math.min(o.capital || total, total), seed: (root.rs ^ (g.seq * 40503)) | 0, cc, pref: o.pref, subId: id, execPay: clamp(Math.round(o.cash / 400 / 1e4) * 1e4, 40e4, 150e4) });
+  st.parentName = ownerSt.coName;
   let unit = null;
   if (o.type) ksWith(st, () => { unit = ksSubStartUnit(o.type, o.sc).u; });
-  ksPost('subFound', [['subShares', invest, 0], ['cash', 0, invest]], { u: 'HQ', cf: 'capex', desc: `子会社の設立（${st.coName}）への出資` });
-  const s = { id, st, own, kind: own < 1 ? 'jv' : 'new', since: root.m, eq0: total, adds: 0, reTr: 0, gw: 0, gwCum: 0, cc, fx0, fee: own < 1 ? 0 : 0.01, payout: 0.3, auto: true, name: st.coName, partner: own < 1 ? (o.partner || `${pick(CO_PREFIX)}${pick(['商事', '物産', '産業'])}`) : null };
+  ksWith(ownerSt, () => ksPost('subFound', [['subShares', invest, 0], ['cash', 0, invest]], { u: 'HQ', cf: 'capex', desc: `${aff ? '関連会社' : '子会社'}の設立（${st.coName}）への出資` }));
+  const partner = own < 1 ? (o.partner || `${pick(CO_PREFIX)}${pick(['商事', '物産', '産業'])}`) : null;
+  const s = { id, st, own, kind: aff ? 'aff' : own < 1 ? 'jv' : 'new', since: root.m, eq0: total, adds: 0, reTr: 0, gw: 0, gwCum: 0, cc, fx0, fee: own < 1 ? 0 : 0.01, payout: 0.3, auto: true, name: st.coName, partner, inv: invest, aff };
+  if (ownerId !== 'root') s.parent = ownerId;
   g.subs.push(s);
-  ksNews(`${st.coName}を設立しました（出資 ${fmtYen(invest)}${own < 1 ? `・持分${Math.round(own * 100)}%、残りは${s.partner}が出資する合弁会社` : '・100%子会社'}）${unit ? `。${ksS(unit).name}を始めます` : ''}`, 'good');
+  const by = ownerId === 'root' ? '' : `${ownerSt.coName}が出資して、孫会社として`;
+  ksWith(root, () => ksNews(`${by}${st.coName}を設立しました（出資 ${fmtYen(invest)}${aff ? `・持分${Math.round(own * 100)}%。経営は${partner}が主導し、持分法の関連会社になります` : own < 1 ? `・持分${Math.round(own * 100)}%、残りは${partner}が出資する合弁会社` : '・100%子会社'}）${unit ? `。${ksS(unit).name}を始めます` : ''}`, 'good'));
   return { ok: true, s };
 }
 
@@ -23786,29 +24210,33 @@ function ksGroupDD(t) {
   t.ddFee = fee;
   return t;
 }
-/* 株式を買う。own：取得する持分（0.51〜1） */
+/* 株式を買う。own：取得する持分（0.2〜1。50%以下は持分法の関連会社） */
 function ksGroupBuy(t, own) {
   ksGroupInit();
   const root = G, g = root.group;
+  ksGroupMigrate(root);
   if (!t.st) return { ok: false, why: '先にデューデリジェンスが必要です' };
-  own = clamp(+own || 1, 0.51, 1);
-  const price = niceAmount(t.q.price100 * own * (own >= 0.67 ? 1 : 0.97));
+  own = clamp(+own || 1, 0.2, 1);
+  const aff = own <= 0.5;
+  // 支配権のつかない少ない持分は、少し安く買える
+  const price = niceAmount(t.q.price100 * own * (own >= 0.67 ? 1 : own > 0.5 ? 0.97 : 0.9));
   if (ksB('cash') < price) return { ok: false, why: '買収の資金が足りません' };
   const id = 'S' + (++g.seq);
   const st = t.st;
   st.isSub = true; st.subId = id; st.parentName = root.coName;
   // 取得の時点の純資産（今月すでに記帳した損益は、取得後の損益として連結に入るので除く）
-  const eq = Math.round(ksWith(st, () => ksEquity() - sum(Object.entries(G.flow || {}), ([k, v]) => (KS_ACCT[k].t === 'R' ? v : KS_ACCT[k].t === 'X' ? -v : 0))));
-  ksPost('subBuy', [['subShares', price, 0], ['cash', 0, price]], { u: 'HQ', cf: 'capex', desc: `株式の取得（${t.co}を子会社に）` });
+  const eq = Math.round(ksWith(st, () => ksEquity() - ksMonthPLNow()));
+  ksPost('subBuy', [['subShares', price, 0], ['cash', 0, price]], { u: 'HQ', cf: 'capex', desc: `株式の取得（${t.co}を${aff ? '関連会社' : '子会社'}に）` });
   const gw = Math.max(0, price - own * eq), negGw = Math.max(0, own * eq - price);
-  const s = { id, st, own, kind: 'acq', since: root.m, eq0: eq, adds: 0, reTr: 0, gw: Math.round(gw), negGw: Math.round(negGw), gwCum: 0, cc: 'jp', fx0: 1, fee: 0.005, payout: 0.3, auto: true, name: st.coName, price, partner: own < 1 ? '旧株主（創業家）' : null };
+  const s = { id, st, own, kind: aff ? 'aff' : 'acq', since: root.m, eq0: eq, adds: 0, reTr: 0, gw: Math.round(gw), negGw: Math.round(negGw), negDone: true, gwCum: 0, cc: 'jp', fx0: 1, fee: aff ? 0 : 0.005, payout: 0.3, auto: true, name: st.coName, price, partner: own < 1 ? '旧株主（創業家）' : null, inv: price, aff };
   g.subs.push(s);
+  if (negGw) g.cadj.push({ fy: fyOf(root.m), m: root.m, owner: 'root', id, t: aff ? '持分法による投資利益（負ののれん相当額）' : '負ののれん発生益', why: `${st.coName}の純資産の持分より安く買えた差は、買った期の${aff ? '持分法による投資利益' : '特別利益'}`, pl: aff ? { noi: Math.round(negGw) } : { exg: Math.round(negGw) } });
   g.targets = (g.targets || []).filter(x => x !== t);
-  ksNews(`${t.co}の株式の${Math.round(own * 100)}%を${fmtYen(price)}で取得し、子会社にしました（純資産 ${fmtYen(eq)}・のれん ${fmtYen(gw)}${negGw ? `・負ののれん ${fmtYen(negGw)}` : ''}）`, 'good');
+  ksNews(`${t.co}の株式の${Math.round(own * 100)}%を${fmtYen(price)}で取得し、${aff ? '持分法の関連会社' : '子会社'}にしました（純資産 ${fmtYen(eq)}・${aff ? '投資差額' : 'のれん'} ${fmtYen(gw)}${negGw ? `・負ののれん ${fmtYen(negGw)}` : ''}）`, 'good');
   return { ok: true, s, price, gw };
 }
 
-/* ---------- 子会社の株式を売る ---------- */
+/* ---------- 子会社・関連会社の株式を売る ---------- */
 function ksSubValue(s) {
   const L = ksWith(s.st, ksLastFY);
   const bfs = L ? ksWith(s.st, () => ksToBankFS(L)) : null;
@@ -23817,66 +24245,63 @@ function ksSubValue(s) {
   return Math.round(Math.max(eq * 0.9, eq + opi * 3) * ksSubK(s, ksRoot().m));
 }
 function ksGroupSell(id) {
-  const root = G, g = root.group;
+  const root = ksRoot(), g = root.group;
+  ksGroupMigrate(root);
   const s = ksSubById(id, root);
-  if (!s || s.gone) return { ok: false, why: '子会社がありません' };
+  if (!s || s.gone) return { ok: false, why: '会社がありません' };
   if (root.closing) return { ok: false, why: '決算整理の途中です' };
+  const seller = ksOwnerSt(s, root);
+  if (!seller) return { ok: false, why: '株式を持つ会社がありません' };
   const price = niceAmount(ksSubValue(s) * s.own);
-  const carry = Math.round(s.own * (s.eq0 + s.adds) + s.gw);
-  const icl = Math.round(sum((g.loans || []).filter(L => L.sub === id), L => L.bal));
+  const carry = ksRecInv(s);
+  const adj = ksRecSaleAdj(s);
+  const tree = [s, ...ksDescendants(s.id, root)];
   // 親会社からの貸付金は、売るときに返してもらう
-  if (icl > 0) ksGroupRepay(s, icl, true);
+  for (const x of tree) ksGroupLoanSettle(x);
   const lines = [['cash', price, 0], ['subShares', 0, carry]];
   if (price > carry) lines.push(['subGain', 0, price - carry]); else if (price < carry) lines.push(['subLoss', carry - price, 0]);
-  ksPost('subSell', lines, { u: 'HQ', cf: 'capex', desc: `子会社の株式の売却（${s.name}）` });
-  ksGroupDeconsolidate(s, 'sold', price);
-  ksNews(`${s.name}の株式を${fmtYen(price)}で売却しました（帳簿価額 ${fmtYen(carry)}・売却${price >= carry ? '益' : '損'} ${fmtYen(Math.abs(price - carry))}）`, price >= carry ? 'good' : 'bad');
+  ksWith(seller, () => ksPost('subSell', lines, { u: 'HQ', cf: 'capex', desc: `${s.aff ? '関連会社' : '子会社'}の株式の売却（${s.name}）` }));
+  for (const x of tree) ksRecClose(x, x === s ? 'sold' : 'with', x === s ? { price, adj } : {});
+  const by = seller === root ? '' : `（${seller.coName}が持っていた株式）`;
+  ksWith(root, () => ksNews(`${s.name}の株式${by}を${fmtYen(price)}で売却しました（帳簿価額 ${fmtYen(carry)}・売却${price >= carry ? '益' : '損'} ${fmtYen(Math.abs(price - carry))}）${tree.length > 1 ? `。${tree.slice(1).map(x => x.name).join('・')}もグループから外れます` : ''}`, price >= carry ? 'good' : 'bad'));
   return { ok: true, price, carry };
-}
-/* 連結から外す（売却・破産）。連結の利益剰余金との差を、売却損益の連結修正として記録する */
-function ksGroupDeconsolidate(s, why, price) {
-  const root = ksRoot();
-  const fy = fyOf(root.m);
-  const pl = ksGroupSubPL(s, fy, root.m);
-  const ni = ksPLNi(pl);
-  s.reTr += ni - ksIcDivTot(s, fy);
-  const amort = ksGwAmortFY(s, fy, root.m);
-  s.gwCum += amort;
-  s.out = { why, m: root.m, fy, price, pl, adj: Math.round(-s.own * s.reTr + s.gwCum), amort, reTr: s.reTr };
-  s.gone = true;
-  s.goneM = root.m;
 }
 
 /* ---------- 親子の取引（増資・貸付・返済） ---------- */
 function ksGroupInject(id, amt) {
-  const root = G, s = ksSubById(id, root);
-  if (!s || s.gone) return { ok: false, why: '子会社がありません' };
+  const root = ksRoot(), s = ksSubById(id, root);
+  if (!s || s.gone) return { ok: false, why: '会社がありません' };
+  const owner = ksOwnerSt(s, root);
+  if (!owner) return { ok: false, why: '株式を持つ会社がありません' };
   amt = Math.round(amt);
-  if (ksB('cash') < amt) return { ok: false, why: '現預金が足りません' };
+  if (amt <= 0 || ksWith(owner, () => ksB('cash')) < amt) return { ok: false, why: '現預金が足りません' };
   const total = Math.round(amt / s.own);
   const k = ksSubK(s, root.m);
-  ksPost('subAdd', [['subShares', amt, 0], ['cash', 0, amt]], { u: 'HQ', cf: 'capex', desc: `子会社（${s.name}）の増資の引受け` });
+  ksRecInv(s);
+  ksWith(owner, () => ksPost('subAdd', [['subShares', amt, 0], ['cash', 0, amt]], { u: 'HQ', cf: 'capex', desc: `${s.aff ? '関連会社' : '子会社'}（${s.name}）の増資の引受け` }));
   ksWith(s.st, () => {
     const loc = Math.round(total / k);
     const cap = Math.round(loc / 2);
-    ksPost('capIn', [['cash', loc, 0], ['capital', 0, cap], ['capSurplus', 0, loc - cap]], { u: 'HQ', cf: 'equity', desc: `増資（親会社${s.own < 1 ? 'と合弁の相手' : ''}が引き受け）` });
+    ksPost('capIn', [['cash', loc, 0], ['capital', 0, cap], ['capSurplus', 0, loc - cap]], { u: 'HQ', cf: 'equity', desc: `増資（${owner.coName}${s.own < 1 ? 'とほかの株主' : ''}が引き受け）` });
   });
   s.adds += total;
-  ksNews(`${s.name}に${fmtYen(amt)}を増資しました${s.own < 1 ? `（合弁の相手も持分に応じて${fmtYen(total - amt)}を出資）` : ''}`, 'good');
+  s.inv += amt;
+  ksWith(root, () => ksNews(`${s.name}に${fmtYen(amt)}を増資しました${s.own < 1 ? `（ほかの株主も持分に応じて${fmtYen(total - amt)}を出資）` : ''}`, 'good'));
   return { ok: true };
 }
 function ksGroupLend(id, amt, auto) {
-  const root = G, g = root.group, s = ksSubById(id, root);
+  const root = ksRoot(), g = root.group, s = ksSubById(id, root);
   if (!s || s.gone) return { ok: false, why: '子会社がありません' };
+  if (s.aff) return { ok: false, why: '関連会社には貸し付けません（経営はほかの株主が主導しています）' };
   if (s.cc && s.cc !== 'jp') return { ok: false, why: '海外子会社には、貸付ではなく増資で資金を出します（このゲームでは）' };
   amt = Math.round(amt);
-  if (ksB('cash') < amt) return { ok: false, why: '現預金が足りません' };
+  if (ksWith(root, () => ksB('cash')) < amt) return { ok: false, why: '現預金が足りません' };
   const rate = +(Math.max(0.5, (root.eco.prime || 1.875) + 0.5)).toFixed(2);
-  ksPost('icLend', [['icLoan', amt, 0], ['cash', 0, amt]], { u: 'HQ', cf: 'fin', desc: `子会社（${s.name}）への貸付` });
+  ksWith(root, () => ksPost('icLend', [['icLoan', amt, 0], ['cash', 0, amt]], { u: 'HQ', cf: 'fin', desc: `子会社（${s.name}）への貸付` }));
   ksWith(s.st, () => ksPost('icBorrow', [['cash', amt, 0], ['icDebt', 0, amt]], { u: 'HQ', cf: 'borrow', desc: '親会社からの借入' }));
   g.loans = g.loans || [];
   g.loans.push({ sub: id, bal: amt, rate, m: root.m, auto: !!auto });
-  if (!auto) ksNews(`${s.name}に${fmtYen(amt)}を貸し付けました（年${rate}%）`, 'info');
+  if (!auto) ksWith(root, () => ksNews(`${s.name}に${fmtYen(amt)}を貸し付けました（年${rate}%）`, 'info'));
   return { ok: true, rate };
 }
 function ksGroupRepay(s, amt, quiet) {
@@ -23900,43 +24325,56 @@ function ksGroupRepay(s, amt, quiet) {
 }
 function ksIcLoanBal(id, root = ksRoot()) { return Math.round(sum(((root.group || {}).loans || []).filter(L => L.sub === id), L => L.bal)); }
 
-/* ---------- 毎月：親子の取引（親会社の月次の前に記帳する） ---------- */
+/* ---------- 毎月：グループの中の取引（親会社の月次の前に記帳する） ---------- */
 function ksIcRec(fy, id) {
   const ic = ksRoot().group.ic;
   const o = ic[fy] || (ic[fy] = {});
-  return o[id] || (o[id] = { feeS: 0, feeN: 0, feeX: 0, int: 0, div: 0, divTot: 0 });
+  const r = o[id] || (o[id] = { feeS: 0, feeN: 0, feeX: 0, int: 0, div: 0, divTot: 0 });
+  r.divM = r.divM || {}; r.divTotM = r.divTotM || {};
+  return r;
 }
 function ksIcDivTot(s, fy) { const o = ((ksRoot().group.ic || {})[fy] || {})[s.id]; return o ? o.divTot : 0; }
+/* 受取配当等の益金不算入の区分を、受け取った会社に記録する */
+function ksDivTaxRec(ownerSt, s, fy, recv) {
+  const box = ownerSt.group ? ownerSt.group.divFY : (ownerSt.divFY = ownerSt.divFY || {});
+  const d = box[fy] || (box[fy] = { full: 0, rel: 0, other: 0, small: 0, foreign: 0 });
+  if (s.cc && s.cc !== 'jp') { if (s.own >= 0.25) d.foreign += recv; else d.other += recv; }
+  else if (s.own >= 0.9999) d.full += recv; else if (s.own > 1 / 3) d.rel += recv; else if (s.own > 0.05) d.other += recv; else d.small += recv;
+}
 function ksGroupPre() {
   const root = G, g = root.group;
+  ksGroupMigrate(root);
   const m = root.m, fy = fyOf(m), mo = calMonth(m);
   g.fx[m] = { usd: root.eco.fx || 148, eur: root.eco.eur || 160 };
   for (const s of ksSubs(root)) {
     const st = s.st;
     if (st.over) continue;
+    const owner = ksOwnerSt(s, root);
+    if (!owner || owner.over) continue;
     const k = ksSubK(s, m);
     const rec = ksIcRec(fy, s.id);
-    // 経営指導料：先月の売上に料率を掛けて、毎月受け取る
+    const ownerHD = ksIsPureHD(owner);
+    // 経営指導料：先月の売上に料率を掛けて、毎月、直接の親会社が受け取る（関連会社からは受け取らない）
     const last = st.months[st.months.length - 1];
     const base = last && last.flow ? last.flow.sales || 0 : 0;
-    const feeL = Math.round(base * (s.fee || 0));
+    const feeL = s.aff ? 0 : Math.round(base * (s.fee || 0));
     if (feeL > 0 && ksWith(st, () => ksB('cash')) > feeL) {
       const fee = Math.round(feeL * k);
-      const acct = ksIsPureHD(root) ? 'sales' : 'feeInc';
-      ksWith(st, () => ksPost('icFee', [['feeExp', feeL, 0], ['cash', 0, feeL]], { u: 'HQ', cf: 'exp', desc: '親会社への経営指導料' }));
-      ksPost('icFee', [['cash', fee, 0], [acct, 0, fee]], { u: 'HQ', cf: 'collect', key: s.id, desc: `子会社（${s.name}）からの経営指導料` });
+      const acct = ownerHD ? 'sales' : 'feeInc';
+      ksWith(st, () => ksPost('icFee', [['feeExp', feeL, 0], ['cash', 0, feeL]], { u: 'HQ', cf: 'exp', desc: `${owner.coName}への経営指導料` }));
+      ksWith(owner, () => ksPost('icFee', [['cash', fee, 0], [acct, 0, fee]], { u: 'HQ', cf: 'collect', key: s.id, desc: `子会社（${s.name}）からの経営指導料` }));
       if (acct === 'sales') rec.feeS += fee; else rec.feeN += fee;
       rec.feeX += fee;
     }
-    // 貸付金の利息
+    // 親会社からの貸付金の利息
     for (const L of (g.loans || []).filter(x => x.sub === s.id && x.bal > 0)) {
       const it = Math.round(L.bal * L.rate / 1200);
       if (it <= 0) continue;
       ksWith(st, () => ksPost('icInt', [['interest', it, 0], ['cash', 0, it]], { u: 'HQ', cf: 'interest', desc: '親会社への利息' }));
-      ksPost('icInt', [['cash', it, 0], ['intInc', 0, it]], { u: 'HQ', cf: 'collect', key: s.id, desc: `子会社（${s.name}）からの利息` });
+      ksWith(root, () => ksPost('icInt', [['cash', it, 0], ['intInc', 0, it]], { u: 'HQ', cf: 'collect', key: s.id, desc: `子会社（${s.name}）からの利息` }));
       rec.int += it;
     }
-    // 配当：6月（子会社の株主総会）に、前期の利益に配当性向を掛けて払う
+    // 配当：6月（株主総会）に、前期の利益に配当性向を掛けて、株主に持分に応じて払う
     if (mo === 6 && s.payout > 0) {
       const L = st.fys[fy - 1];
       const ni = L ? L.pl.ni : 0;
@@ -23948,32 +24386,30 @@ function ksGroupPre() {
         const res = ksWith(st, () => Math.round(Math.max(0, Math.min(D * 0.1, ksB('capital') / 4 - ksB('capSurplus') - ksB('legalRes')))));
         ksWith(st, () => ksPost('icDiv', [['re', D + res, 0], ['cash', 0, D], ['legalRes', 0, res]], { u: 'HQ', cf: 'equity', desc: '剰余金の配当（株主総会の決議）' }));
         const recv = Math.round(D * s.own * k);
-        const acct = ksIsPureHD(root) ? 'sales' : 'divInc';
-        ksPost('icDiv', [['cash', recv, 0], [acct, 0, recv]], { u: 'HQ', cf: 'collect', key: s.id, desc: `子会社（${s.name}）からの配当` });
+        const acct = ownerHD ? 'sales' : 'divInc';
+        ksWith(owner, () => ksPost('icDiv', [['cash', recv, 0], [acct, 0, recv]], { u: 'HQ', cf: 'collect', key: s.id, desc: `${s.aff ? '関連会社' : '子会社'}（${s.name}）からの配当` }));
         rec.div += recv;
         rec.divTot += Math.round(D * k);
         rec.divS = (rec.divS || 0) + (acct === 'sales' ? recv : 0);
-        // 税金：受取配当等の益金不算入の区分
-        const d = g.divFY[fy] || (g.divFY[fy] = { full: 0, rel: 0, other: 0, small: 0, foreign: 0 });
-        if (s.cc && s.cc !== 'jp') d.foreign += recv; else if (s.own >= 0.9999) d.full += recv; else if (s.own > 1 / 3) d.rel += recv; else if (s.own > 0.05) d.other += recv; else d.small += recv;
+        rec.divM[m] = (rec.divM[m] || 0) + recv;
+        rec.divTotM[m] = (rec.divTotM[m] || 0) + Math.round(D * k);
+        ksDivTaxRec(owner, s, fy, recv);
       }
     }
-    // 資金の支え：子会社の資金が来月までに足りなくなりそうなら、親会社が貸す
-    if (g.policy.support && (!s.cc || s.cc === 'jp')) {
-      const fc = ksWith(st, () => ksForecast(2));
-      const low = Math.min(...fc.map(x => x.bal));
+    if (s.aff) continue;
+    // 資金の支え：子会社の資金が来月までに足りなくなりそうなら、親会社が貸す（海外は直接の親会社が増資）
+    if (g.policy.support) {
+      const fc = ksWith(st, () => ksForecast(3));
+      const low = Math.min(ksWith(st, () => ksB('cash')), ...fc.map(x => x.bal));
       const need = ksWith(st, () => ksMonthlyFixedOut());
-      if (low < need * 0.3) {
-        const amt = niceAmount(need * 1.5 - low);
-        if (ksB('cash') - amt > ksMonthlyFixedOut() * 1.5) ksGroupLend(s.id, amt, true);
-      }
-    } else if (g.policy.support && s.cc && s.cc !== 'jp') {
-      const fc = ksWith(st, () => ksForecast(2));
-      const low = Math.min(...fc.map(x => x.bal));
-      const need = ksWith(st, () => ksMonthlyFixedOut());
-      if (low < need * 0.3) {
-        const amt = niceAmount((need * 2 - low) * k * s.own);
-        if (ksB('cash') - amt > ksMonthlyFixedOut() * 1.5) ksGroupInject(s.id, amt);
+      if (low < need * 0.6) {
+        if (!s.cc || s.cc === 'jp') {
+          const amt = niceAmount(Math.max(need * 2 - low, need));
+          if (ksB('cash') - amt > ksMonthlyFixedOut() * 1.5) ksGroupLend(s.id, amt, true);
+        } else {
+          const amt = niceAmount((need * 2 - low) * k * s.own);
+          if (ksWith(owner, () => ksB('cash') - amt > ksMonthlyFixedOut() * 1.5)) ksGroupInject(s.id, amt);
+        }
       }
     }
     // 余ったお金で、親会社からの借入を返す
@@ -23981,7 +24417,7 @@ function ksGroupPre() {
     if (lb > 0) {
       const cashS = ksWith(st, () => ksB('cash'));
       const need = ksWith(st, () => ksMonthlyFixedOut());
-      if (cashS > need * 4) ksGroupRepay(s, Math.min(lb, cashS - need * 3), true);
+      if (cashS > need * 6) ksGroupRepay(s, Math.min(lb, cashS - need * 4), true);
     }
   }
   // 持株会社の本社の人件費
@@ -24031,20 +24467,41 @@ function ksGroupSubMonth(s, eco) {
   });
   if (st.over) ksGroupSubFailed(s);
 }
-/* 子会社の資金が尽きた：破産手続（親会社は株式と貸付金を損失にする） */
+/* 会社の資金が尽きた：破産手続（持ち主は株式を、親会社は貸付金を損失にする。下の会社もグループから外れる） */
 function ksGroupSubFailed(s) {
-  const root = ksRoot();
-  const carry = Math.round(s.own * (s.eq0 + s.adds) + s.gw);
-  const icl = ksIcLoanBal(s.id, root);
-  ksWith(root, () => {
-    const lines = [['subLoss', carry, 0], ['subShares', 0, carry]];
-    if (icl > 0) lines.push(['badDebt', icl, 0], ['icLoan', 0, icl]);
-    ksPost('subFail', lines, { u: 'HQ', desc: `子会社（${s.name}）の破産：株式と貸付金の損失` });
-  });
-  root.group.loans = (root.group.loans || []).filter(L => L.sub !== s.id);
-  ksGroupDeconsolidate(s, 'failed', 0);
-  ksWith(root, () => ksNews(`子会社の${s.name}が資金繰りに行き詰まり、破産しました。株式（${fmtYen(carry)}）${icl ? `と貸付金（${fmtYen(icl)}）` : ''}を損失にしました`, 'bad'));
+  const root = ksRoot(), g = root.group;
+  ksGroupMigrate(root);
+  const owner = ksOwnerSt(s, root) || root;
+  const carry = ksRecInv(s);
+  const adj = ksRecSaleAdj(s);
+  const tree = [s, ...ksDescendants(s.id, root)];
+  ksWith(owner, () => ksPost('subFail', [['subLoss', carry, 0], ['subShares', 0, carry]], { u: 'HQ', desc: `${s.aff ? '関連会社' : '子会社'}（${s.name}）の破産：株式の損失` }));
+  let icl = 0;
+  for (const x of tree) {
+    const b = ksIcLoanBal(x.id, root);
+    if (b > 0) { icl += b; ksWith(root, () => ksPost('subFail', [['badDebt', b, 0], ['icLoan', 0, b]], { u: 'HQ', desc: `子会社（${x.name}）の破産：貸付金の損失` })); }
+    g.loans = (g.loans || []).filter(L => L.sub !== x.id);
+  }
+  for (const x of tree) ksRecClose(x, x === s ? 'failed' : 'with', x === s ? { adj } : {});
+  ksWith(root, () => ksNews(`${s.aff ? '関連会社' : '子会社'}の${s.name}が資金繰りに行き詰まり、破産しました。株式（${fmtYen(carry)}）${icl ? `と貸付金（${fmtYen(icl)}）` : ''}を損失にしました`, 'bad'));
 }
+
+/* ---------- グループの資金の融通（CMS） ----------
+   子会社の月末の支払いに現預金が足りないとき、親会社の「資金の支え」の方針がオンなら、足りない分を親会社が貸す
+   （銀行の緊急融資より先に。国内の連結子会社だけ） */
+let KS_GROUP_RUN = null;
+const ksCashCoverG0 = ksCashCover;
+ksCashCover = function () {
+  const root = KS_GROUP_RUN;
+  if (root && G !== root && G.isSub && G.subId && ksB('cash') < 0) {
+    const s = ksSubById(G.subId, root);
+    if (s && !s.gone && !s.aff && (!s.cc || s.cc === 'jp') && root.group.policy.support) {
+      const amt = niceAmount(-ksB('cash') + ksMonthlyFixedOut() * 0.5);
+      if (root.bal.cash - amt > ksWith(root, ksMonthlyFixedOut)) ksWith(root, () => ksGroupLend(s.id, amt, true));
+    }
+  }
+  return ksCashCoverG0();
+};
 
 /* ---------- グループの月次（親会社 → 子会社の順） ---------- */
 function ksGroupAdvance() {
@@ -24057,7 +24514,8 @@ function ksGroupAdvance() {
   const eco = JSON.parse(JSON.stringify(root.eco));
   ksGroupPre();
   const rep = ksAdvance();
-  for (const s of ksSubs(root)) ksGroupSubMonth(s, eco);
+  KS_GROUP_RUN = root;
+  try { for (const s of ksSubs(root)) ksGroupSubMonth(s, eco); } finally { KS_GROUP_RUN = null; }
   G = root;
   return rep;
 }
@@ -24092,13 +24550,14 @@ function ksGroupSubPL(s, fy, toM = 1e9) {
   const from = s.since; // 子会社になる前の損益は入れない（買収・株式移転で取得のときの純資産に含まれている）
   return ksPLLines(ksEntPLAcct(s.st, fy, from, toM, s.cc && s.cc !== 'jp' ? m => ksSubK(s, m) : null));
 }
-/* のれんの償却（10年・月割）。fy の分 */
+/* のれんの償却（10年・月割。gwFrom から gwLife 年）。fy の分 */
 function ksGwAmortFY(s, fy, toM = fy * 12 + 11) {
   if (!s.gw) return 0;
-  const life = (s.gwLife || 10) * 12;
-  const from = Math.max(fy * 12, s.since), to = Math.min(toM, fy * 12 + 11, s.since + life - 1);
+  const life = Math.max(1, Math.round((s.gwLife || 10) * 12));
+  const g0 = s.gwFrom ?? s.since;
+  const from = Math.max(fy * 12, g0, s.since), to = Math.min(toM, fy * 12 + 11, g0 + life - 1);
   const months = Math.max(0, to - from + 1);
-  return Math.round(Math.min(s.gw * months / life, s.gw - s.gwCum));
+  return Math.round(Math.max(0, Math.min(s.gw * months / life, s.gw - s.gwCum)));
 }
 const KS_CONS_BS = [
   ['cash', '現金預金', b => b.cash], ['ar', '売上債権（貸倒引当金控除後）', b => b.ar - b.allow], ['inv', '棚卸資産', b => b.goods + b.mat + b.wip + b.prod + b.cwip],
@@ -24111,58 +24570,127 @@ const KS_CONS_BS = [
 const KS_CONS_ASSET = ['cash', 'ar', 'inv', 'oca', 'ppe', 'ia', 'gw', 'subShares', 'icLoan', 'io'];
 const KS_CONS_LIAB = ['ap', 'debt', 'icDebt', 'ocl'];
 function ksBSLines(b, k = 1) { const o = {}; for (const [key, , f] of KS_CONS_BS) o[key] = Math.round(f(b) * k); return o; }
-/* 親会社の決算が終わったときに、連結決算書をつくる */
+/* 親会社の決算が終わったときに、連結決算書をつくる
+   ・連結子会社（持分50%超。子会社の下の孫会社も）：合算して、投資と資本・内部取引・貸し借りを消す
+   ・関連会社（持分20〜50%）：合算せず持分法。投資の額を、純資産の持分と投資差額の残りに直し、持分の利益を1行で入れる
+   ・非支配株主の持分：会社ごとに、下の会社の持分を含めた「株主に帰属する利益・純資産」に、ほかの株主の持分を掛ける（利益は月ごと）
+   ・期の途中で持分が変わった会社は、前の期間の記録（gone）と今の記録に分かれている */
 function ksGroupConsolidate(fy) {
   const root = G, g = root.group;
-  const endM = fy * 12 + 11;
-  const subs = g.subs.filter(s => s.since <= endM && (!s.gone || (s.out && s.out.fy === fy)));
-  if (!subs.length) return null;
+  ksGroupMigrate(root);
+  const startM = fy * 12, endM = fy * 12 + 11;
+  const recs = g.subs.filter(s => s.since <= endM && (!s.gone || (s.out && s.out.fy === fy)));
+  if (!recs.length) return null;
   const P = root.fys[fy];
   if (!P) return null;
-  const ents = [];
-  // 親会社
-  const pPL = ksPLLines(ksEntPLAcct(root, fy));
-  const pBS = ksBSLines(P.bs);
-  ents.push({ id: 'root', n: root.coName, own: 1, pl: pPL, bs: pBS, parent: true });
-  const elim = []; // 連結修正仕訳 { t, why, pl:{line:±}, bs:{line:±}, nci, fctr }
-  let nciBS = 0, fctrBS = 0, nciPL = 0, gwBS = 0;
-  for (const s of subs) {
-    const st = s.st;
-    const sold = s.gone && s.out && s.out.fy === fy;
-    const kEnd = ksSubK(s, endM);
-    const pl = sold ? s.out.pl : ksGroupSubPL(s, fy);
-    const ni = ksPLNi(pl);
-    const SB = !sold && st.fys[fy] ? st.fys[fy].bs : null;
-    const bs = SB ? ksBSLines(SB, kEnd) : null;
-    ents.push({ id: s.id, n: s.name, own: s.own, pl, bs, sold, cc: s.cc, kEnd });
-    const rec = ((g.ic[fy] || {})[s.id]) || { feeS: 0, feeN: 0, feeX: 0, int: 0, div: 0, divTot: 0, divS: 0 };
-    // 1) 内部取引の消去（経営指導料・利息・配当）
-    if (rec.feeX) elim.push({ t: '経営指導料の相殺消去', why: `${s.name}が払った経営指導料と、親会社が受け取った分は、グループの外との取引ではないので消す`, pl: { sales: -rec.feeS, noi: -rec.feeN, sga: -rec.feeX } });
-    if (rec.int) elim.push({ t: '貸付金の利息の相殺消去', why: `親会社の受取利息と${s.name}の支払利息を消す`, pl: { noi: -rec.int, noe: -rec.int } });
-    if (rec.div) elim.push({ t: '配当金の相殺消去', why: `${s.name}からの配当は、グループの中でお金が動いただけ。親会社の受取配当金を消し、利益剰余金に戻す${s.own < 1 ? '（非支配株主に払った分は、非支配株主持分を減らす）' : ''}`, pl: { sales: -(rec.divS || 0), noi: -(rec.div - (rec.divS || 0)) } });
-    // 2) のれんの償却・売却時の修正
-    let amort = 0;
-    if (sold) amort = s.out.amort;
-    else { amort = ksGwAmortFY(s, fy); }
-    if (amort) elim.push({ t: 'のれんの償却', why: `${s.name}を買ったときの、のれん（支払った額と純資産の差）を10年で償却する（連結だけの費用）`, pl: { sga: amort } });
-    if (s.kind === 'acq' && s.negGw && fyOf(s.since) === fy) elim.push({ t: '負ののれん発生益', why: `${s.name}の純資産より安く買えた差は、買った期の特別利益`, pl: { exg: s.negGw } });
-    // 3) 子会社の利益の非支配株主への配分
-    const nciNi = Math.round(ni * (1 - s.own));
-    if (s.own < 1) { nciPL += nciNi; elim.push({ t: '非支配株主に帰属する当期純利益', why: `${s.name}の利益のうち、親会社以外の株主（${s.partner || '少数株主'}）の持分${Math.round((1 - s.own) * 100)}%の分`, nciPL: nciNi }); }
-    if (sold) {
-      elim.push({ t: s.out.why === 'sold' ? '子会社株式の売却損益の連結修正' : '子会社の破産の連結修正', why: '個別の決算の売却損益は、取得の額との差。連結では、これまでに連結で取り込んだ利益（とのれんの償却）をのぞいた差になる', pl: s.out.adj >= 0 ? { exg: s.out.adj } : { exl: -s.out.adj } });
-      continue;
+  const lastOf = s => (s.gone ? (s.out.last ?? s.out.m - 1) : endM);
+  const active = (s, m) => m >= s.since && m <= lastOf(s);
+  const ents = [{ id: 'root', n: root.coName, own: 1, pl: ksPLLines(ksEntPLAcct(root, fy)), bs: ksBSLines(P.bs), parent: true }];
+  const pBS = ents[0].bs;
+  const elim = []; // 連結修正仕訳 { t, why, pl:{line:±}, bs:{line:±}, nciPL }
+  // 各社の今期の損益（換算後）・月ごとの純利益・のれんの償却
+  const D = {};
+  for (const s of recs) {
+    const pl = s.gone ? s.out.pl : ksGroupSubPL(s, fy);
+    let niM = {};
+    if (s.gone) niM = s.out.niM || { [lastOf(s)]: ksPLNi(pl) };
+    else {
+      const kf = s.cc && s.cc !== 'jp' ? mm => ksSubK(s, mm) : null;
+      for (const x of s.st.months) if (fyOf(x.m) === fy && x.m >= s.since) niM[x.m] = ksPLNi(ksPLLines(ksEntPLAcct(s.st, fy, x.m, x.m, kf)));
     }
-    // 4) 投資と資本の相殺消去・非支配株主持分・為替換算調整勘定（期末の貸借対照表）
-    const NA = bs ? sum(KS_CONS_ASSET, k2 => bs[k2]) - sum(KS_CONS_LIAB, k2 => bs[k2]) : 0;
-    // 今期の利益剰余金の増減（換算後）を、取得後の利益の記録に加える
-    const reTrEnd = s.reTr + ni - rec.divTot - (s.kind === 'acq' && fyOf(s.since) === fy ? 0 : 0);
-    const fctr = Math.round(NA - (s.eq0 + s.adds) - reTrEnd);
-    const nci = Math.round(NA * (1 - s.own));
-    const gwLeft = Math.round(s.gw - s.gwCum - amort);
-    nciBS += nci; fctrBS += Math.round(fctr * s.own); gwBS += gwLeft;
-    elim.push({ t: '投資と資本の相殺消去', why: `親会社の${s.name}の株式（${fmtYen(Math.round(s.own * (s.eq0 + s.adds) + s.gw))}）と、${s.name}の${s.kind === 'acq' ? '取得のときの' : ''}資本を消す${s.gw ? '。差はのれん' : ''}${s.own < 1 ? '。親会社以外の株主の持分は非支配株主持分' : ''}`, bs: { subShares: -Math.round(s.own * (s.eq0 + s.adds) + s.gw), gw: gwLeft }, eq: true });
-    s._next = { reTr: reTrEnd, gwCum: s.gwCum + amort };
+    const amort = s.gone ? (s.out.amort || 0) : ksGwAmortFY(s, fy);
+    const life = Math.max(1, Math.round((s.gwLife || 10) * 12)), g0 = s.gwFrom ?? s.since;
+    const amM = [];
+    for (let m = startM; m <= endM; m++) if (active(s, m) && m >= g0 && m < g0 + life) amM.push(m);
+    D[s.id] = { pl, ni: ksPLNi(pl), niM, rec: ((g.ic[fy] || {})[s.id]) || {}, amort, amPer: amM.length ? amort / amM.length : 0, amSet: new Set(amM) };
+  }
+  // 合算する会社（連結子会社）
+  for (const s of recs) {
+    if (s.aff) continue;
+    const d = D[s.id];
+    const SB = !s.gone && s.st.fys[fy] ? s.st.fys[fy].bs : null;
+    const kEnd = ksSubK(s, endM);
+    const bs = SB ? ksBSLines(SB, kEnd) : null;
+    if (s.gone && !Object.values(d.pl).some(v => v)) continue;
+    ents.push({ id: s.id, n: s.gone && !['sold', 'failed', 'with'].includes(s.out.why) ? `${s.name}（${ymLabel(lastOf(s))}まで）` : s.name, own: s.own, pl: d.pl, bs, sold: !!s.gone, cc: s.cc, kEnd });
+  }
+  // 1) 内部取引の消去・のれんの償却・持分法の損益・売却の修正
+  for (const s of recs) {
+    const d = D[s.id], rec = d.rec;
+    const on = ksOwnerNameOf(s, root);
+    if (rec.feeX) elim.push({ t: '経営指導料の相殺消去', why: `${s.name}が${on}に払った経営指導料は、グループの外との取引ではないので、受け取った側の収益と払った側の費用を消す`, pl: { sales: -(rec.feeS || 0), noi: -(rec.feeN || 0), sga: -rec.feeX } });
+    if (rec.int) elim.push({ t: '貸付金の利息の相殺消去', why: `親会社の受取利息と${s.name}の支払利息を消す`, pl: { noi: -rec.int, noe: -rec.int } });
+    if (rec.div) elim.push({ t: '配当金の相殺消去', why: `${s.name}から${on}への配当は、グループの中でお金が動いただけ。受取配当金を消す${s.aff ? '（持分法では、そのぶん投資の額が減る）' : s.own < 1 ? '（ほかの株主に払った分は、非支配株主持分を減らす）' : ''}`, pl: { sales: -(rec.divS || 0), noi: -(rec.div - (rec.divS || 0)) } });
+    if (s.aff) {
+      const inc = Math.round(s.own * d.ni - d.amort);
+      if (inc) elim.push({ t: '持分法による投資損益', why: `関連会社の${s.name}の純利益のうち、持分${Math.round(s.own * 100)}%の分${d.amort ? '（投資差額の償却を引く）' : ''}を、1行で営業外の損益に入れる`, pl: inc >= 0 ? { noi: inc } : { noe: -inc } });
+    } else if (d.amort) elim.push({ t: 'のれんの償却', why: `${s.name}を買ったときの、のれん（支払った額と純資産の差）を10年で償却する（連結だけの費用）`, pl: { sga: d.amort } });
+    if (s.gone && s.out.adj && ['sold', 'failed'].includes(s.out.why)) elim.push({ t: s.out.why === 'sold' ? '株式の売却損益の連結修正' : '破産の連結修正', why: '個別の決算の売却損益は、取得の額との差。連結では、これまでに連結で取り込んだ利益（とのれんの償却）を除いた差になる', pl: s.out.adj >= 0 ? { exg: s.out.adj } : { exl: -s.out.adj } });
+  }
+  for (const a of g.cadj.filter(x => x.fy === fy)) elim.push({ t: a.t, why: a.why, pl: a.pl });
+  // 2) 非支配株主に帰属する当期純利益（月ごと）
+  const niOf = pl => ksPLNi(Object.assign({ sales: 0, cogs: 0, sga: 0, noi: 0, noe: 0, exg: 0, exl: 0, tax: 0 }, pl));
+  const adjAt = {};
+  const addAdj = (o, m, v) => { const k = o + '|' + m; adjAt[k] = (adjAt[k] || 0) + v; };
+  for (const a of g.cadj.filter(x => x.fy === fy)) addAdj(a.owner || 'root', a.m, niOf(a.pl));
+  for (const s of recs) if (s.gone && s.out.adj && ['sold', 'failed'].includes(s.out.why)) addAdj(ksRecOwnerId(s), s.out.m, s.out.adj);
+  const order = recs.filter(s => !s.aff).sort((a, b) => ksRecDepth(b, root) - ksRecDepth(a, root));
+  let nciPL = 0;
+  const nciBy = {};
+  for (let m = startM; m <= endM; m++) {
+    const at = {};
+    for (const r of order) {
+      if (!active(r, m)) continue;
+      const b = r.base || r.id;
+      let v = D[r.id].niM[m] || 0;
+      for (const x of recs) {
+        if (ksRecOwnerId(x) !== b || !active(x, m)) continue;
+        const dx = D[x.id];
+        v -= dx.rec.divM ? dx.rec.divM[m] || 0 : (m === startM + 2 ? dx.rec.div || 0 : 0);
+        const am = dx.amSet.has(m) ? dx.amPer : 0;
+        v += (x.aff ? x.own * (dx.niM[m] || 0) : x.own * (at[x.id] || 0)) - am;
+      }
+      v += adjAt[b + '|' + m] || 0;
+      at[r.id] = v;
+      const share = (1 - r.own) * v;
+      nciPL += share;
+      nciBy[r.id] = (nciBy[r.id] || 0) + share;
+    }
+  }
+  for (const s of order) if (s.own < 1 && Math.round(nciBy[s.id] || 0)) elim.push({ t: '非支配株主に帰属する当期純利益', why: `${s.name}の利益（下の会社の持分の利益を含む）のうち、${ksOwnerNameOf(s, root)}以外の株主（${s.partner || '少数株主'}）の持分${Math.round((1 - s.own) * 100)}%の分`, nciPL: Math.round(nciBy[s.id]) });
+  // 3) 期末：投資と資本の相殺消去・持分法の評価・非支配株主持分・為替換算調整勘定
+  const liveRecs = recs.filter(s => !s.gone);
+  const NA = {}, reEnd = {}, gwLeft = {}, fctr = {};
+  for (const s of liveRecs) {
+    const d = D[s.id];
+    const SB = s.st.fys[fy] ? s.st.fys[fy].bs : null;
+    const b = SB ? ksBSLines(SB, ksSubK(s, endM)) : null;
+    NA[s.id] = b ? sum(KS_CONS_ASSET, k => b[k]) - sum(KS_CONS_LIAB, k => b[k]) : 0;
+    reEnd[s.id] = s.reTr + d.ni - (d.rec.divTot || 0);
+    gwLeft[s.id] = Math.round(s.gw - s.gwCum - d.amort);
+    fctr[s.id] = Math.round(NA[s.id] - (s.eq0 + s.adds) - reEnd[s.id]);
+  }
+  const E = {};
+  const eOf = s => {
+    if (E[s.id] !== undefined) return E[s.id];
+    let v = NA[s.id];
+    for (const x of liveRecs) if (ksRecOwnerId(x) === s.id) v += (x.aff ? x.own * NA[x.id] : x.own * eOf(x)) + gwLeft[x.id] - ksRecInv(x);
+    return (E[s.id] = v);
+  };
+  let nciBS = 0, fctrBS = 0;
+  const affs = [];
+  for (const s of liveRecs) {
+    const inv = ksRecInv(s);
+    if (s.aff) {
+      const emv = Math.round(s.own * NA[s.id] + gwLeft[s.id]);
+      elim.push({ t: '持分法による投資の評価', why: `関連会社の${s.name}の株式（取得の額 ${fmtYen(inv)}）を、純資産の持分${Math.round(s.own * 100)}%と投資差額の残りの額（${fmtYen(emv)}）に直す`, bs: { subShares: emv - inv }, eq: true });
+      affs.push({ id: s.id, n: s.name, own: s.own, inv, emv, inc: Math.round(s.own * D[s.id].ni - D[s.id].amort), cc: s.cc });
+    } else {
+      nciBS += Math.round((1 - s.own) * eOf(s));
+      elim.push({ t: '投資と資本の相殺消去', why: `${ksOwnerNameOf(s, root)}の持つ${s.name}の株式（${fmtYen(inv)}）と、${s.name}の${s.kind === 'acq' ? '取得のときの' : ''}資本を消す${s.gw ? '。差はのれん' : ''}${s.own < 1 ? '。ほかの株主の持分は非支配株主持分' : ''}`, bs: { subShares: -inv, gw: gwLeft[s.id] }, eq: true });
+    }
+    fctrBS += Math.round(fctr[s.id] * ksEffOwn(s, root));
+    s._next = { reTr: reEnd[s.id], gwCum: s.gwCum + D[s.id].amort };
   }
   // 債権債務の相殺消去
   const icl = Math.round(pBS.icLoan || 0);
@@ -24175,23 +24703,25 @@ function ksGroupConsolidate(fy) {
   const live = ents.filter(e => e.bs);
   const sumBS = {}, consBS = {};
   for (const k of BSK) { sumBS[k] = sum(live, e => e.bs[k] || 0); consBS[k] = sumBS[k] + sum(elim, e => (e.bs && e.bs[k]) || 0); }
-  // 資本は親会社の分だけ。利益剰余金は差額（貸借の一致で確かめる）
-  consBS.capital = pBS.capital; consBS.capSur = pBS.capSur;
+  // 資本は親会社の分だけ（持分の追加取得の差額は資本剰余金）。利益剰余金は差額（貸借の一致で確かめる）
+  const capAdj = Math.round(sum(g.capAdj.filter(x => x.m <= endM), x => x.amt));
+  consBS.capital = pBS.capital; consBS.capSur = pBS.capSur + capAdj; consBS.capAdj = capAdj;
   consBS.nci = nciBS; consBS.fctr = fctrBS;
   const TA = sum(KS_CONS_ASSET, k => consBS[k]), TL = sum(KS_CONS_LIAB, k => consBS[k]);
   consBS.re = Math.round(TA - TL - consBS.capital - consBS.capSur - nciBS - fctrBS);
   consBS.TA = TA; consBS.TL = TL; consBS.EQ = TA - TL;
   const ni = ksPLNi(consPL);
+  nciPL = Math.round(nciPL);
   consPL.ni = ni; consPL.niNci = nciPL; consPL.niParent = ni - nciPL;
   consPL.gp = consPL.sales - consPL.cogs; consPL.opi = consPL.gp - consPL.sga; consPL.ord = consPL.opi + consPL.noi - consPL.noe; consPL.pretax = consPL.ord + consPL.exg - consPL.exl;
   // 確かめ：利益剰余金 ＝ 前期の連結の利益剰余金 ＋ 親会社株主に帰属する当期純利益 − 親会社の配当
   const prev = g.cons[fy - 1];
   const divPaid = Math.round(sum(root.months.filter(x => fyOf(x.m) === fy), x => (x.cf && x.cf.equity) || 0));
   const reExpected = prev ? Math.round(prev.bs.re + consPL.niParent + Math.min(0, divPaid)) : null;
-  const cons = { fy, ents: ents.map(e => ({ id: e.id, n: e.n, own: e.own, pl: e.pl, bs: e.bs, sold: e.sold, cc: e.cc, parent: e.parent })), elim, sumPL, sumBS, pl: consPL, bs: consBS, check: reExpected === null ? null : consBS.re - reExpected };
+  const cons = { fy, ents: ents.map(e => ({ id: e.id, n: e.n, own: e.own, pl: e.pl, bs: e.bs, sold: e.sold, cc: e.cc, parent: e.parent })), elim, sumPL, sumBS, pl: consPL, bs: consBS, affs, check: reExpected === null ? null : consBS.re - reExpected };
   g.cons[fy] = cons;
   // 次の期へ：取得後の利益の記録とのれんの償却累計を進める
-  for (const s of subs) if (s._next) { s.reTr = s._next.reTr; s.gwCum = s._next.gwCum; delete s._next; }
+  for (const s of liveRecs) if (s._next) { s.reTr = s._next.reTr; s.gwCum = s._next.gwCum; delete s._next; }
   return cons;
 }
 
@@ -24210,7 +24740,7 @@ const ksTaxCalcG0 = ksTaxCalc;
 ksTaxCalc = function () {
   const t = ksTaxCalcG0();
   const fy = G.closing ? G.closing.fy : fyOf(G.m);
-  const d = G.group && G.group.divFY && G.group.divFY[fy];
+  const d = (G.group && G.group.divFY && G.group.divFY[fy]) || (G.divFY && G.divFY[fy]);
   // 受取配当等の益金不算入：完全子法人（100%）・関連法人（1/3超）は全額、その他（5%超）は50%、5%以下は20%、海外子会社（25%以上）は95%
   const excl = d ? Math.round(d.full + d.rel + d.other * 0.5 + d.small * 0.2 + d.foreign * 0.95) : 0;
   const cc = G.country || 'jp';
@@ -24231,10 +24761,11 @@ ksTaxCalc = function () {
 function ksGroupAfterClose(fy) {
   if (G.isSub || !G.group) return;
   if (!G.group.subs.length) return;
+  ksGroupMigrate(G);
   try { ksGroupConsolidate(fy); } catch (e) { console.error(e); }
   for (const s of G.group.subs) if (s.gone && s.out && s.out.fy <= fy) s.out.done = true;
 }
-/* グループの整合性（テスト用）：各社の帳簿と、連結の貸借 */
+/* グループの整合性（テスト用）：各社の帳簿、貸付金、持ち主ごとの関係会社株式 */
 function ksGroupCheck(root = ksRoot()) {
   const e = [];
   for (const s of ksSubs(root)) for (const x of ksWith(s.st, ksCheck)) e.push(`${s.name}：${x}`);
@@ -24244,8 +24775,10 @@ function ksGroupCheck(root = ksRoot()) {
     if (Math.abs(icl - (root.bal.icLoan || 0)) > 10) e.push(`関係会社貸付金の明細 ${icl} ≠ 元帳 ${root.bal.icLoan}`);
     const icd = Math.round(sum(ksSubs(root), s => s.st.bal.icDebt || 0));
     if (Math.abs(icd - icl) > 10) e.push(`子会社の関係会社借入金の合計 ${icd} ≠ 親会社の貸付金 ${icl}`);
-    const carry = Math.round(sum(ksSubs(root), s => s.own * (s.eq0 + s.adds) + s.gw));
-    if (Math.abs(carry - (root.bal.subShares || 0)) > 1000) e.push(`関係会社株式 ${root.bal.subShares} ≠ 取得の額の合計 ${carry}`);
+    for (const [oid, st] of [['root', root], ...ksSubs(root).map(s => [s.id, s.st])]) {
+      const carry = Math.round(sum(ksSubs(root).filter(s => ksRecOwnerId(s) === oid), ksRecInv));
+      if (Math.abs(carry - (st.bal.subShares || 0)) > 1000) e.push(`${st.coName}の関係会社株式 ${st.bal.subShares} ≠ 持っている株式の取得の額 ${carry}`);
+    }
   }
   return e;
 }
@@ -25195,7 +25728,7 @@ function ksLocF(u, key) {
     if (key === 'demand') return ['shop', 'rest'].includes(eng) ? Math.pow(r, 0.3) : 1;
     return 1;
   }
-  const P = KS_PREFS[G.loc.units[u.id]], R = KS_PREFS[G.loc.home || G.loc.hq];
+  const P = KS_PREFS[G.loc.units[u.id]], R = KS_PREFS[(G.loc.uhome && G.loc.uhome[u.id]) || G.loc.home || G.loc.hq];
   if (!P || !R || P === R) return 1;
   if (key === 'wage') return Math.pow(P.wage / R.wage, 0.7);
   if (key === 'rent') return Math.pow(P.land.com / R.land.com, 0.2);
@@ -25772,7 +26305,10 @@ Object.assign(UI, { kGrpSec: 'org', kGrpFy: null, kGF: null, kSplit: null, kHdRe
 function ksGroupMastHtml() {
   const root = ksRoot();
   if (!root || !root.group || !ksSubAll(root).length) return '';
-  const opts = [['root', `${root.coName}（親会社）`], ...ksSubs(root).map(s => [s.id, `${s.name}（子会社 ${Math.round(s.own * 100)}%）`])];
+  const tree = [];
+  const walk = (pid, d) => { for (const s of ksCSubs(root).filter(x => ksRecOwnerId(x) === pid)) { tree.push([s.id, `${'　'.repeat(d)}${s.name}（${d ? '孫会社' : '子会社'} ${Math.round(s.own * 100)}%）`]); walk(s.id, d + 1); } };
+  walk('root', 0);
+  const opts = [['root', `${root.coName}（親会社）`], ...tree];
   const cur = ksIsSubView() ? G.subId : 'root';
   return `<label class="entsw"><span class="sr">表示する会社</span><select data-ch="kView" aria-label="表示する会社">${opts.map(([v, l]) => `<option value="${v}"${v === cur ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select></label>`;
 }
@@ -25780,7 +26316,7 @@ function ksSubBanner() {
   if (!ksIsSubView()) return '';
   const s = ksSubById(G.subId);
   if (!s) return '';
-  return `<div class="subbanner" role="note"><b>子会社の画面</b>：${esc(s.name)}（${esc(ksRoot().coName)}の${s.own >= 0.9999 ? '100%子会社' : `持分${Math.round(s.own * 100)}%`}${s.cc && s.cc !== 'jp' ? `・${esc(KS_COUNTRIES[s.cc].n)}の現地法人。帳簿は設立のときのレートで円に直した額` : ''}）。${s.auto ? '経営は子会社の社長に任せています（自動）' : 'あなたが直接経営しています'}。月末の締めは、グループ全体で進みます。
+  return `<div class="subbanner" role="note"><b>${s.parent ? '孫会社' : '子会社'}の画面</b>：${esc(s.name)}（${esc(ksOwnerNameOf(s))}の${s.own >= 0.9999 ? '100%子会社' : `持分${Math.round(s.own * 100)}%`}${s.cc && s.cc !== 'jp' ? `・${esc(KS_COUNTRIES[s.cc].n)}の現地法人。帳簿は設立のときのレートで円に直した額` : ''}）。${s.auto ? '経営は子会社の社長に任せています（自動）' : 'あなたが直接経営しています'}。月末の締めは、グループ全体で進みます。
     ${btn(s.auto ? '自分で経営する' : '子会社の社長に任せる', 'kSubAuto', { id: s.id }, 'sm')}${btn('親会社に戻る', 'kView', { v: 'root' }, 'sm primary')}</div>`;
 }
 CHANGES.kView = el => ksSwitchView(el.value);
@@ -25808,7 +26344,7 @@ KS_SCREENS.k_group = () => {
     <div class="subtabs" role="tablist">${subs.map(([k, l]) => `<button type="button" data-act="kGrpSec" data-v="${k}" aria-pressed="${sec === k}">${l}</button>`).join('')}</div>${body}`;
 };
 ACTIONS.kGrpSec = d => { UI.kGrpSec = d.v; render(); };
-function ksKindName(s) { return { new: '設立した子会社', jv: '合弁会社', split: '分社化した子会社', acq: '買収した子会社' }[s.kind] || '子会社'; }
+function ksKindName(s) { return s.aff ? '関連会社（持分法）' : ({ new: '設立した子会社', jv: '合弁会社', split: '分社化した子会社', acq: '買収した子会社', hd: '事業子会社' }[s.kind] || '子会社'); }
 function ksSubCard(s) {
   const st = s.st;
   const ytd = ksWith(st, ksYTD);
@@ -25816,28 +26352,40 @@ function ksSubCard(s) {
   const cash = ksWith(st, () => ksB('cash'));
   const head = ksWith(st, ksHeadcount);
   const flag = s.cc && s.cc !== 'jp' ? `<span class="tag">${esc(KS_COUNTRIES[s.cc].n)}</span>` : '';
-  return `<div class="orgbox sub${st.over ? ' bad' : ''}"><div class="ob-t"><b>${esc(s.name)}</b>${flag}</div>
-    <div class="small muted">${esc(ksKindName(s))}・持分${Math.round(s.own * 100)}%${s.partner ? `（相手：${esc(s.partner)}）` : ''}</div>
+  const sched = (ksRoot().group.mergers || []).find(x => x.from === s.id);
+  return `<div class="orgbox sub${s.aff ? ' aff' : ''}${st.over ? ' bad' : ''}"><div class="ob-t"><b>${esc(s.name)}</b>${flag}${s.aff ? '<span class="tag">持分法</span>' : ''}${sched ? `<span class="tag warn">${ymLabel(sched.m)}に合併</span>` : ''}</div>
+    <div class="small muted">${esc(ksKindName(s))}・持分${Math.round(s.own * 100)}%${s.partner ? `（${s.aff ? '経営の主導' : 'ほかの株主'}：${esc(s.partner)}）` : ''}</div>
     <div class="small">${esc(ksWith(st, ksCompanyDesc) || '事業なし')}</div>
-    <dl class="kv sm"><dt>今期の売上（月次）</dt><dd>${fmtYen(ytd.sales)}</dd><dt>今期の経常利益</dt><dd class="${ytd.ord < 0 ? 'neg' : ''}">${fmtYen(ytd.ord)}</dd><dt>現預金</dt><dd>${fmtYen(cash)}</dd><dt>従業員</dt><dd>${head}人</dd><dt>銀行の格付</dt><dd>${st.grade || '―'}</dd>${L ? `<dt>前期の純利益</dt><dd class="${L.pl.ni < 0 ? 'neg' : ''}">${fmtYen(L.pl.ni)}</dd>` : ''}</dl>
-    <div class="row" style="gap:4px;flex-wrap:wrap">${btn('この会社に入る', 'kView', { v: s.id }, 'sm primary')}${btn('資金と取引', 'kSubFin', { id: s.id }, 'sm')}</div></div>`;
+    <dl class="kv sm"><dt>今期の売上（月次）</dt><dd>${fmtYen(ytd.sales)}</dd><dt>今期の経常利益</dt><dd class="${ytd.ord < 0 ? 'neg' : ''}">${fmtYen(ytd.ord)}</dd><dt>現預金</dt><dd>${fmtYen(cash)}</dd><dt>従業員</dt><dd>${head}人</dd>${L ? `<dt>前期の純利益</dt><dd class="${L.pl.ni < 0 ? 'neg' : ''}">${fmtYen(L.pl.ni)}</dd>` : ''}</dl>
+    <div class="row" style="gap:4px;flex-wrap:wrap">${s.aff ? btn('決算書を見る', 'kAffView', { id: s.id }, 'sm') : btn('この会社に入る', 'kView', { v: s.id }, 'sm primary')}${btn('資金と取引', 'kSubFin', { id: s.id }, 'sm')}${btn('再編・社名', 'kSubOps', { id: s.id }, 'sm')}</div></div>`;
+}
+/* 会社とその下の会社（木の形） */
+function ksOrgNode(s, root) {
+  const kids = ksSubsOf(s.id, root);
+  return `<div class="orgnode">${ksSubCard(s)}${kids.length ? `<div class="orgkids">${kids.map(x => ksOrgNode(x, root)).join('')}</div>` : ''}</div>`;
 }
 function ksGrpOrgHtml() {
   const root = G, g = root.group;
+  ksGroupMigrate(root);
   const subs = ksSubs(root);
+  const top1 = ksSubsOf('root', root);
   const L = ksLastFY();
   const cons = g.cons[ksFyOfLast()];
   const top = `<div class="orgbox parent"><div class="ob-t"><b>${esc(root.coName)}</b><span class="tag">${ksIsPureHD(root) ? '純粋持株会社' : g.hd ? '事業持株会社' : '親会社'}</span><span class="tag">${esc(ksFormName(root))}</span></div>
     <div class="small">${esc(ksCompanyDesc() || '子会社の株式を持ち、グループを経営する')}</div>
-    <dl class="kv sm"><dt>関係会社株式</dt><dd>${fmtYen(ksB('subShares'))}</dd><dt>子会社への貸付金</dt><dd>${fmtYen(ksB('icLoan'))}</dd><dt>現預金</dt><dd>${fmtYen(ksB('cash'))}</dd>${L ? `<dt>前期の純利益（個別）</dt><dd class="${L.pl.ni < 0 ? 'neg' : ''}">${fmtYen(L.pl.ni)}</dd>` : ''}</dl></div>`;
-  const chart = subs.length ? `<div class="orgchart">${top}<div class="orgline" aria-hidden="true"></div><div class="orgsubs">${subs.map(ksSubCard).join('')}</div></div>`
+    <dl class="kv sm"><dt>関係会社株式</dt><dd>${fmtYen(ksB('subShares'))}</dd><dt>子会社への貸付金</dt><dd>${fmtYen(ksB('icLoan'))}</dd><dt>現預金</dt><dd>${fmtYen(ksB('cash'))}</dd>${L ? `<dt>前期の純利益（個別）</dt><dd class="${L.pl.ni < 0 ? 'neg' : ''}">${fmtYen(L.pl.ni)}</dd>` : ''}</dl>
+    <div class="row" style="gap:4px"><span class="small muted">子会社 ${ksCSubs(root).filter(x => !x.parent).length}社・孫会社 ${ksCSubs(root).filter(x => x.parent).length}社・関連会社 ${subs.filter(x => x.aff).length}社</span></div></div>`;
+  const chart = subs.length ? `<div class="orgchart">${top}<div class="orgline" aria-hidden="true"></div><div class="orgsubs">${top1.map(x => ksOrgNode(x, root)).join('')}</div></div>`
     : `<div class="orgchart">${top}</div><div class="empty">まだ子会社はありません。「グループをつくる」から、子会社の設立・分社化・買収・持株会社への移行ができます。</div>`;
-  const gone = ksSubAll(root).filter(s => s.gone);
-  const goneHtml = gone.length ? panel('売却・破産した子会社', `<ul class="small" style="margin:0;padding-left:1.2em">${gone.map(s => `<li>${esc(s.name)}：${s.out.why === 'sold' ? `${ymLabel(s.out.m)}に${fmtYen(s.out.price)}で売却` : `${ymLabel(s.out.m)}に破産`}</li>`).join('')}</ul>`) : '';
+  const gone = ksSubAll(root).filter(s => s.gone && s.out && ['sold', 'failed', 'merged', 'with'].includes(s.out.why));
+  const goneTxt = s => { const o = s.out; return o.why === 'sold' ? `${ymLabel(o.m)}に${fmtYen(o.price)}で売却` : o.why === 'merged' ? `${ymLabel(o.m)}に${esc(o.into === 'root' ? root.coName : (ksSubById(o.into, root) || {}).name || '')}に吸収合併` : o.why === 'with' ? `${ymLabel(o.m)}に持ち主の会社と一緒にグループから外れた` : `${ymLabel(o.m)}に破産`; };
+  const goneHtml = gone.length ? panel('グループから外れた会社', `<ul class="small" style="margin:0;padding-left:1.2em">${gone.map(s => `<li>${esc(s.name)}：${goneTxt(s)}</li>`).join('')}</ul>`) : '';
+  const mg = (g.mergers || []).map(x => { const c = ksSubById(x.from, root); const into = x.into === 'root' ? root.coName : (ksSubById(x.into, root) || {}).name; return c ? `<li>${esc(into)}が${esc(c.name)}を吸収合併（効力発生日 ${ymLabel(x.m)}1日）${btn('取りやめる', 'kMergeCancel', { id: x.id }, 'sm ghost')}</li>` : ''; }).join('');
+  const mgHtml = mg ? panel('予定している合併', `<ul class="small" style="margin:0;padding-left:1.2em">${mg}</ul><p class="note">合併は、期首（4月1日）に効力が生じます。それまでに株主総会の承認と、債権者保護手続（官報の公告と1か月の異議の期間）を行います。</p>`) : '';
   const kpi = cons ? panel(`連結の成績（${ksFyLabel(cons.fy)}）`, kv([['連結売上高', fmtYen(cons.pl.sales)], ['連結営業利益', ksNum(cons.pl.opi)], ['親会社株主に帰属する当期純利益', ksNum(cons.pl.niParent)], ['非支配株主に帰属する当期純利益', ksNum(cons.pl.niNci)], ['連結純資産（うち非支配株主持分）', `${fmtYen(cons.bs.EQ)}（${fmtYen(cons.bs.nci)}）`], ['連結の自己資本比率', cons.bs.TA ? fmtPct((cons.bs.EQ - cons.bs.nci) / cons.bs.TA * 100, 1) : '―']]) + `<div class="row" style="margin-top:6px">${btn('連結決算書を見る', 'kGrpSec', { v: 'cons' }, 'sm')}</div>`) : '';
-  const pol = subs.length ? panel('グループの方針', `<label class="inline"><input type="checkbox" data-ch="kGrpSupport" ${g.policy.support ? 'checked' : ''}> 子会社の資金が足りなくなりそうなら、親会社が貸し付けて支える（海外子会社は増資）</label>
-    <p class="note">親会社の貸付金は「関係会社長期貸付金」、子会社の側は「関係会社長期借入金」。連結決算では、グループの中の貸し借りとして消します。${g.hd ? `<br>持株会社の本社：${g.hq.staff}人（経営企画・経理・人事・法務）。費用は子会社からの経営指導料でまかないます。` : ''}</p>`) : '';
-  return `${chart}<div class="grid g2" style="margin-top:10px">${kpi}${pol}</div>${goneHtml}`;
+  const pol = subs.length ? panel('グループの方針', `<label class="inline"><input type="checkbox" data-ch="kGrpSupport" ${g.policy.support ? 'checked' : ''}> 子会社の資金が足りなくなりそうなら、親会社が貸し付けて支える（海外の子会社は直接の親会社が増資）</label>
+    <p class="note">親会社の貸付金は「関係会社長期貸付金」、子会社の側は「関係会社長期借入金」。連結決算では、グループの中の貸し借りとして消します。関連会社は、経営を主導するほかの株主が資金を手当てします。${g.hd ? `<br>持株会社の本社：${g.hq.staff}人（経営企画・経理・人事・法務）。費用は子会社からの経営指導料でまかないます。` : ''}</p>`) : '';
+  return `${chart}<div class="grid g2" style="margin-top:10px">${kpi}${pol}</div>${mgHtml}${goneHtml}`;
 }
 CHANGES.kGrpSupport = el => { G.group.policy.support = el.checked; render(); };
 
@@ -25851,16 +26399,17 @@ MODALS.kSubFin = () => {
   const foreign = s.cc && s.cc !== 'jp';
   const feeOpts = [0, 0.005, 0.01, 0.015, 0.02, 0.03, 0.05].map(v => `<option value="${v}"${Math.abs(s.fee - v) < 1e-6 ? ' selected' : ''}>${(v * 100).toFixed(1)}%</option>`).join('');
   const poOpts = [0, 0.2, 0.3, 0.5, 0.8, 1].map(v => `<option value="${v}"${Math.abs(s.payout - v) < 1e-6 ? ' selected' : ''}>${Math.round(v * 100)}%</option>`).join('');
-  const body = `<p style="margin:0 0 8px"><b>${esc(s.name)}</b>（${esc(ksKindName(s))}・持分${Math.round(s.own * 100)}%）</p>
-    ${kv([['子会社の現預金', fmtYen(ksWith(s.st, () => ksB('cash')))], ['親会社からの借入金', fmtYen(icl)], ['親会社の持つ株式（取得の額）', fmtYen(Math.round(s.own * (s.eq0 + s.adds) + s.gw))], ['子会社の純資産', fmtYen(Math.round(ksWith(s.st, ksEquity)))], s.gw ? ['のれん（連結）', `${fmtYen(s.gw)}（10年で償却。済み ${fmtYen(s.gwCum)}）`] : null].filter(Boolean))}
+  const on = ksOwnerNameOf(s);
+  const body = `<p style="margin:0 0 8px"><b>${esc(s.name)}</b>（${esc(ksKindName(s))}・${esc(on)}の持分${Math.round(s.own * 100)}%）</p>
+    ${kv([['この会社の現預金', fmtYen(ksWith(s.st, () => ksB('cash')))], s.aff ? null : ['親会社からの借入金', fmtYen(icl)], [`${on}の持つ株式（取得の額）`, fmtYen(ksRecInv(s))], ['この会社の純資産', fmtYen(Math.round(ksWith(s.st, ksEquity)))], s.gw ? [s.aff ? '投資差額（のれん相当額）' : 'のれん（連結）', `${fmtYen(s.gw)}（10年で償却。済み ${fmtYen(s.gwCum)}）`] : null].filter(Boolean))}
     <div class="grid g2" style="gap:10px;margin-top:8px">
-      <label class="field"><span>経営指導料（子会社の売上に対する料率・毎月）</span><select data-ch="kSFFee">${feeOpts}</select><span class="small muted">親会社は${ksIsPureHD() ? '営業収益' : '営業外収益（経営指導料収入）'}、子会社は販管費（支払経営指導料）。${foreign ? '海外子会社への料率が高すぎると、移転価格税制で課税されることがある' : '高すぎると子会社の利益を不当に移していると見られることがある'}。</span></label>
+      ${s.aff ? '' : `<label class="field"><span>経営指導料（子会社の売上に対する料率・毎月）</span><select data-ch="kSFFee">${feeOpts}</select><span class="small muted">親会社は${ksIsPureHD() ? '営業収益' : '営業外収益（経営指導料収入）'}、子会社は販管費（支払経営指導料）。${foreign ? '海外子会社への料率が高すぎると、移転価格税制で課税されることがある' : '高すぎると子会社の利益を不当に移していると見られることがある'}。</span></label>`}
       <label class="field"><span>配当性向（前期の純利益に対する配当の割合・毎年6月）</span><select data-ch="kSFPay">${poOpts}</select><span class="small muted">親会社の受取配当金は、税金の計算で益金に入れない（${s.own >= 0.9999 ? '完全子法人なので全額' : s.own > 1 / 3 ? '関連法人なので全額' : '一部'}${foreign ? '。海外子会社は95%' : ''}）。</span></label>
     </div>
     <div class="field" style="margin-top:8px"><span>金額（万円）</span><input type="number" min="100" step="100" value="${Math.round(F.amt / 1e4)}" data-ch="kSFAmt" style="width:160px"></div>
-    <div class="row" style="gap:6px;flex-wrap:wrap">${btn('増資する（出資を増やす）', 'kSFInject', {}, 'sm')}${foreign ? '' : btn('貸し付ける', 'kSFLend', {}, 'sm')}${icl > 0 ? btn('貸付金を返してもらう', 'kSFRepay', {}, 'sm') : ''}${btn('株式を売る', 'kSFSell', {}, 'sm danger')}</div>
+    <div class="row" style="gap:6px;flex-wrap:wrap">${btn('増資する（出資を増やす）', 'kSFInject', {}, 'sm')}${foreign || s.aff ? '' : btn('貸し付ける', 'kSFLend', {}, 'sm')}${icl > 0 ? btn('貸付金を返してもらう', 'kSFRepay', {}, 'sm') : ''}${btn('株式を売る', 'kSFSell', {}, 'sm danger')}</div>
     <p class="note">増資：親会社は関係会社株式が増え、子会社は資本金・資本準備金が増える（連結では消し合う）。${s.own < 1 ? '合弁会社なので、相手の会社も持分に応じて出資します。' : ''}貸付：利息は毎月、市場の金利（短期プライムレート＋0.5%）で受け取ります。</p>`;
-  return modalFrame('子会社との資金と取引', body, btn('閉じる', 'closeModal'), { size: 'narrow' });
+  return modalFrame(s.aff ? '関連会社との資金と取引' : '子会社との資金と取引', body, btn('閉じる', 'closeModal'), { size: 'narrow' });
 };
 CHANGES.kSFFee = el => { const s = ksSubById(UI.kSF.id); s.fee = +el.value; drawModal(); };
 CHANGES.kSFPay = el => { const s = ksSubById(UI.kSF.id); s.payout = +el.value; drawModal(); };
@@ -25871,8 +26420,9 @@ ACTIONS.kSFRepay = () => { if (ksClosingBlock()) return; const s = ksSubById(UI.
 ACTIONS.kSFSell = () => {
   const s = ksSubById(UI.kSF.id);
   const price = niceAmount(ksSubValue(s) * s.own);
-  const carry = Math.round(s.own * (s.eq0 + s.adds) + s.gw);
-  confirmBox(`${esc(s.name)}の株式を売る`, `買い手の提示額は <b>${fmtYen(price)}</b>、親会社の帳簿の額（取得の額）は ${fmtYen(carry)} です。差 <b>${fmtYen(price - carry)}</b> が関係会社株式売却${price >= carry ? '益（特別利益）' : '損（特別損失）'}になります。連結決算では、子会社の取得の後の利益をすでに取り込んでいるので、売却損益は別の額に修正されます。${ksIcLoanBal(s.id) ? '<br>子会社への貸付金は、売るときに返してもらいます。' : ''}`, '売却する', 'kSFSellGo', { id: s.id }, true);
+  const carry = ksRecInv(s);
+  const kids = ksDescendants(s.id);
+  confirmBox(`${esc(s.name)}の株式を売る`, `買い手の提示額は <b>${fmtYen(price)}</b>、${esc(ksOwnerNameOf(s))}の帳簿の額（取得の額）は ${fmtYen(carry)} です。${kids.length ? `<br>${kids.map(x => esc(x.name)).join('・')}も、一緒にグループから外れます。` : ''}差 <b>${fmtYen(price - carry)}</b> が関係会社株式売却${price >= carry ? '益（特別利益）' : '損（特別損失）'}になります。連結決算では、子会社の取得の後の利益をすでに取り込んでいるので、売却損益は別の額に修正されます。${ksIcLoanBal(s.id) ? '<br>子会社への貸付金は、売るときに返してもらいます。' : ''}`, '売却する', 'kSFSellGo', { id: s.id }, true);
 };
 ACTIONS.kSFSellGo = d => { if (ksClosingBlock()) return; const r = ksGroupSell(d.id); toast(r.ok ? '株式を売却しました' : r.why, r.ok ? '' : 'bad'); UI.kSF = null; closeModal(true); render(); autosave(); };
 
@@ -25948,7 +26498,11 @@ function ksGrpMakeHtml() {
   const us = ksActiveUnits();
   const cash = ksB('cash');
   // 子会社の設立
-  const F = UI.kGF || (UI.kGF = { q: '', type: null, sc: 1, own: 1, cc: 'jp', pref: G.loc ? G.loc.hq : 22, amt: null, name: '' });
+  const F = UI.kGF || (UI.kGF = { q: '', type: null, sc: 1, own: 1, cc: 'jp', pref: G.loc ? G.loc.hq : 22, amt: null, name: '', owner: 'root' });
+  const owners = [['root', `${G.coName}（親会社）`], ...ksCSubs().filter(x => !x.cc || x.cc === 'jp').map(x => [x.id, `${x.name}（孫会社として）`])];
+  if (!owners.some(o => o[0] === (F.owner || 'root'))) F.owner = 'root';
+  const ownerSt = F.owner && F.owner !== 'root' ? ksSubById(F.owner).st : G;
+  const ocash = ksWith(ownerSt, () => ksB('cash'));
   const plan = F.type ? ksSubStartPlan(F.type, F.sc) : null;
   const need = plan ? plan.need : 0;
   const amt = F.amt || (plan ? Math.round(need * F.own / 1e6) * 1e6 : 0);
@@ -25956,19 +26510,20 @@ function ksGrpMakeHtml() {
   const ccOpts = [['jp', '日本'], ...Object.entries(KS_COUNTRIES).map(([k, x]) => [k, x.n])].map(([v, l]) => `<option value="${v}"${F.cc === v ? ' selected' : ''}>${esc(l)}</option>`).join('');
   const prefOpts = Object.values(KS_PREFS).map(p => `<option value="${p.c}"${+F.pref === p.c ? ' selected' : ''}>${esc(p.n)}</option>`).join('');
   const C = F.cc !== 'jp' ? KS_COUNTRIES[F.cc] : null;
-  const found = panel('子会社を設立する（新しい事業）', `<p class="small" style="margin:0 0 6px">新しい会社をつくって出資し（${term('関係会社株式', 'subShares')}）、その会社で事業を始めます。合弁にすると、相手の会社も持分に応じて出資します。海外に設立すると現地法人になり、その国の税率と法律が適用されます。</p>
+  const found = panel('子会社・関連会社を設立する（新しい事業）', `<p class="small" style="margin:0 0 6px">新しい会社をつくって出資し（${term('関係会社株式', 'subShares')}）、その会社で事業を始めます。合弁にすると、相手の会社も持分に応じて出資します。持分が50%以下なら、経営は相手が主導する${term('関連会社', 'mochibunho')}（持分法）になります。子会社が出資すると<b>孫会社</b>になります。海外に設立すると現地法人になり、その国の税率と法律が適用されます。</p>
+    <label class="field"><span>出資する会社</span><select data-ch="kGFowner">${owners.map(([v, l]) => `<option value="${v}"${(F.owner || 'root') === v ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select></label>
     <input type="search" value="${esc(F.q)}" data-in="kGFq" placeholder="業種を探す（例：ソフトウェア、物流、介護）" style="width:100%" aria-label="業種を探す">
     <div id="kGFlist" class="typelist sm">${ksGFListHtml(list, F)}</div>
     ${F.type ? `<div class="callout" style="margin-top:6px"><b>${esc(F.type)}</b>${plan ? `<br><span class="small">立ち上げの設備 ${fmtYen(plan.capex)}・軌道に乗るまでの運転資金の目安 ${fmtYen(plan.work)}・合計の目安 <b>${fmtYen(need)}</b></span>` : ''}</div>` : ''}
     <div class="grid g2" style="gap:8px;margin-top:6px">
       <div class="field"><span>規模</span><div class="seg" role="radiogroup">${[[0.5, '小さく'], [1, 'ふつう'], [2, '大きく']].map(([v, l]) => `<button type="button" data-act="kGFsc" data-v="${v}" aria-pressed="${F.sc === v}">${l}</button>`).join('')}</div></div>
-      <div class="field"><span>持分（議決権）</span><div class="seg" role="radiogroup">${[[1, '100%'], [0.8, '80%'], [0.6, '60%'], [0.51, '51%']].map(([v, l]) => `<button type="button" data-act="kGFown" data-v="${v}" aria-pressed="${F.own === v}">${l}</button>`).join('')}</div></div>
+      <div class="field"><span>持分（議決権）</span><div class="seg wrap" role="radiogroup">${[[1, '100%'], [0.8, '80%'], [0.6, '60%'], [0.51, '51%'], [0.49, '49%'], [0.4, '40%'], [0.3, '30%'], [0.2, '20%']].map(([v, l]) => `<button type="button" data-act="kGFown" data-v="${v}" aria-pressed="${F.own === v}">${l}</button>`).join('')}</div><span class="small muted">${F.own > 0.5 ? '50%超：連結子会社（全部を連結）' : '50%以下：関連会社（持分法で、利益の持分だけを取り込む）'}</span></div>
       <label class="field"><span>設立する国</span><select data-ch="kGFcc">${ccOpts}</select></label>
       ${F.cc === 'jp' ? `<label class="field"><span>所在地</span><select data-ch="kGFpref">${prefOpts}</select></label>` : `<div class="field"><span>${esc(C.n)}</span><span class="small">法人税 約${C.cit}%・${esc(C.vat)}・配当の源泉税 ${C.wht}%・ワーカーの月給 約${fmtNum(C.wk, 0)}ドル</span></div>`}
-      <label class="field"><span>親会社の出資額（万円）</span><input type="number" min="100" step="100" value="${Math.round(amt / 1e4)}" data-ch="kGFamt" style="width:150px"></label>
+      <label class="field"><span>出資額（万円）</span><input type="number" min="100" step="100" value="${Math.round(amt / 1e4)}" data-ch="kGFamt" style="width:150px"></label>
       <label class="field"><span>会社の名前（空欄で自動）</span><input type="text" value="${esc(F.name)}" data-ch="kGFname" maxlength="24"></label>
     </div>
-    <div class="row" style="margin-top:6px">${btn('設立する', 'kGFGo', {}, 'primary', { disabled: !F.type || amt <= 0 || amt > cash })}<span class="small muted">現預金 ${fmtYen(cash)}${F.own < 1 ? `・合弁の相手の出資 ${fmtYen(Math.round(amt / F.own - amt))}` : ''}</span></div>`);
+    <div class="row" style="margin-top:6px">${btn('設立する', 'kGFGo', {}, 'primary', { disabled: !F.type || amt <= 0 || amt > ocash })}<span class="small muted">${esc(ownerSt.coName)}の現預金 ${fmtYen(ocash)}${F.own < 1 ? `・相手の出資 ${fmtYen(Math.round(amt / F.own - amt))}` : ''}</span></div>`);
   // 分社化
   const S = UI.kSplit || (UI.kSplit = { u: us[0] ? us[0].id : null, cash: null });
   const pv = S.u ? ksGroupSplitPreview(S.u) : null;
@@ -25983,7 +26538,7 @@ function ksGrpMakeHtml() {
   // 買収
   const g = G.group;
   const tg = g.targets || [];
-  const ma = panel('株式を買って子会社にする（買収）', `<p class="small" style="margin:0 0 6px">他社の株式の過半数を買うと、その会社は子会社になります（事業の譲受と違い、会社ごと手に入れる）。払った額と、取得した持分の純資産の差は、連結決算で${term('のれん', 'goodwill')}になります。まずデューデリジェンス（買収の前の調査）で、過去の決算書を確かめましょう。</p>
+  const ma = panel('株式を買って子会社にする（買収・資本参加）', `<p class="small" style="margin:0 0 6px">他社の株式の過半数を買うと、その会社は子会社になります（事業の譲受と違い、会社ごと手に入れる）。20〜49%なら資本参加で、関連会社（持分法）になります。払った額と、取得した持分の純資産の差は、連結決算で${term('のれん', 'goodwill')}になります。まずデューデリジェンス（買収の前の調査）で、過去の決算書を確かめましょう。</p>
     ${btn(`買収の候補を探す（仲介会社への着手金 ${fmtYen(KS_MA_FEE)}）`, 'kGTFind', {}, 'sm')}
     ${tg.length ? `<div class="tbl-wrap" style="margin-top:6px"><table class="t compact"><thead><tr><th>会社</th><th>業種</th><th class="n">調査</th></tr></thead><tbody>${tg.map(t => ksGTRow(t)).join('')}</tbody></table></div>` : ''}`);
   // 持株会社
@@ -26006,13 +26561,14 @@ CHANGES.kGFcc = el => { UI.kGF.cc = el.value; render(); };
 CHANGES.kGFpref = el => { UI.kGF.pref = +el.value; };
 CHANGES.kGFamt = el => { const v = parseFloat(el.value); if (isFinite(v) && v > 0) { UI.kGF.amt = Math.round(v) * 1e4; render(); } };
 CHANGES.kGFname = el => { UI.kGF.name = el.value; };
+CHANGES.kGFowner = el => { UI.kGF.owner = el.value; UI.kGF.amt = null; render(); };
 ACTIONS.kGFGo = () => {
   if (ksClosingBlock()) return;
   const F = UI.kGF;
   const plan = ksSubStartPlan(F.type, F.sc);
   const amt = F.amt || Math.round(plan.need * F.own / 1e6) * 1e6;
   const name = (F.name || '').trim();
-  const r = ksGroupFound({ type: F.type, sc: F.sc, own: F.own, cash: amt, cc: F.cc, pref: F.pref, name: name ? (/株式会社|合同会社|有限会社/.test(name) || F.cc !== 'jp' ? name : name + '株式会社') : '' });
+  const r = ksGroupFound({ type: F.type, sc: F.sc, own: F.own, cash: amt, cc: F.cc, pref: F.pref, owner: F.owner || 'root', name: name ? (/株式会社|合同会社|有限会社/.test(name) || F.cc !== 'jp' ? name : name + '株式会社') : '' });
   if (!r.ok) { toast(r.why, 'bad'); return; }
   toast(`${r.s.name}を設立しました`);
   UI.kGF = null; UI.kGrpSec = 'org';
@@ -26050,8 +26606,9 @@ function ksGTRow(t) {
   if (!t.st) return `<tr><td>${esc(t.co)}</td><td class="small">${esc(t.type)}</td><td class="n">${btn('デューデリジェンス', 'kGTDD', { id: t.id }, 'sm')}</td></tr>`;
   const q = t.q;
   return `<tr><td><b>${esc(t.co)}</b><div class="small">売上 ${fmtYen(q.sales)}・営業利益 ${fmtYen(q.opi)}・純資産 ${fmtYen(q.eq)}・借入金 ${fmtYen(q.debt)}・格付 ${q.grade}・従業員${q.head}人</div></td><td class="small">${esc(t.type)}</td>
-    <td class="n">${btn('決算書を見る', 'kGTView', { id: t.id }, 'sm')}<div class="small" style="margin-top:4px">${[[1, '100%'], [0.67, '67%'], [0.51, '51%']].map(([o, l]) => btn(`${l} ${fmtYen(niceAmount(q.price100 * o * (o >= 0.67 ? 1 : 0.97)))}`, 'kGTBuy', { id: t.id, o }, 'sm')).join('')}</div></td></tr>`;
+    <td class="n">${btn('決算書を見る', 'kGTView', { id: t.id }, 'sm')}<div class="small" style="margin-top:4px">${[[1, '100%'], [0.67, '67%'], [0.51, '51%'], [0.34, '34%'], [0.2, '20%']].map(([o, l]) => btn(`${l} ${fmtYen(ksGTPrice(q, o))}`, 'kGTBuy', { id: t.id, o }, 'sm')).join('')}</div></td></tr>`;
 }
+function ksGTPrice(q, o) { return niceAmount(q.price100 * o * (o >= 0.67 ? 1 : o > 0.5 ? 0.97 : 0.9)); }
 ACTIONS.kGTFind = () => { if (ksClosingBlock()) return; ksGroupFindTargets(); toast('買収の候補が見つかりました'); render(); autosave(); };
 ACTIONS.kGTDD = d => { if (ksClosingBlock()) return; const t = (G.group.targets || []).find(x => x.id === d.id); if (!t) return; ksGroupDD(t); toast(`デューデリジェンスの費用 ${fmtYen(t.ddFee)}`); render(); autosave(); };
 ACTIONS.kGTView = d => showModal('kGTView', { id: d.id });
@@ -26068,15 +26625,15 @@ ACTIONS.kGTBuy = d => {
   const t = (G.group.targets || []).find(x => x.id === d.id);
   if (!t || !t.st) return;
   const own = +d.o;
-  const price = niceAmount(t.q.price100 * own * (own >= 0.67 ? 1 : 0.97));
+  const price = ksGTPrice(t.q, own);
   const gw = Math.max(0, price - own * t.q.eq);
-  confirmBox(`${esc(t.co)}の株式の${Math.round(own * 100)}%を買う`, `価格 <b>${fmtYen(price)}</b>（取得する持分の純資産 ${fmtYen(Math.round(own * t.q.eq))}・のれん 約${fmtYen(gw)}）。${ksB('cash') < price ? `<br><b class="neg">現預金（${fmtYen(ksB('cash'))}）が足りません。資金と銀行の画面で、買収の資金を借りてから買いましょう。</b>` : ''}${own < 1 ? `<br>残りの${Math.round((1 - own) * 100)}%は今の株主が持ち続け、連結決算の非支配株主持分になります。` : ''}`, '買う', 'kGTBuyGo', { id: t.id, o: own });
+  confirmBox(`${esc(t.co)}の株式の${Math.round(own * 100)}%を買う`, `価格 <b>${fmtYen(price)}</b>（取得する持分の純資産 ${fmtYen(Math.round(own * t.q.eq))}・${own > 0.5 ? 'のれん' : '投資差額'} 約${fmtYen(gw)}）。${own <= 0.5 ? '<br>持分が50%以下なので子会社にはならず、持分法の関連会社になります（経営は今の株主が主導）。' : ''}${ksB('cash') < price ? `<br><b class="neg">現預金（${fmtYen(ksB('cash'))}）が足りません。資金と銀行の画面で、買収の資金を借りてから買いましょう。</b>` : ''}${own < 1 && own > 0.5 ? `<br>残りの${Math.round((1 - own) * 100)}%は今の株主が持ち続け、連結決算の非支配株主持分になります。` : ''}`, '買う', 'kGTBuyGo', { id: t.id, o: own });
 };
 ACTIONS.kGTBuyGo = d => {
   if (ksClosingBlock()) return;
   const t = (G.group.targets || []).find(x => x.id === d.id);
   const r = ksGroupBuy(t, +d.o);
-  toast(r.ok ? `${r.s.name}を子会社にしました` : r.why, r.ok ? '' : 'bad');
+  toast(r.ok ? `${r.s.name}を${r.s.aff ? '関連会社' : '子会社'}にしました` : r.why, r.ok ? '' : 'bad');
   if (r.ok) UI.kGrpSec = 'org';
   closeModal(true); render(); autosave();
 };
@@ -26089,7 +26646,8 @@ function ksGrpFormHtml() {
   const conv = f === 'gk' ? `<div class="row" style="margin-top:6px">${btn('株式会社に組織変更する（約40万円・債権者保護手続1か月）', 'kFormConv', { to: 'kk' }, 'sm primary')}</div>`
     : f === 'yk' ? `<div class="row" style="margin-top:6px">${btn('商号を株式会社に変えて移行する（約20万円）', 'kFormConv', { to: 'kk' }, 'sm primary')}</div>` : '';
   const gov = kv([['資本金', fmtYen(G.bal.capital || 0)], ['負債の合計', fmtYen(Math.round(ksLiab()))], ['大会社（資本金5億円以上または負債200億円以上）', big ? '<b>大会社</b>：会計監査人の監査・内部統制の基本方針の決議が要る' : 'いいえ'], ['法人税の税率', (G.bal.capital || 0) > 1e8 ? '資本金1億円超：税率は約30.6%（外形標準課税を含む目安。中小法人の軽減税率は使えない）' : '中小法人：所得800万円までは約25%、超える部分は約34%（目安）'], ['住民税の均等割', fmtYen(ksKintou(G))]]);
-  return `<div class="grid g2">${panel('会社の形（会社法）', `<div class="tbl-wrap"><table class="t compact"><tbody>${rows}</tbody></table></div>${conv}`)}${panel('いまの会社の区分', gov + '<p class="note">資本金を増やすと信用は上がりますが、1億円を超えると中小法人の税の優遇がなくなり、5億円以上は大会社として会計監査人が必要になります。</p>')}</div>`;
+  return `<div class="grid g2">${panel('会社の形（会社法）', `<div class="tbl-wrap"><table class="t compact"><tbody>${rows}</tbody></table></div>${conv}`)}${panel('いまの会社の区分', gov + '<p class="note">資本金を増やすと信用は上がりますが、1億円を超えると中小法人の税の優遇がなくなり、5億円以上は大会社として会計監査人が必要になります。</p>')}</div>
+    <div class="grid g2" style="margin-top:10px">${panel('社名（商号）を変える', ksRenameHtml('root'))}</div>`;
 }
 ACTIONS.kFormConv = d => {
   if (ksClosingBlock()) return;
@@ -26106,7 +26664,8 @@ ACTIONS.kFormConv = d => {
 function ksGrpLearnHtml() {
   return `<div class="grid g2">${panel('子会社・関連会社', `<ul class="small" style="margin:0;padding-left:1.2em">
     <li><b>子会社</b>：議決権の過半数を持つなど、経営を支配している会社。連結決算に全部を取り込む（全部連結）。</li>
-    <li><b>関連会社</b>：20%以上を持ち、重要な影響を与える会社。持分法で、利益のうち持分の分だけを取り込む（このゲームでは扱わない）。</li>
+    <li><b>関連会社</b>：20%以上を持ち、重要な影響を与える会社。合算はせず${term('持分法', 'mochibunho')}で、利益のうち持分の分だけを「持分法による投資損益」として取り込む。</li>
+    <li><b>孫会社</b>：子会社の子会社。親会社から見た持分は掛け算（80%×60%＝48%）でも、子会社を通じて支配しているので連結する。</li>
     <li><b>合弁会社</b>：他の会社と一緒に出資してつくる会社。過半数を持てば子会社で、相手の持分は非支配株主持分。</li></ul>`)}
     ${panel('持株会社（ホールディングス）', `<p class="small" style="margin:0">子会社の株式を持ち、グループの経営（戦略・人事・資金・監査）に専念する会社。自分で事業をしない会社を純粋持株会社、事業もする会社を事業持株会社という。事業ごとに会社を分けると、責任と成績がはっきりし、買収や売却もしやすくなる。持株会社の収入は、子会社からの<b>経営指導料</b>と<b>配当</b>。</p>`)}
     ${panel('お金と税金', `<ul class="small" style="margin:0;padding-left:1.2em">
@@ -26118,6 +26677,8 @@ function ksGrpLearnHtml() {
     <li><b>会社分割</b>：事業を他の会社（新しくつくる会社＝新設分割、ある会社＝吸収分割）に移す。</li>
     <li><b>株式移転</b>：新しく持株会社をつくり、今の会社がその100%子会社になる。</li>
     <li><b>株式交換</b>：他社の株主に自社の株式を渡して、その会社を100%子会社にする。</li>
+    <li><b>${term('合併', 'gappei')}</b>：2つの会社が1つになる。吸収合併では、存続する会社が消える会社の資産・負債・従業員・契約をまとめて引き継ぐ。</li>
+    <li><b>${term('持分の追加取得', 'tsuikaShutoku')}</b>：子会社の残りの株を買う。連結では、のれんは増やさず、非支配株主持分との差を資本剰余金にする。</li>
     <li>どれも原則として株主総会の特別決議（3分の2以上）、反対する株主の買取請求、債権者保護手続（官報の公告と1か月以上の異議の期間）が要る。</li></ul>`)}</div>`;
 }
 
@@ -26380,11 +26941,20 @@ function ksMapJpHtml() {
     <div class="mapleg marks"><span><i class="m-hq">本</i>本社</span><span><i class="m-u">2</i>事業所の数</span><span><i class="m-l">土</i>自社の土地</span><span><i class="m-s">子</i>子会社</span><span><i class="m-d">!</i>1年以内の災害</span></div>`;
   return `${foreign ? `<div class="callout warn">この会社は海外（${esc(KS_COUNTRIES[G.country].n)}）の子会社です。日本の地図は参考です。</div>` : ''}
     <div class="grid g-side map-grid"><div>${panel('日本の地図', `<div class="seg wrap sm" role="radiogroup" aria-label="色で示す数字">${metricSeg}</div>
+      ${ksPrefSelectHtml(UI.kMapPref, s => s.hq ? '（本社）' : s.units.length ? `（事業所${s.units.length}）` : '')}
       <div class="jmap-wrap"><div class="jmap${M.warm ? ' warm' : ''}" role="group" aria-label="都道府県の地図">${tiles}</div></div>${legend}
       <p class="note">地価は令和8年の都道府県地価調査の基準地の平均（用途別）、最低賃金は令和8年度の地域別最低賃金（その後の改定を含む）、賃金は賃金構造基本統計調査の平均。ゲームの目安です。</p>`)}</div>
       <div class="stack">${ksMapPrefPanel(UI.kMapPref)}</div></div>`;
 }
 ACTIONS.kMapPref = d => { UI.kMapPref = +d.v; UI.kLand = null; render(); };
+/* 都道府県を一覧から選ぶ（小さい画面でタイルを押しにくいとき） */
+function ksPrefSelectHtml(cur, note) {
+  const byReg = {};
+  for (const p of Object.keys(KS_PREFS).map(Number)) (byReg[KS_PREFS[p].reg] = byReg[KS_PREFS[p].reg] || []).push(p);
+  const opts = Object.entries(KS_PREF_REG).filter(([r]) => byReg[r]).map(([r, rn]) => `<optgroup label="${esc(rn)}">${byReg[r].map(p => `<option value="${p}"${p === cur ? ' selected' : ''}>${esc(KS_PREFS[p].n)}${note ? esc(note(ksSitesIn(p))) : ''}</option>`).join('')}</optgroup>`).join('');
+  return `<label class="field mapsel"><span>都道府県を選ぶ</span><select data-ch="kMapPrefSel">${opts}</select></label>`;
+}
+CHANGES.kMapPrefSel = el => { UI.kMapPref = +el.value; UI.kLand = null; render(); };
 ACTIONS.kMapMetric = d => { UI.kMapMetric = d.v; render(); };
 
 function ksMapPrefPanel(p) {
@@ -26463,7 +27033,7 @@ ACTIONS.kMapFound = d => {
   UI.kGF = Object.assign(UI.kGF || { q: '', type: null, sc: 1, own: 1, cc: 'jp', pref: G.loc ? G.loc.hq : KS_HOME_PREF, amt: null, name: '' }, { cc: d.cc });
   if (d.p) UI.kGF.pref = +d.p;
   UI.tab = 'k_group'; UI.kGrpSec = 'make';
-  render(); window.scrollTo({ top: 0 });
+  render(); scrollToMain();
 };
 
 /* 新しい事業の場所（新しい事業の画面） */
@@ -26619,7 +27189,7 @@ function ksMapRiskHtml() {
       ${panel(term('BCP（事業継続計画）', 'bcp'), `<p class="small" style="margin:0 0 6px">災害のときに、何を優先して、どれだけの期間で事業を戻すかを決めた計画。被害と営業の止まる期間を小さくします。</p>${kv([['いまの備え', bcp < 1 ? `被害 ×${fmtNum(bcp, 2)}` : 'ふつう'], ['備えを強める', '方針と人事の画面で、重点実施事項「BCPと防災」か、経営方針「ガバナンス・リスク管理」']])}<div class="row" style="margin-top:6px">${btn('方針と人事へ', 'kGoHr', {}, 'sm')}</div>`)}</div></div>`;
 }
 ACTIONS.kEqIns = () => { G.loc.eqIns = !G.loc.eqIns; toast(G.loc.eqIns ? '地震保険に入りました' : '地震保険をやめました'); render(); autosave(); };
-ACTIONS.kGoHr = () => { UI.tab = 'k_hr'; UI.kHrSec = 'policy'; render(); window.scrollTo({ top: 0 }); };
+ACTIONS.kGoHr = () => { UI.tab = 'k_hr'; UI.kHrSec = 'policy'; render(); scrollToMain(); };
 
 /* ---------- 出来事と災害のお知らせ ---------- */
 MODALS.kEvt = a => {
@@ -26647,7 +27217,7 @@ MODALS.kDisaster = a => {
     <p class="small muted">${esc(KS_PREF_RISKNOTE[P.reg])}。拠点を分ける、BCPをつくる、保険に入る、といった備えで被害を小さくできます。</p>`;
   return modalFrame(`【災害】${esc(P.n)}の${esc(D.n)}`, body, btn('拠点と地図を見る', 'kDisGo', {}, '') + btn('閉じる', 'closeModal', {}, 'primary'), { sub: ymLabel(G.m) });
 };
-ACTIONS.kDisGo = () => { UI.tab = 'k_map'; UI.kMapSec = 'risk'; closeModal(true); render(); window.scrollTo({ top: 0 }); };
+ACTIONS.kDisGo = () => { UI.tab = 'k_map'; UI.kMapSec = 'risk'; closeModal(true); render(); scrollToMain(); };
 
 /* ---------- 用語 ---------- */
 Object.assign(TERMS, {
@@ -26721,6 +27291,472 @@ function ksCustomOptions(k) {
   };
   return { custom, pref: custom.pref, form: c.form === 'hd' ? 'kk' : c.form };
 }
+
+/* ---- 29k_kaisha_group2.js ---- */
+/* =========================================================
+ *  29k_kaisha_group2.js : グループの再編（エンジン）
+ *   ・商号の変更（親会社・子会社・孫会社）
+ *   ・持分の買い増し（合弁・買収した会社の残りの株を買う。株式交換で完全子会社にする）
+ *     関連会社（持分法）の株を買い増して50%を超えると、連結子会社になる（段階取得）
+ *   ・傘下に移す（中間持株会社をつくる：子会社の株式を別の100%子会社に現物出資する）
+ *   ・合併（子会社を持ち主に吸収する・兄弟の子会社どうしを合併する。効力発生日は期首の4月1日）
+ * ========================================================= */
+
+/* ---------- 商号の変更 ---------- */
+function ksRenameCost(st) {
+  const head = ksWith(st, ksHeadcount);
+  const sites = ksWith(st, () => ksActiveUnits().length);
+  // 登録免許税3万円・司法書士の報酬・看板・名刺・印鑑・ウェブ・取引先への通知
+  return { reg: 3e4, fee: 3e4, signs: Math.round((20e4 + head * 5000 + sites * 15e4) / 1e4) * 1e4 };
+}
+function ksGroupRename(id, name) {
+  const root = ksRoot();
+  name = String(name || '').replace(/\s+/g, ' ').trim().slice(0, 40);
+  const s = id && id !== 'root' ? ksSubById(id, root) : null;
+  if (id && id !== 'root' && (!s || s.gone)) return { ok: false, why: '会社がありません' };
+  const st = s ? s.st : root;
+  const word = KS_FORMS[ksForm(st)].pre;
+  if (name.replace(word, '').trim().length < 1) return { ok: false, why: '社名を入れてください' };
+  if (!name.includes(word)) return { ok: false, why: `商号には会社の種類（「${word}」）を入れます（会社法6条）` };
+  if (name === st.coName) return { ok: false, why: '今と同じ社名です' };
+  if ([root, ...ksSubs(root).map(x => x.st)].some(x => x !== st && x.coName === name)) return { ok: false, why: 'グループの中に同じ社名の会社があります' };
+  const c = ksRenameCost(st);
+  const total = c.reg + c.fee + c.signs;
+  if (ksWith(st, () => ksB('cash')) < total) return { ok: false, why: '現預金が足りません' };
+  const old = st.coName;
+  ksWith(st, () => ksPost('rename', [['dues', c.reg, 0], ['fees', c.fee, 0], ['ads', c.signs, 0], ['cash', 0, total]], { u: 'HQ', cf: 'exp', desc: `商号の変更（${old}→${name}）：変更の登記・看板・名刺など` }));
+  st.coNameOld = old;
+  st.coName = name;
+  if (s) s.name = name;
+  for (const x of ksSubs(root)) if (ksRecOwnerId(x) === (s ? s.id : 'root')) x.st.parentName = name;
+  ksWith(root, () => ksNews(`商号を変更しました：${old} → ${name}（株主総会の特別決議で定款を変え、2週間以内に変更の登記。費用 ${fmtYen(total)}）`, 'info'));
+  return { ok: true, total };
+}
+
+/* ---------- 持分の買い増し（追加取得・段階取得・株式交換） ---------- */
+/* 見込み：toOwn までの株を買う値段と、連結の処理 */
+function ksBuyMoreQuote(id, toOwn) {
+  const root = ksRoot();
+  const s = ksSubById(id, root);
+  if (!s || s.gone) return { ok: false, why: '会社がありません' };
+  if (s.own >= 0.9999) return { ok: false, why: 'すでに100%の株を持っています' };
+  toOwn = clamp(+toOwn, s.own + 0.005, 1);
+  const d = toOwn - s.own;
+  const fair = Math.max(1, ksSubValue(s));
+  const control = s.aff && toOwn > 0.5;
+  const price = niceAmount(fair * d * (control ? 1.15 : 1.05)); // 支配権がつくときは上乗せ（コントロール・プレミアム）
+  const owner = ksOwnerSt(s, root);
+  return { ok: !!owner, why: owner ? '' : '株式を持つ会社がありません', s, toOwn, d, fair, price, control, owner, exchangeOK: owner === root && ksForm(root) === 'kk' && toOwn >= 0.9999 };
+}
+/* o.exchange：株式交換（親会社の新しい株式を渡す。現金は要らない。親会社が株式会社のときだけ） */
+function ksGroupBuyMore(id, toOwn, o = {}) {
+  const root = ksRoot(), g = root.group;
+  ksGroupMigrate(root);
+  if (root.closing) return { ok: false, why: '決算整理の途中です' };
+  const q = ksBuyMoreQuote(id, toOwn);
+  if (!q.ok) return q;
+  const { s, owner, price } = q;
+  const exch = !!o.exchange && q.exchangeOK;
+  if (!exch && ksWith(owner, () => ksB('cash')) < price) return { ok: false, why: '現預金が足りません' };
+  const t = root.m, fy = fyOf(t);
+  const N = ksRecNow(s);
+  const ownerId = ksRecOwnerId(s);
+  const effOwner = ownerId === 'root' ? 1 : ksEffOwn(ksSubById(ownerId, root), root);
+  const before = s.own;
+  ksRecInv(s);
+  ksWith(owner, () => ksPost(exch ? 'subExch' : 'subMore', [['subShares', price, 0], exch ? ['capSurplus', 0, price] : ['cash', 0, price]], { u: 'HQ', cf: exch ? 'equity' : 'capex', desc: exch ? `株式交換（${s.name}を完全子会社に。新しい株式を交付して資本準備金に）` : `${s.name}の株式の追加取得（持分${Math.round(before * 100)}%→${Math.round(q.toOwn * 100)}%）` }));
+  let msg = '';
+  if (s.aff && q.control) {
+    // 段階取得：前から持っていた株を、支配を得た日の時価で測りなおし、差を損益にする。のれんは時価の合計と純資産の差
+    const emvH = before * N.NAh + N.gwLeft;
+    const fairPrev = Math.round(q.fair * before);
+    const gain = Math.round(fairPrev - emvH);
+    ksRecReopen(s, 'control');
+    const gwNew = fairPrev + price - q.toOwn * N.NAtr;
+    Object.assign(s, { aff: false, kind: 'acq', own: q.toOwn, since: t, eq0: N.NAtr, adds: 0, reTr: 0, gw: Math.max(0, Math.round(gwNew)), negGw: 0, negDone: true, gwCum: 0, gwFrom: t, gwLife: 10, fee: 0.005, inv: s.inv + price });
+    if (q.toOwn >= 0.9999) s.partner = null;
+    if (gain) g.cadj.push({ fy, m: t, owner: ownerId, id: s.id, t: '段階取得に係る差損益', why: `${s.name}を子会社にしたので、前から持っていた${Math.round(before * 100)}%の株を時価（${fmtYen(fairPrev)}）で測りなおし、持分法の額との差を損益にする（連結だけ）`, pl: gain >= 0 ? { exg: gain } : { exl: -gain } });
+    if (gwNew < 0) g.cadj.push({ fy, m: t, owner: ownerId, id: s.id, t: '負ののれん発生益', why: `${s.name}の純資産の持分より安く支配を得た差`, pl: { exg: Math.round(-gwNew) } });
+    msg = `持分法の関連会社から連結子会社になりました（段階取得の${gain >= 0 ? '差益' : '差損'} ${fmtYen(Math.abs(gain))}・のれん ${fmtYen(s.gw)}）`;
+  } else if (s.aff) {
+    // 持分法のまま：買い増した分の投資差額を加える
+    const emvH = before * N.NAh + N.gwLeft;
+    ksRecReopen(s, 'restake');
+    const gwNew = emvH + price - q.toOwn * N.NAh;
+    Object.assign(s, { own: q.toOwn, since: t, eq0: N.NAh, adds: 0, reTr: 0, gw: Math.max(0, Math.round(gwNew)), gwCum: 0, gwFrom: t, gwLife: 10, inv: s.inv + price });
+    if (gwNew < 0) g.cadj.push({ fy, m: t, owner: ownerId, id: s.id, t: '持分法による投資利益（負ののれん相当額）', why: `${s.name}の純資産の持分より安く買い増した差`, pl: { noi: Math.round(-gwNew) } });
+    msg = '持分法の関連会社のまま、持分が増えました';
+  } else {
+    // 連結子会社の追加取得：のれんは増やさず、非支配株主持分の減少との差を資本剰余金にする
+    const capAdj = Math.round((q.d * ksRecEh(s, root) - price) * effOwner);
+    const r = ksRecReopen(s, 'restake');
+    Object.assign(s, { own: q.toOwn, since: t, eq0: N.NAh, adds: 0, reTr: 0, gw: r.gwRem, gwCum: 0, gwFrom: t, gwLife: Math.max(1, r.gwMonths) / 12, inv: s.inv + price });
+    if (!r.gwMonths) s.gw = 0;
+    if (q.toOwn >= 0.9999) { s.partner = null; if (s.kind === 'jv') s.kind = 'new'; }
+    g.capAdj.push({ m: t, amt: capAdj, id: s.id });
+    msg = `非支配株主持分の減少との差 ${fmtYen(Math.abs(capAdj))} は、連結では資本剰余金の${capAdj >= 0 ? '増加' : '減少'}`;
+  }
+  ksWith(root, () => ksNews(`${s.name}の株式を${exch ? '株式交換で' : `${fmtYen(price)}で`}買い増し、持分が${Math.round(before * 100)}%から${Math.round(q.toOwn * 100)}%になりました。${msg}`, 'good'));
+  return { ok: true, price, exch };
+}
+
+/* ---------- 傘下に移す（中間持株会社） ---------- */
+/* 移せる先：親会社、または実質100%の国内の連結子会社（自分と自分の下の会社は除く） */
+function ksReparentTargets(id, root = ksRoot()) {
+  const s = ksSubById(id, root);
+  if (!s || s.gone) return [];
+  const below = new Set([s.id, ...ksDescendants(s.id, root).map(x => x.id)]);
+  const out = [];
+  if (ksRecOwnerId(s) !== 'root') out.push({ id: 'root', n: root.coName });
+  for (const x of ksCSubs(root)) if (!below.has(x.id) && x.id !== ksRecOwnerId(s) && (!x.cc || x.cc === 'jp') && ksEffOwn(x, root) >= 0.9999) out.push({ id: x.id, n: x.name });
+  return out;
+}
+function ksGroupReparent(id, toId) {
+  const root = ksRoot();
+  ksGroupMigrate(root);
+  if (root.closing) return { ok: false, why: '決算整理の途中です' };
+  const s = ksSubById(id, root);
+  if (!s || s.gone) return { ok: false, why: '会社がありません' };
+  if (!ksReparentTargets(id, root).some(x => x.id === toId)) return { ok: false, why: 'その会社の下には移せません（移す先は実質100%の国内の子会社です）' };
+  const fromId = ksRecOwnerId(s);
+  if (fromId !== 'root' && ksEffOwn(ksSubById(fromId, root), root) < 0.9999) return { ok: false, why: '今の持ち主の会社にほかの株主がいるので、移せません' };
+  const from = ksOwnerSt(s, root);
+  const to = toId === 'root' ? root : ksSubById(toId, root).st;
+  const inv = ksRecInv(s);
+  if (fromId === 'root' && toId !== 'root' && ksRecOwnerId(ksSubById(toId, root)) === 'root') {
+    // 親会社が、子会社の株式を移す先の子会社（親会社が直接持つ会社）に現物出資する（移す先の資本が増える）
+    const t = ksSubById(toId, root);
+    ksWith(root, () => ksPost('reorg', [['subShares', inv, 0], ['subShares', 0, inv]], { u: 'HQ', cf: 'other', desc: `${s.name}の株式を${t.name}に現物出資（${t.name}の株式に変わる）` }));
+    ksWith(to, () => ksPost('reorgIn', [['subShares', inv, 0], ['capSurplus', 0, inv]], { u: 'HQ', cf: 'equity', desc: `親会社から${s.name}の株式の現物出資を受ける` }));
+    t.adds += inv;
+    t.inv = ksRecInv(t) + inv;
+  } else {
+    // 今の持ち主から、帳簿の価額で買い取る（孫会社の下へ移すときは、親会社からも買い取る）
+    if (ksWith(to, () => ksB('cash')) < inv) return { ok: false, why: `${to.coName}の現預金が足りません（${fmtYen(inv)}が要ります）` };
+    ksWith(to, () => ksPost('reorg', [['subShares', inv, 0], ['cash', 0, inv]], { u: 'HQ', cf: 'capex', desc: `${s.name}の株式をグループの会社から帳簿の価額で買い取る` }));
+    ksWith(from, () => ksPost('reorg', [['cash', inv, 0], ['subShares', 0, inv]], { u: 'HQ', cf: 'capex', desc: `${s.name}の株式をグループの会社に帳簿の価額で譲る` }));
+  }
+  if (toId === 'root') delete s.parent; else s.parent = toId;
+  s.st.parentName = to.coName;
+  ksWith(root, () => ksNews(`${s.name}を${to.coName}の傘下に移しました（グループの中の再編なので、連結の損益は変わりません）`, 'info'));
+  return { ok: true };
+}
+
+/* ---------- 合併（吸収合併）。効力発生日は期首（4月1日） ---------- */
+/* 合併できるか：from を into に吸収させる。into は from の持ち主（'root' か子会社）か、同じ持ち主の兄弟の子会社 */
+function ksMergerCheck(fromId, intoId, root = ksRoot()) {
+  const c = ksSubById(fromId, root);
+  if (!c || c.gone) return { ok: false, why: '会社がありません' };
+  if (c.aff) return { ok: false, why: '関連会社は合併できません（先に株を買い増して子会社にします）' };
+  if (c.own < 0.9999) return { ok: false, why: 'ほかの株主がいる会社は合併できません（先に残りの株を買って100%にします）' };
+  if (c.cc && c.cc !== 'jp') return { ok: false, why: '海外の会社とは合併できません（国をまたぐ合併は日本の会社法ではできない）' };
+  const ownerId = ksRecOwnerId(c);
+  if (intoId === ownerId) return { ok: true, mode: 'up', c, O: ksOwnerSt(c, root) };
+  const a = ksSubById(intoId, root);
+  if (!a || a.gone || a.aff) return { ok: false, why: '合併する相手がありません' };
+  if (ksRecOwnerId(a) !== ownerId) return { ok: false, why: '兄弟の子会社（同じ会社が持つ子会社）どうしだけが合併できます' };
+  if (a.own < 0.9999) return { ok: false, why: '存続する会社にほかの株主がいるので、合併できません' };
+  if (a.cc && a.cc !== 'jp') return { ok: false, why: '海外の会社とは合併できません' };
+  return { ok: true, mode: 'sister', c, a, O: a.st };
+}
+function ksMergerEffM(root = ksRoot()) { let m = (fyOf(root.m) + 1) * 12; if (m - root.m < 2) m += 12; return m; }
+const KS_MERGER_COST = { reg: 6e4, koukoku: 15e4, pro: 100e4 }; // 登記（存続・解散）・官報公告（債権者保護手続）・司法書士と会計の専門家
+function ksGroupScheduleMerger(fromId, intoId) {
+  const root = ksRoot(), g = root.group;
+  ksGroupMigrate(root);
+  const r = ksMergerCheck(fromId, intoId, root);
+  if (!r.ok) return r;
+  if (g.mergers.some(x => x.from === fromId || x.into === fromId || x.from === intoId)) return { ok: false, why: 'この会社の合併はもう予定されています' };
+  const m = ksMergerEffM(root);
+  const x = { id: 'M' + (++g.seq), from: fromId, into: intoId, mode: r.mode, m, at: root.m };
+  g.mergers.push(x);
+  const intoName = intoId === 'root' ? root.coName : ksSubById(intoId, root).name;
+  ksWith(root, () => ksNews(`${r.c.name}を${intoName}に吸収合併する契約を結びました。株主総会の承認と債権者保護手続（官報に公告して1か月）を経て、${ymLabel(m)}1日に効力が生じます`, 'info'));
+  return { ok: true, x };
+}
+function ksGroupCancelMerger(id) {
+  const g = ksRoot().group;
+  g.mergers = (g.mergers || []).filter(x => x.id !== id);
+  return { ok: true };
+}
+/* 帳簿と事業を c から O へ移す。mode 'up'：O は c の株主（株式は消え、差は抱合せ株式消滅差損益）／'sister'：純資産の内訳を引き継ぐ */
+function ksMergeBooks(c, O, mode, gw) {
+  const C = c.st;
+  const umap = {}, amap = {};
+  const units = C.units.filter(u => !u.closedM);
+  for (const u of units) umap[u.id] = 'U' + (++O.useq);
+  const EQ = ['capital', 'capSurplus', 'legalRes', 're'];
+  const lines = [];
+  for (const k of KS_KEYS) {
+    if (EQ.includes(k)) continue;
+    const v = Math.round(C.bal[k] || 0);
+    if (v) lines.push(ksDebitNature(k) === (v > 0) ? [k, Math.abs(v), 0] : [k, 0, Math.abs(v)]);
+  }
+  let gain = 0;
+  if (mode === 'up') {
+    if (gw.amt > 0) lines.push(['goodwill', gw.amt, 0]);
+    lines.push(['subShares', 0, ksRecInv(c)]);
+    const dr = sum(lines, l => l[1]), cr = sum(lines, l => l[2]);
+    gain = dr - cr;
+    if (gain > 0) lines.push(['mergeGain', 0, gain]); else if (gain < 0) lines.push(['mergeLoss', -gain, 0]);
+  } else {
+    for (const k of EQ) { const v = Math.round(C.bal[k] || 0); const kk = k === 'capital' ? 'capSurplus' : k; if (v) lines.push(v > 0 ? [kk, 0, v] : [kk, -v, 0]); }
+  }
+  ksWith(O, () => {
+    ksPost('merge', lines, { u: 'HQ', cf: 'other', desc: `${C.coName}を吸収合併（資産・負債と事業を引き継ぐ）` });
+    // 固定資産の台帳（今期の償却は合併の日から）
+    for (const a of C.assets.filter(a => a.soldM === undefined)) {
+      const b = Object.assign({}, a, { id: 'F' + (++G.seq), u: a.u && a.u !== 'HQ' ? (umap[a.u] || 'HQ') : a.u });
+      if (!b.cip) b.depFrom = G.m;
+      amap[a.id] = b.id;
+      G.assets.push(b);
+    }
+    if (mode === 'up' && gw.amt > 0) ksNewAsset({ n: `のれん（${C.coName}との合併）`, acct: 'goodwill', cost: gw.amt, life: Math.max(1, gw.months) / 12, part: 'S', u: 'HQ', depFrom: G.m });
+    for (const x of C.ar) G.ar.push(Object.assign({}, x, { u: umap[x.u] || x.u }));
+    for (const x of C.ap) G.ap.push(Object.assign({}, x));
+    for (const L of C.loans) {
+      if (L.kind === 'od') {
+        if (L.bal <= 0) continue;
+        const mine = G.loans.find(y => y.kind === 'od' && y.bank === L.bank);
+        if (mine) { mine.bal += L.bal; mine.limit = (mine.limit || 0) + (L.limit || 0); continue; }
+      }
+      G.loans.push(Object.assign({}, L, { id: 'L' + (++G.seq) }));
+    }
+    // 期首の再振替（未払費用・前払費用）
+    if (C.reversal && C.reversal.u) {
+      G.reversal = G.reversal || { u: {} };
+      G.reversal.u = G.reversal.u || {};
+      for (const [uid, rv] of Object.entries(C.reversal.u)) {
+        const nid = umap[uid] || 'HQ';
+        const t = G.reversal.u[nid] || (G.reversal.u[nid] = { labor: 0, welfare: 0, rent: 0 });
+        t.labor += rv.labor || 0; t.welfare += rv.welfare || 0; t.rent += rv.rent || 0;
+      }
+    }
+    // 事業（人員・取引先・設備の計画）と、法令・成長・拠点の記録
+    for (const u of units) {
+      const old = u.id, nid = umap[old];
+      u.id = nid;
+      if (G.loc && C.loc) { G.loc.units[nid] = C.loc.units[old] || C.loc.hq; G.loc.uhome = G.loc.uhome || {}; G.loc.uhome[nid] = (C.loc.uhome && C.loc.uhome[old]) || C.loc.home || C.loc.hq; }
+      G.units.push(u);
+      if (C.wfPrevU && C.wfPrevU[old]) { G.wfPrevU = G.wfPrevU || {}; G.wfPrevU[nid] = C.wfPrevU[old]; if (G.wfPrev) { G.wfPrev.labor += C.wfPrevU[old].labor || 0; G.wfPrev.salary += C.wfPrevU[old].salary || 0; } }
+      if (C.law && G.law) for (const k of Object.keys(C.law.done)) if (k.endsWith(':' + old)) G.law.done[k.slice(0, -old.length) + nid] = C.law.done[k];
+      if (C.grow && G.grow) {
+        for (const [k, x] of Object.entries(C.grow.up || {})) if (x.u === old) G.grow.up[k.includes(old) ? k.split(old).join(nid) : `${k}_${nid}`] = Object.assign({}, x, { u: nid });
+        if (C.grow.intl && C.grow.intl[old]) G.grow.intl[nid] = C.grow.intl[old];
+        for (const q of C.grow.fxq || []) if (q.u === old) G.grow.fxq.push(Object.assign({}, q, { u: nid }));
+      }
+      if (typeof ksLawAddUnit === 'function') ksLawAddUnit(u);
+    }
+    // 自社の土地と建物
+    if (G.loc && C.loc) for (const L of C.loc.lands || []) {
+      const L2 = Object.assign({}, L, { id: 'D' + (++G.loc.seq), asset: amap[L.asset] || L.asset });
+      if (L.bldg) L2.bldg = Object.assign({}, L.bldg, { asset: amap[L.bldg.asset] || L.bldg.asset, uid: L.bldg.uid ? umap[L.bldg.uid] || null : null });
+      G.loc.lands.push(L2);
+    }
+    // 人と制度：満足度は人数の重みで合わせる。障害者雇用の人数も引き継ぐ
+    if (G.hr && C.hr) {
+      const hO = Math.max(1, ksHeadcount() - ksWith(C, ksHeadcount)), hC = ksWith(C, ksHeadcount);
+      G.hr.es = Math.round((G.hr.es * hO + C.hr.es * hC) / Math.max(1, hO + hC) * 10) / 10;
+      G.hr.dis = (G.hr.dis || 0) + (C.hr.dis || 0);
+    }
+  });
+  return { gain, umap };
+}
+function ksGroupDoMergers() {
+  const root = G, g = root.group;
+  const due = (g.mergers || []).filter(x => x.m <= root.m);
+  if (!due.length) return;
+  g.mergers = g.mergers.filter(x => x.m > root.m);
+  const fy = fyOf(root.m);
+  for (const x of due) {
+    const r = ksMergerCheck(x.from, x.into, root);
+    const c = ksSubById(x.from, root);
+    if (!r.ok || r.mode !== x.mode || (c && c.st.over)) { ksNews(`${c ? c.name : '会社'}の合併は、条件が変わったので取りやめました（${r.why || '会社の状態が変わった'}）`, 'bad'); continue; }
+    const O = r.O;
+    if (O.over) continue;
+    const intoName = x.into === 'root' ? root.coName : ksSubById(x.into, root).name;
+    // 合併の費用（存続する会社が払う）
+    const cost = KS_MERGER_COST.reg + KS_MERGER_COST.koukoku + KS_MERGER_COST.pro;
+    ksWith(O, () => ksPost('mergeFee', [['dues', KS_MERGER_COST.reg, 0], ['fees', KS_MERGER_COST.koukoku + KS_MERGER_COST.pro, 0], ['cash', 0, cost]], { u: 'HQ', cf: 'exp', desc: `${c.name}との合併の費用（登記・官報公告・専門家）` }));
+    const life = Math.max(1, Math.round((c.gw ? (c.gwLife || 10) : 0) * 12));
+    const gw = { amt: Math.max(0, Math.round((c.gw || 0) - (c.gwCum || 0))), months: Math.max(0, (c.gwFrom ?? c.since) + life - root.m) };
+    if (!gw.months) gw.amt = 0;
+    const lossCF = c.st.lossCF || 0;
+    const qualified = ['new', 'split', 'hd'].includes(c.kind) || root.m - c.since >= 60;
+    const res = ksMergeBooks(c, O, x.mode, gw);
+    // 繰越欠損金：100%グループの適格合併で、支配から5年以上（または設立から）なら引き継げる
+    if (lossCF > 0 && qualified) O.lossCF = (O.lossCF || 0) + lossCF;
+    // 親会社からの貸付金：親会社が吸収したら消え、子会社が吸収したらその会社の借入になる
+    for (const L of (g.loans || []).filter(y => y.sub === c.id)) {
+      if (x.into === 'root' && x.mode === 'up') { const b = Math.round(L.bal); if (b > 0) ksWith(root, () => ksPost('mergeIc', [['icDebt', b, 0], ['icLoan', 0, b]], { u: 'HQ', cf: 'other', desc: `合併した${c.name}への貸付金と借入金が同じ会社の中になり消える（混同）` })); L.bal = 0; }
+      else L.sub = x.into;
+    }
+    g.loans = (g.loans || []).filter(y => y.bal > 0);
+    // 下の会社（孫会社）は、存続する会社の子会社になる
+    for (const y of ksSubs(root)) if (y.parent === c.id) { if (x.mode === 'up' && x.into === 'root') delete y.parent; else y.parent = x.into; y.st.parentName = O.coName; }
+    if (x.mode === 'up') {
+      if (res.gain) g.cadj.push({ fy, m: root.m, owner: x.into, id: c.id, t: '抱合せ株式消滅差損益の消去', why: `${c.name}を吸収したときの${res.gain >= 0 ? '差益' : '差損'}は、${c.name}の取得の後の利益をすでに連結に取り込んでいるので消す`, pl: res.gain >= 0 ? { exg: -res.gain } : { exl: res.gain } });
+    } else {
+      // 兄弟の合併：存続する会社の記録に、消える会社の資本と取得の後の利益・のれんを足す
+      const a = r.a;
+      const lifeA = Math.max(1, Math.round((a.gw ? (a.gwLife || 10) : 0) * 12));
+      const remA = Math.max(0, Math.round((a.gw || 0) - (a.gwCum || 0))), monA = Math.max(0, (a.gwFrom ?? a.since) + lifeA - root.m);
+      const gwT = (monA ? remA : 0) + gw.amt;
+      const mon = gwT ? Math.round(((monA ? remA : 0) * monA + gw.amt * gw.months) / gwT) : 0;
+      Object.assign(a, { eq0: a.eq0 + c.eq0 + c.adds + c.reTr, inv: ksRecInv(a) + ksRecInv(c), gw: gwT, gwCum: 0, gwFrom: root.m, gwLife: Math.max(1, mon) / 12 });
+      if (!gwT) a.gw = 0;
+    }
+    ksRecClose(c, 'merged', { into: x.into });
+    c.st = null;
+    ksNews(`${intoName}が${c.name}を吸収合併しました（効力発生日 ${ymLabel(root.m)}1日）。${c.name}の事業・従業員・資産と負債は${intoName}に引き継がれ、${c.name}は解散しました${x.mode === 'up' && res.gain ? `。抱合せ株式消滅${res.gain >= 0 ? '差益' : '差損'} ${fmtYen(Math.abs(res.gain))}（個別の決算の特別損益。連結では消す）` : ''}`, 'good');
+  }
+}
+/* 期首（4月）になったら、予定の合併を行う（親会社の決算が終わり、連結決算をつくった後） */
+const ksNextMonthG0 = ksNextMonth;
+ksNextMonth = function () {
+  ksNextMonthG0();
+  if (G && !G.isSub && !G.hist && G.group && (G.group.mergers || []).some(x => x.m <= G.m)) ksGroupDoMergers();
+};
+
+/* ---- 29l_kaisha_group2_ui.js ---- */
+/* =========================================================
+ *  29l_kaisha_group2_ui.js : グループの再編の画面
+ *   社名の変更・持分の買い増し（株式交換）・合併・傘下に移す・孫会社の設立・関連会社の決算書
+ * ========================================================= */
+
+/* ---------- 社名（商号）の変更 ---------- */
+function ksRenameHtml(id) {
+  const root = ksRoot();
+  const s = id && id !== 'root' ? ksSubById(id, root) : null;
+  const st = s ? s.st : root;
+  const word = KS_FORMS[ksForm(st)].pre;
+  const c = ksRenameCost(st);
+  const v = UI.kRen && UI.kRen.id === (id || 'root') ? UI.kRen.name : st.coName;
+  return `<p class="small" style="margin:0 0 6px">商号は定款に書かれているので、株主総会の特別決議で定款を変え、2週間以内に変更の登記をします。商号には会社の種類（「${esc(word)}」）を入れます。前に付けても（前株）後に付けても（後株）かまいません。</p>
+    <div class="row" style="gap:6px;flex-wrap:wrap"><input type="text" value="${esc(v)}" maxlength="40" data-in="kRenName" data-id="${esc(id || 'root')}" aria-label="新しい社名" style="flex:1 1 220px;min-width:0">${btn('社名を変える', 'kRenGo', { id: id || 'root' }, 'sm primary')}</div>
+    <p class="small muted" style="margin:6px 0 0">費用 ${fmtYen(c.reg + c.fee + c.signs)}（登録免許税 ${fmtYen(c.reg)}・司法書士 ${fmtYen(c.fee)}・看板・名刺・印鑑・ウェブ・取引先への案内 ${fmtYen(c.signs)}）。${st.coNameOld ? `前の社名：${esc(st.coNameOld)}` : ''}</p>`;
+}
+INPUTS.kRenName = el => { UI.kRen = { id: el.dataset.id, name: el.value }; };
+ACTIONS.kRenGo = d => {
+  if (ksClosingBlock()) return;
+  const name = UI.kRen && UI.kRen.id === d.id ? UI.kRen.name : '';
+  const r = ksGroupRename(d.id, name);
+  toast(r.ok ? '社名を変えました' : r.why, r.ok ? '' : 'bad');
+  if (r.ok) UI.kRen = null;
+  if (UI.modal) drawModal();
+  render(); autosave();
+};
+
+/* ---------- 再編・社名（会社ごと） ---------- */
+ACTIONS.kSubOps = d => { UI.kOps = { id: d.id, to: null, merge: null, parent: null }; UI.kRen = null; showModal('kSubOps'); };
+MODALS.kSubOps = () => {
+  const root = ksRoot();
+  const O = UI.kOps;
+  const s = O && ksSubById(O.id, root);
+  if (!s || s.gone) return modalFrame('再編', '<p>会社がありません。</p>', btn('閉じる', 'closeModal'));
+  const sec = [];
+  sec.push(`<h3 class="fsh">社名を変える</h3>${ksRenameHtml(s.id)}`);
+  // 持分の買い増し
+  if (s.own < 0.9999) {
+    const opts = [...new Set([0.51, 0.67, 0.8, 1].filter(v => v > s.own + 0.001).concat(s.aff ? [Math.min(0.5, Math.round((s.own + 0.1) * 100) / 100)] : []))].filter(v => v > s.own).sort((a, b) => a - b);
+    const to = O.to && opts.includes(O.to) ? O.to : opts[opts.length - 1];
+    O.to = to;
+    const q = ksBuyMoreQuote(s.id, to);
+    const seg = opts.map(v => `<button type="button" data-act="kOpsTo" data-v="${v}" aria-pressed="${v === to}">${Math.round(v * 100)}%</button>`).join('');
+    const what = q.control ? '持分法の関連会社から<b>連結子会社</b>になります（段階取得：前から持っていた株を時価で測りなおし、差を損益に）。' : s.aff ? '持分法の関連会社のままです。' : '連結では、のれんは増やさず、非支配株主持分の減少との差を資本剰余金にします。';
+    sec.push(`<h3 class="fsh">持分を買い増す</h3><p class="small" style="margin:0 0 6px">いまの持分 ${Math.round(s.own * 100)}%。${esc(s.partner || 'ほかの株主')}から株を買います。${what}</p>
+      <div class="seg" role="radiogroup">${seg}</div>
+      ${q.ok ? `<p class="small" style="margin:6px 0">価格 <b>${fmtYen(q.price)}</b>（会社の価値 ${fmtYen(q.fair)} × ${Math.round(q.d * 100)}%${q.control ? '・支配権のプレミアム15%' : '・プレミアム5%'}）</p>` : `<p class="small neg">${esc(q.why)}</p>`}
+      <div class="row" style="gap:6px;flex-wrap:wrap">${btn('現金で買う', 'kMoreGo', { id: s.id, ex: 0 }, 'sm primary')}${q.exchangeOK ? btn('株式交換で100%にする（現金は要らない）', 'kMoreGo', { id: s.id, ex: 1 }, 'sm') : ''}</div>
+      ${q.exchangeOK ? `<p class="note">株式交換：${esc(root.coName)}が新しく株式を発行して相手に渡し、${esc(s.name)}を完全子会社にします。親会社の資本準備金が増え、現金は出ていきません（既存の株主の持分は薄まる）。</p>` : ''}`);
+  }
+  // 合併
+  if (!s.aff) {
+    const ownerId = ksRecOwnerId(s);
+    const cands = [[ownerId, `${ownerId === 'root' ? root.coName : ksSubById(ownerId, root).name}（この会社の株主）に吸収される`], ...ksCSubs(root).filter(x => x !== s && ksRecOwnerId(x) === ownerId).map(x => [x.id, `兄弟の${x.name}に吸収される`])];
+    const into = O.merge && cands.some(c => c[0] === O.merge) ? O.merge : cands[0][0];
+    O.merge = into;
+    const chk = ksMergerCheck(s.id, into, root);
+    const sched = (root.group.mergers || []).find(x => x.from === s.id);
+    sec.push(`<h3 class="fsh">合併する</h3>${sched ? `<p class="small">${ymLabel(sched.m)}1日に合併する予定です。${btn('取りやめる', 'kMergeCancel', { id: sched.id }, 'sm ghost')}</p>` : `<label class="field"><span>吸収する会社（存続会社）</span><select data-ch="kOpsMerge">${cands.map(([v, l]) => `<option value="${v}"${v === into ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select></label>
+      ${chk.ok ? `<p class="small" style="margin:6px 0">効力発生日は${ymLabel(ksMergerEffM(root))}1日（期首）。${esc(s.name)}の事業・従業員・資産と負債・契約をまとめて引き継ぎ、${esc(s.name)}は解散します。${chk.mode === 'up' ? '株主の会社が吸収するので、持っていた株式は消え、純資産との差は「抱合せ株式消滅差損益」（個別の特別損益。連結では消す）になります。' : '兄弟の会社どうしなので、純資産（資本金・利益剰余金など）をそのまま引き継ぎ、損益は出ません。'}重複する本社の費用が減ります。費用 約${fmtYen(KS_MERGER_COST.reg + KS_MERGER_COST.koukoku + KS_MERGER_COST.pro)}（登記・官報公告・専門家）。</p>` : `<p class="small neg">${esc(chk.why)}</p>`}
+      ${btn('合併の契約を結ぶ', 'kMergeGo', { id: s.id }, 'sm', { disabled: !chk.ok })}`}`);
+  }
+  // 傘下に移す
+  const tgs = ksReparentTargets(s.id, root);
+  if (tgs.length) {
+    const to = O.parent && tgs.some(t => t.id === O.parent) ? O.parent : tgs[0].id;
+    O.parent = to;
+    sec.push(`<h3 class="fsh">ほかの会社の傘下に移す（中間持株会社）</h3><p class="small" style="margin:0 0 6px">いまは${esc(ksOwnerNameOf(s, root))}が持っています。グループの中で株の持ち主を変えます（帳簿の価額のまま。親会社から子会社へ移すときは現物出資、それ以外は帳簿の価額で買い取り）。連結の損益は変わりません。</p>
+      <div class="row" style="gap:6px;flex-wrap:wrap"><select data-ch="kOpsParent" aria-label="移す先">${tgs.map(t => `<option value="${t.id}"${t.id === to ? ' selected' : ''}>${esc(t.n)}${t.id === 'root' ? '（親会社）' : ''}</option>`).join('')}</select>${btn('移す', 'kReparentGo', { id: s.id }, 'sm')}</div>`);
+  }
+  // 孫会社をつくる
+  if (!s.aff && (!s.cc || s.cc === 'jp')) sec.push(`<h3 class="fsh">この会社の下に会社をつくる（孫会社）</h3><p class="small" style="margin:0 0 6px">${esc(s.name)}が出資して、新しい会社をつくります。孫会社の経営指導料と配当は${esc(s.name)}が受け取ります。</p>${btn('孫会社をつくる', 'kFoundUnder', { id: s.id }, 'sm')}`);
+  return modalFrame(`${esc(s.name)}の再編と社名`, sec.join(''), btn('閉じる', 'closeModal'), { size: 'narrow' });
+};
+ACTIONS.kOpsTo = d => { UI.kOps.to = +d.v; drawModal(); };
+CHANGES.kOpsMerge = el => { UI.kOps.merge = el.value; drawModal(); };
+CHANGES.kOpsParent = el => { UI.kOps.parent = el.value; };
+ACTIONS.kMoreGo = d => {
+  if (ksClosingBlock()) return;
+  const r = ksGroupBuyMore(d.id, UI.kOps.to, { exchange: +d.ex === 1 });
+  toast(r.ok ? (r.exch ? '株式交換で完全子会社にしました' : `${fmtYen(r.price)}で株を買い増しました`) : r.why, r.ok ? '' : 'bad');
+  UI.kOps.to = null;
+  drawModal(); render(); autosave();
+};
+ACTIONS.kMergeGo = d => {
+  if (ksClosingBlock()) return;
+  const r = ksGroupScheduleMerger(d.id, UI.kOps.merge);
+  toast(r.ok ? `合併の契約を結びました（${ymLabel(r.x.m)}1日に効力）` : r.why, r.ok ? '' : 'bad');
+  drawModal(); render(); autosave();
+};
+ACTIONS.kMergeCancel = d => { ksGroupCancelMerger(d.id); toast('合併を取りやめました'); if (UI.modal) drawModal(); render(); autosave(); };
+ACTIONS.kReparentGo = d => {
+  if (ksClosingBlock()) return;
+  const r = ksGroupReparent(d.id, UI.kOps.parent);
+  toast(r.ok ? '傘下に移しました' : r.why, r.ok ? '' : 'bad');
+  UI.kOps.parent = null;
+  drawModal(); render(); autosave();
+};
+ACTIONS.kFoundUnder = d => {
+  UI.kGF = Object.assign(UI.kGF || { q: '', type: null, sc: 1, own: 1, cc: 'jp', pref: G.loc ? G.loc.hq : 22, amt: null, name: '' }, { owner: d.id, amt: null });
+  UI.kGrpSec = 'make';
+  closeModal(true); render(); scrollToMain();
+};
+
+/* ---------- 関連会社の決算書（経営はほかの株主が主導するので、中には入れない） ---------- */
+ACTIONS.kAffView = d => showModal('kAffView', { id: d.id });
+MODALS.kAffView = a => {
+  const s = ksSubById(a.id);
+  if (!s || s.gone) return modalFrame('関連会社', '', btn('閉じる', 'closeModal'));
+  const ys = ksWith(s.st, () => ksFYList().slice(-3).map(fy => ({ fy, s: ksToBankFS(G.fys[fy]), lab: ksFyLabel(fy) })));
+  const rows = [['S', '売上高'], ['OPI', '営業利益'], ['ORD', '経常利益'], ['NI', '当期純利益'], ['TA', '総資産'], ['EQ', '純資産'], ['CASH', '現預金']];
+  const tbl = ys.length ? `<div class="tbl-wrap"><table class="fs"><thead><tr><th>（千円）</th>${ys.map(y => `<th class="n">${y.lab}</th>`).join('')}</tr></thead><tbody>${rows.map(([k, n]) => `<tr><td>${n}</td>${ys.map(y => `<td class="n">${fmtK(y.s[k])}</td>`).join('')}</tr>`).join('')}</tbody></table></div>` : '<div class="empty">まだ決算がありません</div>';
+  const ytd = ksWith(s.st, ksYTD);
+  return modalFrame(`${esc(s.name)}（関連会社・持分${Math.round(s.own * 100)}%）`, `${tbl}${kv([['今期の売上（月次）', fmtYen(ytd.sales)], ['今期の経常利益', ksNum(ytd.ord)], ['経営の主導', esc(s.partner || 'ほかの株主')]])}<p class="note">関連会社は合算せず、純利益のうち持分の分を「持分法による投資損益」として連結に取り込みます。過半数まで株を買い増すと、子会社として全部を連結し、自分で経営できます（「再編・社名」から）。</p>`, btn('閉じる', 'closeModal'));
+};
+
+/* ---------- 連結決算の画面：関連会社と資本剰余金 ---------- */
+const ksGrpConsHtmlG0 = ksGrpConsHtml;
+ksGrpConsHtml = function () {
+  const html = ksGrpConsHtmlG0();
+  const g = G.group;
+  const fys = Object.keys(g.cons).map(Number).sort((a, b) => a - b);
+  if (!fys.length) return html;
+  const fy = UI.kGrpFy !== null && g.cons[UI.kGrpFy] ? UI.kGrpFy : fys[fys.length - 1];
+  const c = g.cons[fy];
+  const extra = [];
+  if (c.affs && c.affs.length) extra.push(panel('持分法を適用した関連会社', `<div class="tbl-wrap"><table class="t compact"><thead><tr><th>会社</th><th class="n">持分</th><th class="n">取得の額</th><th class="n">持分法の額</th><th class="n">今期の投資損益</th></tr></thead><tbody>${c.affs.map(x => `<tr><td>${esc(x.n)}</td><td class="n">${Math.round(x.own * 100)}%</td><td class="n">${fmtYen(x.inv)}</td><td class="n">${fmtYen(x.emv)}</td><td class="n ${x.inc < 0 ? 'neg' : ''}">${ksNum(x.inc)}</td></tr>`).join('')}</tbody></table></div><p class="note">連結貸借対照表の関係会社株式は、持分法の額（取得の額＋取得の後の利益の持分−配当−投資差額の償却）です。</p>`));
+  if (c.bs.capAdj) extra.push(panel('持分の追加取得による資本剰余金', `<p class="small" style="margin:0">子会社の株を買い増したときの、払った額と非支配株主持分の減少の差の累計：<b>${ksNum(c.bs.capAdj)}</b>（連結の資本剰余金に含む）。支配が続いている子会社の株の売り買いは、資本の取引として扱い、損益にしません。</p>`));
+  return extra.length ? html.replace('<div class="grid g2">', `<div class="grid g2" style="margin-bottom:10px">${extra.join('')}</div><div class="grid g2">`) : html;
+};
+
+/* ---------- 用語 ---------- */
+Object.assign(TERMS, {
+  mochibunho: { n: '持分法', c: 'book', s: '関連会社（20〜50%）の利益のうち、持分の分だけを連結に取り込む方法。', b: '関連会社の決算書は合算せず、投資の額（関係会社株式）を、取得の後の利益の持分だけ増やし、受け取った配当だけ減らします。損益計算書には「持分法による投資損益」として営業外の損益に1行で入ります。「一行連結」とも呼ばれます。', see: ['renketsu'] },
+  gappei: { n: '合併', c: 'book', s: '2つ以上の会社が1つになること。', b: '吸収合併では存続会社が消滅会社の権利と義務をまとめて引き継ぎ、新設合併では新しい会社がすべてを引き継ぎます。株主総会の特別決議・債権者保護手続・登記が要ります。親会社が100%子会社を吸収するとき、子会社の純資産と、持っていた子会社株式の帳簿価額の差は「抱合せ株式消滅差損益」（特別損益）になります。', see: ['renketsu'] },
+  tsuikaShutoku: { n: '持分の追加取得', c: 'book', s: '支配している子会社の株を、さらに買い増すこと。', b: '連結では、支配が続いている子会社の株の売り買いは資本の取引として扱います。払った額と、減った非支配株主持分の差は、のれんでも損益でもなく資本剰余金にします（2013年の会計基準の改正から）。関連会社の株を買い増して支配を得たとき（段階取得）は、前から持っていた株を時価で測りなおし、差を損益にします。', see: ['nci', 'mochibunho'] },
+});
 
 /* ---- 30_gyosei_core.js ---- */
 /* =========================================================
@@ -27754,7 +28790,7 @@ GY_SCREENS.g_news = () => {
 
 /* ---------- アクション ---------- */
 Object.assign(ACTIONS, {
-  gGo: d => { UI.tab = d.tab; if (UI.modal) closeModal(true); render(); window.scrollTo({ top: 0 }); },
+  gGo: d => { UI.tab = d.tab; if (UI.modal) closeModal(true); render(); scrollToMain(); },
   gAssign: d => {
     const c = gyCase(d.id);
     if (!gyAssign(d.id)) { toast(`人日が足りません（今月の上限 ${gyMaxUse()}人日）`, 'bad'); return; }

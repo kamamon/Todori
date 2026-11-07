@@ -12,7 +12,7 @@
   --rule-strong: #94a89f;
   --ink: #17242b;
   --ink-2: #4a5a5e;
-  --ink-3: #6f7f82;
+  --ink-3: #5c6c6f;
   --vault: #1d5240;
   --vault-2: #2b6b55;
   --vault-soft: #dbe8e1;
@@ -44,7 +44,7 @@
     color-scheme: dark;
     --paper: #0e1614; --sheet: #15201d; --sheet-2: #1a2824; --sheet-3: #20302b;
     --rule: #2a3b35; --rule-strong: #43594f;
-    --ink: #e2ebe6; --ink-2: #a8b7b1; --ink-3: #85958f;
+    --ink: #e2ebe6; --ink-2: #a8b7b1; --ink-3: #93a39d;
     --vault: #4fa585; --vault-2: #62b897; --vault-soft: #1f3a31; --on-vault: #0d1613; --mast: #12352a; --on-mast: #e6f0eb;
     --brass: #d3a650; --brass-soft: #3a2f18;
     --shu: #ef6a55; --shu-soft: #3d1f1a;
@@ -58,7 +58,7 @@
   color-scheme: dark;
   --paper: #0e1614; --sheet: #15201d; --sheet-2: #1a2824; --sheet-3: #20302b;
   --rule: #2a3b35; --rule-strong: #43594f;
-  --ink: #e2ebe6; --ink-2: #a8b7b1; --ink-3: #85958f;
+  --ink: #e2ebe6; --ink-2: #a8b7b1; --ink-3: #93a39d;
   --vault: #4fa585; --vault-2: #62b897; --vault-soft: #1f3a31; --on-vault: #0d1613; --mast: #12352a; --on-mast: #e6f0eb;
   --brass: #d3a650; --brass-soft: #3a2f18;
   --shu: #ef6a55; --shu-soft: #3d1f1a;
@@ -900,6 +900,7 @@ ul.plain { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; fon
 
 /* 地図（タイル） */
 .map-grid { align-items: start; }
+.mapsel { margin-top: 10px; max-width: 320px; }
 .jmap-wrap { margin: 8px 0 6px; }
 .jmap, .wmap { display: grid; gap: 3px; }
 .jmap { grid-template-columns: repeat(13, minmax(0, 1fr)); grid-template-rows: repeat(12, auto); max-width: 620px; }
@@ -953,4 +954,221 @@ details.custom > summary { cursor: pointer; font-weight: 700; font-size: 13px; c
   ol.cal > li { grid-template-columns: minmax(0, 1fr); gap: 2px; }
   .orgsubs { grid-template-columns: minmax(0, 1fr); }
   .cu-nums { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* グループの木の形（孫会社）・関連会社 */
+.orgnode { display: grid; gap: 6px; align-content: start; min-width: 0; }
+.orgkids { display: grid; gap: 6px; margin-left: 12px; padding-left: 10px; border-left: 2px solid var(--rule-strong); }
+.orgbox.aff { border-style: dashed; background: var(--sheet-2); }
+
+/* =========================================================
+ *  スマホ：読みやすい文字と、指で押しやすいボタン
+ *  幅 760px 以下が対象。押せるものは高さ 40〜48px、入力欄は 16px（iPhone で拡大されない大きさ）。
+ *  「月末を締めて翌月へ」は画面の下に固定して、親指で押せるようにする。
+ * ========================================================= */
+@media (max-width: 760px) {
+  html { scroll-padding-top: calc(var(--band) + 60px); scroll-padding-bottom: calc(86px + var(--sab)); }
+  body { font-size: 15px; line-height: 1.65; }
+
+  /* ---- 上の帯：社名・日付・メニュー ---- */
+  .mast { grid-template-columns: minmax(0, 1fr) auto auto; column-gap: 8px; row-gap: 6px; padding: calc(10px + var(--band0)) 12px 10px; }
+  .mast-brand { grid-column: 1; grid-row: 1; gap: 10px; }
+  .mast-actions { display: contents; }
+  .mast .mbtn[data-act="menu"] { grid-column: 2; grid-row: 1; }
+  .mast .mbtn[data-act="help"] { grid-column: 3; grid-row: 1; }
+  .mbtn { min-height: 40px; padding: 6px 12px; font-size: 14px; border-radius: 8px; }
+  .mast-date { grid-column: 1 / -1; grid-row: 2; flex-wrap: wrap; column-gap: 10px; row-gap: 0; }
+  .mast-date .wareki { font-size: 17px; }
+  .mast-date .sub { font-size: 13px; }
+  .bank-name { font-size: 18px; }
+  .bank-name .bn { white-space: normal; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
+  .bank-sub { font-size: 13px; }
+  .entsw { grid-column: 1 / -1; grid-row: 3; }
+  .entsw select { width: 100%; max-width: none; font-size: 16px; min-height: 42px; padding: 6px 10px; border-radius: 8px; }
+  .btn-advance {
+    position: fixed; z-index: 40;
+    left: calc(12px + var(--sal)); right: calc(12px + var(--sar)); bottom: calc(10px + var(--sab));
+    min-height: 52px; padding: 12px 16px; border-radius: 12px; font-size: 16px; letter-spacing: .04em;
+    background: var(--vault); color: var(--on-vault);
+    box-shadow: 0 12px 28px -12px rgba(10, 20, 17, .7), inset 0 -2px 0 rgba(0, 0, 0, .2);
+  }
+  .btn-advance:hover { background: var(--vault-2); }
+  .btn-advance:disabled { opacity: 1; background: var(--sheet-3); color: var(--ink-3); box-shadow: none; }
+  /* 文字を入力している間は（キーボードと重なるので）隠す */
+  body:has(:is(input[type="text"], input[type="number"], input[type="search"], textarea):focus) .btn-advance { visibility: hidden; }
+  main { padding: 14px 12px calc(96px + var(--sab)); }
+
+  /* ---- 主要な数字：横に滑らせて見る一列 ---- */
+  .strip { display: grid; grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 43%; overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: none; overscroll-behavior-x: contain; }
+  .strip::-webkit-scrollbar { display: none; }
+  .strip > div, .strip > div:nth-child(n) { scroll-snap-align: start; padding: 8px 12px 9px; border-right: 1px solid var(--rule); border-bottom: 0; }
+  .strip > div:last-child { border-right: 0; }
+  .strip .v { font-size: 17px; }
+  .strip .d { overflow: hidden; text-overflow: ellipsis; }
+
+  /* ---- 画面の切り替え（タブ） ---- */
+  .tab { padding: 12px 14px; font-size: 15px; min-height: 48px; }
+  .tab .badge { margin-left: 2px; }
+  .subtabs { margin-bottom: 12px; scrollbar-width: none; }
+  .subtabs::-webkit-scrollbar { display: none; }
+  .subtabs button { min-height: 46px; padding: 10px 14px; font-size: 14px; }
+
+  /* ---- 文字の大きさ ---- */
+  .h1 { font-size: 22px; }
+  .ph h2, .ph h3 { font-size: 16px; }
+  .ph .aside { font-size: 13px; }
+  .pb { padding: 12px; }
+  .small, .note, .unit, .field > span, .kv dt, .kv.sm, .gitem span, .modal .mh .sub, .ld-meta, .esnum span,
+  .appcard .meta, .inbox .t2, .inv .ds, .stage-steps li, .flowline, .ringi-no { font-size: 13px; }
+  .tag, .badge, .newslist .when, .kpi .k, .kpi .d, .inv .cost, .qz-tag, .stamps .lab, .preset span, .modebtn span,
+  .strip .k, .strip .d, .mapleg { font-size: 12px; }
+  .callout, .learnbox, .lookhere p, .flagbox ul, ol.elim, ul.tl, ul.plain, ol.cal ul, .ladder li, .inv .res, .newslist li,
+  .subbanner, .lawitem summary, .formula, .qz-a, .toast { font-size: 14px; }
+  .inbox .t1, .inv .nm, .ctl-l, .eqopt b, .typeopt b, .stype-t b, .unitchip b, .preset b, .appcard .nm, .measbtn b, .ctl-in output { font-size: 15px; }
+  .legend { font-size: 13px; }
+  .tag { padding: 2px 8px; }
+  .badge { min-width: 22px; height: 22px; border-radius: 11px; }
+  .chart text, .chart .glab { font-size: 12px; }
+  #tip { font-size: 13px; max-width: calc(100vw - 24px); white-space: pre-wrap; }
+  .kv { gap: 6px 14px; grid-template-columns: fit-content(46%) minmax(0, 1fr); }
+  .inbox li { padding: 12px; gap: 10px; }
+  .inbox .ico { width: 26px; height: 26px; font-size: 13px; }
+  .inbox li { grid-template-columns: 26px minmax(0, 1fr); }
+  .inbox li > :last-child:not(:nth-child(2)) { grid-column: 2; justify-self: start; }
+  .newslist li { padding: 10px 12px; grid-template-columns: minmax(0, 1fr); gap: 2px; }
+
+  /* ---- ボタンと入力 ---- */
+  /* 続けて押しても画面が拡大されないように。押した瞬間に少し沈ませて、押せたことが分かるように */
+  button, .btn, select, label.inline, summary, [data-act] { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+  :is(.btn, .mbtn, .seg button, .subtabs button, .tab, .chip, .choice, .qz-b, .pcard, .pcheck, .unitchip, .eqopt, .typeopt, .modebtn, .preset, .gitem, .appcard, .jt):active:not(:disabled) { filter: brightness(.93); }
+  .btn-advance:active:not(:disabled) { transform: translateY(1px); filter: brightness(.95); }
+  .row { gap: 10px; }
+  .btn { min-height: 44px; padding: 9px 14px; font-size: 14px; border-radius: 6px; }
+  .btn.sm { min-height: 40px; padding: 6px 12px; font-size: 14px; }
+  .btn.ghost { padding-left: 10px; padding-right: 10px; }
+  .btn.linkish, .linkish { min-height: 0; padding: 6px 2px; }
+  .xbtn { width: 44px; height: 44px; margin: -6px -10px -6px 0; font-size: 26px; display: grid; place-items: center; padding: 0; flex: none; }
+  .seg { flex-wrap: wrap; max-width: 100%; }
+  .seg button, .seg button:last-child { min-height: 42px; padding: 8px 14px; font-size: 14px; flex: 1 0 auto; border-right: 0; border-left: 1px solid var(--rule); margin-left: -1px; border-top: 1px solid var(--rule); margin-top: -1px; }
+  .seg.sm button { min-height: 40px; padding: 6px 11px; font-size: 13px; }
+  .chips { gap: 8px; }
+  .chip { min-height: 38px; padding: 6px 13px; font-size: 14px; }
+  input[type="number"], input[type="text"], input[type="search"], select, textarea { font-size: 16px; min-height: 44px; padding: 8px 10px; border-radius: 6px; }
+  input[type="checkbox"] { width: 22px; height: 22px; flex: none; }
+  label.inline { min-height: 40px; gap: 10px; }
+  input[type="range"] { height: 36px; }
+  .ctl-in { grid-template-columns: minmax(0, 1fr) 5.5em; }
+  .choice, .qz-b { padding: 12px 14px; min-height: 48px; }
+  .pcard, .pcheck { padding: 11px 12px; }
+  .pcheck { gap: 10px; }
+  .pchecks { max-height: none; overflow: visible; gap: 6px; }
+  .wiz button { min-height: 38px; padding: 4px 12px 4px 5px; font-size: 13px; }
+  .wiz .n { width: 24px; height: 24px; font-size: 12px; }
+  .unitchip { padding: 10px 12px; }
+  .eqopt, .typeopt, .gitem { padding: 10px 12px; }
+  .modebtn, .preset { padding: 12px 14px; }
+  .appcard { padding: 12px 14px; }
+  .flowline .fl { padding: 5px 11px; }
+  details > summary { padding: 6px 0; }
+  details.custom > summary { padding: 6px 0; font-size: 14px; }
+  .term { padding: 3px 0; }
+  .eqlist { max-height: 56vh; }
+  .typelist { max-height: 60vh; }
+
+  /* ---- 表：押しつぶさず、横に滑らせて読む。先頭の列は残す ---- */
+  .tbl-wrap { overscroll-behavior-x: contain; }
+  /* 横に続きがあるときは、右（左）の端に影を出す（端まで滑らせると消える） */
+  main { --tbl-bg: var(--paper); }
+  .panel, .modal { --tbl-bg: var(--sheet); }
+  .inv, .guide, .custom-grid, .learnbox, .campopt.on { --tbl-bg: var(--sheet-2); }
+  .tbl-wrap {
+    background:
+      linear-gradient(to right, var(--tbl-bg, var(--sheet)) 45%, transparent) left center / 28px 100% no-repeat local,
+      linear-gradient(to left, var(--tbl-bg, var(--sheet)) 45%, transparent) right center / 28px 100% no-repeat local,
+      radial-gradient(farthest-side at 0 50%, color-mix(in srgb, var(--ink) 20%, transparent), transparent) left center / 12px 100% no-repeat scroll,
+      radial-gradient(farthest-side at 100% 50%, color-mix(in srgb, var(--ink) 20%, transparent), transparent) right center / 12px 100% no-repeat scroll;
+  }
+  table.t { font-size: 14px; }
+  .t th, .t td { padding: 8px 10px; }
+  .t.compact td, .t.compact th { padding: 6px 8px; }
+  .t thead th, .t tr.sec td { font-size: 13px; }
+  /* 狭い列でも1〜2文字ずつ折り返さないように、文字の列は最低5文字分の幅。説明文の入った列は9文字分 */
+  .tbl-wrap .t td:not(.n) { min-width: calc(5em + 20px); }
+  .tbl-wrap .t td:first-child:not(.n) { min-width: calc(7em + 20px); }
+  .tbl-wrap .t td :is(div, p, ul, ol) { min-width: 9em; }
+  .fs { font-size: 13.5px; }
+  .fs th, .fs td { padding: 6px 8px; }
+  .fs thead th, .fs tr.head td, .fs tr.head.subhead td { font-size: 12.5px; }
+  /* 数字の表は、横に滑らせても先頭の列（科目・項目）を残す。説明文の入った表は残さない（画面がふさがるので） */
+  :where(.tbl-wrap) :where(.t:not(.jtable):not(.stk):not(:has(td:first-child :is(div, p, ul))), .fs) :where(tr) > :first-child { position: sticky; left: 0; z-index: 1; background: var(--tbl-bg, var(--sheet)); }
+
+  /* ボタンのある表：1行ずつのカード（見出しは各セルの上に小さく）。ボタンは横に並べて、すぐ押せるように */
+  .tbl-wrap.stk-wrap { overflow: visible; background: none; }
+  .t.stk { display: block; }
+  .t.stk > thead { display: none; }
+  .t.stk > tbody { display: block; }
+  .t.stk > tbody > tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 14px; row-gap: 5px; padding: 11px 2px; border-bottom: 1px solid var(--rule); }
+  .t.stk > tbody > tr > td { display: block; min-width: 0; padding: 0; border: 0; text-align: left; white-space: normal; position: static; background: none; }
+  .t.stk > tbody > tr > td:first-child, .t.stk > tbody > tr > td:last-child { grid-column: 1 / -1; }
+  .t.stk > tbody > tr > td[data-l]:not(:first-child):not(:last-child)::before { content: attr(data-l); display: block; font-size: 12px; color: var(--ink-3); line-height: 1.4; }
+  .t.stk > tbody > tr > td:last-child { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .t.stk > tbody > tr > td:empty { display: none; }
+  .t.stk > tbody > tr > td :is(div, p, ul, ol) { min-width: 0; }
+  .t.stk > tbody > tr.sel, .t.stk > tbody > tr.click:hover { background: var(--vault-soft); }
+
+  /* 仕訳帳：1件ずつ、摘要の下に借方と貸方を並べる */
+  .jtable { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto; column-gap: 8px; min-width: 0; }
+  .jtable thead, .jtable tbody { display: contents; }
+  .jtable tr { display: grid; grid-column: 1 / -1; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto; grid-template-columns: subgrid; align-items: baseline; }
+  .jtable :is(td, th) { padding: 3px 2px; border: 0; min-width: 0; white-space: normal; }
+  .jtable td.n, .jtable th.n { white-space: nowrap; }
+  .jtable thead tr { background: var(--sheet-2); border-bottom: 1px solid var(--rule-strong); }
+  .jtable thead th { position: static; padding-top: 6px; padding-bottom: 6px; }
+  .jtable thead th:first-child { display: none; }
+  .jtable td.jdesc { grid-column: 1 / -1; min-width: 0; max-width: none; border: 0; padding: 12px 2px 4px; }
+  .jtable tr.jend { border-bottom: 1px solid var(--rule); padding-bottom: 8px; }
+  .jtable :is(td, th):nth-last-child(2) { border-left: 1px solid var(--rule); padding-left: 8px; }
+  .jtable tr.total { border-top: 1px solid var(--rule-strong); padding-top: 6px; }
+  .jtable tr.total td:first-child { grid-column: 1 / -1; padding-bottom: 0; }
+
+  /* ---- ダイアログ：画面の下から出るシート ---- */
+  #modal-root .scrim { place-items: end stretch; padding: calc(8px + var(--band)) var(--sar) 0 var(--sal); }
+  .modal, .modal.wide, .modal.narrow {
+    width: 100%; max-height: calc(100vh - 8px); max-height: calc(100dvh - 8px - var(--band));
+    border-radius: 16px 16px 0 0; border-width: 1px 0 0;
+  }
+  .modal .mh { padding: 12px 14px 10px 16px; align-items: center; }
+  .modal .mh h2 { font-size: 18px; line-height: 1.35; }
+  .modal .mb { padding: 14px 16px; }
+  .modal .mf { padding: 10px 12px calc(10px + var(--sab)); gap: 8px; }
+  .modal .mf > .btn { flex: 1 1 auto; min-height: 48px; font-size: 15px; }
+  .modal-art { max-height: 26vh; }
+
+  /* ---- お知らせ：上に出して、下のボタンやダイアログを隠さない。押した指はお知らせを素通りする ---- */
+  #toast-root { top: calc(8px + var(--band)); bottom: auto; left: calc(12px + var(--sal)); right: calc(12px + var(--sar)); max-width: none; gap: 6px; pointer-events: none; }
+  #toast-root .toast:nth-last-child(n+3) { display: none; }
+  .toast { padding: 10px 14px; box-shadow: 0 10px 24px -10px rgba(0, 0, 0, .55); }
+
+  /* ---- 地図 ---- */
+  .jmap-wrap { margin: 8px -4px 6px; }
+  .jt { font-size: 10.5px; }
+  .jt .jn.n3 { letter-spacing: -.16em; font-size: .9em; }
+  .jm i, .mapleg i[class^="m-"] { min-width: 13px; height: 13px; font-size: 9px; }
+  .mapsel { max-width: none; }
+  .mapsel select { width: 100%; }
+
+  /* ---- 開始画面 ---- */
+  .startwrap { padding: 0 10px; }
+  .appoint .start .btn { min-height: 48px; }
+}
+
+/* タブレットなど指で操作する広い画面：押せる所を少し大きく */
+@media (pointer: coarse) and (min-width: 761px) {
+  .btn { min-height: 40px; }
+  .btn.sm { min-height: 34px; }
+  .seg button, .subtabs button { min-height: 40px; }
+  .chip { min-height: 32px; }
+  input[type="number"], input[type="text"], input[type="search"], select { min-height: 40px; font-size: 16px; }
+  input[type="checkbox"] { width: 20px; height: 20px; }
+  .xbtn { min-width: 40px; min-height: 40px; }
 }

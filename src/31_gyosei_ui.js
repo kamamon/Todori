@@ -285,7 +285,7 @@ GY_SCREENS.g_news = () => {
 
 /* ---------- アクション ---------- */
 Object.assign(ACTIONS, {
-  gGo: d => { UI.tab = d.tab; if (UI.modal) closeModal(true); render(); window.scrollTo({ top: 0 }); },
+  gGo: d => { UI.tab = d.tab; if (UI.modal) closeModal(true); render(); scrollToMain(); },
   gAssign: d => {
     const c = gyCase(d.id);
     if (!gyAssign(d.id)) { toast(`人日が足りません（今月の上限 ${gyMaxUse()}人日）`, 'bad'); return; }
