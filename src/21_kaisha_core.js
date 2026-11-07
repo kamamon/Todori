@@ -145,7 +145,7 @@ function ksPartHoursOf(u, r) {
   if (!h || !h[r.id]) return 0;
   return (u.partH && u.partH[r.id]) || h[r.id];
 }
-function ksRoleWage(r, u) { return r.wage * G.eco.wageIdx * (r.cost === 'labor' && u && u.op && u.op.salaryLv ? u.op.salaryLv : 1) * (G.wageLv || 1) * (G.law && G.law.partAdj && ksPartHoursOf(u, r) ? G.law.partAdj : 1); }
+function ksRoleWage(r, u) { return r.wage * G.eco.wageIdx * (r.cost === 'labor' && u && u.op && u.op.salaryLv ? u.op.salaryLv : 1) * (G.wageLv || 1) * (G.law && ksPartHoursOf(u, r) ? (G.law.partAdj || 1) * ((u && u.partAdj) || 1) : 1); }
 function ksUnitHead(u) { return ksS(u).roles.reduce((s, r) => s + (u.staff[r.id] || 0), 0); }
 function ksHeadcount() { return sum(ksActiveUnits(), ksUnitHead); }
 /* 月の人件費の見込み（賞与・社会保険を含む平均） */
@@ -224,7 +224,7 @@ function ksDepFor(a, fy) {
   if (a.acct === 'land' || !a.life) return 0;
   const start = fy * 12, end = fy * 12 + 11;
   if (a.soldM !== undefined && a.soldM < start) return 0;
-  const from = Math.max(start, a.acqM);
+  const from = Math.max(start, a.acqM, a.depFrom ?? start); // depFrom：会社分割などで途中から引き継いだ資産は、引き継いだ月から
   const to = a.soldM !== undefined ? Math.min(end, a.soldM) : end;
   const months = Math.max(0, to - from + 1);
   const annual = a.cost / a.life;
@@ -512,6 +512,7 @@ function ksAdvance() {
   ksEventsMonth(ctx);
   if (typeof ksLawMonth === 'function' && G.law) ksLawMonth(ctx, res);
   if (typeof ksGrowMonth === 'function' && G.grow) ksGrowMonth(ctx, res);
+  if (typeof ksExtMonth === 'function') ksExtMonth(ctx, res); // 方針と人事・拠点・法令の追加分
   if (calMonth(m) === 4) ksBudgetApprove(true); // 4月末までに決めなければ予算案のまま決まる
   ksPayAP();
   if (!ksCashCover()) {
@@ -591,7 +592,7 @@ function ksEventsMonth(ctx) {
     ksPost('subsidy', [['cash', amt, 0], ['miscInc', 0, amt]], { cf: 'other' });
     ksNews(`市の省エネ設備の補助金${fmtYen(amt)}が入金されました（雑収入）`, 'good');
   }
-  if (chance(0.0035)) {
+  if (!G.loc && chance(0.0035)) {
     const amt = niceAmount(ksAnnualSales() * uni(0.004, 0.012));
     ksPost('disaster', [['disaster', amt, 0], ['cash', 0, amt]], { cf: 'other' });
     ksNews(`台風で建物の一部が壊れ、修理と片付けに${fmtYen(amt)}かかりました（特別損失）`, 'bad');
@@ -774,6 +775,7 @@ function ksFinishClosing() {
   G.closing = null;
   if (!G.hist) ksNews(`${ksFyLabel(fy)}の決算が確定しました。当期純利益 ${fmtYen(st.pl.ni)}、銀行の格付は${prevG ? (gr.g < prevG ? `${prevG}から${gr.g}に上がりました` : gr.g > prevG ? `${prevG}から${gr.g}に下がりました` : `${gr.g}のまま`) : gr.g}`, gr.g <= (prevG || gr.g) ? 'good' : 'bad');
   if (typeof ksGrowAfterClose === 'function') ksGrowAfterClose();
+  if (typeof ksExtAfterClose === 'function') ksExtAfterClose(fy); // 目標の評価・連結決算
   ksNextMonth();
 }
 /* 全部の手順を正しく処理する（過去の期・自動処理） */
@@ -946,8 +948,8 @@ function ksToBankFS(st, adjust = true) {
     S: p.sales, COGS: p.cogs - depC, GP: p.gp + depC, SGA: p.sga - (p.sgaItems.find(x => x[0] === 'depS') || [0, 0])[1] - gwA, DEP: p.dep + gwA,
     OPI: p.opi, NONOP: p.noi, INT: p.noe, ORD: p.ord, EXTRA: p.exg - p.exl, PRETAX: p.pretax, TAX: p.tax, NI: p.ni, DIV: 0,
     CASH: b.cash, AR: b.ar - b.allow, INV: b.goods + b.mat + b.wip + b.prod + b.cwip, OCA: b.prepaid,
-    PPE: ppe, LAND: b.land, INVEST: b.deposit,
-    AP: b.ap, STD: b.std, OCL: b.accrued + b.accruedExp + b.taxPay + b.advRecv, LTD: b.ltd, CAP: b.capital + (b.capSurplus || 0), RE: b.re + (b.legalRes || 0),
+    PPE: ppe, LAND: b.land, INVEST: b.deposit + (b.subShares || 0) + (b.icLoan || 0),
+    AP: b.ap, STD: b.std, OCL: b.accrued + b.accruedExp + b.taxPay + b.advRecv, LTD: b.ltd + (b.icDebt || 0), CAP: b.capital + (b.capSurplus || 0), RE: b.re + (b.legalRes || 0),
   };
   s.CA = s.CASH + s.AR + s.INV + s.OCA; s.FA = s.PPE + s.INVEST; s.TA = s.CA + s.FA;
   s.CL = s.AP + s.STD + s.OCL; s.TL = s.CL + s.LTD; s.EQ = s.CAP + s.RE;
@@ -1473,7 +1475,8 @@ function ksNewGame(o) {
   G.startedM = G.m;
   if (typeof ksLawInit === 'function') ksLawInit();
   if (typeof ksGrowInit === 'function') ksGrowInit();
-  ksNews(`${G.ceo}氏が${G.coName}の代表取締役社長に就任。${ksCompanyDesc()}を営む${G.founded}年創業の会社`, 'info');
+  if (typeof ksExtInit === 'function') ksExtInit(o); // 方針と人事・拠点・グループ・カスタムスタート
+  if (!G.isSub) ksNews(`${G.ceo}氏が${G.coName}の代表取締役社長に就任。${ksCompanyDesc() || '持株会社'}を営む${G.founded}年創業の会社`, 'info');
   return G;
 }
 /* 就任時の会社が、選んだ状態に合っているか */

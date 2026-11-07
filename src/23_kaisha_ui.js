@@ -62,7 +62,7 @@ function renderK() {
   if (!KS_TABS.some(t => t[0] === UI.tab)) UI.tab = 'k_dash';
   const tabsEl = $('.tabs');
   const sl = tabsEl ? tabsEl.scrollLeft : 0;
-  app.innerHTML = `${ksMast()}${ksStrip()}<div class="body"><nav class="tabs" aria-label="画面の切り替え">${ksTabsHtml()}</nav><main id="main">${ksScreen()}</main></div>`;
+  app.innerHTML = `${ksMast()}${typeof ksSubBanner === 'function' ? ksSubBanner() : ''}${ksStrip()}<div class="body"><nav class="tabs" aria-label="画面の切り替え">${ksTabsHtml()}</nav><main id="main">${ksScreen()}</main></div>`;
   const t2 = $('.tabs');
   if (t2) t2.scrollLeft = sl;
 }
@@ -78,9 +78,9 @@ function ksMast() {
   const fy = fyOf(G.m);
   const label = G.closing ? '決算整理を続ける' : mo === 3 ? '3月末を締めて決算へ' : '月末を締めて翌月へ';
   return `<header class="mast kmast">
-    <div class="mast-brand">${ksSeal(I.icon)}<div style="min-width:0"><div class="bank-name"><span class="bn">${esc(G.coName)}</span></div><div class="bank-sub">代表取締役社長 ${esc(G.ceo)}<span class="hide-m">　${esc(I.label)}${G.grow && G.grow.ipo.st === 'listed' ? `・${KS_MARKETS[G.grow.ipo.market].s}上場` : ''}</span></div></div></div>
+    <div class="mast-brand">${ksSeal(I.icon)}<div style="min-width:0"><div class="bank-name"><span class="bn">${esc(G.coName)}</span></div><div class="bank-sub">${G.isSub ? '子会社の社長' : '代表取締役社長'} ${esc(G.ceo)}<span class="hide-m">　${esc(I.label || (G.group && G.group.hd ? `持株会社（子会社${ksSubs().length}社）` : ''))}${G.grow && G.grow.ipo.st === 'listed' ? `・${KS_MARKETS[G.grow.ipo.market].s}上場` : ''}</span></div></div></div>
     <div class="mast-date"><div class="wareki">${warekiLabel(G.m)}</div><div class="sub">${y}年${mo}月　${ksFyLabel(fy)}（${ksFyYear(fy)}）</div></div>
-    <div class="mast-actions"><button type="button" class="mbtn" data-act="menu">メニュー</button><button type="button" class="mbtn" data-act="help">遊び方</button>
+    <div class="mast-actions">${typeof ksGroupMastHtml === 'function' ? ksGroupMastHtml() : ''}<button type="button" class="mbtn" data-act="menu">メニュー</button><button type="button" class="mbtn" data-act="help">遊び方</button>
     <button type="button" class="btn-advance" data-act="advance"${G.over ? ' disabled' : ''}>${label}</button></div>
   </header>`;
 }
@@ -101,7 +101,7 @@ function ksStrip() {
     ['今期の経常利益', `<span class="${ytd.ord < 0 ? 'neg' : ''}">${fmtYen(ytd.ord)}</span>`, `<span class="muted">月次の累計</span>`],
     ['自己資本比率', isFinite(eq) ? `<span class="${eq < 10 ? 'neg' : ''}">${fmtPct(eq, 1)}</span>` : '―', `<span class="muted">直近の決算</span>`],
     ['銀行の格付', `${G.grade || '―'}<span class="unit"> /10</span>`, `<span class="muted">${G.grade <= 3 ? '優良' : G.grade <= 6 ? '正常' : G.grade <= 8 ? '要注意' : '破綻懸念'}</span>`],
-    ['従業員', `${ksHeadcount()}<span class="unit">人</span>`, `<span class="muted">人件費 月${fmtYen(ksPayrollEstimate().total)}</span>`],
+    !ksActiveUnits().length && G.group && G.group.hq ? ['本社の社員', `${G.group.hq.staff}<span class="unit">人</span>`, `<span class="muted">持株会社・人件費 月${fmtYen(G.group.hq.staff * G.group.hq.wage)}</span>`] : ['従業員', `${ksHeadcount()}<span class="unit">人</span>`, `<span class="muted">人件費 月${fmtYen(ksPayrollEstimate().total)}</span>`],
     ['資金繰り', short ? '<span class="neg">不足の見込み</span>' : low < ksMonthlyFixedOut() * 0.5 ? '<span class="warnc">注意</span>' : '安全', `<span class="muted">3か月の最低 ${fmtYen(low)}</span>`],
   ];
   void last;
@@ -185,7 +185,7 @@ KS_SCREENS.k_dash = () => {
     ['事業', `${esc(I.label)}${ksActiveUnits().length > 1 ? `（${ksActiveUnits().length}事業）` : `（${esc(I.name)}）`}`],
     ['創業', `${G.founded}年（${ksFyLabel(fyOf(G.m))}）`],
     ['資本金', fmtYen(ksB('capital'))],
-    ['従業員', `${fmtNum(ksHeadcount(), 0)}人（${ksActiveUnits().length > 1 ? ksActiveUnits().map(u => `${esc(ksUName(u))} ${fmtNum(ksUnitHead(u), 0)}人`).join('・') : ksS(ksMainUnit()).roles.map(r => `${r.n.replace(/（.*?）/, '')} ${fmtNum(ksMainUnit().staff[r.id] || 0, 0)}人`).join('・')}）`],
+    ['従業員', !ksActiveUnits().length ? (G.group && G.group.hq ? `本社 ${fmtNum(G.group.hq.staff, 0)}人（持株会社）` : '0人') : `${fmtNum(ksHeadcount(), 0)}人（${ksActiveUnits().length > 1 ? ksActiveUnits().map(u => `${esc(ksUName(u))} ${fmtNum(ksUnitHead(u), 0)}人`).join('・') : ksS(ksMainUnit()).roles.map(r => `${r.n.replace(/（.*?）/, '')} ${fmtNum(ksMainUnit().staff[r.id] || 0, 0)}人`).join('・')}）`],
     ['取引銀行', [...new Set(G.loans.filter(L => L.bal > 0 || L.kind === 'od').map(L => KS_BANKS[L.bank].short))].join('・') || 'なし'],
     lastFS ? ['直近の決算', `${ksFyLabel(lastFS.fy)}　${ksSalesName()} ${fmtYen(lastFS.pl.sales)}・当期純利益 ${ksNum(lastFS.pl.ni)}`] : null,
   ]);
@@ -769,7 +769,11 @@ function ksRequestAdvance() {
 }
 function ksRunAdvance() {
   UI.modal = null;
-  const rep = ksAdvance();
+  // 子会社の画面にいても、月末の締めはグループ全体（親会社→子会社）で進める
+  const view = typeof ksIsSubView === 'function' && ksIsSubView() ? G.subId : null;
+  if (view) ksViewEntity(null);
+  let rep = typeof ksGroupAdvance === 'function' ? ksGroupAdvance() : ksAdvance();
+  if (view && !G.closing && !G.over && ksSubById(view) && !ksSubById(view).gone) { ksViewEntity(view); rep = G.monthRep || rep; }
   UI.queue = [];
   if (rep && UI.settings.monthly) UI.queue.push({ name: 'kMonth', args: { m: rep.m } });
   if (G.closing) { G.closing.view = G.closing.i; UI.queue.push({ name: 'kClose', args: {} }); }
@@ -1015,17 +1019,20 @@ MODALS.kHelp = a => {
 };
 
 /* ---------- 保存と読み込み ---------- */
-function ksSaveMeta() { return JSON.stringify({ co: G.coName, ceo: G.ceo, m: G.m, desc: ksCompanyDesc(), at: Date.now(), over: !!G.over }); }
+function ksSaveMeta() { const R = typeof ksRoot === 'function' ? ksRoot() : G; return JSON.stringify({ co: R.coName, ceo: R.ceo, m: R.m, desc: ksWith(R, ksCompanyDesc) || '持株会社', at: Date.now(), over: !!R.over }); }
 function ksDeserialize(s) {
   if (s.version !== KS_SAVE_VERSION || !s.bal) throw new Error(s.version && s.version < KS_SAVE_VERSION ? '古い版のセーブデータです（業種が増えた新しい版では読み込めません）。新しいゲームを始めてください' : 'セーブデータの形式が違います');
   for (const u of s.units || []) if (!KS_TYPES[u.type]) throw new Error(`セーブデータの業種「${u.type}」が見つかりません`);
   G = s;
+  if (typeof KS_ROOT !== 'undefined') KS_ROOT = null;
   G.pendingModals = G.pendingModals || [];
   for (const k of KS_KEYS) if (G.bal[k] === undefined) G.bal[k] = 0;
+  for (const sb of (G.group ? G.group.subs : [])) for (const k of KS_KEYS) if (sb.st.bal[k] === undefined) sb.st.bal[k] = 0;
   if (!G.quiz) G.quiz = { asked: 0, correct: 0 };
   if (!G.flags) G.flags = {};
   if (!G.law && typeof ksLawInit === 'function') ksLawInit();
   if (!G.grow && typeof ksGrowInit === 'function') ksGrowInit();
+  if (typeof ksExtInit === 'function' && (!G.hr || !G.loc || !G.group)) ksExtInit({ load: true });
   return G;
 }
 /* 今のモード（ゲーム中ならそのモード、開始画面なら選んでいるモード）の保存先 */
@@ -1101,6 +1108,7 @@ function renderStartK() {
       <select data-ch="kStSec" aria-label="産業"><option value="">すべての産業</option>${secs}</select><select data-ch="kStEng" aria-label="事業の型"><option value="">すべての型</option>${engs}</select></div>
       <div id="kstList" class="stypes-wrap">${ksStartTypesHtml(k)}</div></div>
     <div class="field"><span>引き継ぐ会社の状態</span><div class="seg" role="radiogroup">${conds}</div><span class="small muted">${esc(KS_COND[k.cond].desc)}</span></div>
+    ${typeof ksCustomHtml === 'function' ? ksCustomHtml(k) : ''}
     <div class="grid g2" style="gap:12px"><div class="field"><span>任期</span><div class="seg" role="radiogroup">${terms}</div></div>
     <label class="field"><span>シード（同じ数字なら同じ展開）</span><input type="text" id="kstSeed" value="${esc(k.seed)}" placeholder="空欄でランダム" inputmode="numeric"></label></div>
     <p class="small muted" style="margin:0">就任の時点で、先代が経営した過去4期分の決算書と帳簿があります。最初の決算は3か月後の3月末。銀行の頭取モードとは別に保存されます。</p>
@@ -1135,7 +1143,11 @@ Object.assign(ACTIONS, {
     const seedN = parseInt(String(k.seed).replace(/[^0-9]/g, ''), 10);
     const o = { units: k.units.map(x => ({ type: x.type, sc: x.sc })), coName: co, ceo, cond: k.cond, term: k.term };
     if (Number.isFinite(seedN)) o.seed = seedN;
-    ksNewGame(o);
+    if (typeof ksCustomOptions === 'function') Object.assign(o, ksCustomOptions(k));
+    if (typeof KS_ROOT !== 'undefined') KS_ROOT = null;
+    if (o.form === 'gk') co = co.replace(/株式会社/, '合同会社'); else if (o.form === 'yk') co = co.replace(/株式会社/, '有限会社');
+    o.coName = co;
+    if (typeof ksNewGameCustom === 'function') ksNewGameCustom(o); else ksNewGame(o);
     UI.tab = 'k_dash'; UI.kFy = null; UI.kJm = null; UI.guideSel = null; UI.kUnit = null;
     render();
     window.scrollTo({ top: 0 });

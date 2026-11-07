@@ -44,6 +44,8 @@ if (!fs.existsSync(shots)) fs.mkdirSync(shots);
       if (!name) return;
       await handleRosai();
       if (!(await page.$('#modal-root .modal'))) return;
+      const ch = await page.$('.modal [data-act="kEvtCh"]');
+      if (ch) { await ch.click(); await page.waitForTimeout(80); continue; }
       const b = await page.$('.modal .mf [data-act="closeModal"]');
       if (b) await b.click(); else await page.keyboard.press('Escape');
       await page.waitForTimeout(80);
@@ -84,7 +86,7 @@ if (!fs.existsSync(shots)) fs.mkdirSync(shots);
     if (first) await shot('01_intro', false);
     await closeModals();
     // すべてのタブ
-    for (const t of ['k_dash', 'k_ops', 'k_grow', 'k_law', 'k_bank', 'k_fs', 'k_books', 'k_budget', 'k_learn', 'k_news']) {
+    for (const t of ['k_dash', 'k_ops', 'k_hr', 'k_map', 'k_grow', 'k_group', 'k_law', 'k_bank', 'k_fs', 'k_books', 'k_budget', 'k_learn', 'k_news']) {
       await page.click(`.tab[data-tab="${t}"]`);
       await page.waitForTimeout(70);
       await screenErr(`${ind} ${t}`);
@@ -202,6 +204,8 @@ if (!fs.existsSync(shots)) fs.mkdirSync(shots);
         const isClose = await page.evaluate(() => !!document.querySelector('.modal .wiz'));
         if (isClose) break;
         await handleRosai();
+        const ch = await page.$('.modal [data-act="kEvtCh"]');
+        if (ch) { await ch.click(); await page.waitForTimeout(80); continue; }
         const b = await page.$('.modal .mf [data-act="closeModal"]');
         if (!b) break;
         await b.click(); await page.waitForTimeout(80);

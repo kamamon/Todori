@@ -302,7 +302,10 @@ function ksUnitHeadHtml(u) {
 }
 KS_SCREENS.k_ops = () => {
   const u = ksCurUnit();
-  if (!u) return '<div class="empty">事業がありません</div>';
+  if (!u) {
+    const subs = typeof ksSubs === 'function' && G.group ? ksSubs(G) : [];
+    return `<h1 class="h1">現場</h1><div class="empty">${subs.length ? `この会社（持株会社）は、自分では事業をしていません。子会社の経営を管理し、経営指導料と配当を受け取ります。<br>子会社の現場は、上の「表示する会社」で子会社を選ぶと見られます。<div class="row" style="justify-content:center;gap:6px;flex-wrap:wrap;margin-top:8px">${subs.map(s => btn(`${esc(s.name)}の現場`, 'kView', { v: s.id }, 'sm')).join('')}</div>` : '事業がありません。'}<div class="row" style="justify-content:center;margin-top:8px">${btn('新しい事業を始める', 'kNewUnit', {}, 'sm primary')}</div></div>`;
+  }
   const ops = KS_OPS[ksS(u).eng];
   return `<div class="kops"><h1 class="h1">現場</h1><p class="lead">事業ごとに経営の判断をします。決めたことは今月から効き、月末に数字になって表れます。${ksActiveUnits().length > 1 ? '事業ごとの損益は「決算書」のセグメント情報で比べられます。' : ''}</p>
     ${ksUnitBar()}${ksUnitHeadHtml(u)}${ops.screen(u)}</div>`;
@@ -807,6 +810,7 @@ MODALS.kNewUnit = () => {
       <p class="small">${esc(S.d || KS_ENG_INFO[S.eng].desc)}</p>
       ${kv([S.prod.length ? ['商品・サービス', esc(S.prod.slice(0, 5).join('・'))] : null, S.cust.length ? ['お客さま', esc(S.cust.slice(0, 5).join('・'))] : null, S.eq.length ? ['主な設備', esc(S.eq.slice(0, 4).map(e => (KS_EQ[e.k] || {}).n).filter(Boolean).join('・'))] : null, ['職種', esc(S.roles.map(r => r.n.replace(/（.*?）/, '')).join('・'))], S.lic ? ['許認可', esc(S.lic.n)] : null, (S.laws || []).length ? ['関わる法令', esc(S.laws.map(l => (LAW_ITEMS[l] || { s: l }).s).join('・'))] : null].filter(Boolean))}
       <div class="field" style="margin-top:8px"><span>始める規模</span><div class="seg" role="radiogroup">${[[0.5, '小さく'], [1, 'ふつう'], [2, '大きく']].map(([v, l]) => `<button type="button" data-act="kNUSc" data-v="${v}" aria-pressed="${N.sc === v}">${l}</button>`).join('')}</div></div>
+      ${typeof ksNUPrefHtml === 'function' ? ksNUPrefHtml(S) : ''}
       ${pl ? `<div class="callout" style="margin-top:8px"><b>${esc(pl.title)}</b><br><span class="small">${esc(pl.desc)}</span><br><span class="small">初めの投資 <b>${fmtYen(sum(pl.items, x => x.cost) + (pl.deposit || 0))}</b>（${pl.items.length}件の設備${pl.deposit ? '・保証金' : ''}）</span></div>` : ''}`;
   }
   const body = `<div class="nuwrap"><div class="nuleft"><div class="row" style="gap:6px;flex-wrap:wrap"><input type="search" value="${esc(N.q)}" data-in="kNUq" placeholder="業種・商品・お客さまで探す（例：レーザー、データセンター、海運）" style="flex:1;min-width:12em" aria-label="業種を探す">
@@ -823,6 +827,7 @@ function ksNUDraft() {
   const u = { id: 'U' + (G.useq + 1), type: S.name, n: null, sc: N.sc, op: {}, staff: {}, invB: {}, kpi: {}, startM: G.m };
   KS_ENGINE[S.eng].fresh(u);
   ksCalibFresh(u);
+  if (N.pref) u.prefInit = +N.pref;
   N.draft = u;
   return u;
 }
