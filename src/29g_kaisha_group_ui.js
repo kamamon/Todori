@@ -23,8 +23,8 @@ function ksSubBanner() {
   if (!ksIsSubView()) return '';
   const s = ksSubById(G.subId);
   if (!s) return '';
-  return `<div class="subbanner" role="note"><b>${s.parent ? '孫会社' : '子会社'}の画面</b>：${esc(s.name)}（${esc(ksOwnerNameOf(s))}の${s.own >= 0.9999 ? '100%子会社' : `持分${Math.round(s.own * 100)}%`}${s.cc && s.cc !== 'jp' ? `・${esc(KS_COUNTRIES[s.cc].n)}の現地法人。帳簿は設立のときのレートで円に直した額` : ''}）。${s.auto ? '経営は子会社の社長に任せています（自動）' : 'あなたが直接経営しています'}。月末の締めは、グループ全体で進みます。
-    ${btn(s.auto ? '自分で経営する' : '子会社の社長に任せる', 'kSubAuto', { id: s.id }, 'sm')}${btn('親会社に戻る', 'kView', { v: 'root' }, 'sm primary')}</div>`;
+  return `<div class="subbanner" role="note"><b>${s.parent ? '孫会社' : '子会社'}の画面</b>：${esc(s.name)}（${esc(ksOwnerNameOf(s))}の${s.own >= 0.9999 ? '100%子会社' : `持分${Math.round(s.own * 100)}%`}${s.cc && s.cc !== 'jp' ? `・${esc(KS_COUNTRIES[s.cc].n)}の現地法人。帳簿は設立のときのレートで円に直した額` : ''}）。経営：${esc(ksSubOpName(s))}${s.auto ? '（自動）' : ''}。月末の締めは、グループ全体で進みます。
+    ${btn(s.auto ? '自分で経営する' : s.orgRun && ksDeptSubNode(s.id) ? `${esc(ksDeptSubNode(s.id).name)}に任せる` : '子会社の社長に任せる', 'kSubAuto', { id: s.id }, 'sm')}${btn('管轄と経営', 'kSubJur', { id: s.id }, 'sm')}${btn('親会社に戻る', 'kView', { v: 'root' }, 'sm primary')}</div>`;
 }
 CHANGES.kView = el => ksSwitchView(el.value);
 ACTIONS.kView = d => ksSwitchView(d.v);
@@ -38,7 +38,7 @@ function ksSwitchView(id) {
   const st = G;
   if (st.pendingModals && st.pendingModals.length) { UI.queue = st.pendingModals.map(s => ({ name: s.type, args: s })); st.pendingModals = []; const n = UI.queue.shift(); showModal(n.name, n.args); }
 }
-ACTIONS.kSubAuto = d => { const s = ksSubById(d.id); if (!s) return; s.auto = !s.auto; toast(s.auto ? '経営を子会社の社長に任せました' : 'この子会社は、あなたが直接経営します'); render(); autosave(); };
+ACTIONS.kSubAuto = d => { const s = ksSubById(d.id); if (!s) return; s.auto = !s.auto; if (ksRoot().org) ksWith(ksRoot(), ksDeptTouch); toast(s.auto ? `経営を${ksSubOp(s) === 'org' ? ksDeptSubNode(s.id).name : '子会社の社長'}に任せました` : 'この子会社は、あなたが直接経営します'); render(); autosave(); };
 
 /* ---------- グループの画面 ---------- */
 KS_SCREENS.k_group = () => {
@@ -99,15 +99,17 @@ function ksSubCard(s) {
   const flag = s.cc && s.cc !== 'jp' ? `<span class="tag">${esc(KS_COUNTRIES[s.cc].n)}</span>` : '';
   const sched = (ksRoot().group.mergers || []).find(x => x.from === s.id);
   const open = ksOrgCardOpen(s);
-  const tags = `<span class="tag">${Math.round(s.own * 100)}%</span>${flag}${s.aff ? '<span class="tag">持分法</span>' : ''}${sched ? `<span class="tag warn">${ymLabel(sched.m)}に合併</span>` : ''}${st.over ? '<span class="tag bad">破産</span>' : ''}`;
+  const jn = typeof ksDeptSubNode === 'function' ? ksDeptSubNode(s.id, ksRoot()) : null;
+  const tags = `<span class="tag">${Math.round(s.own * 100)}%</span>${flag}${s.aff ? '<span class="tag">持分法</span>' : ''}${jn ? `<span class="tag ok">管轄：${esc(jn.name)}</span>` : ''}${sched ? `<span class="tag warn">${ymLabel(sched.m)}に合併</span>` : ''}${st.over ? '<span class="tag bad">破産</span>' : ''}`;
   const sum = `<span class="ob-sum"><span>売上 ${fmtYen(ytd.sales)}</span><span>経常 <span class="${ytd.ord < 0 ? 'neg' : ''}">${fmtYen(ytd.ord)}</span></span><span>現預金 ${fmtYen(cash)}</span></span>`;
   const headBtn = `<button type="button" class="ob-head" data-act="kOrgCard" data-id="${esc(s.id)}" aria-expanded="${open}" aria-controls="ob-${esc(s.id)}" title="${open ? 'たたむ' : 'くわしく見る'}">
       <span class="ob-t"><b>${esc(s.name)}</b>${tags}</span>${open ? '' : sum}<span class="ob-chev" aria-hidden="true"></span></button>`;
   const body = open ? `<div class="ob-body" id="ob-${esc(s.id)}">
     <div class="small muted">${esc(ksKindName(s))}・持分${Math.round(s.own * 100)}%${s.partner ? `（${s.aff ? '経営の主導' : 'ほかの株主'}：${esc(s.partner)}）` : ''}</div>
     <div class="small">${esc(ksWith(st, ksCompanyDesc) || '事業なし')}</div>
+    ${typeof ksSubOpName === 'function' ? `<div class="small">経営：${esc(ksSubOpName(s, ksRoot()))}${jn ? `・管轄：${esc(jn.name)}` : ''}</div>` : ''}
     <dl class="kv sm"><dt>今期の売上（月次）</dt><dd>${fmtYen(ytd.sales)}</dd><dt>今期の経常利益</dt><dd class="${ytd.ord < 0 ? 'neg' : ''}">${fmtYen(ytd.ord)}</dd><dt>現預金</dt><dd>${fmtYen(cash)}</dd><dt>従業員</dt><dd>${head}人</dd>${L ? `<dt>前期の純利益</dt><dd class="${L.pl.ni < 0 ? 'neg' : ''}">${fmtYen(L.pl.ni)}</dd>` : ''}</dl>
-    <div class="row" style="gap:4px;flex-wrap:wrap">${s.aff ? btn('決算書を見る', 'kAffView', { id: s.id }, 'sm') : btn('この会社に入る', 'kView', { v: s.id }, 'sm primary')}${btn('資金と取引', 'kSubFin', { id: s.id }, 'sm')}${btn('再編・社名', 'kSubOps', { id: s.id }, 'sm')}</div></div>` : '';
+    <div class="row" style="gap:4px;flex-wrap:wrap">${s.aff ? btn('決算書を見る', 'kAffView', { id: s.id }, 'sm') : btn('この会社に入る', 'kView', { v: s.id }, 'sm primary')}${btn('資金と取引', 'kSubFin', { id: s.id }, 'sm')}${btn('管轄と経営', 'kSubJur', { id: s.id }, 'sm')}${btn('再編・社名', 'kSubOps', { id: s.id }, 'sm')}</div></div>` : '';
   return `<div class="orgbox sub${open ? '' : ' shut'}${s.aff ? ' aff' : ''}${st.over ? ' bad' : ''}">${headBtn}${body}</div>`;
 }
 /* 会社とその下の会社（木の形）。下の会社がある会社には、枝を開く／たたむ帯をつける */

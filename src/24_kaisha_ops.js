@@ -298,7 +298,15 @@ function ksUnitHeadHtml(u) {
   const segs = [KS_SECTORS[S.sec].n, S.grp, KS_ENG_INFO[S.eng].n].filter(Boolean);
   const start = u.startM > (G.startedM ?? 9999) - 1 ? `${ymLabel(u.startM)}から` : '';
   return `<div class="unithead"><div><h2 class="h2" style="margin:0">${esc(ksUName(u))}</h2><div class="small muted">${segs.map(esc).join(' ／ ')}${start ? `・${start}` : ''}${u.acq ? `・${esc(u.acq.co)}から譲受` : ''}</div>${S.d ? `<p class="small" style="margin:4px 0 0">${esc(S.d)}</p>` : ''}</div>
-    <div class="row">${btn('業種のくわしく', 'kTbInfo', { ctx: '', v: S.name }, 'sm ghost')}${ksActiveUnits().length > 1 ? btn('この事業から撤退する', 'kCloseUnit', { u: u.id }, 'sm ghost') : ''}</div></div>`;
+    <div class="row">${btn('業種のくわしく', 'kTbInfo', { ctx: '', v: S.name }, 'sm ghost')}${ksActiveUnits().length > 1 ? btn('この事業から撤退する', 'kCloseUnit', { u: u.id }, 'sm ghost') : ''}</div></div>${ksUnitRunNote(u)}`;
+}
+/* 運営をユニット・事業部に任せている事業：だれが決めているかを知らせる */
+function ksUnitRunNote(u) {
+  const r = typeof ksDeptRunnerOf === 'function' && G.org ? ksDeptRunnerOf(u.id) : null;
+  if (!r) return '';
+  const t = ksDeptHeadTitle(r), rel = ksDeptRunRel(r);
+  const how = rel >= 0.08 ? '出来はよい' : rel <= -0.08 ? '出来はよくない' : '出来は並';
+  return `<div class="callout small runnote" role="note">この事業の運営は<b>${esc(r.name)}</b>（${esc(t)} ${esc(r.head.name)}・${how}）に任せています。値決めと人の手配は毎月、${esc(t)}が決めます（ここで変えても翌月に決め直します）。${btn('組織で変える', 'kGo', { tab: 'k_org' }, 'sm')}</div>`;
 }
 KS_SCREENS.k_ops = () => {
   const u = ksCurUnit();

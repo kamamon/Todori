@@ -1284,6 +1284,25 @@ details.custom > summary { cursor: pointer; font-weight: 700; font-size: 13px; c
 .motbar > span.hi { background: var(--vault); }
 .motbar > span.low { background: var(--neg, #b42318); }
 .orgc-a { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+/* 組織図の折りたたみ：部の見出しの行（押すと開く／たたむ）と、管轄の会社 */
+.orgc-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "t chev" "sum chev"; align-items: center; column-gap: 8px; row-gap: 2px; width: 100%; min-height: 30px; margin: 0; padding: 0; border: 0; background: none; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.orgc-head .orgc-t { grid-area: t; }
+.orgc-head .orgc-sum { grid-area: sum; color: var(--ink-2); }
+.orgc-head .ob-chev { grid-area: chev; }
+.orgc-head:hover b { text-decoration: underline; text-decoration-color: var(--vault); text-underline-offset: 3px; }
+.orgc-head:focus-visible { outline: 2px solid var(--vault); outline-offset: 2px; border-radius: 4px; }
+.orgc-body { display: grid; gap: 3px; }
+.orgc.shut { padding-top: 5px; padding-bottom: 5px; }
+.orgtree2.dense { gap: 4px; }
+.orgtree2.dense .orgkids2 { gap: 4px; }
+.orgc.co { border-style: dotted; background: var(--sheet-2); }
+.orgc.co.aff { opacity: .9; }
+.orgc.co.bad { border-color: var(--shu); }
+.orgdirect { color: var(--ink-2); }
+.runnote { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 8px 0 0; }
+@media (min-width: 761px) {
+  .orgtree2.dense .orgc.shut .orgc-head { grid-template-columns: minmax(0, 1fr) auto auto; grid-template-areas: "t sum chev"; }
+}
 .orgunits, .orgfbs { display: grid; gap: 4px; }
 .orgpend, .orgmeets { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
 .orgpend li, .orgmeets li { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
@@ -1297,6 +1316,7 @@ details.custom > summary { cursor: pointer; font-weight: 700; font-size: 13px; c
 @media (max-width: 760px) {
   .orgkids2 { margin-left: 4px; padding-left: 8px; }
   .orgc { padding: 8px 10px; }
+  .orgc-head { min-height: 44px; }
   .orgc-mot { margin-left: 0; }
   .meetr-c .seg { flex: 1 1 100%; }
   .meetr-c select { flex: 1 1 100%; }

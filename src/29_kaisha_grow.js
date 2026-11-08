@@ -101,8 +101,64 @@ function ksUpgDoExpense(id, uid) {
   ksNews(`${U.n}${u ? `（${ksUName(u)}）` : ''}を始めました（${fmtYen(cost)}）。${msg}`, 'good');
   return cost;
 }
+/* ---------- 投資をまとめて実施する（すべての事業・ユニットや事業部の事業・グループ全体） ---------- */
+const KS_UPG_ASSET = ['sw', 'bldg', 'mach', 'equip', 'veh'];
+function ksUpgIsAsset(U) { return KS_UPG_ASSET.includes(U.acct); }
+/* まとまりの中で、まだ実施していなくて合う事業 */
+function ksUpgTargets(U, units) { return units.filter(u => u && !u.closedM && ksUpgAvail(U, u).ok); }
+/* この会社の事業にまとめて実施する（手元の資金で。設備は資産として買う）。{ n, tot } */
+function ksUpgApplyMany(id, uids) {
+  const U = KS_UPG_BY[id];
+  if (!U || U.scope !== 'unit' || !G.grow) return { n: 0, tot: 0 };
+  let tot = 0, n = 0;
+  for (const uid of uids) {
+    const u = ksUnit(uid);
+    if (!u || u.closedM || !ksUpgAvail(U, u).ok) continue;
+    const cost = Math.round(U.cost(u));
+    if (ksUpgIsAsset(U)) ksBuyAsset({ n: U.n, acct: U.acct, cost, life: U.life, part: U.acct === 'mach' && ksS(u).eng === 'mfg' ? 'C' : 'S', u: uid });
+    else ksPost('upg', [[U.acct, cost, 0], ['cash', 0, cost]], { cf: 'exp', u: uid, desc: `${U.n}（${ksUName(u)}）` });
+    ksUpgRegister(id, uid);
+    tot += cost; n++;
+  }
+  if (n) ksNews(`${U.n}を${n}事業でまとめて始めました（${fmtYen(tot)}）。${U.dur ? `${ymLabel(G.m + U.dur)}から効果が出ます` : 'すぐに効果が出ます'}`, 'good');
+  return { n, tot };
+}
+/* グループ全体の計画：親会社と連結子会社（破産した会社を除く）ごとに、対象の事業と費用。
+   手元の資金で払えない会社（払うと月の固定の支払いの半分を割る）は見送る */
+function ksUpgGroupPlan(id) {
+  const U = KS_UPG_BY[id];
+  const root = ksRoot();
+  if (!U || U.scope !== 'unit') return [];
+  const cos = [{ st: root, s: null }, ...(root.group ? ksCSubs(root) : []).filter(x => x.st && !x.st.over).map(x => ({ st: x.st, s: x }))];
+  return cos.map(c => ksWith(c.st, () => {
+    if (!G.grow) return null;
+    const us = ksUpgTargets(U, ksActiveUnits());
+    if (!us.length) return null;
+    const cost = sum(us, u => Math.round(U.cost(u)));
+    const cash = ksB('cash');
+    return { id: c.s ? c.s.id : 'root', name: G.coName, uids: us.map(u => u.id), names: us.map(u => ksUName(u)), cost, cash, ok: cash - cost >= ksMonthlyFixedOut() * 0.5 };
+  })).filter(Boolean);
+}
+/* グループ全体に実施する（会社ごとに、その会社の手元の資金で払う）。{ done: [...], skip: [...], n, tot } */
+function ksUpgGroupApply(id) {
+  const root = ksRoot();
+  const plan = ksUpgGroupPlan(id);
+  const out = { done: [], skip: [], n: 0, tot: 0 };
+  for (const p of plan) {
+    if (!p.ok) { out.skip.push(p); continue; }
+    const st = p.id === 'root' ? root : (ksSubById(p.id, root) || {}).st;
+    if (!st) continue;
+    const r = ksWith(st, () => ksUpgApplyMany(id, p.uids));
+    out.done.push(Object.assign({}, p, r));
+    out.n += r.n; out.tot += r.tot;
+  }
+  return out;
+}
 /* 設備投資の画面の効果のキー */
-if (typeof KS_CAPEX_FX !== 'undefined') KS_CAPEX_FX.upg = a => ksUpgRegister(a.id, a.u);
+if (typeof KS_CAPEX_FX !== 'undefined') {
+  KS_CAPEX_FX.upg = a => ksUpgRegister(a.id, a.u);
+  KS_CAPEX_FX.upgMany = a => { for (const uid of a.us) ksUpgRegister(a.id, uid); const U = KS_UPG_BY[a.id]; return `${U.n}を${a.us.length}事業で始めました。${U.dur ? `${ymLabel(G.m + U.dur)}から効果が出ます` : 'すぐに効果が出ます'}`; };
+}
 
 /* ---------- 海外展開と為替 ---------- */
 const KS_REGIONS = {
