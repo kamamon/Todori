@@ -109,6 +109,47 @@ if (!fs.existsSync(shots)) fs.mkdirSync(shots);
   if (await page.$(`#ok2-${bu.id}`)) errors.push('枝がたためない');
   await click(`[data-act="kDeptKids"][data-id="${bu.id}"]`, 'unfold');
   if (!(await page.$(`#ok2-${bu.id}`))) errors.push('枝が開かない');
+  // ユニットの下に事業部をつくる：ユニットが選んだ事業（2つ）と会社（1社）だけが出る
+  await click(`[data-act="kDeptAdd"][data-parent="${bu.id}"]`, 'add under bu');
+  await modalErr('add under bu');
+  const nU = await page.$$eval('#modal-root [data-ch="kDeptUnit"]', l => l.length);
+  if (nU !== 2) errors.push(`ユニットの下につくる部で選べる事業が${nU}（ユニットが選んだ2つのはず）`);
+  const nS = await page.$$eval('#modal-root [data-ch="kDeptSub"]', l => l.length);
+  if (nS !== 1) errors.push(`ユニットの下につくる部で選べる会社が${nS}（ユニットの管轄の1社のはず）`);
+  await page.fill('#orgName', '外食事業部');
+  await click('#modal-root [data-ch="kDeptUnit"]', 'child unit');
+  await click('[data-act="kDeptSave"]', 'save child');
+  s = await st();
+  const child = s.nodes.find(n => n.name === '外食事業部');
+  if (!child) errors.push('ユニットの下に事業部ができない');
+  // 移す：事業部ごと社長の直下へ → 事業はユニットの受け持ちから外れる
+  if (child) {
+    const cu = child.subs.length + (await page.evaluate(id => window.Toudori.G.org.nodes.find(n => n.id === id).units.length, child.id));
+    if (!cu) errors.push('つくった事業部が事業を持っていない');
+    await click(`[data-act="kDeptMove"][data-id="${child.id}"]`, 'move child');
+    await modalErr('move'); await hscroll('move'); await shot('move');
+    await page.selectOption('#modal-root [data-ch="kDeptMvDest"][data-k="node"]', ''); await wait(80);
+    await click('#modal-root [data-act="kDeptMvGo"][data-k="node"]', 'move go');
+    const r = await page.evaluate(([cid, bid]) => {
+      const O = window.Toudori.G.org;
+      const c = O.nodes.find(n => n.id === cid), b = O.nodes.find(n => n.id === bid);
+      const below = new Set([bid]); let grew = true; while (grew) { grew = false; for (const o of O.nodes) if (!below.has(o.id) && below.has(o.parent)) { below.add(o.id); grew = true; } }
+      const selB = new Set(); for (const o of O.nodes) if (below.has(o.id)) for (const x of o.units) selB.add(x);
+      return { parent: c.parent, inBu: c.units.some(x => selB.has(x)) };
+    }, [child.id, bu.id]);
+    if (r.parent !== null || r.inBu) errors.push(`事業部を社長の直下へ移せない：${JSON.stringify(r)}`);
+    // 事業を1つ、ユニットへ移す（移す先を選んで「移す」）
+    await click(`[data-act="kDeptMove"][data-id="${child.id}"]`, 'move child 2');
+    const k = await page.$eval('#modal-root [data-ch="kDeptMvDest"][data-k^="u:"]', e => e.dataset.k).catch(() => null);
+    if (!k) errors.push('事業を1つずつ移す欄がない');
+    else {
+      await page.selectOption(`#modal-root [data-ch="kDeptMvDest"][data-k="${k}"]`, bu.id); await wait(80);
+      await click(`#modal-root [data-act="kDeptMvGo"][data-k="${k}"]`, 'move unit go');
+      const h = await page.evaluate(uid => (window.Toudori.G.org.nodes.find(n => (n.kind === 'bu' || n.fn === 'biz') && n.units.includes(uid)) || {}).id, k.slice(2));
+      if (h !== bu.id) errors.push(`事業をユニットへ移せない：${h}`);
+    }
+    await closeModals();
+  }
   // 組織図から「管轄と経営」→ 自分で経営する
   await click('.orgc.co [data-act="kSubJur"]', 'jur from org');
   await modalErr('jur'); await hscroll('jur'); await shot('jur');

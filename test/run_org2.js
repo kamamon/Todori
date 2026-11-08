@@ -130,7 +130,46 @@ ok(meets >= 4, `定例会が少ない：${meets}`);
 ok(subRow >= 1, '管轄の会社の売上が、定例会の実績に入っていない');
 ok(E.ksDeptNode(bu.id).pol.budS > E.ksWith(G, () => 0), 'ユニットの売上の予算がない');
 
-// 6) 部をなくすと、管轄の会社は社長の直轄に戻る（任せていた子会社は、子会社の社長が経営）
+// 6) 受け持ちの入れ子：ユニットの下の事業部は、ユニットが選んだ事業と会社の中から選ぶ
+{
+  G = api.G;
+  const u = E.ksActiveUnits().map(x => x.id); // 食品スーパー・金属部品（ラーメンは撤退していない。3つ）
+  const selBu0 = E.ksDeptSel(bu);
+  ok(selBu0.length >= 1, 'ユニットの選んだ事業がない');
+  const inBu = selBu0[0];
+  const outBu = u.find(x => !selBu0.includes(x));
+  const child = E.ksDeptAdd({ kind: 'dept', fn: 'biz', parent: bu.id, units: [inBu, outBu].filter(Boolean), subs: [s1.id, s2.id] });
+  ok(child.units.includes(inBu), 'ユニットが選んだ事業を、下の事業部で選べない');
+  ok(!outBu || !child.units.includes(outBu), 'ユニットが選んでいない事業を、下の事業部で選べてしまう');
+  ok(E.ksDeptSel(bu).includes(inBu) && !(bu.units || []).includes(inBu), 'ユニットの選んだ事業から外れた／ユニットが直接持ったまま');
+  ok(child.subs.includes(s1.id) && !child.subs.includes(s2.id), `ユニットの管轄の会社の中からだけ選べるはず：${child.subs.join(',')}`);
+  ok(E.ksDeptSelSubs(bu).includes(s1.id), 'ユニットの管轄（下の部も合わせて）から会社が消えた');
+  // 事業部の下の部も同じ：事業部が選んだ事業の中から
+  const grand = E.ksDeptAdd({ kind: 'dept', fn: 'biz', parent: child.id, units: [inBu, outBu].filter(Boolean) });
+  ok(grand.units.includes(inBu) && (!outBu || !grand.units.includes(outBu)), '事業部の下の部が、事業部の選んだ事業の外から選べてしまう');
+  ok(E.ksDeptHolderOf(inBu) === grand && E.ksDeptSel(child).includes(inBu) && E.ksDeptSel(bu).includes(inBu), '入れ子の受け持ちがおかしい');
+  // 上の組織で外すと、下の部からも外れる
+  E.ksDeptEdit(child.id, { units: [] });
+  ok(!grand.units.includes(inBu) && !E.ksDeptSel(child).includes(inBu) && (bu.units || []).includes(inBu), '事業部で外した事業が、下の部に残る／ユニットに戻らない');
+  // 事業を1つ、別の組織へ移す（ユニットから金属部品の事業部へ）
+  ok(E.ksDeptMoveUnit(inBu, mf.id) && E.ksDeptHolderOf(inBu) === mf && !E.ksDeptSel(bu).includes(inBu), '事業をユニットから別の事業部へ移せない');
+  // 部ごと移す：事業部をユニットから外へ（社長の直下へ）→ 事業と会社も一緒に移る
+  E.ksDeptMoveUnit(inBu, child.id);
+  ok(E.ksDeptSel(bu).includes(inBu), 'ユニットの下の事業部に事業を戻せない');
+  ok(E.ksDeptMove(child.id, null), '事業部を社長の直下へ移せない');
+  ok(!E.ksDeptSel(bu).includes(inBu) && E.ksDeptSel(child).includes(inBu) && !E.ksDeptSelSubs(bu).includes(s1.id), '部ごと移したのに、事業や会社が元のユニットに残る');
+  ok(!E.ksDeptMove(bu.id, bu.id) && !E.ksDeptMove(child.id, grand.id), '自分や自分の下の部へ移せてしまう');
+  // ユニットへ移す → ユニットの受け持ちに加わる
+  ok(E.ksDeptMove(child.id, bu.id) && E.ksDeptSel(bu).includes(inBu) && E.ksDeptSelSubs(bu).includes(s1.id), '事業部をユニットへ移しても、ユニットの受け持ちに加わらない');
+  // 下の部をなくすと、直接持っていた事業と会社は上の組織に戻る
+  E.ksDeptRemove(grand.id); E.ksDeptRemove(child.id);
+  ok((bu.units || []).includes(inBu) && (bu.subs || []).includes(s1.id), '下の部をなくしても、事業と会社がユニットに戻らない');
+  const e = E.ksCheck();
+  ok(!e.length, '入れ子の操作のあと帳簿が合わない');
+  say('入れ子', 'ユニットの選択', E.ksDeptSel(bu).length, '会社', E.ksDeptSelSubs(bu).length);
+}
+
+// 7) 部をなくすと、管轄の会社は社長の直轄に戻る（任せていた子会社は、子会社の社長が経営）
 E.ksDeptRemove(bu.id);
 ok(!E.ksDeptSubNode(s1.id, G) && E.ksSubOp(s1, G) === 'ceo', 'ユニットをなくしても管轄が残る／任せたまま');
 // 保存して読み込み（JSON）しても動く
