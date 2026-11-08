@@ -25,8 +25,9 @@ const P_KEYS = {
 };
 // どの事業の型にも書ける：accF（労災の起きやすさの倍率）、accSet（労災の文の組。'plant' は発電所・タンク基地など）
 const P_COMMON = ['accF', 'accSet'];
-const ITEM_KEYS = ['d', 'prod', 'cust', 'p', 'eq', 'aux', 'laws', 'lic', 'season', 'icon', 'scale', 'bm'];
-const GROUP_KEYS = ['sec', 'grp', 'eng', 'bm', 'icon', 'season', 'd', 'prod', 'cust', 'p', 'eq', 'aux', 'laws', 'lic', 'items', 'scale'];
+// how（売上の立ち方）・kf（成功のカギ）・risk（主なリスク）・kw（探すときの言葉）は、選ぶ画面の「くわしく」の補足
+const ITEM_KEYS = ['d', 'prod', 'cust', 'p', 'eq', 'aux', 'laws', 'lic', 'season', 'icon', 'scale', 'bm', 'how', 'kf', 'risk', 'kw'];
+const GROUP_KEYS = ['sec', 'grp', 'eng', 'bm', 'icon', 'season', 'd', 'prod', 'cust', 'p', 'eq', 'aux', 'laws', 'lic', 'items', 'scale', 'how', 'kf', 'risk', 'kw'];
 
 function load(fileList) {
   const ctx = { console, Math, JSON, Object, Array, Number, String, Set, Map };

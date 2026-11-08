@@ -776,7 +776,9 @@ function ksRunAdvance() {
   if (view && !G.closing && !G.over && ksSubById(view) && !ksSubById(view).gone) { ksViewEntity(view); rep = G.monthRep || rep; }
   UI.queue = [];
   if (rep && UI.settings.monthly) UI.queue.push({ name: 'kMonth', args: { m: rep.m } });
-  if (G.closing) { G.closing.view = G.closing.i; UI.queue.push({ name: 'kClose', args: {} }); }
+  // 「質問をとばして結果を見る」設定なら、決算整理をまとめて記帳して結果を出す
+  if (G.closing && UI.settings.autoClose && typeof ksCloseSkipAll === 'function') { ksCloseSkipAll(); UI.queue.push({ name: 'kResult', args: {} }); }
+  else if (G.closing) { G.closing.view = G.closing.i; UI.queue.push({ name: 'kClose', args: {} }); }
   for (const s of (G.pendingModals || [])) UI.queue.push({ name: s.type, args: s });
   G.pendingModals = [];
   if (G.over) UI.queue.push({ name: 'kOver', args: {} });
@@ -1077,15 +1079,6 @@ function ksStartStore() {
   if (seed) k.seed = seed.value;
   if (co) { if (co.value.trim() && co.value.trim() !== ksDefaultCoName(k.units[0].type)) { k.coName = co.value; k.coEdited = true; } else if (!co.value.trim()) { k.coName = ''; k.coEdited = false; } }
 }
-function ksStartTypeRow(S, k) {
-  const sel = k.units.some(x => x.type === S.name);
-  return `<li class="stype${sel ? ' on' : ''}"><span class="indico" aria-hidden="true">${esc(S.icon)}</span><span class="stype-t"><b>${esc(S.name)}</b><span class="small muted">${esc(S.grp)}・${esc(KS_ENG_INFO[S.eng].n)}</span></span>
-    <span class="stype-a">${btn(sel ? '選択中' : 'これにする', 'kStPick', { v: S.name }, `sm${sel ? '' : ' primary'}`, { disabled: sel })}${!sel ? btn('＋加える', 'kStAdd', { v: S.name }, 'sm') : ''}</span></li>`;
-}
-function ksStartTypesHtml(k) {
-  const list = ksSearchTypes(k.q, k.sec, k.eng, 40);
-  return list.length ? `<ul class="stypes">${list.map(S => ksStartTypeRow(S, k)).join('')}</ul>` : '<div class="empty">見つかりません。言葉を変えて探してください</div>';
-}
 function renderStartK() {
   const k = ksStartDefaults();
   k.units = k.units.filter(x => KS_TYPES[x.type]);
@@ -1093,11 +1086,12 @@ function renderStartK() {
   let meta = null;
   try { meta = JSON.parse(lsGet(LSK.meta('a')) || 'null'); } catch (e) { meta = null; }
   const cont = meta && !meta.over && meta.desc ? btn(`続きから（${esc(meta.co)}・${ymLabel(meta.m)}）`, 'loadAuto') : '';
-  const chosen = k.units.map((x, i) => { const S = KS_TYPES[x.type]; return `<li class="sunit"><span class="indico" aria-hidden="true">${esc(S.icon)}</span><span class="stype-t"><b>${esc(S.name)}</b><span class="small muted">${esc(S.d || KS_ENG_INFO[S.eng].desc)}</span></span>
+  const chosen = k.units.map((x, i) => { const S = KS_TYPES[x.type]; const ci = ksCapInfo(x.type); return `<li class="sunit"><span class="indico" aria-hidden="true">${esc(S.icon)}</span><span class="stype-t"><button type="button" class="tname" data-act="kTbInfo" data-ctx="st" data-v="${esc(S.name)}" title="くわしく見る">${esc(S.name)}</button><span class="small muted">${esc(S.d || KS_ENG_INFO[S.eng].desc)}</span><span class="small">${esc(ci.n)} ${fmtNum(ksScToCap(x.type, x.sc || 1), 0)}${esc(ci.u)}${k.cu && k.cu.on && x.g ? `・${esc((KS_GROWTH.find(g => Math.abs(g[0] - x.g) < 1e-9) || [0, ''])[1])}` : ''}</span></span>
     <span class="stype-a"><span class="seg sm" role="radiogroup" aria-label="規模">${[[0.5, '小'], [1, '中'], [2, '大'], [4, '特大']].map(([v, l]) => `<button type="button" data-act="kStSc" data-i="${i}" data-v="${v}" aria-pressed="${x.sc === v}">${l}</button>`).join('')}</span>${k.units.length > 1 ? btn('外す', 'kStDel', { i }, 'sm ghost') : ''}</span></li>`; }).join('');
-  const picks = ksStartPicks().map(n => `<button type="button" class="chip${k.units.some(x => x.type === n) ? ' on' : ''}" data-act="kStPick" data-v="${esc(n)}">${esc(KS_TYPES[n].icon)} ${esc(n)}</button>`).join('');
-  const secs = Object.entries(KS_SECTORS).map(([c, x]) => `<option value="${c}"${k.sec === c ? ' selected' : ''}>${esc(x.n)}（${ksCountTypes(c, null)}）</option>`).join('');
-  const engs = Object.entries(KS_ENG_INFO).map(([c, x]) => `<option value="${c}"${k.eng === c ? ' selected' : ''}>${esc(x.n)}</option>`).join('');
+  // おすすめ：初めは8つ。「ほかのおすすめ」で全部
+  const pickAll = ksStartPicks();
+  const picks = pickAll.slice(0, k.morePicks ? pickAll.length : 8).map(n => `<button type="button" class="chip${k.units.some(x => x.type === n) ? ' on' : ''}" data-act="kStPick" data-v="${esc(n)}">${esc(KS_TYPES[n].icon)} ${esc(n)}</button>`).join('')
+    + (pickAll.length > 8 ? `<button type="button" class="chip" data-act="kStMorePicks" aria-expanded="${!!k.morePicks}">${k.morePicks ? 'たたむ' : `ほかのおすすめ（${pickAll.length - 8}）`}</button>` : '');
   const conds = Object.entries(KS_COND).map(([c, C]) => `<button type="button" data-act="kStCond" data-v="${c}" aria-pressed="${k.cond === c}">${C.n}</button>`).join('');
   const terms = [[10, '10年'], [20, '20年'], [0, '定めない']].map(([v, l]) => `<button type="button" data-act="kStTerm" data-v="${v}" aria-pressed="${k.term === v}">${l}</button>`).join('');
   const setup = `<section class="setup" aria-labelledby="setupTitle">
@@ -1105,9 +1099,7 @@ function renderStartK() {
     ${startModeSwitch()}
     <div class="field"><span>事業（${fmtNum(KS_TYPE_LIST.length, 0)}の業種から。いくつでも組み合わせられます）</span><ul class="sunits">${chosen}</ul></div>
     <div class="field"><span>おすすめ</span><div class="chips">${picks}</div></div>
-    <div class="field"><span>業種を探す</span><div class="row" style="gap:6px;flex-wrap:wrap"><input type="search" id="kstQ" value="${esc(k.q)}" data-in="kStQ" placeholder="例：レーザー、データセンター、航空、海運、新聞、介護" style="flex:1;min-width:12em" aria-label="業種を探す">
-      <select data-ch="kStSec" aria-label="産業"><option value="">すべての産業</option>${secs}</select><select data-ch="kStEng" aria-label="事業の型"><option value="">すべての型</option>${engs}</select></div>
-      <div id="kstList" class="stypes-wrap">${ksStartTypesHtml(k)}</div></div>
+    <div class="field"><span>業種を選ぶ（産業 → 分類 → 業種とたどるか、言葉で探す。名前を押すと、くわしい説明が出ます）</span>${ksTbHtml('st', { id: 'kstQ' })}</div>
     <div class="field"><span>引き継ぐ会社の状態</span><div class="seg" role="radiogroup">${conds}</div><span class="small muted">${esc(KS_COND[k.cond].desc)}</span></div>
     ${typeof ksSgHtml === 'function' ? ksSgHtml(k) : ''}
     ${typeof ksCustomHtml === 'function' ? ksCustomHtml(k) : ''}
@@ -1132,6 +1124,7 @@ Object.assign(ACTIONS, {
   stMode: d => { if (UI.start.mode === 'gyosei') gyStartStore(); else if (UI.start.mode === 'kaisha') ksStartStore(); else if (typeof startStoreInputs === 'function') startStoreInputs(); UI.start.mode = d.v; render(); },
   kStPick: d => { ksStartStore(); const k = UI.start.k; k.units = [{ type: d.v, sc: 1 }]; if (!k.coEdited) k.coName = ''; render(); },
   kStAdd: d => { ksStartStore(); const k = UI.start.k; if (!k.units.some(x => x.type === d.v)) k.units.push({ type: d.v, sc: 1 }); render(); },
+  kStMorePicks: () => { ksStartStore(); UI.start.k.morePicks = !UI.start.k.morePicks; render(); },
   kStDel: d => { ksStartStore(); const k = UI.start.k; if (k.units.length > 1) k.units.splice(+d.i, 1); render(); },
   kStSc: d => { ksStartStore(); const k = UI.start.k; if (k.units[+d.i]) k.units[+d.i].sc = +d.v; render(); },
   kStCond: d => { ksStartStore(); UI.start.k.cond = d.v; render(); },
@@ -1143,7 +1136,8 @@ Object.assign(ACTIONS, {
     let co = (k.coEdited ? k.coName : '').trim() || ksDefaultCoName(k.units[0].type);
     if (!/株式会社|有限会社|合同会社/.test(co)) co = '株式会社' + co;
     const seedN = parseInt(String(k.seed).replace(/[^0-9]/g, ''), 10);
-    const o = { units: k.units.map(x => ({ type: x.type, sc: x.sc })), coName: co, ceo, cond: k.cond, term: k.term };
+    // 成長（g）はカスタムスタートのときだけ使う。設備の数で決めた規模（sc）はいつも使う
+    const o = { units: k.units.map(x => ({ type: x.type, sc: x.sc, g: k.cu && k.cu.on ? (+x.g || 0) : 0 })), coName: co, ceo, cond: k.cond, term: k.term };
     if (Number.isFinite(seedN)) o.seed = seedN;
     if (typeof ksCustomOptions === 'function') Object.assign(o, ksCustomOptions(k));
     if (typeof ksSgOptions === 'function') { const sg = ksSgOptions(k); if (sg.length) o.startGroup = sg; } // 就任の時点のグループの会社
@@ -1158,8 +1152,3 @@ Object.assign(ACTIONS, {
     showModal('kIntro');
   },
 });
-Object.assign(CHANGES, {
-  kStSec: el => { ksStartStore(); UI.start.k.sec = el.value; const b = $('#kstList'); if (b) b.innerHTML = ksStartTypesHtml(UI.start.k); },
-  kStEng: el => { ksStartStore(); UI.start.k.eng = el.value; const b = $('#kstList'); if (b) b.innerHTML = ksStartTypesHtml(UI.start.k); },
-});
-INPUTS.kStQ = el => { UI.start.k.q = el.value; const b = $('#kstList'); if (b) b.innerHTML = ksStartTypesHtml(UI.start.k); };

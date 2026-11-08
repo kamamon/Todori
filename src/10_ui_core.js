@@ -186,8 +186,8 @@ function closeModal(force) {
   if (!UI.modal) return;
   const m = MODALS[UI.modal.name];
   if (!force && m && m.locked && m.locked(UI.modal.args)) return;
-  // 用語カード・用語集は、開く前に見ていたモーダルへ戻る
-  if ((UI.modal.name === 'term' || UI.modal.name === 'glossary') && UI.mstack && UI.mstack.length) {
+  // 用語カード・用語集・業種のくわしく（ダイアログの上から開いたとき）は、開く前に見ていたモーダルへ戻る
+  if ((UI.modal.name === 'term' || UI.modal.name === 'glossary' || (UI.modal.name === 'kTypeInfo' && UI.modal.args && UI.modal.args.back)) && UI.mstack && UI.mstack.length) {
     const prev = UI.mstack.pop();
     showModal(prev.name, prev.args);
     return;
@@ -207,12 +207,14 @@ function drawModal() {
   const old = root.querySelector('.modal');
   const keepY = old && UI.mDrawn === UI.modal.name ? old.scrollTop : 0;
   const keepX = old && UI.mDrawn === UI.modal.name ? [...old.querySelectorAll('.tbl-wrap')].map(w => w.scrollLeft) : [];
+  const keepL = old && UI.mDrawn === UI.modal.name ? [...old.querySelectorAll('.tb-list, .typelist')].map(w => w.scrollTop) : []; // 業種の一覧の位置
   root.innerHTML = `<div class="scrim" data-act="scrim">${html}</div>`;
   UI.mDrawn = UI.modal.name;
   markStackTables(root);
   const nm = root.querySelector('.modal');
   if (nm && keepY) nm.scrollTop = keepY;
   if (nm && keepX.length) nm.querySelectorAll('.tbl-wrap').forEach((w, i) => { if (keepX[i]) w.scrollLeft = keepX[i]; });
+  if (nm && keepL.length) nm.querySelectorAll('.tb-list, .typelist').forEach((w, i) => { if (keepL[i]) w.scrollTop = keepL[i]; });
   document.body.style.overflow = 'hidden';
   const f = root.querySelector('[data-autofocus]') || root.querySelector('.mf .btn.primary') || root.querySelector('.modal button');
   if (f) f.focus({ preventScroll: true });

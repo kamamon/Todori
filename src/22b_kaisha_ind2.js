@@ -15,7 +15,7 @@ function ksUName(u) { return u.n || ksS(u).name; }
 function ksHasEng(eng) { return ksActiveUnits().some(u => ksS(u).eng === eng); }
 function ksUnitsOf(eng) { return ksActiveUnits().filter(u => ksS(u).eng === eng); }
 /* 成長の要素（20e・29）からの倍率。まだ無いときは1 */
-function ksUpF(u) { return (typeof ksUpgradeF === 'function' ? ksUpgradeF(u, 'demand') : 1) * (typeof ksLawDemandF === 'function' ? ksLawDemandF(u) : 1); }
+function ksUpF(u) { return (typeof ksUpgradeF === 'function' ? ksUpgradeF(u, 'demand') : 1) * (typeof ksLawDemandF === 'function' ? ksLawDemandF(u) : 1) * (typeof ksTrendF === 'function' ? ksTrendF(u) : 1); }
 function ksShrinkF(u) { return typeof ksUpgradeF === 'function' ? ksUpgradeF(u, 'shrink') : 1; }
 function ksEnF(u) { return typeof ksUpgradeF === 'function' ? ksUpgradeF(u, 'energy') : 1; }
 function ksFuelF(u) { return typeof ksUpgradeF === 'function' ? ksUpgradeF(u, 'fuel') : 1; }
@@ -45,7 +45,7 @@ function ksCalibRun(u, k, months, warm, hqFixed = 0) {
   try {
     const cu = JSON.parse(JSON.stringify(u));
     G.units = [cu];
-    G.hist = true; G.repT = 1; G.over = null; G.closing = null;
+    G.hist = true; G.calibRun = true; G.repT = 1; G.over = null; G.closing = null;
     const S = ksS(cu), E = KS_ENGINE[S.eng];
     if (k !== 1) E.scale(cu, k);
     // 工事：始める前から抱えている工事も同じ倍率にする（工期が長いと、測る期間に古い大きさの工事の完成が入り、倍率を見誤る）
@@ -199,6 +199,7 @@ function ksCloseUnit(u) {
   u.dep = 0;
   G.curU = null;
   u.closedM = G.m;
+  if (typeof ksDeptDropUnit === 'function') ksDeptDropUnit(u.id); // 社内の組織の受け持ちから外す
   return `設備の売却 ${fmtYen(pv.sale)}・退職金 ${fmtYen(pv.sev)}${pv.inv ? `・在庫の処分 ${fmtYen(pv.inv / 2)}` : ''}`;
 }
 

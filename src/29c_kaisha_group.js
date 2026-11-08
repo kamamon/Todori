@@ -1150,6 +1150,7 @@ function ksExtMonth(ctx, res) {
   if (typeof ksMapMonth === 'function' && G.loc) ksMapMonth(ctx, res);
   if (typeof ksLaw2Month === 'function' && G.law) ksLaw2Month(ctx, res);
   if (typeof ksEvt2Month === 'function') ksEvt2Month(ctx, res);
+  if (typeof ksDeptMonth === 'function' && G.org && G.org.nodes.length) ksDeptMonth(ctx, res); // 社内の組織（部の費用・方針・定例会）
 }
 function ksExtAfterClose(fy) {
   if (G.hist) return;

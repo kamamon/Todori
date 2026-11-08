@@ -74,24 +74,37 @@ ACTIONS.kGoalSet = () => { ksHrSetGoals(UI.kGoals.list); toast('目標を決め�
 /* ---------- 福利厚生と手当 ---------- */
 function ksHrWfHtml() {
   const H = G.hr;
-  const cat = UI.kWfCat || '手当';
-  const cats = KS_WF_CATS.map(c => `<button type="button" data-act="kWfCat" data-v="${esc(c)}" aria-pressed="${c === cat}">${esc(c)}</button>`).join('');
+  const cat = KS_WF_CATS.includes(UI.kWfCat) ? UI.kWfCat : '手当';
+  // 分類ごとに、使っている制度の数を出す
+  const cats = KS_WF_CATS.map(c => {
+    const list = KS_WF.filter(W => W.cat === c && !W.base && ksWfAvail(W));
+    const on = list.filter(W => ksWfLv(W.id) > 0).length;
+    return `<button type="button" data-act="kWfCat" data-v="${esc(c)}" aria-pressed="${c === cat}">${esc(c)}<span class="wfc-n">${on}/${list.length}</span></button>`;
+  }).join('');
   const rows = KS_WF.filter(W => W.cat === cat).map(W => {
     const lv = ksWfLv(W.id), base = (H.wfBase || {})[W.id] || 0;
     const avail = ksWfAvail(W);
-    const ctl = W.base ? '<span class="tag ok">基本の制度（給与・経費に含まれている）</span>'
-      : !avail ? '<span class="small muted">この会社では対象外</span>'
-      : `<div class="seg wrap" role="radiogroup">${W.lvs.map((l, i) => `<button type="button" data-act="kWfSet" data-id="${W.id}" data-v="${i}" aria-pressed="${lv === i}">${esc(l)}${i === base && i ? '（就任の時）' : ''}</button>`).join('')}</div>`;
-    const cost = W.base || !avail ? '' : `<div class="small">会社の費用 月${fmtYen(ksWfCostMonth(W, lv))}${lv !== base ? `<span class="muted">（就任の時より ${ksWfCostMonth(W, lv) >= ksWfCostMonth(W, base) ? '+' : '−'}${fmtYen(Math.abs(ksWfCostMonth(W, lv) - ksWfCostMonth(W, base)))}）</span>` : ''}・${esc(KS_ACCT[ksWfAcct(W, Math.max(1, lv))].n)}${ksWfAcct(W, Math.max(1, lv)) === 'salary' ? '（課税される手当。社会保険料の会社負担も増える）' : ''}</div>`;
-    const eff = !W.base && W.es ? `<div class="small muted">満足度 ＋${W.es[Math.max(1, lv)] || W.es[1]}${W.eff ? `・${Object.entries(W.eff).map(([k, a]) => `${KS_EFF_N[k]} ${Math.round((a[Math.max(1, lv)] - 1) * 100)}%`).join('・')}` : ''}</div>` : '';
-    return `<tr><td><b>${esc(W.n)}</b><div class="small">${esc(W.d)}</div>${cost}${eff}</td><td>${ctl}<details class="small" style="margin-top:4px"><summary>税金の扱い（従業員の所得税）</summary><p style="margin:4px 0 0">${esc(W.tax)}</p></details></td></tr>`;
+    let ctl;
+    if (W.base) ctl = '<span class="tag ok">基本の制度（給与・経費に含まれている）</span>';
+    else if (!avail) ctl = '<span class="small muted">この会社では対象外</span>';
+    else {
+      // 段階ごとに、会社の費用（月）と満足度を並べる
+      ctl = `<div class="wflv" role="radiogroup" aria-label="${esc(W.n)}の段階">${W.lvs.map((l, i) => {
+        const c = ksWfCostMonth(W, i);
+        const effs = i && W.eff ? Object.entries(W.eff).map(([k, a]) => `${KS_EFF_N[k]}${Math.round((a[i] - 1) * 100) >= 0 ? '+' : ''}${Math.round((a[i] - 1) * 100)}%`).filter(t => !/[+−-]0%$/.test(t)).join('・') : '';
+        return `<button type="button" class="wflv-b" data-act="kWfSet" data-id="${W.id}" data-v="${i}" aria-pressed="${lv === i}"><span class="wflv-n">${esc(l)}${i === base && i ? ' <span class="tag">就任の時</span>' : ''}</span>${i ? `<span class="wflv-m">月${fmtYen(c)}${W.es && W.es[i] ? `・満足度＋${W.es[i]}` : ''}${effs ? `・${effs}` : ''}</span>` : ''}</button>`;
+      }).join('')}</div>`;
+    }
+    const cost = W.base || !avail ? '' : `<div class="small">いま：会社の費用 月${fmtYen(ksWfCostMonth(W, lv))}${lv !== base ? `<span class="muted">（就任の時より ${ksWfCostMonth(W, lv) >= ksWfCostMonth(W, base) ? '+' : '−'}${fmtYen(Math.abs(ksWfCostMonth(W, lv) - ksWfCostMonth(W, base)))}）</span>` : ''}・${esc(KS_ACCT[ksWfAcct(W, Math.max(1, lv))].n)}${ksWfAcct(W, Math.max(1, lv)) === 'salary' ? '（課税される手当。社会保険料の会社負担も増える）' : ''}</div>`;
+    return `<li class="wfi${lv ? ' on' : ''}"><div class="wfi-t"><b>${esc(W.n)}</b><div class="small">${esc(W.d)}</div>${cost}<details class="small"><summary>税金の扱い（従業員の所得税）</summary><p style="margin:4px 0 0">${esc(W.tax)}</p></details></div><div class="wfi-c">${ctl}</div></li>`;
   }).join('');
   const extra = ksWfExtraMonth();
   const tot = sum(KS_WF.filter(W => !W.base), W => ksWfCostMonth(W));
   const head = Math.max(1, ksHeadcount());
-  return `<div class="grid g-side"><div>${panel('福利厚生と手当', `<div class="subtabs sm" role="tablist">${cats}</div><div class="tbl-wrap"><table class="t"><tbody>${rows}</tbody></table></div>`)}</div>
-    <div class="stack">${panel('費用と効果', kv([['制度の費用（会社全体）', `月${fmtYen(tot)}（1人あたり${fmtYen(tot / head)}）`], ['就任の時より増えた分', `<b>${extra >= 0 ? '+' : '−'}${fmtYen(Math.abs(extra))}</b>／月`], ['従業員満足度', `${fmtNum(H.es, 0)}点`], ['参考：大企業の法定外福利費', '1人あたり月2.5万円ほど（経団連の調査・2018年度）。中小企業では数千円〜1万円']]) + '<p class="note">課税される手当（住宅手当・家族手当など）は給料手当・労務費として記帳し、社会保険料（会社の負担は約15%）も増えます。非課税の制度（食事補助・社宅・企業型DCなど）は福利厚生費。社員の手取りが同じでも、非課税の制度のほうが社員の得は大きくなります。就任の時の制度の費用は、もとの経費に含まれています。</p>')}
-    ${panel('制度を選ぶときの見方', `<ul class="small" style="margin:0;padding-left:1.2em"><li>若手の採用と定着：借上社宅・住宅手当・食事補助</li><li>子育て・介護の世代：企業主導型保育所・育児休業の上乗せ・介護の支援</li><li>長く勤めてもらう：企業型DC・中退共・永年勤続の表彰</li><li>技能を高める：資格手当・資格取得の支援・研修</li><li>出張の多い仕事（卸売・建設・専門サービス）：出張手当と旅費規程</li></ul>`)}</div></div>`;
+  const nOn = KS_WF.filter(W => !W.base && ksWfAvail(W) && ksWfLv(W.id) > 0).length, nAll = KS_WF.filter(W => !W.base && ksWfAvail(W)).length;
+  return `<div class="grid g-side"><div>${panel(`福利厚生と手当（${nOn}/${nAll}の制度を使っている）`, `<div class="subtabs sm wfcats" role="tablist">${cats}</div><ul class="wflist">${rows}</ul>`)}</div>
+    <div class="stack">${panel('費用と効果', kv([['制度の費用（会社全体）', `月${fmtYen(tot)}（1人あたり${fmtYen(tot / head)}）`], ['就任の時より増えた分', `<b>${extra >= 0 ? '+' : '−'}${fmtYen(Math.abs(extra))}</b>／月`], ['従業員満足度', `${fmtNum(H.es, 0)}点`], ['参考：大企業の法定外福利費', '1人あたり月2.5万円ほど（経団連の調査・2018年度）。中小企業では数千円〜1万円']]) + '<p class="note">課税される手当（住宅手当・家族手当など）は給料手当・労務費として記帳し、社会保険料（会社の負担は約15%）も増えます。非課税の制度（食事補助・社宅・企業型DCなど）は福利厚生費。社員の手取りが同じでも、非課税の制度のほうが社員の得は大きくなります。満足度は、制度を増やすほど上がり方がゆるやかになります。就任の時の制度の費用は、もとの経費に含まれています。</p>')}
+    ${panel('制度を選ぶときの見方', `<ul class="small" style="margin:0;padding-left:1.2em"><li>若手の採用と定着：借上社宅・社員寮・住宅手当・食事補助・テレワーク</li><li>子育て・介護の世代：企業主導型保育所・育児休業の上乗せ・短時間勤務の延長・介護の支援</li><li>長く勤めてもらう：企業型DC・中退共・確定給付企業年金・永年勤続の表彰</li><li>現場の人の確保：特殊勤務手当・深夜の手当・送迎バス・制服と安全靴</li><li>技能を高める：資格手当・資格取得の支援・研修・eラーニング</li><li>出張の多い仕事（卸売・建設・専門サービス）：出張手当と旅費規程</li></ul>`)}</div></div>`;
 }
 ACTIONS.kWfCat = d => { UI.kWfCat = d.v; render(); };
 ACTIONS.kWfSet = d => { if (ksHrSetWf(d.id, +d.v)) { toast(`${KS_WF_BY[d.id].n}を「${KS_WF_BY[d.id].lvs[+d.v]}」にしました`); render(); autosave(); } };

@@ -790,34 +790,23 @@ function ksOpsAlerts() {
 }
 
 /* ---------- 新しい事業を始める ---------- */
-ACTIONS.kNewUnit = () => { UI.kNU = { q: '', sec: '', eng: '', sel: null, sc: 1, plan: null }; showModal('kNewUnit'); };
-function ksNUList() {
-  const N = UI.kNU;
-  const own = new Set(ksActiveUnits().map(u => u.type));
-  return ksSearchTypes(N.q, N.sec, N.eng, 80).filter(S => !own.has(S.name));
-}
+ACTIONS.kNewUnit = () => { UI.kNU = { sel: null, sc: 1, plan: null }; ksTbReset('nu'); showModal('kNewUnit'); };
 MODALS.kNewUnit = () => {
   const N = UI.kNU;
-  const list = ksNUList();
-  const secs = Object.entries(KS_SECTORS).map(([k, x]) => `<option value="${k}"${N.sec === k ? ' selected' : ''}>${esc(x.n)}（${ksCountTypes(k, N.eng)}）</option>`).join('');
-  const engs = Object.entries(KS_ENG_INFO).map(([k, x]) => `<option value="${k}"${N.eng === k ? ' selected' : ''}>${esc(x.n)}</option>`).join('');
-  const items = list.map(S => `<button type="button" class="typeopt${N.sel === S.name ? ' on' : ''}" data-act="kNUPick" data-v="${esc(S.name)}" aria-pressed="${N.sel === S.name}"><span class="indico" aria-hidden="true">${esc(S.icon)}</span><span><b>${esc(S.name)}</b><span class="small muted">${esc(S.grp)}・${esc(KS_ENG_INFO[S.eng].n)}</span></span></button>`).join('');
-  let detail = '<div class="empty">左の一覧から業種を選ぶと、事業の中身と立ち上げの計画が出ます</div>';
+  let detail = '<div class="empty">左の一覧から業種を選ぶと、事業の中身と立ち上げの計画が出ます。産業 → 分類 → 業種とたどるか、言葉で探してください</div>';
   if (N.sel && KS_TYPES[N.sel]) {
     const S = KS_TYPES[N.sel];
     const pl = ksNUPlan();
-    detail = `<h3 style="margin:0 0 4px">${esc(S.name)}</h3><div class="small muted">${esc(KS_SECTORS[S.sec].n)} ／ ${esc(S.grp)} ／ ${esc(KS_ENG_INFO[S.eng].n)}</div>
-      <p class="small">${esc(S.d || KS_ENG_INFO[S.eng].desc)}</p>
-      ${kv([S.prod.length ? ['商品・サービス', esc(S.prod.slice(0, 5).join('・'))] : null, S.cust.length ? ['お客さま', esc(S.cust.slice(0, 5).join('・'))] : null, S.eq.length ? ['主な設備', esc(S.eq.slice(0, 4).map(e => (KS_EQ[e.k] || {}).n).filter(Boolean).join('・'))] : null, ['職種', esc(S.roles.map(r => r.n.replace(/（.*?）/, '')).join('・'))], S.lic ? ['許認可', esc(S.lic.n)] : null, (S.laws || []).length ? ['関わる法令', esc(S.laws.map(l => (LAW_ITEMS[l] || { s: l }).s).join('・'))] : null].filter(Boolean))}
+    detail = `<h3 style="margin:0 0 4px">${esc(S.name)}</h3><div class="small muted">${esc(KS_SECTORS[S.sec].n)} ／ ${esc(S.grp)}</div>
+      ${ksTypeInfoHtml(S, { compact: true })}
+      <div class="row" style="margin-top:4px">${btn('もっとくわしく見る', 'kTbInfo', { ctx: 'nu', v: S.name }, 'sm ghost')}</div>
       <div class="field" style="margin-top:8px"><span>始める規模</span><div class="seg" role="radiogroup">${[[0.5, '小さく'], [1, 'ふつう'], [2, '大きく']].map(([v, l]) => `<button type="button" data-act="kNUSc" data-v="${v}" aria-pressed="${N.sc === v}">${l}</button>`).join('')}</div></div>
       ${typeof ksNUPrefHtml === 'function' ? ksNUPrefHtml(S) : ''}
       ${pl ? `<div class="callout" style="margin-top:8px"><b>${esc(pl.title)}</b><br><span class="small">${esc(pl.desc)}</span><br><span class="small">初めの投資 <b>${fmtYen(sum(pl.items, x => x.cost) + (pl.deposit || 0))}</b>（${pl.items.length}件の設備${pl.deposit ? '・保証金' : ''}）</span></div>` : ''}`;
   }
-  const body = `<div class="nuwrap"><div class="nuleft"><div class="row" style="gap:6px;flex-wrap:wrap"><input type="search" value="${esc(N.q)}" data-in="kNUq" placeholder="業種・商品・お客さまで探す（例：レーザー、データセンター、海運）" style="flex:1;min-width:12em" aria-label="業種を探す">
-      <select data-ch="kNUsec" aria-label="産業"><option value="">すべての産業（${fmtNum(KS_TYPE_LIST.length, 0)}業種）</option>${secs}</select><select data-ch="kNUeng" aria-label="事業の型"><option value="">すべての型</option>${engs}</select></div>
-      <div class="typelist" id="kNUlist">${items || '<div class="empty">見つかりません</div>'}</div></div>
+  const body = `<div class="nuwrap"><div class="nuleft">${ksTbHtml('nu', { tall: true })}</div>
     <div class="nuright">${detail}</div></div>`;
-  return modalFrame('新しい事業を始める', body, btn('やめる', 'closeModal') + (N.sel ? btn('この事業の投資を検討する', 'kNUGo', {}, 'primary') : ''), { size: 'wide', sub: '業種を選んで、立ち上げの投資をします' });
+  return modalFrame('新しい事業を始める', body, btn('やめる', 'closeModal') + (N.sel ? btn('この事業の投資を検討する', 'kNUGo', {}, 'primary') : ''), { size: 'wide', sub: `${fmtNum(KS_TYPE_LIST.length, 0)}の業種から選んで、立ち上げの投資をします` });
 };
 /* 立ち上げの計画（下書きの事業をつくって計画を出す。まだ会社には加えない） */
 function ksNUDraft() {
@@ -842,7 +831,12 @@ KS_CAPEX_PRE.unitStart = a => {
   UI.kUnit = u.id;
 };
 Object.assign(ACTIONS, {
-  kNUPick: d => { UI.kNU.sel = d.v; UI.kNU.draft = null; drawModal(); },
+  kNUPick: d => {
+    UI.kNU.sel = d.v; UI.kNU.draft = null; drawModal();
+    // スマホでは中身が一覧の下に出るので、そこまで動かす
+    const r = document.querySelector('#modal-root .nuright');
+    if (r && window.matchMedia && window.matchMedia('(max-width: 760px)').matches) r.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  },
   kNUSc: d => { UI.kNU.sc = +d.v; UI.kNU.draft = null; drawModal(); },
   kNUGo: () => {
     const N = UI.kNU;
@@ -854,18 +848,6 @@ Object.assign(ACTIONS, {
     ksCapexOpen(Object.assign({}, pl, { title: `${ksS(u).name}を始める`, pre: 'unitStart', preArg: { draft: u }, fx: pl.fx === 'unitStart' ? 'unitStart' : pl.fx, arg: Object.assign({}, pl.arg, { u: u.id }) }));
   },
 });
-Object.assign(CHANGES, {
-  kNUsec: el => { UI.kNU.sec = el.value; drawModal(); },
-  kNUeng: el => { UI.kNU.eng = el.value; drawModal(); },
-});
-INPUTS.kNUq = el => {
-  UI.kNU.q = el.value;
-  const box = $('#kNUlist');
-  if (!box) return;
-  const N = UI.kNU;
-  box.innerHTML = ksNUList().map(S => `<button type="button" class="typeopt${N.sel === S.name ? ' on' : ''}" data-act="kNUPick" data-v="${esc(S.name)}" aria-pressed="${N.sel === S.name}"><span class="indico" aria-hidden="true">${esc(S.icon)}</span><span><b>${esc(S.name)}</b><span class="small muted">${esc(S.grp)}・${esc(KS_ENG_INFO[S.eng].n)}</span></span></button>`).join('') || '<div class="empty">見つかりません</div>';
-};
-
 /* ---------- 事業から撤退する ---------- */
 ACTIONS.kCloseUnit = d => showModal('kCloseUnit', { u: d.u });
 MODALS.kCloseUnit = a => {

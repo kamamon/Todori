@@ -445,6 +445,40 @@ function ksLawResolveAccident(id, ch) {
   if (a.sev === 'long' || a.sev === 'death') L.inspNext = Object.assign(L.inspNext || {}, { labor: a.conceal ? 0.15 : a.sev === 'death' ? 0.95 : 0.35 });
 }
 
+/* 起きた労災を、適切な対応でまとめて済ませる（救護・労災保険で治療・報告・待期期間の補償・再発防止）。済ませた件数を返す */
+function ksLawAccidentsAll(prevent = 'equip') {
+  const L = G.law;
+  if (!L) return 0;
+  let n = 0;
+  for (const a of L.acc.filter(x => x.status === 'new')) {
+    ksLawResolveAccident(a.id, { first: 'ok', pay: 'rosai', report: a.sev === 'none' ? 'none' : 'report', comp: 'pay', prevent });
+    n++;
+  }
+  return n;
+}
+/* 法令のやること（期限切れ・要対応・期限が近いもの）をまとめて実施し、立入検査の指摘も直して是正報告書を出す */
+function ksLawDoAllList() {
+  const L = G.law;
+  if (!L) return { tasks: [], insp: [] };
+  return { tasks: ksLawTasks().filter(x => x.st !== 'ok'), insp: L.insp.filter(i => i.status === 'open') };
+}
+function ksLawDoAll() {
+  const L = G.law;
+  const out = { n: 0, cost: 0, names: [], reports: 0 };
+  if (!L) return out;
+  const ot = L.otNow ?? ksOtHours();
+  const { tasks, insp } = ksLawDoAllList();
+  for (const x of tasks) {
+    const c = ksLawDo(x.t.id, x.t.id === 'r36' ? { special: ot > 40 } : {});
+    out.n++; out.cost += +c || 0; out.names.push(x.name);
+  }
+  for (const ins of insp) {
+    for (const f of ins.finds) if (!f.fixed) { ksLawFindingFix(f.item); f.fixed = true; }
+    if (ksLawReport(ins.id)) out.reports++;
+  }
+  return out;
+}
+
 /* ---------- 火災 ---------- */
 function ksLawFires(viol) {
   let mul = 1;

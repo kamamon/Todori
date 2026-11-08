@@ -63,10 +63,12 @@ function ksResolveCatalog() {
         p, eq: (ov.eq || g.eq || []).map(ksParseEq), aux: (ov.aux || g.aux || []).map(ksParseEq),
         laws: ov.laws || g.laws || [], lic: ov.lic || g.lic || null, seasonKey: ov.season || g.season || 'flat', scale: ov.scale || g.scale || 1,
         calib: g.calib !== false && ov.calib !== false, legacy: ov.legacy || g.legacy || null,
+        // 業種の補足（選ぶ画面の「くわしく」）：売上の立ち方・成功のカギ・主なリスク・探すときの言葉
+        how: ov.how || g.how || '', kf: ov.kf || g.kf || '', risk: ov.risk || g.risk || '', kw: ov.kw || g.kw || [], gd: g.d || '',
       };
       S.season = ksSeasonArr(S.seasonKey);
       S.roles = ksRolesFor(g.eng, p);
-      S.key = (name + ' ' + g.grp + ' ' + (S.prod || []).join(' ') + ' ' + (S.cust || []).join(' ') + ' ' + KS_SECTORS[g.sec].n).toLowerCase();
+      S.key = (name + ' ' + g.grp + ' ' + (S.prod || []).join(' ') + ' ' + (S.cust || []).join(' ') + ' ' + KS_SECTORS[g.sec].n + ' ' + (S.kw || []).join(' ')).toLowerCase();
       KS_TYPES[name] = S;
       KS_TYPE_LIST.push(S);
     }
@@ -80,18 +82,57 @@ function ksS(u) {
 }
 function ksP(u) { return ksS(u).p; }
 function ksEngOf(u) { return KS_ENGINE[ksS(u).eng]; }
-/* 業種を探す（名前・グループ・製品・お客・大分類の文字を含む） */
-function ksSearchTypes(q, sec, eng, limit = 80) {
-  const words = String(q || '').toLowerCase().split(/[\s　]+/).filter(Boolean);
-  const out = [];
-  for (const S of KS_TYPE_LIST) {
-    if (sec && S.sec !== sec) continue;
-    if (eng && S.eng !== eng) continue;
-    if (words.length && !words.every(w => S.key.includes(w))) continue;
-    out.push(S);
-    if (out.length >= limit) break;
-  }
-  return out;
+/* 探す言葉をそろえる：全角の英数字を半角に、大文字を小文字に、カタカナをひらがなに（「リニア」「りにあ」「ＥＶ」「ev」が同じになる） */
+function ksNorm(s) {
+  return String(s || '').normalize('NFKC').toLowerCase().replace(/[\u30a1-\u30f6]/g, c => String.fromCharCode(c.charCodeAt(0) - 0x60));
 }
+/* 探すときの索引（初めて探すときに作る） */
+function ksTypeIdx(S) {
+  if (S._ix) return S._ix;
+  return (S._ix = {
+    name: ksNorm(S.name), kw: ksNorm((S.kw || []).join(' ')), grp: ksNorm(S.grp), pc: ksNorm((S.prod || []).join(' ') + ' ' + (S.cust || []).join(' ')),
+    sec: ksNorm((KS_SECTORS[S.sec] || {}).n), d: ksNorm(S.d + ' ' + (S.how || '') + ' ' + (S.gd || '')),
+  });
+}
+/* 業種を探す：言葉がすべて、名前・探す言葉・中分類・商品とお客さま・大分類・説明のどこかに入っている業種を、
+   名前に入っているものから順に並べる。o: { sec, eng, limit, skip（除く業種名の Set） } → { total, list } */
+function ksTypeFind(q, o = {}) {
+  const words = ksNorm(q).split(/[\s、,，・/／]+/).filter(Boolean);
+  const hit = [];
+  for (const S of KS_TYPE_LIST) {
+    if (o.sec && S.sec !== o.sec) continue;
+    if (o.eng && S.eng !== o.eng) continue;
+    if (o.skip && o.skip.has(S.name)) continue;
+    if (!words.length) { hit.push([0, hit.length, S]); continue; }
+    const I = ksTypeIdx(S);
+    let sc = 0;
+    for (const w of words) {
+      const s = I.name === w ? 100 : I.name.startsWith(w) ? 70 : I.name.includes(w) ? 50 : I.kw.includes(w) ? 35 : I.grp.includes(w) ? 25 : I.pc.includes(w) ? 18 : I.sec.includes(w) ? 10 : I.d.includes(w) ? 6 : 0;
+      if (!s) { sc = -1; break; }
+      sc += s;
+    }
+    if (sc > 0) hit.push([sc - I.name.length * 0.05, hit.length, S]);
+  }
+  if (words.length) hit.sort((a, b) => b[0] - a[0] || a[1] - b[1]);
+  const lim = o.limit || 80;
+  return { total: hit.length, list: hit.slice(0, lim).map(x => x[2]) };
+}
+/* 業種を探す（前からある呼び方。言葉があれば当てはまる順、なければカタログの順） */
+function ksSearchTypes(q, sec, eng, limit = 80) { return ksTypeFind(q, { sec, eng, limit }).list; }
 function ksCountTypes(sec, eng) { return KS_TYPE_LIST.filter(S => (!sec || S.sec === sec) && (!eng || S.eng === eng)).length; }
+/* 中分類の索引：大分類ごとに、中分類（グループ）を並べる。{ bySec: { E: [{ sec, grp, icon, d, types: [S…], eng: { mfg: 数 } }] }, byKey: { 'E|…': 同じもの } } */
+let KS_GRP_IX = null;
+function ksGrpIndex() {
+  if (KS_GRP_IX && KS_GRP_IX.n === KS_TYPE_LIST.length) return KS_GRP_IX;
+  const ix = { n: KS_TYPE_LIST.length, bySec: {}, byKey: {} };
+  for (const S of KS_TYPE_LIST) {
+    const key = S.sec + '|' + S.grp;
+    let g = ix.byKey[key];
+    if (!g) { g = ix.byKey[key] = { sec: S.sec, grp: S.grp, icon: S.icon, d: S.gd || '', how: S.how, types: [], eng: {} }; (ix.bySec[S.sec] = ix.bySec[S.sec] || []).push(g); }
+    if (!g.d && S.gd) g.d = S.gd;
+    g.types.push(S);
+    g.eng[S.eng] = (g.eng[S.eng] || 0) + 1;
+  }
+  return (KS_GRP_IX = ix);
+}
 ksResolveCatalog();

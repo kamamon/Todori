@@ -4,7 +4,7 @@ const path = require('path');
 const vm = require('vm');
 const src = path.join(__dirname, '..', 'src');
 // ビルドと同じ、ファイル名の順。画面（DOM）を使うファイルは除く
-const files = fs.readdirSync(src).filter(f => /^(00_util|01_data|01_terms|05_company|20_kaisha_data|20[a-z]_.*|21_kaisha_core|22_kaisha_ind|22[a-z]_.*|26_law_data|27_kaisha_law|29_kaisha_grow|29[a-z]_kaisha_(group|group2|hr|map|law2|evt|startgroup))\.js$/.test(f)).filter(f => !(process.env.NOLAW && /law/.test(f))).sort();
+const files = fs.readdirSync(src).filter(f => /^(00_util|01_data|01_terms|05_company|20_kaisha_data|20[a-z]_.*|21_kaisha_core|22_kaisha_ind|22[a-z]_.*|26_law_data|27_kaisha_law|29_kaisha_grow|29[a-z]_kaisha_(group|group2|hr|map|law2|evt|startgroup|org))\.js$/.test(f)).filter(f => !(process.env.NOLAW && /law/.test(f))).sort();
 function loadKaisha() {
   const ctx = { console, Math, JSON, Date, Object, Array, Number, String, Set, Map, isFinite, isNaN, Infinity, NaN, parseInt, parseFloat, Error };
   vm.createContext(ctx);

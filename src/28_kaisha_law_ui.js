@@ -28,8 +28,10 @@ ksInbox = () => {
   }
   const over = ksLawTasks().filter(x => x.st === 'over');
   const due = ksLawTasks().filter(x => x.st === 'due');
-  if (over.length) out.push({ ico: '法', cls: 'warn', t1: `法令で決められたことが${over.length}件、期限切れになっています`, t2: over.map(x => x.name).join('・'), act: btn('法令と安全へ', 'kGo', { tab: 'k_law' }, 'sm') });
-  if (due.length) out.push({ ico: '法', t1: `今月までの法令の手続き：${due.map(x => x.name).join('・')}`, t2: '期限を過ぎると違反になります', act: btn('法令と安全へ', 'kGo', { tab: 'k_law' }, 'sm') });
+  if (over.length) out.push({ ico: '法', cls: 'warn', t1: `法令で決められたことが${over.length}件、期限切れになっています`, t2: over.map(x => x.name).join('・'), act: btn('まとめて実施', 'kLawAll', {}, 'sm primary') + btn('法令と安全へ', 'kGo', { tab: 'k_law' }, 'sm') });
+  if (due.length) out.push({ ico: '法', t1: `今月までの法令の手続き：${due.map(x => x.name).join('・')}`, t2: '期限を過ぎると違反になります', act: btn('まとめて実施', 'kLawAll', {}, 'sm') + btn('法令と安全へ', 'kGo', { tab: 'k_law' }, 'sm') });
+  const accN = G.law.acc.filter(a => a.status === 'new').length;
+  if (accN) out.push({ ico: '災', cls: 'bad', t1: `労働災害${accN}件の対応が済んでいません`, t2: '救護・労災保険・報告・休業補償・再発防止を決めます', act: btn('まとめて対応', 'kRosaiAll', {}, 'sm primary') });
   if (ksPartRoles().length && ksMinWageGap() > 0) out.push({ ico: '賃', cls: 'bad', t1: `パート・アルバイトの時給が最低賃金（${typeof ksMinWageOf === 'function' ? ksMinWageOf(ksPartRoles().slice().sort((a, b) => (ksMinWageOf(b.u) - ksPartHourly(b)) - (ksMinWageOf(a.u) - ksPartHourly(a)))[0].u) : G.law.minWage}円）を下回っています`, t2: '差額を払う義務があり、労働基準監督署に申告されることもあります', act: btn('時給を引き上げる', 'kLawRaise', {}, 'sm primary') });
   const ot = G.law.otNow;
   if (ot > 80 || (ot > 45 && !G.law.special)) out.push({ ico: '時', cls: 'warn', t1: `残業が1人あたり月${fmtNum(ot, 0)}時間になっています`, t2: ot > 80 ? '過労死ライン（月80〜100時間）に近い水準です。人を増やすか仕事の量を調整しましょう' : '月45時間を超えるには36協定の特別条項が必要です', act: btn('法令と安全へ', 'kGo', { tab: 'k_law' }, 'sm') });
@@ -75,9 +77,9 @@ KS_SCREENS.k_law = () => {
   const learn = [...new Set(tasks.map(x => x.t.item).concat(['otmax', 'report', 'hinan']))].filter(k => LAW_ITEMS[k]).map(k => { const it = LAW_ITEMS[k]; return `<details class="lawitem"><summary><b>${esc(it.s)}</b><span class="small muted">　${esc(it.law)}</span>${viol.has(k) ? ' <span class="tag bad">違反</span>' : ''}</summary><p class="small">${esc(it.rule)}</p><p class="small"><b>守り方：</b>${esc(it.how)}</p><p class="small muted"><b>罰則など：</b>${esc(it.pen)}　${term('解説', it.tk)}</p></details>`; }).join('');
   return `<h1 class="h1">法令と安全</h1><p class="lead">会社は、労働基準法・労働安全衛生法・消防法などのルールを守る義務があります。守らないと労働災害や火災が起きやすくなり、役所の立入検査で指摘され、直さなければ送検・公表され、銀行の評価も下がります。</p>
     <div class="grid g-side"><div class="stack">
-      ${panel(`法令で決められたこと（${tasks.filter(x => x.st === 'over').length ? `<span class="neg">期限切れ ${tasks.filter(x => x.st === 'over').length}件</span>` : '期限切れなし'}）`, `<div class="tbl-wrap"><table class="t"><thead><tr><th>やること</th><th>所管・法律</th><th>状態</th><th class="n">費用</th><th></th></tr></thead><tbody>${rows}</tbody></table></div><p class="note">費用は、健康診断なら福利厚生費、点検なら支払手数料や修繕費、講習なら採用教育費として仕訳されます（「帳簿」で確かめられます）。</p>`)}
+      ${panel(`法令で決められたこと（${tasks.filter(x => x.st === 'over').length ? `<span class="neg">期限切れ ${tasks.filter(x => x.st === 'over').length}件</span>` : '期限切れなし'}）`, `${ksLawAllBar()}<div class="tbl-wrap"><table class="t"><thead><tr><th>やること</th><th>所管・法律</th><th>状態</th><th class="n">費用</th><th></th></tr></thead><tbody>${rows}</tbody></table></div><p class="note">費用は、健康診断なら福利厚生費、点検なら支払手数料や修繕費、講習なら採用教育費として仕訳されます（「帳簿」で確かめられます）。</p>`)}
       ${panel('役所の立入検査と指摘', insp ? `<div class="tbl-wrap"><table class="t"><thead><tr><th>月</th><th>役所</th><th>指摘</th><th>状態</th></tr></thead><tbody>${insp}</tbody></table></div>` : '<div class="empty">まだ立入検査はありません。労働基準監督署・消防署などは、予告なしに来ることがあります。</div>')}
-      ${panel('労働災害の記録', accs ? `<div class="tbl-wrap"><table class="t"><thead><tr><th>月</th><th>何が起きたか</th><th>程度</th><th>報告</th></tr></thead><tbody>${accs}</tbody></table></div>` : '<div class="empty">労働災害は起きていません</div>')}
+      ${panel('労働災害の記録', accs ? `${L.acc.some(a => a.status === 'new') ? `<div class="row between bulkbar"><span class="small">対応していない労災 <b>${L.acc.filter(a => a.status === 'new').length}件</b></span>${btn('適切な対応でまとめて済ませる', 'kRosaiAll', {}, 'sm primary')}</div>` : ''}<div class="tbl-wrap"><table class="t"><thead><tr><th>月</th><th>何が起きたか</th><th>程度</th><th>報告</th></tr></thead><tbody>${accs}</tbody></table></div>` : '<div class="empty">労働災害は起きていません</div>')}
       ${fires ? panel('火災の記録', `<div class="tbl-wrap"><table class="t"><thead><tr><th>月</th><th>場所・原因</th><th>程度</th><th class="n">損害</th></tr></thead><tbody>${fires}</tbody></table></div>`) : ''}
     </div><div class="stack">
       ${panel('安全と保険の方針', `<div class="stack" style="gap:8px">${pol}</div>`)}
@@ -88,8 +90,33 @@ KS_SCREENS.k_law = () => {
     </div></div>`;
 };
 
+/* 法令のやることのまとめて実施（期限切れ・要対応・期限が近いもの、立入検査の指摘） */
+function ksLawAllBar() {
+  const { tasks, insp } = ksLawDoAllList();
+  if (!tasks.length && !insp.length) return '';
+  const cost = sum(tasks, x => x.cost);
+  return `<div class="row between bulkbar"><span class="small">まだのもの <b>${tasks.length}件</b>${insp.length ? `・立入検査の指摘 <b>${insp.length}件</b>` : ''}（費用 約${fmtYen(cost)}）</span>${btn('まとめて実施する', 'kLawAll', {}, 'sm primary')}</div>`;
+}
+MODALS.kLawAll = () => {
+  const { tasks, insp } = ksLawDoAllList();
+  const cost = sum(tasks, x => x.cost);
+  const ot = G.law.otNow ?? ksOtHours();
+  const rows = tasks.map(x => `<li>${esc(x.name)}<span class="small muted">（${KS_ST_TAG[x.st][0]}・${fmtYen(x.cost)}${x.t.id === 'r36' ? `・特別条項${ot > 40 ? 'あり' : 'なし'}` : ''}）</span></li>`).join('');
+  const irows = insp.map(i => `<li>${esc(LAW_AG[i.ag].n)}の指摘（${i.finds.filter(f => !f.fixed).length}件）を直して、是正報告書を出す</li>`).join('');
+  const body = (tasks.length || insp.length) ? `<p class="small" style="margin:0 0 8px">次のものを、まとめて実施します。費用は内容に応じた勘定（福利厚生費・支払手数料など）で仕訳されます。</p><ul class="small" style="padding-left:1.2em;margin:0">${rows}${irows}</ul><p class="small" style="margin:8px 0 0">費用の合計 約<b>${fmtYen(cost)}</b>${insp.length ? '（指摘を直す費用は別）' : ''}</p>` : '<p>まとめて実施するものはありません。</p>';
+  return modalFrame('法令のやることをまとめて実施', body, btn('やめる', 'closeModal') + btn('まとめて実施する', 'kLawAllGo', {}, 'primary', { disabled: !tasks.length && !insp.length }), { size: 'narrow' });
+};
+
 /* ---------- アクション ---------- */
 Object.assign(ACTIONS, {
+  kLawAll: () => showModal('kLawAll'),
+  kLawAllGo: () => {
+    const r = ksLawDoAll();
+    toast(`${r.n}件を実施しました（費用 ${fmtYen(r.cost)}）${r.reports ? `・是正報告書${r.reports}件を提出` : ''}`);
+    closeModal(true);
+    render();
+    autosave();
+  },
   kLawDo: d => {
     const t = ksLawTaskList().find(x => x.id === d.id);
     const cost = ksLawDo(d.id);
@@ -191,7 +218,8 @@ MODALS.kRosai = args => {
   const ans = R.ch[step];
   body += `<div class="qz"><div class="qz-q"><span class="qz-tag">判断</span>${qz.q}</div><div class="qz-ch">${qz.ch.map(([v, t]) => `<button type="button" class="qz-b${ans ? (v === qz.ans ? ' ok' : v === ans ? ' ng' : '') : ''}" data-act="kRosaiPick" data-v="${v}"${ans ? ' disabled' : ''}>${t}</button>`).join('')}</div>
     ${ans ? `<div class="qz-a ${ans === qz.ans ? 'ok' : 'ng'}"><b>${ans === qz.ans ? '適切な対応です' : 'この対応には問題があります'}</b>　${qz.ex}</div>` : ''}</div>`;
-  return modalFrame('労働災害への対応', body, btn('次へ', 'kRosaiNext', {}, 'primary', { disabled: !ans }), { noClose: true, sub: `${ymLabel(a.m)}の労災` });
+  const nNew = G.law.acc.filter(x => x.status === 'new').length;
+  return modalFrame('労働災害への対応', body, btn(nNew > 1 ? `適切な対応でまとめて済ませる（${nNew}件）` : '適切な対応で済ませる', 'kRosaiAll', {}, '') + btn('次へ', 'kRosaiNext', {}, 'primary', { disabled: !ans }), { noClose: true, sub: `${ymLabel(a.m)}の労災` });
 };
 MODALS.kRosai.locked = () => true;
 Object.assign(ACTIONS, {
@@ -207,6 +235,16 @@ Object.assign(ACTIONS, {
     drawModal();
   },
   kRosaiNext: () => { UI.kRosai.i++; drawModal(); modalTop(); },
+  // 対応していない労災を、適切な対応（救護・労災保険・報告・待期期間の補償・設備の改善と教育）でまとめて済ませる
+  kRosaiAll: () => {
+    const n = ksLawAccidentsAll('equip');
+    UI.kRosai = null;
+    UI.queue = UI.queue.filter(q => q.name !== 'kRosai');
+    toast(n ? `労災${n}件に適切な対応をしました（労災保険で治療・報告・休業の補償・設備の改善と安全教育）` : '対応が必要な労災はありません');
+    if (UI.modal && UI.modal.name === 'kRosai') closeModal(true);
+    render();
+    autosave();
+  },
   kRosaiDone: () => {
     const R = UI.kRosai;
     const ch = Object.assign({ pay: 'rosai', comp: 'pay', report: 'report' }, R.ch);

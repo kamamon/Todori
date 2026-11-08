@@ -166,7 +166,7 @@ if (!fs.existsSync(shots)) fs.mkdirSync(shots);
     await screenErr(`${ind} ops after`);
     // 新しい事業の画面
     await page.click('[data-act="kNewUnit"]'); await page.waitForTimeout(100);
-    await page.fill('[data-in="kNUq"]', 'データセンター'); await page.waitForTimeout(80);
+    await page.fill('.tb[data-ctx="nu"] .tb-q', 'データセンター'); await page.waitForTimeout(80);
     const tp = await page.$('[data-act="kNUPick"]');
     if (tp) { await tp.click(); await page.waitForTimeout(120); }
     await modalErr(`${ind} newunit`);

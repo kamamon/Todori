@@ -270,14 +270,12 @@ function ksGrpMakeHtml() {
   const plan = F.type ? ksSubStartPlan(F.type, F.sc) : null;
   const need = plan ? plan.need : 0;
   const amt = F.amt || (plan ? Math.round(need * F.own / 1e6) * 1e6 : 0);
-  const list = F.q ? ksSearchTypes(F.q, '', '', 12) : [];
   const ccOpts = [['jp', '日本'], ...Object.entries(KS_COUNTRIES).map(([k, x]) => [k, x.n])].map(([v, l]) => `<option value="${v}"${F.cc === v ? ' selected' : ''}>${esc(l)}</option>`).join('');
   const prefOpts = Object.values(KS_PREFS).map(p => `<option value="${p.c}"${+F.pref === p.c ? ' selected' : ''}>${esc(p.n)}</option>`).join('');
   const C = F.cc !== 'jp' ? KS_COUNTRIES[F.cc] : null;
   const found = panel('子会社・関連会社を設立する（新しい事業）', `<p class="small" style="margin:0 0 6px">新しい会社をつくって出資し（${term('関係会社株式', 'subShares')}）、その会社で事業を始めます。合弁にすると、相手の会社も持分に応じて出資します。持分が50%以下なら、経営は相手が主導する${term('関連会社', 'mochibunho')}（持分法）になります。子会社が出資すると<b>孫会社</b>になります。海外に設立すると現地法人になり、その国の税率と法律が適用されます。</p>
     <label class="field"><span>出資する会社</span><select data-ch="kGFowner">${owners.map(([v, l]) => `<option value="${v}"${(F.owner || 'root') === v ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select></label>
-    <input type="search" value="${esc(F.q)}" data-in="kGFq" placeholder="業種を探す（例：ソフトウェア、物流、介護）" style="width:100%" aria-label="業種を探す">
-    <div id="kGFlist" class="typelist sm">${ksGFListHtml(list, F)}</div>
+    <div class="field"><span>業種（産業 → 分類 → 業種とたどるか、言葉で探す）</span>${ksTbHtml('gf', { id: 'kGFq', ph: '業種を探す（例：ソフトウェア、物流、介護、リニア）' })}</div>
     ${F.type ? `<div class="callout" style="margin-top:6px"><b>${esc(F.type)}</b>${plan ? `<br><span class="small">立ち上げの設備 ${fmtYen(plan.capex)}・軌道に乗るまでの運転資金の目安 ${fmtYen(plan.work)}・合計の目安 <b>${fmtYen(need)}</b></span>` : ''}</div>` : ''}
     <div class="grid g2" style="gap:8px;margin-top:6px">
       <div class="field"><span>規模</span><div class="seg" role="radiogroup">${[[0.5, '小さく'], [1, 'ふつう'], [2, '大きく']].map(([v, l]) => `<button type="button" data-act="kGFsc" data-v="${v}" aria-pressed="${F.sc === v}">${l}</button>`).join('')}</div></div>
@@ -314,10 +312,6 @@ function ksGrpMakeHtml() {
     <p class="note">実際には、株式移転（新しい持株会社をつくる）や会社分割（事業を子会社に移す）を、株主総会の特別決議（3分の2以上）と債権者保護手続を経て行います。</p>`) : '';
   return `<div class="grid g2">${found}${split}</div><div class="grid g2" style="margin-top:10px">${ma}${hd}</div>`;
 }
-function ksGFListHtml(list, F) {
-  return list.map(S => `<button type="button" class="typeopt${F.type === S.name ? ' on' : ''}" data-act="kGFpick" data-v="${esc(S.name)}"><span class="indico" aria-hidden="true">${esc(S.icon)}</span><span><b>${esc(S.name)}</b><span class="small muted">${esc(S.grp)}</span></span></button>`).join('') || (F.q ? '<div class="empty">見つかりません</div>' : '');
-}
-INPUTS.kGFq = el => { UI.kGF.q = el.value; const b = $('#kGFlist'); if (b) b.innerHTML = ksGFListHtml(ksSearchTypes(el.value, '', '', 12), UI.kGF); };
 ACTIONS.kGFpick = d => { UI.kGF.type = d.v; UI.kGF.amt = null; render(); };
 ACTIONS.kGFsc = d => { UI.kGF.sc = +d.v; UI.kGF.amt = null; render(); };
 ACTIONS.kGFown = d => { UI.kGF.own = +d.v; UI.kGF.amt = null; render(); };

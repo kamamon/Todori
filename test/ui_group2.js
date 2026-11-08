@@ -61,7 +61,7 @@ if (!fs.existsSync(shots)) fs.mkdirSync(shots);
     await page.click('.tab[data-tab="k_group"]'); await wait(80);
     await click('[data-act="kGrpSec"][data-v="make"]', 'make');
     if (owner) { await page.selectOption('[data-ch="kGFowner"]', owner); await wait(100); }
-    await page.fill('[data-in="kGFq"]', q); await wait(100);
+    await page.fill('#kGFq', q); await wait(100);
     const p = await page.$('[data-act="kGFpick"]'); if (!p) { errors.push(`業種 ${q} が見つからない`); return; }
     await p.click(); await wait(100);
     await click(`[data-act="kGFown"][data-v="${own}"]`, 'own ' + own);
