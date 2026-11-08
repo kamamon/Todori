@@ -1066,11 +1066,11 @@ function ksDefaultCoName(type) {
 function ksStartPicks() {
   const out = Object.values(KS_LEGACY_TYPE).filter(n => KS_TYPES[n]);
   // 言葉と事業の型の組み合わせで、代表的な業種を選ぶ
-  for (const [w, e] of [['データセンター', 'cap'], ['総合商社', 'trade'], ['鉄道', 'trans'], ['航空', 'trans'], ['海運', 'trans'], ['倉庫', 'cap'], ['新聞', 'subs'], ['AI', 'pro'], ['携帯電話', 'subs'], ['ホテル', 'cap'], ['レーザー', 'mfg'], ['病院', 'cap'], ['発電', 'cap'], ['半導体', 'mfg'], ['原子力発電', 'cap'], ['防衛装備品', 'build'], ['小型衛星', 'build'], ['ナフサ', 'mfg']]) {
+  for (const [w, e] of [['超電導リニア', 'trans'], ['データセンター', 'cap'], ['総合商社', 'trade'], ['鉄道', 'trans'], ['航空', 'trans'], ['海運', 'trans'], ['倉庫', 'cap'], ['新聞', 'subs'], ['AI', 'pro'], ['携帯電話', 'subs'], ['ホテル', 'cap'], ['レーザー', 'mfg'], ['病院', 'cap'], ['発電', 'cap'], ['半導体', 'mfg'], ['原子力発電', 'cap'], ['防衛装備品', 'build'], ['小型衛星', 'build'], ['ナフサ', 'mfg']]) {
     const S = KS_TYPE_LIST.find(x => x.eng === e && x.name.includes(w) && !out.includes(x.name)) || KS_TYPE_LIST.find(x => x.eng === e && x.key.includes(w.toLowerCase()) && !out.includes(x.name));
     if (S) out.push(S.name);
   }
-  return out.slice(0, 24);
+  return out.slice(0, 26);
 }
 function ksStartStore() {
   const k = ksStartDefaults();

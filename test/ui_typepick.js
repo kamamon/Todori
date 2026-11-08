@@ -52,9 +52,18 @@ if (!fs.existsSync(shots)) fs.mkdirSync(shots);
   if (nSec < 15) errors.push(`産業のタイルが少ない：${nSec}`);
   await shot('st_secs', true);
   await click('#tbb-st .tb-sec[data-v="E"]', 'sector E');
-  const nGrp = await page.$$eval('#tbb-st .tb-grp', l => l.length);
-  if (nGrp < 20) errors.push(`製造業の分類が少ない：${nGrp}`);
-  await click('#tbb-st .tb-grp', 'first group');
+  // 製造業は分類が多いので、間に業界の段がある
+  const nDiv = await page.$$eval('#tbb-st [data-act="kTbDiv"]', l => l.length);
+  if (nDiv < 10) errors.push(`製造業の業界が少ない：${nDiv}`);
+  const divs = await page.$$eval('#tbb-st [data-act="kTbDiv"]', l => l.map(b => b.dataset.v));
+  await click('#tbb-st [data-act="kTbDiv"]', 'first division');
+  const nGrp = await page.$$eval('#tbb-st [data-act="kTbGrp"][data-v]:not([data-v=""])', l => l.length);
+  if (nGrp < 2) errors.push(`業界の中の分類が少ない：${nGrp}`);
+  await click('#tbb-st [data-act="kTbGrp"]:not([data-v=""])', 'first group');
+  // 分類から一つ上（業界）に戻る → また分類へ
+  await click('#tbb-st .tb-crumb [data-act="kTbGrp"][data-v=""]', 'crumb back to division');
+  if (!(await page.$('#tbb-st [data-act="kTbGrp"]:not([data-v=""])'))) errors.push('くずから業界の分類の一覧に戻れない');
+  await click('#tbb-st [data-act="kTbGrp"]:not([data-v=""])', 'first group again');
   const nT = await page.$$eval('#tbb-st .tbt', l => l.length);
   if (!nT) errors.push('分類の中の業種が出ない');
   await hscroll('st group');
@@ -174,7 +183,7 @@ if (!fs.existsSync(shots)) fs.mkdirSync(shots);
   await hscroll('gf');
   await shot('gf', true);
 
-  console.log(JSON.stringify({ mobile, sectors: nSec, groupsE: nGrp, errors }, null, 1));
+  console.log(JSON.stringify({ mobile, sectors: nSec, divisionsE: nDiv, groupsInDiv: nGrp, errors }, null, 1));
   await browser.close();
   process.exit(errors.length ? 1 : 0);
 })();
