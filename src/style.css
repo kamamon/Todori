@@ -1380,3 +1380,12 @@ details.custom > summary { cursor: pointer; font-weight: 700; font-size: 13px; c
   .tb-crumb { font-size: 14px; }
   .tb-crumb button { padding: 6px 0; }
 }
+/* 移す：事業・会社を1つずつ */
+.mvlist { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.mvrow { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 14em) auto; gap: 6px; align-items: center; padding: 4px 6px; border: 1px solid var(--rule); border-radius: var(--r-s); background: var(--sheet); }
+.mvrow > span { font-size: 13px; min-width: 0; overflow-wrap: anywhere; }
+.mvrow select { min-width: 0; width: 100%; }
+@media (max-width: 760px) {
+  .mvrow { grid-template-columns: minmax(0, 1fr) auto; }
+  .mvrow > span { grid-column: 1 / -1; }
+}
