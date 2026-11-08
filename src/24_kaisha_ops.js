@@ -298,7 +298,7 @@ function ksUnitHeadHtml(u) {
   const segs = [KS_SECTORS[S.sec].n, S.grp, KS_ENG_INFO[S.eng].n].filter(Boolean);
   const start = u.startM > (G.startedM ?? 9999) - 1 ? `${ymLabel(u.startM)}から` : '';
   return `<div class="unithead"><div><h2 class="h2" style="margin:0">${esc(ksUName(u))}</h2><div class="small muted">${segs.map(esc).join(' ／ ')}${start ? `・${start}` : ''}${u.acq ? `・${esc(u.acq.co)}から譲受` : ''}</div>${S.d ? `<p class="small" style="margin:4px 0 0">${esc(S.d)}</p>` : ''}</div>
-    <div class="row">${ksActiveUnits().length > 1 ? btn('この事業から撤退する', 'kCloseUnit', { u: u.id }, 'sm ghost') : ''}</div></div>`;
+    <div class="row">${btn('業種のくわしく', 'kTbInfo', { ctx: '', v: S.name }, 'sm ghost')}${ksActiveUnits().length > 1 ? btn('この事業から撤退する', 'kCloseUnit', { u: u.id }, 'sm ghost') : ''}</div></div>`;
 }
 KS_SCREENS.k_ops = () => {
   const u = ksCurUnit();

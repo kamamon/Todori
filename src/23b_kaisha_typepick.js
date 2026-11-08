@@ -19,6 +19,39 @@ const KS_ENG_TIPS = {
   cap: { how: '施設や設備の能力を使ってもらい、使った分の料金を受け取る。売上は能力×稼働率×単価。', kf: '稼働率を高く保つこと、単価、設備投資に見合う需要。', risk: '需要の落ち込み（固定費が重い）、設備の故障、大きな設備投資の借入。' },
   trans: { how: '人や物を運んで運賃を受け取る。売上は車両の数×輸送力×利用率×運賃。', kf: '利用率（積載率・搭乗率）、燃料の費用、乗務員の確保、整備。', risk: '燃料の値上がり、事故、乗務員の不足、景気による需要の変動。' },
 };
+/* 分類が多い産業は、間に「業界」の段を入れる。並びは日本標準産業分類の中分類の順。
+   分類の名前の（　）の前（中分類の名前）で先に振り分け、決まらなければ（　）の中も見る。上から順に当てはまったもの */
+const KS_SEC_DIVS = {
+  E: [
+    ['食料品・飼料', /食料品|食品|菓子|調味料|畜産|水産|野菜|果実|惣菜|めん|麺|豆腐|納豆|大豆|ペットフード|飼料|糖類|精穀|製粉|パン|乳製品|卵|農産加工|穀物|米飯|冷凍食品|レトルト|油脂|健康食品|栄養|食肉|製菓/],
+    ['飲料・たばこ', /酒|飲料|茶|コーヒー|製氷|たばこ/],
+    ['繊維・衣服', /繊維|衣服|縫製|染色|捺染|和装|紡績|織物|ニット|寝具|かばん|服飾/],
+    ['木材・家具', /木材|木製品|家具|^装備品|内装品|建具/],
+    ['紙・印刷', /パルプ|紙|印刷|製本/],
+    ['化学・医薬', /化学|医薬|バイオ|再生医療|細胞|樹脂|電池の材料|素材|CO2|クリーン燃料|化粧品|塗料|洗剤|肥料|火薬/],
+    ['石油・プラスチック・ゴム', /石油|石炭|プラスチック|ゴム/],
+    ['皮革・窯業・土石', /なめし革|革製品|毛皮|窯業|土石|ガラス|セメント|陶磁器|れんが|耐火物/],
+    ['鉄鋼・非鉄金属', /鉄鋼|非鉄|製鉄|鋳造|鋳物|鍛造|圧延|製錬|精錬/],
+    ['金属製品', /金属製品|めっき|ばね|ボルト|板金|溶接/],
+    ['機械', /はん用機械|生産用機械|業務用機械|ロボット|工作機械|ポンプ|ベアリング|軸受|産業機械|農業機械|建設機械|医療機器/],
+    ['半導体・電子部品', /半導体|電子部品|電子回路|デバイス|ウェーハ|液晶|プリント配線|ディスプレイ/],
+    ['電気・情報通信機械', /電気機械|情報通信機械|蓄電池|燃料電池|充電器|電動化|量子|家電|通信機器|コンピュータ|照明|電線/],
+    ['輸送用機械', /輸送用機械|自動車|ドローン|空飛ぶ|自動運転|船舶|造船|鉄道車両|航空機|二輪/],
+    ['防衛・宇宙・原子力', /防衛|宇宙|原子|核融合|ロケット|衛星/],
+    ['その他の製造業', /./],
+  ],
+};
+/* 分類（グループ）の業界 */
+function ksTbDivOf(g) {
+  const L = KS_SEC_DIVS[g.sec];
+  if (!L) return '';
+  if (g.div !== undefined) return g.div;
+  const last = L[L.length - 1][0];
+  const base = g.grp.replace(/（.*$/, '');
+  const hit = t => (L.slice(0, -1).find(([, re]) => re.test(t)) || [])[0];
+  g.div = /^その他の製造業/.test(base) ? last : hit(base) || hit(g.grp) || last;
+  return g.div;
+}
 const KS_MONTHS_FY = ['4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月', '1月', '2月', '3月'];
 
 /* ---------- 使う場所ごとの決まり ----------
@@ -60,7 +93,7 @@ const KS_TB_CTX = {
 };
 function ksTb(ctx) {
   UI.tb = UI.tb || {};
-  return UI.tb[ctx] || (UI.tb[ctx] = { q: '', sec: '', grp: '', eng: '', lim: 60 });
+  return UI.tb[ctx] || (UI.tb[ctx] = { q: '', sec: '', div: '', grp: '', eng: '', lim: 60 });
 }
 function ksTbReset(ctx) { if (UI.tb) delete UI.tb[ctx]; }
 function ksDataAttr(o) { return Object.entries(o).map(([k, v]) => ` data-${k}="${esc(v)}"`).join(''); }
@@ -97,17 +130,34 @@ function ksTbBody(ctx) {
     }).join('');
     return `<div class="tb-hd"><span>産業を選ぶと、その中の分類が出ます。言葉で探すこともできます</span></div><div class="tb-list tb-secs">${tiles}</div>`;
   }
-  const gs = (ix.bySec[T.sec] || []).filter(g => g.types.some(keep));
+  const all = (ix.bySec[T.sec] || []).filter(g => g.types.some(keep));
   const g = T.grp ? ix.byKey[T.sec + '|' + T.grp] : null;
+  const divs = KS_SEC_DIVS[T.sec] && all.length > 40 ? KS_SEC_DIVS[T.sec] : null;
+  const div = divs ? (g ? ksTbDivOf(g) : T.div) : '';
+  const gs = div ? all.filter(x => ksTbDivOf(x) === div) : all;
   const secN = esc(KS_SECTORS[T.sec].n);
-  const crumb = `<nav class="tb-crumb" aria-label="いまの分類"><button type="button" data-act="kTbSec" data-ctx="${ctx}" data-v="">すべての産業</button><span aria-hidden="true">›</span>${g ? `<button type="button" data-act="kTbGrp" data-ctx="${ctx}" data-v="">${secN}</button><span aria-hidden="true">›</span><b>${esc(g.grp)}</b>` : `<b>${secN}</b>`}</nav>`;
+  const sep = '<span aria-hidden="true">›</span>';
+  const crumb = `<nav class="tb-crumb" aria-label="いまの分類"><button type="button" data-act="kTbSec" data-ctx="${ctx}" data-v="">すべての産業</button>${sep}${
+    !div && !g ? `<b>${secN}</b>` : `<button type="button" data-act="kTbSec" data-ctx="${ctx}" data-v="${T.sec}">${secN}</button>${sep}${
+      div && !g ? `<b>${esc(div)}</b>` : `${div ? `<button type="button" data-act="kTbGrp" data-ctx="${ctx}" data-v="">${esc(div)}</button>${sep}` : ''}<b>${esc(g.grp)}</b>`}`}</nav>`;
+  // 業界の一覧（製造業のように分類が多い産業）
+  if (divs && !div && !g) {
+    const tiles = divs.map(([dn]) => {
+      const dg = all.filter(x => ksTbDivOf(x) === dn);
+      const n = sum(dg, x => x.types.filter(keep).length);
+      if (!n) return '';
+      const ex = dg.slice(0, 3).map(x => x.grp.replace(/（.*$/, '')).join('、');
+      return `<li><button type="button" class="tb-grp" data-act="kTbDiv" data-ctx="${ctx}" data-v="${esc(dn)}"><span class="indico" aria-hidden="true">${esc(dg[0].icon)}</span><span class="tbt-t"><b>${esc(dn)}</b><span class="tbt-m">${esc(ksTbShort(ex, 60))}${dg.length > 3 ? 'など' : ''}・${fmtNum(dg.length, 0)}分類</span></span><span class="tb-n">${fmtNum(n, 0)}</span></button></li>`;
+    }).join('');
+    return `${crumb}<div class="tb-hd"><span>${secN}：${fmtNum(all.length, 0)}分類・${fmtNum(sum(all, x => x.types.filter(keep).length), 0)}業種。業界を選んでください</span></div><ul class="tb-list tb-grps">${tiles}</ul>`;
+  }
   if (!g) {
     const rows = gs.map(x => {
       const n = x.types.filter(keep).length;
       const ex = x.types.filter(keep).slice(0, 3).map(S => S.name).join('、');
       return `<li><button type="button" class="tb-grp" data-act="kTbGrp" data-ctx="${ctx}" data-v="${esc(x.grp)}"><span class="indico" aria-hidden="true">${esc(x.icon)}</span><span class="tbt-t"><b>${esc(x.grp)}</b><span class="tbt-d">${esc(ksTbShort(x.d, 56))}</span><span class="tbt-m">${esc(ksTbShort(ex, 60))}${n > 3 ? 'など' : ''}</span></span><span class="tb-n">${fmtNum(n, 0)}</span></button></li>`;
     }).join('');
-    return `${crumb}<div class="tb-hd"><span>${secN}：${fmtNum(gs.length, 0)}分類・${fmtNum(sum(gs, x => x.types.filter(keep).length), 0)}業種</span></div><ul class="tb-list tb-grps">${rows}</ul>`;
+    return `${crumb}<div class="tb-hd"><span>${div ? esc(div) : secN}：${fmtNum(gs.length, 0)}分類・${fmtNum(sum(gs, x => x.types.filter(keep).length), 0)}業種</span></div><ul class="tb-list tb-grps">${rows}</ul>`;
   }
   const list = g.types.filter(keep);
   return `${crumb}${g.d ? `<p class="tb-gd">${esc(g.d)}</p>` : ''}<ul class="tb-list tbts">${list.map(S => ksTbRow(ctx, S, 2)).join('') || '<li class="empty">この分類で選べる業種はありません</li>'}</ul>`;
@@ -132,10 +182,11 @@ function ksTbRedraw(ctx, top) {
 }
 KEEP_SCROLL.push('.tb-list');
 Object.assign(ACTIONS, {
-  kTbSec: d => { const T = ksTb(d.ctx); T.sec = d.v; T.grp = ''; T.q = ''; T.lim = 60; const i = document.querySelector(`.tb[data-ctx="${d.ctx}"] .tb-q`); if (i) i.value = ''; ksTbRedraw(d.ctx, true); },
-  kTbGrp: d => { const T = ksTb(d.ctx); T.grp = d.v; ksTbRedraw(d.ctx, true); },
+  kTbSec: d => { const T = ksTb(d.ctx); T.sec = d.v; T.div = ''; T.grp = ''; T.q = ''; T.lim = 60; const i = document.querySelector(`.tb[data-ctx="${d.ctx}"] .tb-q`); if (i) i.value = ''; ksTbRedraw(d.ctx, true); },
+  kTbGrp: d => { const T = ksTb(d.ctx); if (!d.v && T.grp) { const g = ksGrpIndex().byKey[T.sec + '|' + T.grp]; if (g) T.div = ksTbDivOf(g); } T.grp = d.v; ksTbRedraw(d.ctx, true); },
+  kTbDiv: d => { const T = ksTb(d.ctx); T.div = d.v; T.grp = ''; ksTbRedraw(d.ctx, true); },
   kTbMore: d => { ksTb(d.ctx).lim += 120; ksTbRedraw(d.ctx); },
-  kTbClear: d => { const T = ksTb(d.ctx); T.q = ''; T.lim = 60; T.sec = ''; T.grp = ''; const i = document.querySelector(`.tb[data-ctx="${d.ctx}"] .tb-q`); if (i) i.value = ''; ksTbRedraw(d.ctx, true); },
+  kTbClear: d => { const T = ksTb(d.ctx); T.q = ''; T.lim = 60; T.sec = ''; T.div = ''; T.grp = ''; const i = document.querySelector(`.tb[data-ctx="${d.ctx}"] .tb-q`); if (i) i.value = ''; ksTbRedraw(d.ctx, true); },
   // くわしく：ダイアログの上から開いたら、閉じると元のダイアログに戻る
   kTbInfo: d => { if (!KS_TYPES[d.v]) return; const back = !!(UI.modal && UI.modal.name !== 'kTypeInfo') || !!(UI.modal && UI.modal.name === 'kTypeInfo' && UI.modal.args.back); if (UI.modal && UI.modal.name !== 'kTypeInfo') pushModalBack('kTypeInfo'); showModal('kTypeInfo', { v: d.v, ctx: d.ctx || '', back }); },
   kTiDo: d => {
@@ -192,7 +243,7 @@ function ksProjTxt(S) {
 function ksTypeBadges(S) {
   const out = [tag(KS_ENG_INFO[S.eng].n, 'solid')];
   const eqC = sum([...(S.eq || []), ...(S.aux || [])], e => ((KS_EQ[e.k] || {}).c || 0) * e.n);
-  if (eqC >= 50e8 || S.scale >= 3) out.push(tag('設備投資がとても大きい', 'warn'));
+  if (eqC >= 50e8) out.push(tag('設備投資がとても大きい', 'warn'));
   else if (eqC >= 5e8 || ['cap', 'trans'].includes(S.eng)) out.push(tag('設備投資が大きい', 'brass'));
   if (S.lic) out.push(tag('許認可が要る', 'brass'));
   if ((S.laws || []).length >= 2) out.push(tag('守る法令が多い', 'brass'));
@@ -210,7 +261,7 @@ function ksTypeInfoHtml(S, o = {}) {
   const three = [['売上の立ち方', S.how || tip.how, 'how'], ['成功のカギ', S.kf || tip.kf, 'kf'], ['主なリスク', S.risk || tip.risk, 'risk']]
     .map(([h, t, c]) => `<section class="ti-c ti-${c}"><h4>${h}</h4><p>${esc(t || '')}</p></section>`).join('');
   const rows = [
-    ['ふつうの規模', `${esc(ci.n)} ${fmtNum(ci.base, 0)}${esc(ci.u)}${S.scale > 1 ? `（大きな業種：ふつうの会社の約${S.scale}倍の規模）` : ''}`],
+    ['ふつうの規模', `${esc(ci.n)} ${fmtNum(ci.base, 0)}${esc(ci.u)}`],
     S.eng === 'build' ? ['受ける工事', ksProjTxt(S)] : ksEqTxt(S) ? ['主な設備', ksEqTxt(S)] : null,
     ['働く人', esc(S.roles.map(r => r.n).join('、'))],
     S.prod.length ? ['商品・サービス', esc(S.prod.slice(0, 6).join('、'))] : null,

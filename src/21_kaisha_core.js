@@ -1401,7 +1401,12 @@ function ksCapInfo(type) {
     case 'pro': return { n: `${((S.roles[0] || {}).n || '技術者').replace(/（.*?）/, '')}の人数`, u: '人', base: P.n || 10, maxSc: 40 };
     case 'subs': return { n: '利用者の数', u: '人', base: P.users || 1000, maxSc: 40 };
     case 'cap': return { n: `施設の能力（${P.unit || '単位'}）`, u: P.unit || '', base: P.units || 1, maxSc: lim(eqN(S.eq)) };
-    case 'trans': { const q = S.eq[0] ? KS_EQ[S.eq[0].k] : null; const n = S.eq[0] ? S.eq[0].n : 1; return { n: `${q ? q.n.replace(/（.*?）/, '') : '車両'}の数`, u: q && q.a === 'veh' && q.cap > 1000 ? '隻' : '台', base: n, maxSc: lim(eqN(S.eq)) }; }
+    case 'trans': {
+      const k = S.eq[0] ? S.eq[0].k : '', q = KS_EQ[k] || null, n = S.eq[0] ? S.eq[0].n : 1;
+      // 数え方：船は隻、航空機は機、鉄道の車両は両（路面電車は編成、ケーブルカー・ロープウェイは基）、ほかは台
+      const u = /^ship_/.test(k) || (q && q.cap > 1000) ? '隻' : /^(ac_|heli|bizjet)/.test(k) ? '機' : k === 'train_lrt' ? '編成' : k === 'train_cable' ? '基' : /^(train_|loco)/.test(k) ? '両' : '台';
+      return { n: `${q ? q.n.replace(/（.*?）/, '') : '車両'}の数`, u, base: n, maxSc: lim(eqN(S.eq)) };
+    }
     default: return { n: '規模', u: '', base: 1, maxSc: 40 };
   }
 }
