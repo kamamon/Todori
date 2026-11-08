@@ -4,7 +4,7 @@
  *   会社の歩み・投資（認証・DX・研究開発・人材・省エネ）・海外展開と為替・M&A・資本政策と株式上場
  * ========================================================= */
 
-Object.assign(UI, { kGrowU: null, kGrowSec: 'up', kMa: null, kIpoPlan: null });
+Object.assign(UI, { kGrowU: null, kGrowSec: 'up', kMa: null, kIpoPlan: null, kUpgT: null });
 function ksGrowUnit() {
   let u = UI.kGrowU && ksUnit(UI.kGrowU);
   if (!u || u.closedM) { u = ksCurUnit(); UI.kGrowU = u ? u.id : null; }
@@ -39,8 +39,8 @@ function ksMilestoneHtml() {
 }
 
 /* ---------- 投資 ---------- */
-function ksUpgRows(cat, u) {
-  return KS_UPG.filter(U => U.cat === cat).map(U => {
+function ksUpgRows(cat, u, only) {
+  return KS_UPG.filter(U => U.cat === cat && (!only || U.id === only)).map(U => {
     const unit = U.scope === 'unit' ? u : null;
     if (U.scope === 'unit' && !u) return '';
     const st = ksUpgState(U, unit);
@@ -56,12 +56,121 @@ function ksUpgRows(cat, u) {
   }).join('');
 }
 function ksGrowNoUnit() { return `<div class="empty">この会社は自分では事業をしていません（持株会社）。事業の投資・海外展開は、子会社の画面で行います。${typeof ksSubs === 'function' && G.group && ksSubs(G).length ? `<div class="row" style="justify-content:center;gap:6px;flex-wrap:wrap;margin-top:8px">${ksSubs(G).map(s => btn(esc(s.name), 'kView', { v: s.id }, 'sm')).join('')}</div>` : ''}</div>`; }
+/* 投資の対象：1つの事業か、まとまり（'*all' この会社のすべての事業・'*o:部のid' ユニットや事業部の事業・'*grp' グループ全体） */
+function ksUpgTarget() {
+  const t = UI.kUpgT;
+  if (!t) return null;
+  if (t === '*all') return ksActiveUnits().length >= 2 ? { key: t, n: 'この会社のすべての事業', units: ksActiveUnits() } : null;
+  if (t === '*grp') return !ksIsSubView() && G.group && ksCSubs(G).length ? { key: t, n: 'グループ全体（子会社の事業も）', grp: true } : null;
+  if (t.startsWith('*o:') && typeof ksDeptNode === 'function') {
+    const n = ksDeptNode(t.slice(3));
+    if (!n) return null;
+    const us = ksDeptSubtreeUnits(n).map(id => ksUnit(id)).filter(Boolean);
+    return us.length ? { key: t, n: `${n.name}の事業`, units: us } : null;
+  }
+  return null;
+}
+function ksUpgTargetSelect(u) {
+  const us = ksActiveUnits();
+  const opts = us.map(x => [x.id, ksUName(x)]);
+  const many = [];
+  if (us.length >= 2) many.push(['*all', `この会社のすべての事業（${us.length}）`]);
+  if (typeof ksDeptNodes === 'function' && G.org) for (const n of ksDeptNodes()) { if (!(n.kind === 'bu' || n.fn === 'biz')) continue; const k = ksDeptSubtreeUnits(n).length; if (k >= 2) many.push(['*o:' + n.id, `${n.name}の事業（${k}）`]); }
+  if (!ksIsSubView() && G.group && ksCSubs(G).length) many.push(['*grp', `グループ全体（親会社と子会社${ksCSubs(G).length}社の事業）`]);
+  if (opts.length <= 1 && !many.length) return '';
+  const cur = UI.kUpgT && ksUpgTarget() ? UI.kUpgT : (u ? u.id : '');
+  return `<label class="inline small">対象 <select data-ch="kUpgT" aria-label="投資の対象"><optgroup label="1つの事業">${opts.map(([v, l]) => `<option value="${esc(v)}"${v === cur ? ' selected' : ''}>${esc(l)}</option>`).join('')}</optgroup>${many.length ? `<optgroup label="まとめて">${many.map(([v, l]) => `<option value="${esc(v)}"${v === cur ? ' selected' : ''}>${esc(l)}</option>`).join('')}</optgroup>` : ''}</select></label>`;
+}
+CHANGES.kUpgT = el => { if (el.value.startsWith('*')) UI.kUpgT = el.value; else { UI.kUpgT = null; UI.kGrowU = el.value; } render(); };
+/* まとめて実施の行（事業ごとの投資）。会社全体の投資はふだんの行 */
+function ksUpgBulkRows(cat, T) {
+  return KS_UPG.filter(U => U.cat === cat).map(U => {
+    if (U.scope === 'co') return ksUpgRows(cat, ksActiveUnits()[0] || null, U.id);
+    let tg = [], done = 0, fit = 0, cost = 0, mon = 0, cos = 0, eff = '';
+    if (T.grp) {
+      const plan = ksUpgGroupPlan(U.id);
+      tg = plan;
+      cos = plan.length;
+      fit = sum(plan, p => p.uids.length);
+      cost = sum(plan, p => p.cost);
+      const root = ksRoot();
+      for (const st of [root, ...ksCSubs(root).map(x => x.st)]) ksWith(st, () => { if (!G.grow) return; for (const x of ksActiveUnits()) if (ksUpgState(U, x)) { done++; if (!eff) eff = ksEffText(U, x); } });
+      if (!fit && !done) return '';
+      for (const p of plan) ksWith(p.id === 'root' ? root : ksSubById(p.id, root).st, () => { if (p === plan[0]) eff = ksEffText(U, ksUnit(p.uids[0])); if (U.mon) mon += sum(p.uids, id => Math.round(U.mon(ksUnit(id)))); });
+    } else {
+      tg = ksUpgTargets(U, T.units);
+      done = T.units.filter(x => ksUpgState(U, x)).length;
+      fit = tg.length;
+      if (!fit && !done) return '';
+      cost = sum(tg, x => Math.round(U.cost(x)));
+      mon = U.mon ? sum(tg, x => Math.round(U.mon(x))) : 0;
+      eff = ksEffText(U, tg[0] || T.units.find(x => ksUpgState(U, x)) || T.units[0]);
+    }
+    const asset = KS_ASSET_ACCTS.includes(U.acct);
+    const what = `対象 <b>${fit}事業</b>${T.grp ? `（${cos}社）` : ''}${done ? `・実施済み ${done}` : ''}`;
+    const act = fit ? btn(`まとめて実施（${fit}事業）`, 'kUpgAll', { id: U.id }, 'sm primary') : tag('すべて実施済み', 'ok');
+    return `<tr><td><b>${esc(U.n)}</b><div class="small muted">${esc(U.desc)}</div><div class="small">効果：${eff}${U.dur ? `（${U.dur}か月後から）` : ''}</div><div class="small">${what}</div></td>
+      <td class="n">${fit ? fmtYen(cost) : '―'}<div class="small muted">${asset ? `${KS_ASSET_NAMES[U.acct]}・${U.life}年で償却` : `${KS_ACCT[U.acct].n}（費用）`}</div>${mon ? `<div class="small muted">毎月 合計${fmtYen(mon)}</div>` : ''}</td>
+      <td class="n">${act}</td></tr>`;
+  }).join('');
+}
 function ksUpgHtml() {
   const u = ksGrowUnit();
   if (!u) return ksGrowNoUnit();
-  const cats = Object.entries(KS_UPG_CATS).map(([c, n]) => { const rows = ksUpgRows(c, u); return rows ? `<h3 class="fsh">${esc(n)}</h3><div class="tbl-wrap"><table class="t"><thead><tr><th>投資</th><th class="n">費用</th><th class="n"></th></tr></thead><tbody>${rows}</tbody></table></div>` : ''; }).join('');
-  return `<div class="row between" style="margin-bottom:6px"><p class="small" style="margin:0">設備やシステムのように長く使うものは資産になり、何年かで償却します。認証・広告・制度づくりは、払ったときの費用です。効果は事業の数字（需要・ロス・電気代・労災など）に表れます。</p>${ksUnitSelect('kGrowU', u)}</div>${cats}`;
+  const T = ksUpgTarget();
+  if (!T) UI.kUpgT = null;
+  const cats = Object.entries(KS_UPG_CATS).map(([c, n]) => { const rows = T ? ksUpgBulkRows(c, T) : ksUpgRows(c, u); return rows ? `<h3 class="fsh">${esc(n)}</h3><div class="tbl-wrap"><table class="t"><thead><tr><th>投資</th><th class="n">${T ? '費用（合計）' : '費用'}</th><th class="n"></th></tr></thead><tbody>${rows}</tbody></table></div>` : ''; }).join('');
+  const note = T ? `<div class="callout small" style="margin-bottom:8px"><b>${esc(T.n)}</b>にまとめて実施します。まだ実施していなくて、事業に合うものだけが対象です${T.grp ? '。会社ごとに、その会社の手元の資金で払います（払うと資金繰りが苦しくなる会社は見送ります）' : ''}。会社全体の投資（「会社全体」の印）は、ふだんどおり1回だけです。</div>` : '';
+  return `<div class="row between" style="margin-bottom:6px"><p class="small" style="margin:0">設備やシステムのように長く使うものは資産になり、何年かで償却します。認証・広告・制度づくりは、払ったときの費用です。効果は事業の数字（需要・ロス・電気代・労災など）に表れます。</p>${ksUpgTargetSelect(u)}</div>${note}${cats}`;
 }
+ACTIONS.kUpgAll = d => {
+  const U = KS_UPG_BY[d.id];
+  const T = ksUpgTarget();
+  if (!U || !T) return;
+  if (T.grp) { showModal('kUpgGrp', { id: U.id }); return; }
+  const tg = ksUpgTargets(U, T.units);
+  if (!tg.length) { toast('対象の事業がありません', 'bad'); return; }
+  const cost = sum(tg, x => Math.round(U.cost(x)));
+  const mon = U.mon ? sum(tg, x => Math.round(U.mon(x))) : 0;
+  const list = tg.map(x => `${esc(ksUName(x))}（${fmtYen(Math.round(U.cost(x)))}）`).join('・');
+  if (KS_ASSET_ACCTS.includes(U.acct)) {
+    ksCapexOpen({ title: `${U.n}（${tg.length}事業）`, desc: `${U.desc}<br>対象：${list}<br>効果：${ksEffText(U, tg[0])}${mon ? `。毎月の費用 合計${fmtYen(mon)}` : ''}。`, items: tg.map(x => ({ n: `${U.n}（${ksUName(x)}）`, acct: U.acct, cost: Math.round(U.cost(x)), life: U.life, part: U.acct === 'mach' && ksS(x).eng === 'mfg' ? 'C' : 'S', u: x.id })), fx: 'upgMany', arg: { id: U.id, us: tg.map(x => x.id) } });
+  } else {
+    confirmBox(`${esc(U.n)}（${tg.length}事業）`, `${esc(U.desc)}<br>対象：${list}<br>費用 合計 <b>${fmtYen(cost)}</b>（${KS_ACCT[U.acct].n}として今期の費用になります）${mon ? `、毎月 合計${fmtYen(mon)}` : ''}。<br>効果：${ksEffText(U, tg[0])}${U.dur ? `（${ymLabel(G.m + U.dur)}から）` : ''}。`, 'まとめて実施する', 'kUpgAllGo', { id: U.id });
+  }
+};
+ACTIONS.kUpgAllGo = d => {
+  const U = KS_UPG_BY[d.id];
+  const T = ksUpgTarget();
+  if (!U || !T || T.grp) return;
+  const tg = ksUpgTargets(U, T.units);
+  const cost = sum(tg, x => Math.round(U.cost(x)));
+  if (ksB('cash') < cost) { toast('現預金が足りません', 'bad'); return; }
+  const r = ksUpgApplyMany(U.id, tg.map(x => x.id));
+  toast(`${U.n}を${r.n}事業で始めました（${fmtYen(r.tot)}）`);
+  closeModal(true); render(); autosave();
+};
+/* グループ全体にまとめて：会社ごとの対象・費用・払えるか */
+MODALS.kUpgGrp = a => {
+  const U = KS_UPG_BY[a.id];
+  const plan = ksUpgGroupPlan(a.id);
+  if (!U || !plan.length) return modalFrame('グループ全体にまとめて実施', '<div class="empty">対象の事業がありません</div>', btn('閉じる', 'closeModal'));
+  const rows = plan.map(p => `<tr><td><b>${esc(p.name)}</b><div class="small muted">${esc(p.names.slice(0, 4).join('・'))}${p.names.length > 4 ? ` など${p.names.length}事業` : ''}</div></td><td class="n">${p.uids.length}</td><td class="n">${fmtYen(p.cost)}</td><td class="n">${fmtYen(p.cash)}</td><td>${p.ok ? tag('実施', 'ok') : tag('見送り（資金が足りない）', 'warn')}</td></tr>`).join('');
+  const ok = plan.filter(p => p.ok);
+  const tot = sum(ok, p => p.cost), n = sum(ok, p => p.uids.length);
+  const root = ksRoot(), p0 = plan[0];
+  const eff = ksWith(p0.id === 'root' ? root : ksSubById(p0.id, root).st, () => ksEffText(U, ksUnit(p0.uids[0])));
+  const body = `<p class="small" style="margin:0 0 8px">${esc(U.desc)}<br>効果：${eff}${U.dur ? `（${U.dur}か月後から）` : ''}。${KS_ASSET_ACCTS.includes(U.acct) ? `${KS_ASSET_NAMES[U.acct]}として各社が買い、${U.life}年で償却します。` : `${KS_ACCT[U.acct].n}として各社の今期の費用になります。`}会社ごとに、その会社の手元の資金で払います。</p>
+    <div class="tbl-wrap"><table class="t compact"><thead><tr><th>会社</th><th class="n">事業</th><th class="n">費用</th><th class="n">現預金</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>
+    <p class="small" style="margin:8px 0 0">実施：${ok.length}社・${n}事業・合計 <b>${fmtYen(tot)}</b>${plan.length > ok.length ? `（見送り ${plan.length - ok.length}社。増資や貸付で資金を入れてから、もう一度実施できます）` : ''}</p>`;
+  return modalFrame(`${esc(U.n)}：グループ全体にまとめて`, body, btn('やめる', 'closeModal') + btn(`${ok.length}社で実施する`, 'kUpgGrpGo', { id: U.id }, 'primary', { disabled: !ok.length }), { size: 'wide' });
+};
+ACTIONS.kUpgGrpGo = d => {
+  const U = KS_UPG_BY[d.id];
+  const r = ksUpgGroupApply(d.id);
+  toast(r.n ? `${U.n}を${r.done.length}社・${r.n}事業で始めました（合計 ${fmtYen(r.tot)}）${r.skip.length ? `。資金が足りない${r.skip.length}社は見送りました` : ''}` : '実施できる会社がありませんでした', r.n ? '' : 'bad');
+  closeModal(true); render(); autosave();
+};
 ACTIONS.kUpgDo = d => {
   const U = KS_UPG_BY[d.id];
   const u = d.u ? ksUnit(d.u) : null;

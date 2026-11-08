@@ -8,6 +8,9 @@
  *   ・四半期ごと（6・9・12・3月の末）に定例会：予算と方針の進み具合を確かめ、部長を評価する
  *   ・効果：機能の部の人数・部長の力とやる気・方針で、需要・離職・労災・ロス・不祥事などの倍率が変わる
  *   ・費用：機能の部の人件費（研究開発は研究開発費）、支店の事務所の家賃、役職手当、方針の取り組みの費用（本社費）
+ *   ・子会社の管轄：ユニットと事業部の下に、グループの会社（子会社・孫会社・関連会社）を置ける。売上は部の実績に入る
+ *   ・運営を任せる：受け持つ事業の値決め・人の手配を部長が毎月決める。管轄の子会社の経営も任せられる。
+ *     出来は部長の腕前とやる気しだいで、任せる先が多すぎると目が届かなくなる
  *   （画面は 29q_kaisha_org_ui.js）
  * ========================================================= */
 
@@ -134,7 +137,10 @@ function ksDeptCalc() {
     const sc = ksDeptScope(n);
     return { n, set: new Set(sc.units), share: sc.all ? 1 : ksDeptScopeHead(sc) / head, s: ksDeptStrength(n), pf: ksDeptPolF(n) };
   });
-  const c = { key, items };
+  // 運営を任せた事業：任せた部の部長の出来
+  const run = new Map();
+  if (O.nodes.some(n => n.runU)) for (const u of ksActiveUnits()) { const r = ksDeptRunnerOf(u.id); if (r) run.set(u.id, ksDeptRunRel(r)); }
+  const c = { key, items, run };
   KS_DEPT_CACHE.set(O, c);
   return c;
 }
@@ -142,9 +148,10 @@ function ksDeptTouch() { if (G && G.org) G.org.ver = (G.org.ver || 0) + 1; }
 function ksDeptF(u, key) {
   const O = G && G.org;
   if (!O || !O.nodes.length) return 1;
-  const { items } = ksDeptCalc();
+  const { items, run } = ksDeptCalc();
   const fnS = {}, thS = {};
   let f = 1;
+  if (u && run.has(u.id) && KS_DEPT_RUN_EFF[key] !== undefined) f *= 1 + KS_DEPT_RUN_EFF[key] * run.get(u.id);
   for (const it of items) {
     const n = it.n;
     const w = u ? (it.set.has(u.id) ? 1 : 0) : it.share;
@@ -225,10 +232,12 @@ function ksDeptAdd(o) {
   const O = ksDeptInit();
   const kind = o.kind === 'bu' ? 'bu' : 'dept';
   const fn = kind === 'bu' ? 'biz' : (KS_DEPT_FN[o.fn] ? o.fn : 'biz');
-  const n = { id: 'o' + (++O.seq), kind, name: String(o.name || '').trim().slice(0, 30), parent: o.parent && ksDeptNode(o.parent) ? o.parent : null, fn, units: [], staff: 0, pref: +o.pref || 0, cc: o.cc || 'jp', head: ksDeptNewHead(), pol: null, since: G.m, qs: {} };
+  const n = { id: 'o' + (++O.seq), kind, name: String(o.name || '').trim().slice(0, 30), parent: o.parent && ksDeptNode(o.parent) ? o.parent : null, fn, units: [], subs: [], runU: !!o.runU, staff: 0, pref: +o.pref || 0, cc: o.cc || 'jp', head: ksDeptNewHead(), pol: null, since: G.m, qs: {} };
   if (!n.name) n.name = ksDeptAutoName(n, o.units || []);
   O.nodes.push(n);
   ksDeptSetUnits(n.id, o.units || []);
+  if (o.subs) ksDeptSetSubs(n.id, o.subs);
+  if (o.runS) ksDeptRunSubs(n, true);
   n.staff = KS_DEPT_FN[fn].ratio ? Math.max(0, Math.round(o.staff ?? ksDeptNeed(n))) : 0;
   ksDeptDraft(n, fyOf(G.m));
   ksDeptTouch();
@@ -278,6 +287,10 @@ function ksDeptEdit(id, p) {
   if (p.pref !== undefined) n.pref = +p.pref || 0;
   if (p.cc !== undefined) n.cc = p.cc || 'jp';
   if (!KS_DEPT_FN[n.fn].ratio) n.staff = 0;
+  if (p.runU !== undefined) n.runU = !!p.runU && ksDeptCanRun(n);
+  if (p.subs !== undefined) ksDeptSetSubs(n.id, p.subs);
+  else if (!ksDeptCanHold(n)) n.subs = [];
+  if (p.runS !== undefined) ksDeptRunSubs(n, p.runS);
   ksDeptTouch();
   return n;
 }
@@ -286,6 +299,7 @@ function ksDeptRemove(id) {
   const n = ksDeptNode(id);
   if (!n) return false;
   for (const k of ksDeptKids(id)) k.parent = n.parent || null;
+  n.subs = []; // 管轄の子会社は社長の直轄に戻る（任せていた子会社は、子会社の社長が経営する）
   O.nodes = O.nodes.filter(x => x !== n);
   ksDeptTouch();
   return true;
@@ -346,7 +360,7 @@ function ksDeptSetBudget(n) {
   const P = n.pol;
   if (!P) return;
   const sc = ksDeptScope(n);
-  const last = sum(sc.units, id => ksDeptUnitSalesFY(id, P.fy - 1)) || sum(sc.units, id => ksDeptUnitSalesM(id)) * 12;
+  const last = (sum(sc.units, id => ksDeptUnitSalesFY(id, P.fy - 1)) || sum(sc.units, id => ksDeptUnitSalesM(id)) * 12) + ksDeptSubsSalesFY(n, P.fy - 1);
   P.budS = KS_DEPT_THEME[P.theme].kpi === 'sales' || n.fn === 'biz' || n.fn === 'sales' ? Math.round(last * (1 + (KS_DEPT_THEME[P.theme].kpi === 'sales' ? P.target : 2) / 100)) : 0;
   P.budS0 = Math.round(last);
   P.budC = Math.round(ksDeptCostEst(n).total * 12 * (KS_DEPT_THEME[P.theme].kpi === 'cost' ? 1 - P.target / 200 : 1));
@@ -428,6 +442,9 @@ function ksDeptMonth() {
     const q = n.qs || (n.qs = {});
     const sc = ksDeptScope(n);
     q.sales = (q.sales || 0) + sum(sc.units, id => (((G.flowU || {})[id] || {}).sales || 0));
+    // 管轄の子会社の売上（子会社の締めは親会社のあと。直近に締めた月の分を足す）
+    const subS = ksDeptSubsSalesLast(n);
+    if (subS) { q.sales += subS; q.subS = (q.subS || 0) + subS; }
     q.cost = (q.cost || 0) + c.total;
     q.n = (q.n || 0) + 1;
     // やる気：60に少しずつ戻る。高すぎる目標を押し付けられていると下がる
@@ -482,7 +499,7 @@ function ksDeptMeetMake() {
     const st = KS_DEPT_STYLE[n.head.style] || KS_DEPT_STYLE.solid;
     const self = clamp(ti - st.self, 0, 4);
     const say = ti <= 1 ? pick(['計画どおりに進んでいます', '手応えがあります。次も続けます', 'お客の反応がよく、予定より進みました']) : ti === 2 ? pick(['おおむね計画どおりです', '遅れはありますが、取り戻せます']) : pick(['計画より遅れています。原因を調べています', '思うように進みませんでした。手を打ちます', '人手が足りず、取り組みが進みませんでした']);
-    return { id: n.id, name: n.name, kind: ksDeptKindName(n), fn: n.fn, head: n.head.name, style: n.head.style, theme: P ? P.theme : null, status: P ? P.status : 'none', sales: Math.round(q.sales || 0), budS, cost: Math.round(q.cost || 0), budC, kt, kp: +kp.toFixed(3), score: +score.toFixed(3), ti, self, say };
+    return { id: n.id, name: n.name, kind: ksDeptKindName(n), fn: n.fn, head: n.head.name, style: n.head.style, theme: P ? P.theme : null, status: P ? P.status : 'none', sales: Math.round(q.sales || 0), subS: Math.round(q.subS || 0), nSubs: ksDeptSubsOf(n).length, run: !!(n.runU || ksDeptSubsOf(n).some(x => x.orgRun && x.auto)), budS, cost: Math.round(q.cost || 0), budC, kt, kp: +kp.toFixed(3), score: +score.toFixed(3), ti, self, say };
   });
   // 会社の予算と実績（四半期と期のはじめから）
   const b = G.budget && G.budget.fy === fy ? G.budget : null;
@@ -527,11 +544,151 @@ function ksDeptMeetResolve(meetId, choices) {
   return out;
 }
 
+/* ---------- 子会社の管轄と、運営を任せる ---------- */
+/* 子会社を管轄に置けるのは、ユニットと事業部（グループの親会社の組織だけ） */
+function ksDeptCanHold(n) { return !!n && (n.kind === 'bu' || n.fn === 'biz') && !(G && G.isSub); }
+/* 運営を任せられるのは、ユニットと事業部 */
+function ksDeptCanRun(n) { return !!n && (n.kind === 'bu' || n.fn === 'biz'); }
+/* 管轄の会社（グループから外れた会社は除く） */
+function ksDeptSubsOf(n, root = G) {
+  if (!n || !n.subs || !n.subs.length || !root || !root.group) return [];
+  return n.subs.map(id => ksSubById(id, root)).filter(x => x && !x.gone);
+}
+/* その会社を管轄するユニット・事業部（親会社の組織の中で） */
+function ksDeptSubNode(subId, root = ksRoot()) {
+  const O = root && root.org;
+  return O ? O.nodes.find(n => (n.subs || []).includes(subId)) || null : null;
+}
+/* 管轄：1つの会社は、ユニット・事業部の1つにだけ入る */
+function ksDeptSetSubs(id, list) {
+  const n = ksDeptNode(id);
+  if (!n) return;
+  if (!ksDeptCanHold(n)) { n.subs = []; return; }
+  const ok = new Set((G.group ? ksSubs(G) : []).map(x => x.id));
+  const want = [...new Set(list || [])].filter(x => ok.has(x));
+  for (const o of ksDeptNodes()) if (o !== n && o.subs) o.subs = o.subs.filter(x => !want.includes(x));
+  n.subs = want;
+  ksDeptTouch();
+}
+/* 管轄の子会社の経営を、まとめてこの組織に任せる（on）・任せるのをやめて子会社の社長に戻す（off） */
+function ksDeptRunSubs(n, on) {
+  for (const x of ksDeptSubsOf(n)) { if (x.aff) continue; x.orgRun = !!on; if (on) x.auto = true; }
+  ksDeptTouch();
+}
+/* 1つの会社の管轄と経営の担い手を決める：nodeId（なし＝社長の直轄）、op＝'self'・'ceo'・'org' */
+function ksSubSetJur(subId, nodeId, op) {
+  const root = G;
+  const x = ksSubById(subId, root);
+  if (!x || x.gone) return false;
+  for (const o of ksDeptNodes()) if (o.subs) o.subs = o.subs.filter(id => id !== subId);
+  const n = nodeId ? ksDeptNode(nodeId) : null;
+  if (n && ksDeptCanHold(n)) n.subs = [...(n.subs || []), subId];
+  if (!x.aff) {
+    if (op === 'self') { x.auto = false; x.orgRun = false; }
+    else if (op === 'org' && n) { x.auto = true; x.orgRun = true; }
+    else if (op === 'ceo' || op === 'org') { x.auto = true; x.orgRun = false; }
+  }
+  ksDeptTouch();
+  return true;
+}
+/* 子会社の経営の担い手：'self'（社長が直接）・'ceo'（子会社の社長に任せる）・'org'（管轄のユニット・事業部に任せる） */
+function ksSubOp(x, root = ksRoot()) {
+  if (!x || x.aff) return 'ceo';
+  if (!x.auto) return 'self';
+  return x.orgRun && ksDeptSubNode(x.id, root) ? 'org' : 'ceo';
+}
+function ksSubOpName(x, root = ksRoot()) {
+  const op = ksSubOp(x, root);
+  if (x.aff) return '相手の会社が経営（持分法）';
+  if (op === 'self') return 'あなたが直接経営';
+  if (op === 'org') { const n = ksDeptSubNode(x.id, root); return `${n.name}（${ksWith(root, () => ksDeptHeadTitle(n))} ${n.head.name}）に任せている`; }
+  return '子会社の社長に任せている';
+}
+/* 管轄の会社の売上（連結子会社だけ。関連会社は売上に入れない） */
+function ksDeptSubsSalesLast(n) {
+  let t = 0;
+  for (const x of ksDeptSubsOf(n)) {
+    if (x.aff || !x.st || x.st.over) continue;
+    const last = x.st.months[x.st.months.length - 1];
+    if (last && last.m >= G.m - 1) t += (last.mg && last.mg.sales) || 0;
+  }
+  return Math.round(t);
+}
+function ksDeptSubsSalesFY(n, fy) {
+  let t = 0;
+  for (const x of ksDeptSubsOf(n)) {
+    if (x.aff || !x.st) continue;
+    const ms = x.st.months.filter(m => fyOf(m.m) === fy);
+    t += ms.length ? sum(ms, m => (m.mg && m.mg.sales) || 0) * 12 / ms.length : 0;
+  }
+  return Math.round(t);
+}
+/* 事業を受け持つ部（事業部かユニット） */
+function ksDeptOwnerOf(uid) { return ksDeptNodes().find(n => (n.units || []).includes(uid)) || null; }
+/* 事業の運営を任せている部：受け持つ部か、その上のユニットで「運営を任せる」にしたもの（近いほう） */
+function ksDeptRunnerOf(uid) {
+  for (let p = ksDeptOwnerOf(uid), i = 0; p && i < 200; i++) { if (p.runU) return p; p = p.parent ? ksDeptNode(p.parent) : null; }
+  return null;
+}
+/* 任せている先の数（事業と子会社）。部長の目が届くのは、3＋腕前×2 まで */
+function ksDeptRunLoad(n) {
+  const us = n.runU ? ksActiveUnits().filter(u => ksDeptRunnerOf(u.id) === n).length : 0;
+  const ss = ksDeptSubsOf(n).filter(x => !x.aff && x.auto && x.orgRun).length;
+  return us + ss;
+}
+function ksDeptRunCap(n) { return 3 + 2 * (n.head ? n.head.skill : 3); }
+/* 任せた運営の出来（並の部長で0。腕前とやる気が高いほど正、任せすぎると下がる） */
+function ksDeptRunRel(n) {
+  const avg = (0.8 + 0.06 * 3) * (0.85 + 0.3 * 0.6);
+  return clamp(ksDeptHeadF(n) / avg - 1 - 0.04 * Math.max(0, ksDeptRunLoad(n) - ksDeptRunCap(n)), -0.45, 0.3);
+}
+/* 出来が効く項目（出来1あたりの倍率の動き） */
+const KS_DEPT_RUN_EFF = { demand: 0.15, shrink: -0.3, acc: -0.4, quit: -0.4, viol: -0.5, leak: -0.3, energy: -0.1, ot: -0.2 };
+/* 運営を任せた事業：部長が今月の値決めと人の手配を決める（事業の型ごとの標準のやり方）。任せた数を返す */
+function ksDeptRunUnits() {
+  if (!G || !G.org || !G.org.nodes.some(n => n.runU)) return 0;
+  let k = 0;
+  for (const u of ksActiveUnits()) {
+    if (!ksDeptRunnerOf(u.id)) continue;
+    G.curU = u.id;
+    try { KS_ENGINE[ksS(u).eng].auto(u); } finally { G.curU = null; }
+    k++;
+  }
+  return k;
+}
+/* 親会社のユニット・事業部が管轄する子会社の倍率（子会社の会社の中で使う）。
+   管轄だけ：目が届く分、不祥事と漏えいが少し減る。運営を任せた：部長の出来と、承認した方針のテーマ（6割の強さ）が効く */
+const KS_DEPT_PAR_CACHE = new WeakMap();
+function ksDeptParentF(key) {
+  const root = (typeof KS_GROUP_RUN !== 'undefined' && KS_GROUP_RUN) || (typeof KS_ROOT !== 'undefined' && KS_ROOT) || null;
+  if (!root || root === G || !root.org || !G.subId) return 1;
+  const x = ksSubById(G.subId, root);
+  if (!x || x.aff) return 1;
+  const n = ksDeptSubNode(x.id, root);
+  if (!n) return 1;
+  const ck = `${root.m}|${root.org.ver || 0}|${x.auto ? 1 : 0}|${x.orgRun ? 1 : 0}`;
+  let c = KS_DEPT_PAR_CACHE.get(x);
+  if (!c || c.ck !== ck) {
+    const mode = ksSubOp(x, root) === 'org' ? 'run' : 'watch';
+    const rel = mode === 'run' ? ksWith(root, () => ksDeptRunRel(n)) : 0;
+    const pf = mode === 'run' ? ksWith(root, () => ksDeptPolF(n)) : 0;
+    c = { ck, mode, rel, pf, theme: n.pol && n.pol.theme };
+    KS_DEPT_PAR_CACHE.set(x, c);
+  }
+  let f = key === 'viol' || key === 'leak' ? 0.95 : 1;
+  if (c.mode === 'run') {
+    if (KS_DEPT_RUN_EFF[key] !== undefined) f *= 1 + KS_DEPT_RUN_EFF[key] * c.rel;
+    const T = c.theme && KS_DEPT_THEME[c.theme];
+    if (T && c.pf && T.eff[key] !== undefined) f *= 1 + T.eff[key] * Math.min(1.3, c.pf) * 0.6;
+  }
+  return clamp(f, 0.6, 1.4);
+}
+
 /* ---------- ほかの仕組みへのつなぎ ---------- */
 /* 効き目：方針と人事（ksHrF）に掛ける。ksHrF は、需要・離職・労災・ロス・不祥事などの倍率のもと */
 if (typeof ksHrF === 'function') {
   const ksHrFDept0 = ksHrF;
-  ksHrF = function (u, key) { return ksHrFDept0(u, key) * (G && G.org && G.org.nodes.length ? ksDeptF(u, key) : 1); };
+  ksHrF = function (u, key) { return ksHrFDept0(u, key) * (G && G.org && G.org.nodes.length ? ksDeptF(u, key) : 1) * (G && G.isSub ? ksDeptParentF(key) : 1); };
 }
 /* 事業をやめたとき：部の受け持ちから外す（受け持ちの事業がなくなっても部は残る） */
 function ksDeptDropUnit(uid) { for (const n of ksDeptNodes()) n.units = (n.units || []).filter(x => x !== uid); }

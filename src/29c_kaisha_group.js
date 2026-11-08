@@ -806,7 +806,7 @@ function ksGroupSubMonth(s, eco) {
     if (s.auto) {
       for (const u of ksActiveUnits()) { G.curU = u.id; KS_ENGINE[ksS(u).eng].auto(u); G.curU = null; }
       ksAutoFinance();
-    }
+    } else if (typeof ksDeptRunUnits === 'function') ksDeptRunUnits(); // 自分で経営する子会社でも、部に運営を任せた事業は部長が決める
     ksAdvance();
     if (s.auto) ksSubAutoAdmin();
     if (G.closing) ksAutoClose();
@@ -853,6 +853,8 @@ ksCashCover = function () {
 /* ---------- グループの月次（親会社 → 子会社の順） ---------- */
 function ksGroupAdvance() {
   const root = G;
+  // 運営をユニット・事業部に任せた事業は、部長が今月の値決めと人の手配を決める
+  if (!root.over && !root.closing && typeof ksDeptRunUnits === 'function') ksDeptRunUnits();
   if (!root.group || !ksSubs(root).length) {
     if (root.group && Object.keys(root.group.ic || {}).length) root.group.fx[root.m] = { usd: root.eco.fx || 148, eur: root.eco.eur || 160 };
     return ksAdvance();
