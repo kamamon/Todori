@@ -259,6 +259,8 @@ MODALS.kClose = () => {
       ${answered ? `<h4 class="fsh" style="margin-top:12px">${done ? '記帳した仕訳' : '記帳する仕訳'}</h4>${entries.length ? ksJournalTable(entries.map(e => Object.assign({ c: true }, e)), { total: false }) : '<p class="small muted">この手順で新しく記帳する仕訳はありません。工事の費用と代金は、毎月の取引で未成工事支出金・未成工事受入金に記帳済みです。</p>'}` : ''}
       ${c.view === 0 && !done ? `<details style="margin-top:10px"><summary class="small">決算整理前の残高試算表を見る</summary>${ksTrialBalance()}</details>` : ''}`;
   }
+  // 質問をとばして、残りの手順をまとめて記帳し、結果まで進める
+  if (step !== 'done') body += `<div class="row between closeskip"><label class="inline small"><input type="checkbox" data-ch="setting" data-key="autoClose" ${UI.settings.autoClose ? 'checked' : ''}> 次の決算から、質問をとばしてすぐ結果を見る</label>${btn('質問をとばして結果へ', 'kCloseSkip', {}, 'sm')}</div>`;
   let foot = btn('あとで続ける', 'closeModal');
   if (done) foot += btn('いまの手順へ', 'kCloseView', { i: c.i }, 'primary');
   else if (step === 'done') foot += btn('決算を確定する', 'kCloseFinish', {}, 'primary');
@@ -298,13 +300,23 @@ Object.assign(ACTIONS, {
     render();
     scheduleSave();
   },
+  kCloseSkip: () => {
+    const c = G.closing;
+    if (!c) return;
+    c.opt = c.opt || {};
+    c.entries = c.entries || {};
+    for (const s of c.steps.slice(c.i)) if (s !== 'done' && s !== 'con') c.entries[s] = ksPostStep(s, c.opt[s] || {});
+    c.i = c.steps.length - 1;
+    ACTIONS.kCloseFinish();
+  },
   kCloseFinish: () => {
     const c = G.closing;
     if (!c) return;
     ksFinishClosing();
     UI.kFy = null;
     UI.modal = null;
-    UI.queue = [];
+    // 締めの月に出た知らせ（定例会・労災・出来事など）は、決算の結果のあとに続けて出す
+    UI.queue = (UI.queue || []).filter(x => x.name !== 'kClose' && x.name !== 'kResult');
     for (const s of (G.pendingModals || [])) UI.queue.push({ name: s.type, args: s });
     G.pendingModals = [];
     render();

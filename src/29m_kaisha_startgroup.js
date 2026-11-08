@@ -21,7 +21,8 @@ function ksSgCanOwn(e) { return !!e && (e.cc || 'jp') === 'jp' && +e.own > 0.5; 
 function ksSgNeedsUnit(e) { return !ksSgCanOwn(e); }
 function ksSgUnits(e) {
   const seen = new Set();
-  return ((e && e.units) || []).filter(x => x && KS_TYPES[x.type] && !seen.has(x.type) && seen.add(x.type)).map(x => ({ type: x.type, sc: KS_SG_SCALES.includes(+x.sc) ? +x.sc : 1 }));
+  return ((e && e.units) || []).filter(x => x && KS_TYPES[x.type] && !seen.has(x.type) && seen.add(x.type))
+    .map(x => ({ type: x.type, sc: clamp(+x.sc || 1, 0.1, ksCapInfo(x.type).maxSc), g: clamp(+x.g || 0, -0.15, 0.2) }));
 }
 function ksSgIsU(id) { return typeof id === 'string' && id.startsWith('u:'); }
 /* 持ち主を直す：持てない会社（関連会社・海外）・なくなった会社・自分の下の会社が持ち主なら、上にたどる（なければ親会社） */
@@ -162,7 +163,7 @@ function ksStartGroupBuild(raw, umap = {}) {
       const capital = Math.min(total, e.capital > 0 ? e.capital : clamp(Math.round(total / 2 / 1e7) * 1e7, 1e7, 1e8));
       st = ksFreshCompany({ coName: e.name, ceo, cash: total, capital, seed, cc: e.cc, pref: e.pref || pref0, subId: id, execPay: clamp(Math.round(total / 400 / 1e4) * 1e4, 40e4, 150e4) });
       ksWith(st, () => {
-        for (const x of e.units) ksSubStartUnit(x.type, x.sc);
+        for (const x of e.units) { const r = ksSubStartUnit(x.type, x.sc); if (x.g && r && r.u) r.u.tr = ksTrendMake(x.g); }
         if (e.debt > 0) ksCustomApply({ custom: { debt: e.debt } });
         ksSetODLimit();
         ksBudgetDraft(); ksBudgetApprove(true);

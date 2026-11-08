@@ -157,7 +157,7 @@ if (!fs.existsSync(shots)) fs.mkdirSync(shots);
   await click('[data-act="kMapPref"][data-v="23"]', 'pref 23');
   await click('[data-act="kMapHQ"]', 'hq'); await click('[data-act="kMapHQGo"]', 'hq go');
   await click('[data-act="kMapNewUnit"]', 'map new unit'); await modalErr('map new unit');
-  await page.fill('[data-in="kNUq"]', 'ラーメン'); await wait(80);
+  await page.fill('.tb[data-ctx="nu"] .tb-q', 'ラーメン'); await wait(80);
   const tp = await page.$('[data-act="kNUPick"]'); if (tp) { await tp.click(); await wait(120); }
   await shot('map_newunit', false);
   await closeModals();

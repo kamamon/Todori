@@ -33,14 +33,41 @@ function ksCustomHtml(k) {
     <div class="grid g2" style="gap:12px;margin-top:6px"><div class="field"><span>景気</span><div class="seg" role="radiogroup">${eco}</div></div>
     ${num('fx', '為替（1ドル＝円）', '148', 'min="80" max="250" step="1"')}</div>
     ${num('founded', '創業の年（西暦）', 'そのまま', `min="1868" max="${START_YEAR}" step="1"`)}
+    ${ksCuUnitsHtml(k)}
     <p class="small muted" style="margin:0">就任の時点（2027年1月）の帳簿を、増資・減資・配当・借入・繰上返済の仕訳でこの額に合わせて始めます。仕訳は帳簿の画面で確かめられます。</p></div>
   </details>`;
+}
+/* 事業ごとの設備の数と、これまでの成長 */
+function ksCuCapField(type, sc, act, i, extra = '') {
+  const ci = ksCapInfo(type);
+  const max = ksScToCap(type, ci.maxSc);
+  return `<label class="field cu-cap"><span>${esc(ci.n)}</span><span class="cu-capin"><input type="number" inputmode="numeric" min="1" max="${max}" step="1" value="${ksScToCap(type, sc || 1)}" data-ch="${act}" data-i="${i}"${extra} aria-label="${esc(type)}の${esc(ci.n)}"><span class="small">${esc(ci.u)}</span></span><span class="small muted">中の規模で${fmtNum(ci.base, 0)}${esc(ci.u)}・最大${fmtNum(max, 0)}${esc(ci.u)}</span></label>`;
+}
+function ksCuGrowField(g, act, i, label = 'これまでの成長（売上の伸び）') {
+  return `<label class="field cu-grow"><span>${label}</span><select data-ch="${act}" data-i="${i}">${KS_GROWTH.map(([v, l]) => `<option value="${v}"${Math.abs((+g || 0) - v) < 1e-9 ? ' selected' : ''}>${l}</option>`).join('')}</select></label>`;
+}
+function ksCuUnitsHtml(k) {
+  const rows = k.units.map((x, i) => `<li class="cu-unit"><b>${esc(x.type)}</b><div class="grid g2 cu-ugrid">${ksCuCapField(x.type, x.sc, 'kCuCap', i)}${ksCuGrowField(x.g, 'kCuGrow', i)}</div></li>`).join('');
+  return `<div class="field"><span>事業ごとの設備と成長</span><ul class="cu-units">${rows}</ul>
+    <span class="small muted">設備の数で事業の大きさが決まります（店・機械・車両・客室などの数。上の「規模」のボタンより細かく決められます）。成長を選ぶと、過去4期の決算書の売上がその割合で伸びて（縮んで）いて、就任のあとも勢いが2年ごとに半分になりながら続きます。伸びてきた会社は利益率が高め、縮んできた会社は低めで始まります。子会社は「グループの会社」の各社の設定で決められます。</span></div>`;
 }
 Object.assign(ACTIONS, {
   kCuForm: d => { ksStartStore(); const c = ksCustomDefaults(UI.start.k); c.form = d.v; c.on = true; render(); },
   kCuEco: d => { ksStartStore(); const c = ksCustomDefaults(UI.start.k); c.eco = d.v; c.on = true; render(); },
 });
 Object.assign(CHANGES, {
+  // 設備の数 → 規模の倍率（入れた数が範囲の外なら直して見せる。画面は描き直さない：押そうとしたボタンが消えないように）
+  kCuCap: el => {
+    const k = UI.start.k, x = k.units[+el.dataset.i];
+    if (!x) return;
+    x.sc = ksCapToSc(x.type, el.value);
+    const n = ksScToCap(x.type, x.sc);
+    if (+el.value !== n) el.value = n;
+    for (const b of document.querySelectorAll(`[data-act="kStSc"][data-i="${+el.dataset.i}"]`)) b.setAttribute('aria-pressed', String(Math.abs(+b.dataset.v - x.sc) < 1e-9));
+    const c = ksCustomDefaults(k); c.on = true;
+    const cb = document.querySelector('[data-ch="kCuOn"]'); if (cb) cb.checked = true;
+  },
+  kCuGrow: el => { const k = UI.start.k, x = k.units[+el.dataset.i]; if (!x) return; x.g = +el.value; const c = ksCustomDefaults(k); c.on = true; const cb = document.querySelector('[data-ch="kCuOn"]'); if (cb) cb.checked = true; },
   kCuOn: el => { ksStartStore(); ksCustomDefaults(UI.start.k).on = el.checked; render(); },
   kCuPref: el => { ksStartStore(); const c = ksCustomDefaults(UI.start.k); c.pref = +el.value; c.on = true; render(); },
   kCuLand: el => { ksStartStore(); const c = ksCustomDefaults(UI.start.k); c.hqLand = el.checked; c.on = true; render(); },

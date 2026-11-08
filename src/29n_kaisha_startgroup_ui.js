@@ -39,7 +39,7 @@ function ksSgOwnTag(e) {
 }
 function ksSgHist(e) { return (e.cc || 'jp') === 'jp' && (e.units || []).length > 0; }
 function ksSgDesc(e, k) {
-  const us = (e.units || []).map(x => `${x.type}（${KS_SG_SCN[x.sc] || '中'}）`);
+  const us = (e.units || []).map(x => `${x.type}（${KS_SG_SCN[x.sc] || `${fmtNum(ksScToCap(x.type, x.sc), 0)}${ksCapInfo(x.type).u}`}${x.g ? `・${x.g > 0 ? '+' : '−'}${Math.round(Math.abs(x.g) * 100)}%/年` : ''}）`);
   const place = (e.cc || 'jp') !== 'jp' ? KS_COUNTRIES[e.cc].n : (KS_PREFS[+e.pref] || KS_PREFS[ksSgRootPref(k)]).n;
   const kind = ksSgHist(e) ? `過去4期の決算書つき・${KS_COND[e.cond] ? KS_COND[e.cond].n : '普通'}` : '就任の時に設立';
   return [us.length ? us.join('・') : '事業なし（株式を持つ会社）', place, kind].join('／');
@@ -99,21 +99,7 @@ function ksSgStoreInputs() {
   if (n) D.e.name = n.value;
   for (const el of document.querySelectorAll('#modal-root [data-ch="kSgNum"]')) D.e[el.dataset.k] = el.value;
 }
-function ksSgRedraw() {
-  const l = $('#sgList');
-  const y = l ? l.scrollTop : 0;
-  drawModal();
-  const l2 = $('#sgList');
-  if (l2 && y) l2.scrollTop = y;
-}
-function ksSgTypesHtml(D) {
-  const list = D.q && D.q.trim() ? ksSearchTypes(D.q, '', '', 40) : ksStartPicks().map(n => KS_TYPES[n]).filter(Boolean);
-  if (!list.length) return '<div class="empty">見つかりません。言葉を変えて探してください</div>';
-  return list.map(S => {
-    const on = D.e.units.some(x => x.type === S.name);
-    return `<button type="button" class="typeopt${on ? ' on' : ''}" data-act="kSgUAdd" data-v="${esc(S.name)}" aria-pressed="${on}"><span class="indico" aria-hidden="true">${esc(S.icon)}</span><span><b>${esc(S.name)}</b><span class="small muted">${esc(S.grp)}・${esc(KS_ENG_INFO[S.eng].n)}${on ? '・加えた（もう一度押すと外す）' : ''}</span></span></button>`;
-  }).join('');
-}
+function ksSgRedraw() { drawModal(); } // 業種の一覧の位置は drawModal が保つ
 /* 株式を持つ会社に選べるもの：親会社・事業会社（持株会社のとき）・国内の連結子会社（自分と自分の下の会社は除く） */
 function ksSgOwnerOptions(k, D) {
   const list = ksSgList(k);
@@ -151,8 +137,9 @@ MODALS.kSg = () => {
   const ownerName = (owners.find(o => o[0] === e.owner) || owners[0])[1].trim();
   const kids = D.id ? list.filter(x => x.owner === D.id) : [];
   const needUnit = ksSgNeedsUnit(e) && !e.units.length;
-  const chosen = e.units.map((x, i) => { const S = KS_TYPES[x.type]; return `<li class="sunit"><span class="indico" aria-hidden="true">${esc(S.icon)}</span><span class="stype-t"><b>${esc(S.name)}</b><span class="small muted">${esc(S.d || KS_ENG_INFO[S.eng].desc)}</span></span>
-    <span class="stype-a"><span class="seg sm" role="radiogroup" aria-label="規模">${KS_SG_SCALES.map(v => `<button type="button" data-act="kSgSc" data-i="${i}" data-v="${v}" aria-pressed="${x.sc === v}">${KS_SG_SCN[v]}</button>`).join('')}</span>${btn('外す', 'kSgUDel', { i }, 'sm ghost')}</span></li>`; }).join('');
+  const chosen = e.units.map((x, i) => { const S = KS_TYPES[x.type]; return `<li class="sunit sg-unit"><span class="indico" aria-hidden="true">${esc(S.icon)}</span><span class="stype-t"><b>${esc(S.name)}</b><span class="small muted">${esc(S.d || KS_ENG_INFO[S.eng].desc)}</span></span>
+    <span class="stype-a"><span class="seg sm" role="radiogroup" aria-label="規模">${KS_SG_SCALES.map(v => `<button type="button" data-act="kSgSc" data-i="${i}" data-v="${v}" aria-pressed="${x.sc === v}">${KS_SG_SCN[v]}</button>`).join('')}</span>${btn('外す', 'kSgUDel', { i }, 'sm ghost')}</span>
+    <div class="grid g2 cu-ugrid sg-udet">${ksCuCapField(x.type, x.sc, 'kSgCap', i)}${ksCuGrowField(x.g, 'kSgGrow', i, hist ? 'これまでの成長（売上の伸び）' : '就任のあとの勢い（売上の伸び）')}</div></li>`; }).join('');
   const ccOpts = [['jp', '日本'], ...Object.entries(KS_COUNTRIES).map(([c, x]) => [c, x.n])].map(([v, l]) => `<option value="${v}"${e.cc === v ? ' selected' : ''}>${esc(l)}</option>`).join('');
   const own = KS_SG_OWNS.map(v => `<button type="button" data-act="kSgOwn" data-v="${v}" aria-pressed="${Math.abs(e.own - v) < 1e-9}">${Math.round(v * 100)}%</button>`).join('');
   const conds = Object.entries(KS_COND).map(([c, X]) => `<button type="button" data-act="kSgCond" data-v="${c}" aria-pressed="${e.cond === c}">${X.n}</button>`).join('');
@@ -175,8 +162,7 @@ MODALS.kSg = () => {
     </div>
     ${notes.join('')}
     <div class="field"><span>事業（いくつでも${ksSgCanOwn(e) ? '。なくてもよい' : ''}）</span>${chosen ? `<ul class="sunits">${chosen}</ul>` : `<div class="small muted">${ksSgCanOwn(e) ? '事業がなければ、ほかの会社の株式を持つだけの会社（中間持株会社）になります。' : 'まだ選んでいません。'}</div>`}</div>
-    <div class="field"><span>業種を探して加える</span><input type="search" id="sgQ" value="${esc(D.q)}" data-in="kSgQ" placeholder="例：ソフトウェア、物流、介護、ホテル" aria-label="業種を探す">
-      <div id="sgList" class="typelist sm sg-types">${ksSgTypesHtml(D)}</div></div>
+    <div class="field"><span>業種を選んで加える（押すたびに加える・外す）</span>${ksTbHtml('sg', { id: 'sgQ', ph: '例：ソフトウェア、物流、介護、ホテル、リニア' })}</div>
     ${hist ? `<div class="field"><span>会社の状態</span><div class="seg" role="radiogroup" aria-label="会社の状態">${conds}</div><span class="small muted">${esc(KS_COND[e.cond].desc)}</span></div>` : ''}
     <div class="grid g3 cu-nums">${num('capital', '資本金（万円）')}${num('cash', '現預金（万円）')}${num('debt', '借入金（万円）')}</div>
     <span class="small muted" style="margin-top:-6px">${hist ? '空欄の項目は、選んだ会社の状態のまま。入れた額に合わせて、増資・減資・配当・借入・繰上返済の仕訳をします。' : '現預金は、立ち上げの設備を買った後に残る額。空欄なら、半年ほどの運転資金を株主が出資します。借入金を入れると、その額を銀行から借りて始めます。'}</span></div>`;
@@ -185,12 +171,12 @@ MODALS.kSg = () => {
   return modalFrame(D.id ? '会社の設定を変える' : '会社を加える', body, foot, { size: 'wide', sub: `就任の時点のグループ（${esc(where)}）` });
 };
 Object.assign(ACTIONS, {
-  kSgAdd: d => { ksStartStore(); const k = ksStartDefaults(); ksSgFix(k); UI.sg = { id: null, e: ksSgBlank(d.owner), q: '' }; showModal('kSg'); },
+  kSgAdd: d => { ksStartStore(); const k = ksStartDefaults(); ksSgFix(k); UI.sg = { id: null, e: ksSgBlank(d.owner), q: '' }; ksTbReset('sg'); showModal('kSg'); },
   kSgEdit: d => {
     ksStartStore();
     const e = ksSgList(ksStartDefaults()).find(x => x.id === d.id);
     if (!e) return;
-    UI.sg = { id: e.id, e: Object.assign({}, e, { units: e.units.map(x => Object.assign({}, x)) }), q: '' };
+    UI.sg = { id: e.id, e: Object.assign({}, e, { units: e.units.map(x => Object.assign({}, x)) }), q: '' }; ksTbReset('sg');
     showModal('kSg');
   },
   kSgDel: d => {
@@ -236,14 +222,22 @@ Object.assign(CHANGES, {
   kSgOwner: el => { ksSgStoreInputs(); UI.sg.e.owner = el.value; ksSgRedraw(); },
   kSgCc: el => { ksSgStoreInputs(); UI.sg.e.cc = el.value; ksSgRedraw(); },
   kSgPref: el => { if (UI.sg) UI.sg.e.pref = +el.value; },
+  kSgCap: el => {
+    const x = UI.sg && UI.sg.e.units[+el.dataset.i];
+    if (!x) return;
+    x.sc = ksCapToSc(x.type, el.value);
+    const n = ksScToCap(x.type, x.sc);
+    if (+el.value !== n) el.value = n;
+    for (const b of document.querySelectorAll(`[data-act="kSgSc"][data-i="${+el.dataset.i}"]`)) b.setAttribute('aria-pressed', String(Math.abs(+b.dataset.v - x.sc) < 1e-9));
+  },
+  kSgGrow: el => { const x = UI.sg && UI.sg.e.units[+el.dataset.i]; if (x) x.g = +el.value; },
 });
-INPUTS.kSgQ = el => { if (!UI.sg) return; UI.sg.q = el.value; const b = $('#sgList'); if (b) { b.innerHTML = ksSgTypesHtml(UI.sg); b.scrollTop = 0; } };
 
 /* 就任するときに渡す設定（金額は円に） */
 function ksSgOptions(k) {
   ksSgFix(k);
   const man = v => { const s = String(v ?? '').trim(); const n = parseFloat(s.replace(/[^0-9.]/g, '')); return s !== '' && Number.isFinite(n) ? Math.round(n) * 1e4 : null; };
-  return ksSgList(k).map(e => ({ id: e.id, name: e.name, owner: e.owner, own: e.own, cc: e.cc, pref: +e.pref || 0, units: e.units.map(x => ({ type: x.type, sc: x.sc })), cond: e.cond, capital: man(e.capital) || 0, cash: man(e.cash) || 0, debt: man(e.debt) }));
+  return ksSgList(k).map(e => ({ id: e.id, name: e.name, owner: e.owner, own: e.own, cc: e.cc, pref: +e.pref || 0, units: e.units.map(x => ({ type: x.type, sc: x.sc, g: +x.g || 0 })), cond: e.cond, capital: man(e.capital) || 0, cash: man(e.cash) || 0, debt: man(e.debt) }));
 }
 /* 会社が多いときは、「つくっています」と出してから始める（画面が止まって見えないように） */
 const ksSgStart0 = ACTIONS.kStart;

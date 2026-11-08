@@ -1244,6 +1244,136 @@ details.custom > summary { cursor: pointer; font-weight: 700; font-size: 13px; c
   .xbtn { min-width: 40px; min-height: 40px; }
 }
 
+/* まとめて実施・まとめて対応・質問をとばす（一括の操作） */
+.bulkbar { gap: 8px; flex-wrap: wrap; margin: 0 0 8px; padding: 8px 10px; border: 1px dashed var(--rule-strong); border-radius: var(--r-m); background: var(--sheet-2); }
+.closeskip { gap: 8px; flex-wrap: wrap; margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--rule-strong); }
+
+/* 福利厚生と手当：制度ごとに、段階（費用・満足度・効果）を並べて選ぶ */
+.wfcats button { display: inline-flex; align-items: center; gap: 4px; }
+.wfc-n { font-size: 11px; color: var(--ink-3); }
+.wflist { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 8px; }
+.wfi { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 10px 16px; padding: 10px 12px; border: 1px solid var(--rule); border-radius: var(--r-m); background: var(--sheet); }
+.wfi.on { border-color: var(--vault); }
+.wfi-t { min-width: 0; display: grid; gap: 3px; align-content: start; }
+.wfi-c { min-width: 0; }
+.wflv { display: grid; gap: 4px; }
+.wflv-b { display: grid; gap: 1px; text-align: left; padding: 6px 10px; border: 1px solid var(--rule-strong); border-radius: var(--r-s, 6px); background: var(--sheet); color: var(--ink); font: inherit; cursor: pointer; }
+.wflv-b[aria-pressed="true"] { border-color: var(--vault); background: var(--vault); color: var(--on-vault, #fff); }
+.wflv-b[aria-pressed="true"] .wflv-m { color: inherit; opacity: 0.9; }
+.wflv-b .tag { font-size: 11px; }
+.wflv-b[aria-pressed="true"] .tag { background: transparent; border-color: currentColor; color: inherit; }
+.wflv-n { font-size: 13px; font-weight: 600; }
+.wflv-m { font-size: 12px; color: var(--ink-3); }
+@media (max-width: 760px) {
+  .wfi { grid-template-columns: minmax(0, 1fr); padding: 10px; }
+  .wflv-b { min-height: 44px; }
+}
+
+/* カスタムスタート：事業ごとの設備の数と成長 */
+.cu-units { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 8px; }
+.cu-unit { padding: 8px 10px; border: 1px solid var(--rule); border-radius: var(--r-m); background: var(--sheet); display: grid; gap: 6px; }
+.cu-ugrid { gap: 8px 12px; }
+.cu-capin { display: flex; align-items: center; gap: 6px; }
+.cu-capin input { width: 8em; }
+.sg-udet { grid-column: 1 / -1; margin-top: 2px; }
+.stype-t .small:last-child:not(.muted) { white-space: normal; }
+
+/* 組織（社内の組織図・方針のレビュー・定例会） */
+.orgtree2, .orgkids2 { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.orgkids2 { margin: 6px 0 0 14px; padding-left: 10px; border-left: 2px solid var(--rule-strong); }
+.orgkids2 .orgkids2 .orgkids2 .orgkids2 { margin-left: 4px; padding-left: 8px; }
+.orgn { min-width: 0; }
+.orgc { display: grid; gap: 3px; padding: 8px 12px; border: 1px solid var(--rule-strong); border-radius: var(--r-m); background: var(--sheet); min-width: 0; }
+.orgc.ceo { border: 2px solid var(--vault); }
+.orgc.bu { border-color: var(--vault); background: var(--vault-soft); }
+.orgc.br { border-style: dashed; }
+.orgc.pend { box-shadow: inset 3px 0 0 var(--warn, #b7791f); }
+.orgc-t { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; min-width: 0; }
+.orgc-t b { font-size: 14px; overflow-wrap: anywhere; }
+.orgc-h, .orgc-d, .orgc-p { min-width: 0; overflow-wrap: anywhere; }
+.orgc-mot { display: inline-flex; align-items: center; gap: 4px; margin-left: 6px; white-space: nowrap; }
+.motbar { display: inline-block; width: 56px; height: 6px; border-radius: 3px; background: var(--rule); overflow: hidden; vertical-align: middle; }
+.motbar > span { display: block; height: 100%; background: var(--ink-3); }
+.motbar > span.hi { background: var(--vault); }
+.motbar > span.low { background: var(--neg, #b42318); }
+.orgc-a { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.orgunits, .orgfbs { display: grid; gap: 4px; }
+.orgpend, .orgmeets { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.orgpend li, .orgmeets li { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.orgpol-h { display: flex; gap: 10px; align-items: flex-start; }
+.orgpol-b { margin-top: 10px; padding: 10px 12px; border: 1px solid var(--rule); border-radius: var(--r-m); background: var(--sheet-2); }
+.meetrows { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.meetr { display: grid; gap: 3px; padding: 10px 12px; border: 1px solid var(--rule); border-radius: var(--r-m); background: var(--sheet); }
+.meetr-t { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.meetr-say { color: var(--ink-2, var(--ink)); }
+.meetr-c { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 4px; }
+@media (max-width: 760px) {
+  .orgkids2 { margin-left: 4px; padding-left: 8px; }
+  .orgc { padding: 8px 10px; }
+  .orgc-mot { margin-left: 0; }
+  .meetr-c .seg { flex: 1 1 100%; }
+  .meetr-c select { flex: 1 1 100%; }
+}
+.fbopt { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 8px; align-items: start; padding: 4px 0; }
+.fbopt input { margin-top: 3px; }
+.fbopt > span { display: grid; gap: 1px; }
+
+/* ---------- 業種を選ぶ一覧（産業 → 分類 → 業種）と、業種のくわしく ---------- */
+.tb { display: grid; gap: 6px; min-width: 0; }
+.tb-bar { display: flex; gap: 6px; flex-wrap: wrap; }
+.tb-bar .tb-q { flex: 1; min-width: 12em; }
+.tb-bar select { max-width: 12em; }
+.tb-body { border: 1px solid var(--rule); border-radius: var(--r-m); background: var(--sheet-2); padding: 6px; display: grid; gap: 6px; min-width: 0; }
+.tb-list { max-height: 340px; overflow: auto; overscroll-behavior: contain; padding: 1px; }
+.tb-body.tall .tb-list { max-height: 46vh; }
+.tb-hd { display: flex; gap: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap; font-size: 12px; color: var(--ink-3); padding: 0 2px; }
+.tb-crumb { display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; font-size: 13px; padding: 0 2px; }
+.tb-crumb button { border: 0; background: none; padding: 2px 0; font: inherit; color: var(--vault); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.tb-crumb span { color: var(--ink-3); }
+.tb-gd { margin: 0; font-size: 12px; color: var(--ink-2); padding: 0 2px; line-height: 1.65; }
+.tb-secs { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 5px; align-content: start; }
+.tb-sec, .tb-grp, .tbt-main { text-align: left; border: 1px solid var(--rule); background: var(--sheet); border-radius: var(--r-m); padding: 7px 9px; cursor: pointer; font: inherit; color: inherit; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; column-gap: 8px; width: 100%; }
+.tb-grp { grid-template-columns: auto minmax(0, 1fr) auto; }
+.tb-sec:hover, .tb-grp:hover, .tbt-main:hover { border-color: var(--vault-2); }
+.tb-grps, .tbts { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; align-content: start; }
+.tbt { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; align-items: center; }
+.tbt.on .tbt-main { border-color: var(--vault); background: var(--vault-soft); box-shadow: inset 0 0 0 1px var(--vault); }
+.tbt-t { display: grid; min-width: 0; gap: 1px; }
+.tbt-t b { font-size: 13px; }
+.tbt-d { font-size: 12px; color: var(--ink-2); display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.5; }
+.tbt-m { font-size: 11px; color: var(--ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tbt-more { margin-left: 8px; color: var(--vault); text-decoration: underline; text-underline-offset: 2px; }
+.tbt-a { display: inline-flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; align-items: center; }
+.tb-n { font-family: var(--f-num); font-size: 12px; color: var(--ink-3); min-width: 2.5em; text-align: right; }
+.tb-more { text-align: center; padding: 4px 0 2px; }
+.tname { border: 0; background: none; padding: 0; font: inherit; font-weight: 700; font-size: 13px; color: inherit; text-align: left; cursor: pointer; text-decoration: underline; text-decoration-color: var(--rule-strong); text-underline-offset: 3px; }
+.tname:hover { color: var(--vault); text-decoration-color: currentColor; }
+.ti-head { display: flex; gap: 10px; align-items: center; }
+.ti-ico { width: 2.4em; height: 2.4em; font-size: 18px; }
+.ti-badges { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.ti-d { font-size: 14px; line-height: 1.8; margin: 10px 0 4px; }
+.ti-gd { margin: 0 0 8px; line-height: 1.65; }
+.ti-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 8px 0; }
+.ti-3.sm { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+.ti-c { border: 1px solid var(--rule); border-top: 3px solid var(--vault); border-radius: var(--r-s); background: var(--sheet); padding: 8px 10px; }
+.ti-c.ti-kf { border-top-color: var(--s2); }
+.ti-c.ti-risk { border-top-color: var(--brass); }
+.ti-c h4 { margin: 0 0 4px; font-size: 12px; color: var(--ink-2); }
+.ti-c p { margin: 0; font-size: 13px; line-height: 1.7; }
+.ti-h { margin: 14px 0 6px; font-size: 13px; border-bottom: 1px solid var(--rule); padding-bottom: 3px; }
+@media (max-width: 760px) {
+  .tb-secs { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .tbt { grid-template-columns: minmax(0, 1fr); }
+  .tbt-a { justify-content: flex-start; }
+  .ti-3 { grid-template-columns: minmax(0, 1fr); }
+  .tb-list, .tb-body.tall .tb-list { max-height: 58vh; }
+  .tbt-t b, .tb-sec b, .tb-grp b, .tname { font-size: 15px; }
+  .tbt-d { font-size: 13px; }
+  .tb-sec, .tb-grp, .tbt-main { padding: 10px 12px; }
+  .tb-crumb { font-size: 14px; }
+  .tb-crumb button { padding: 6px 0; }
+}
+
 </style>
 </head>
 <body>
@@ -6929,8 +7059,8 @@ function closeModal(force) {
   if (!UI.modal) return;
   const m = MODALS[UI.modal.name];
   if (!force && m && m.locked && m.locked(UI.modal.args)) return;
-  // 用語カード・用語集は、開く前に見ていたモーダルへ戻る
-  if ((UI.modal.name === 'term' || UI.modal.name === 'glossary') && UI.mstack && UI.mstack.length) {
+  // 用語カード・用語集・業種のくわしく（ダイアログの上から開いたとき）は、開く前に見ていたモーダルへ戻る
+  if ((UI.modal.name === 'term' || UI.modal.name === 'glossary' || (UI.modal.name === 'kTypeInfo' && UI.modal.args && UI.modal.args.back)) && UI.mstack && UI.mstack.length) {
     const prev = UI.mstack.pop();
     showModal(prev.name, prev.args);
     return;
@@ -6950,12 +7080,14 @@ function drawModal() {
   const old = root.querySelector('.modal');
   const keepY = old && UI.mDrawn === UI.modal.name ? old.scrollTop : 0;
   const keepX = old && UI.mDrawn === UI.modal.name ? [...old.querySelectorAll('.tbl-wrap')].map(w => w.scrollLeft) : [];
+  const keepL = old && UI.mDrawn === UI.modal.name ? [...old.querySelectorAll('.tb-list, .typelist')].map(w => w.scrollTop) : []; // 業種の一覧の位置
   root.innerHTML = `<div class="scrim" data-act="scrim">${html}</div>`;
   UI.mDrawn = UI.modal.name;
   markStackTables(root);
   const nm = root.querySelector('.modal');
   if (nm && keepY) nm.scrollTop = keepY;
   if (nm && keepX.length) nm.querySelectorAll('.tbl-wrap').forEach((w, i) => { if (keepX[i]) w.scrollLeft = keepX[i]; });
+  if (nm && keepL.length) nm.querySelectorAll('.tb-list, .typelist').forEach((w, i) => { if (keepL[i]) w.scrollTop = keepL[i]; });
   document.body.style.overflow = 'hidden';
   const f = root.querySelector('[data-autofocus]') || root.querySelector('.mf .btn.primary') || root.querySelector('.modal button');
   if (f) f.focus({ preventScroll: true });
@@ -8979,7 +9111,8 @@ MODALS.menu = () => {
     <div class="seg">${[['auto', '端末に合わせる'], ['light', 'ライト'], ['dark', 'ダーク']].map(([k, l]) => `<button type="button" data-act="theme" data-v="${k}" aria-pressed="${theme === k}">${l}</button>`).join('')}</div>
     <div style="margin-top:10px;display:grid;gap:6px"><label class="inline small"><input type="checkbox" data-ch="setting" data-key="monthly" ${UI.settings.monthly ? 'checked' : ''}> 毎月、月次報告を表示する</label>
     <label class="inline small"><input type="checkbox" data-ch="setting" data-key="confirmAdvance" ${UI.settings.confirmAdvance ? 'checked' : ''}> 未処理の案件があるとき月末の締めを確認する</label>
-    <label class="inline small"><input type="checkbox" data-ch="setting" data-key="learn" ${UI.settings.learn !== false ? 'checked' : ''}> 学習サポート（決算書の読み方ガイド・解説）を表示する</label></div>
+    <label class="inline small"><input type="checkbox" data-ch="setting" data-key="learn" ${UI.settings.learn !== false ? 'checked' : ''}> 学習サポート（決算書の読み方ガイド・解説）を表示する</label>
+    <label class="inline small"><input type="checkbox" data-ch="setting" data-key="autoClose" ${UI.settings.autoClose ? 'checked' : ''}> 会社経営：決算整理の質問をとばして、すぐ結果を見る</label></div>
     <hr class="sep">${G ? btn('新しいゲームを始める', 'newGameConfirm', {}, 'danger') : ''}`;
   return modalFrame('メニュー', body, btn('閉じる', 'closeModal', {}, 'primary'));
 };
@@ -10328,6 +10461,7 @@ const KS_EQ = {
   train_comm: { n: '通勤形電車（1両）', a: 'veh', c: 1.8e8, l: 13, e: 'trans', cap: 150, cu: '人', crew: 0.25, fuel: 60e4, mt: 80e4 },
   train_exp: { n: '特急形電車（1両）', a: 'veh', c: 2.8e8, l: 13, e: 'trans', cap: 60, cu: '人', crew: 0.3, fuel: 70e4, mt: 100e4 },
   train_shin: { n: '新幹線の車両（1両）', a: 'veh', c: 3.5e8, l: 13, e: 'trans', cap: 80, cu: '人', crew: 0.2, fuel: 150e4, mt: 150e4 },
+  train_maglev: { n: '超電導リニアの車両（1両）', a: 'veh', c: 9e8, l: 13, e: 'trans', cap: 68, cu: '人', crew: 0.12, fuel: 320e4, mt: 260e4 },
   train_dmu: { n: '気動車（ディーゼルカー・1両）', a: 'veh', c: 2.5e8, l: 11, e: 'trans', cap: 100, cu: '人', crew: 0.5, fuel: 60e4, mt: 80e4 },
   train_lrt: { n: '路面電車（LRT・1編成）', a: 'veh', c: 3e8, l: 13, e: 'trans', cap: 150, cu: '人', crew: 1, fuel: 30e4, mt: 50e4 },
   train_mono: { n: 'モノレール車両（1両）', a: 'veh', c: 3e8, l: 13, e: 'trans', cap: 100, cu: '人', crew: 0.25, fuel: 40e4, mt: 60e4 },
@@ -16118,10 +16252,12 @@ function ksResolveCatalog() {
         p, eq: (ov.eq || g.eq || []).map(ksParseEq), aux: (ov.aux || g.aux || []).map(ksParseEq),
         laws: ov.laws || g.laws || [], lic: ov.lic || g.lic || null, seasonKey: ov.season || g.season || 'flat', scale: ov.scale || g.scale || 1,
         calib: g.calib !== false && ov.calib !== false, legacy: ov.legacy || g.legacy || null,
+        // 業種の補足（選ぶ画面の「くわしく」）：売上の立ち方・成功のカギ・主なリスク・探すときの言葉
+        how: ov.how || g.how || '', kf: ov.kf || g.kf || '', risk: ov.risk || g.risk || '', kw: ov.kw || g.kw || [], gd: g.d || '',
       };
       S.season = ksSeasonArr(S.seasonKey);
       S.roles = ksRolesFor(g.eng, p);
-      S.key = (name + ' ' + g.grp + ' ' + (S.prod || []).join(' ') + ' ' + (S.cust || []).join(' ') + ' ' + KS_SECTORS[g.sec].n).toLowerCase();
+      S.key = (name + ' ' + g.grp + ' ' + (S.prod || []).join(' ') + ' ' + (S.cust || []).join(' ') + ' ' + KS_SECTORS[g.sec].n + ' ' + (S.kw || []).join(' ')).toLowerCase();
       KS_TYPES[name] = S;
       KS_TYPE_LIST.push(S);
     }
@@ -16135,20 +16271,59 @@ function ksS(u) {
 }
 function ksP(u) { return ksS(u).p; }
 function ksEngOf(u) { return KS_ENGINE[ksS(u).eng]; }
-/* 業種を探す（名前・グループ・製品・お客・大分類の文字を含む） */
-function ksSearchTypes(q, sec, eng, limit = 80) {
-  const words = String(q || '').toLowerCase().split(/[\s　]+/).filter(Boolean);
-  const out = [];
-  for (const S of KS_TYPE_LIST) {
-    if (sec && S.sec !== sec) continue;
-    if (eng && S.eng !== eng) continue;
-    if (words.length && !words.every(w => S.key.includes(w))) continue;
-    out.push(S);
-    if (out.length >= limit) break;
-  }
-  return out;
+/* 探す言葉をそろえる：全角の英数字を半角に、大文字を小文字に、カタカナをひらがなに（「リニア」「りにあ」「ＥＶ」「ev」が同じになる） */
+function ksNorm(s) {
+  return String(s || '').normalize('NFKC').toLowerCase().replace(/[\u30a1-\u30f6]/g, c => String.fromCharCode(c.charCodeAt(0) - 0x60));
 }
+/* 探すときの索引（初めて探すときに作る） */
+function ksTypeIdx(S) {
+  if (S._ix) return S._ix;
+  return (S._ix = {
+    name: ksNorm(S.name), kw: ksNorm((S.kw || []).join(' ')), grp: ksNorm(S.grp), pc: ksNorm((S.prod || []).join(' ') + ' ' + (S.cust || []).join(' ')),
+    sec: ksNorm((KS_SECTORS[S.sec] || {}).n), d: ksNorm(S.d + ' ' + (S.how || '') + ' ' + (S.gd || '')),
+  });
+}
+/* 業種を探す：言葉がすべて、名前・探す言葉・中分類・商品とお客さま・大分類・説明のどこかに入っている業種を、
+   名前に入っているものから順に並べる。o: { sec, eng, limit, skip（除く業種名の Set） } → { total, list } */
+function ksTypeFind(q, o = {}) {
+  const words = ksNorm(q).split(/[\s、,，・/／]+/).filter(Boolean);
+  const hit = [];
+  for (const S of KS_TYPE_LIST) {
+    if (o.sec && S.sec !== o.sec) continue;
+    if (o.eng && S.eng !== o.eng) continue;
+    if (o.skip && o.skip.has(S.name)) continue;
+    if (!words.length) { hit.push([0, hit.length, S]); continue; }
+    const I = ksTypeIdx(S);
+    let sc = 0;
+    for (const w of words) {
+      const s = I.name === w ? 100 : I.name.startsWith(w) ? 70 : I.name.includes(w) ? 50 : I.kw.includes(w) ? 35 : I.grp.includes(w) ? 25 : I.pc.includes(w) ? 18 : I.sec.includes(w) ? 10 : I.d.includes(w) ? 6 : 0;
+      if (!s) { sc = -1; break; }
+      sc += s;
+    }
+    if (sc > 0) hit.push([sc - I.name.length * 0.05, hit.length, S]);
+  }
+  if (words.length) hit.sort((a, b) => b[0] - a[0] || a[1] - b[1]);
+  const lim = o.limit || 80;
+  return { total: hit.length, list: hit.slice(0, lim).map(x => x[2]) };
+}
+/* 業種を探す（前からある呼び方。言葉があれば当てはまる順、なければカタログの順） */
+function ksSearchTypes(q, sec, eng, limit = 80) { return ksTypeFind(q, { sec, eng, limit }).list; }
 function ksCountTypes(sec, eng) { return KS_TYPE_LIST.filter(S => (!sec || S.sec === sec) && (!eng || S.eng === eng)).length; }
+/* 中分類の索引：大分類ごとに、中分類（グループ）を並べる。{ bySec: { E: [{ sec, grp, icon, d, types: [S…], eng: { mfg: 数 } }] }, byKey: { 'E|…': 同じもの } } */
+let KS_GRP_IX = null;
+function ksGrpIndex() {
+  if (KS_GRP_IX && KS_GRP_IX.n === KS_TYPE_LIST.length) return KS_GRP_IX;
+  const ix = { n: KS_TYPE_LIST.length, bySec: {}, byKey: {} };
+  for (const S of KS_TYPE_LIST) {
+    const key = S.sec + '|' + S.grp;
+    let g = ix.byKey[key];
+    if (!g) { g = ix.byKey[key] = { sec: S.sec, grp: S.grp, icon: S.icon, d: S.gd || '', how: S.how, types: [], eng: {} }; (ix.bySec[S.sec] = ix.bySec[S.sec] || []).push(g); }
+    if (!g.d && S.gd) g.d = S.gd;
+    g.types.push(S);
+    g.eng[S.eng] = (g.eng[S.eng] || 0) + 1;
+  }
+  return (KS_GRP_IX = ix);
+}
 ksResolveCatalog();
 
 /* ---- 21_kaisha_core.js ---- */
@@ -16931,6 +17106,18 @@ function ksFinishClosing() {
   if (typeof ksExtAfterClose === 'function') ksExtAfterClose(fy); // 目標の評価・連結決算
   ksNextMonth();
 }
+/* 決算整理の残りの手順を、選んだ設定（選んでいなければ標準）でまとめて記帳し、決算を確定する（質問はとばす） */
+function ksCloseSkipAll() {
+  const c = G.closing;
+  if (!c) return false;
+  c.opt = c.opt || {};
+  c.entries = c.entries || {};
+  for (const s of c.steps.slice(c.i)) if (s !== 'done' && s !== 'con') c.entries[s] = ksPostStep(s, c.opt[s] || {});
+  c.i = c.steps.length - 1;
+  c.view = c.i;
+  ksFinishClosing();
+  return true;
+}
 /* 全部の手順を正しく処理する（過去の期・自動処理） */
 function ksAutoClose() {
   if (!G.closing) return;
@@ -17521,9 +17708,52 @@ function ksCompanyDesc(us) {
 /* 開始時の事業のリスト：o.units = [{ type, sc, n }]（o.ind は以前の6業種の id） */
 function ksStartList(o) {
   const raw = o.units && o.units.length ? o.units : [{ type: KS_LEGACY_TYPE[o.ind] || o.ind }];
-  // 事業の数に上限はない（同じ業種は1つにまとめる）
+  // 事業の数に上限はない（同じ業種は1つにまとめる）。規模は設備の数から決めた倍率（0.1〜上限）、g はこれまでの成長（年率）
   const seen = new Set();
-  return raw.map(x => (typeof x === 'string' ? { type: x } : x)).filter(x => KS_TYPES[x.type] && !seen.has(x.type) && seen.add(x.type));
+  return raw.map(x => (typeof x === 'string' ? { type: x } : x)).filter(x => KS_TYPES[x.type] && !seen.has(x.type) && seen.add(x.type))
+    .map(x => Object.assign({}, x, { sc: clamp(+x.sc || 1, 0.1, ksCapInfo(x.type).maxSc), g: clamp(+x.g || 0, -0.15, 0.2) }));
+}
+/* 事業の「設備の数」：規模の倍率 1 のときの数（base）と、その名前・単位。開始の画面で数を入れると、倍率 = 数 ÷ base になる */
+function ksCapInfo(type) {
+  const S = KS_TYPES[type];
+  if (!S) return { n: '規模', u: '', base: 1, maxSc: 40 };
+  const P = S.p;
+  const eqN = list => sum(list || [], e => e.n || 0);
+  const lim = n => clamp(Math.floor(600 / Math.max(1, n)), 4, 40); // 資産の数が多くなりすぎないように
+  switch (S.eng) {
+    case 'shop': return { n: '店舗の数', u: '店', base: P.stores || 1, maxSc: lim(P.stores || 1) };
+    case 'rest': return { n: '店舗の数', u: '店', base: P.shops || 1, maxSc: lim(P.shops || 1) };
+    case 'mfg': { const n = eqN(S.eq) || 1; return P.mode === 'line' ? { n: '生産ラインの数', u: 'ライン', base: n, maxSc: lim(n) } : { n: '機械の数', u: '台', base: n, maxSc: lim(n) }; }
+    case 'build': return { n: `${(S.roles[0] || {}).n || '現場監督'}の人数`, u: '人', base: P.site || 1, maxSc: 40 };
+    case 'trade': return { n: '取引先の数', u: '社', base: P.custN || 10, maxSc: 40, sqrt: true };
+    case 'pro': return { n: `${((S.roles[0] || {}).n || '技術者').replace(/（.*?）/, '')}の人数`, u: '人', base: P.n || 10, maxSc: 40 };
+    case 'subs': return { n: '利用者の数', u: '人', base: P.users || 1000, maxSc: 40 };
+    case 'cap': return { n: `施設の能力（${P.unit || '単位'}）`, u: P.unit || '', base: P.units || 1, maxSc: lim(eqN(S.eq)) };
+    case 'trans': { const q = S.eq[0] ? KS_EQ[S.eq[0].k] : null; const n = S.eq[0] ? S.eq[0].n : 1; return { n: `${q ? q.n.replace(/（.*?）/, '') : '車両'}の数`, u: q && q.a === 'veh' && q.cap > 1000 ? '隻' : '台', base: n, maxSc: lim(eqN(S.eq)) }; }
+    default: return { n: '規模', u: '', base: 1, maxSc: 40 };
+  }
+}
+/* 成長の勢いの記録：g（年率）と、過去4期の需要の平均（キャリブレーションの基準） */
+function ksTrendMake(g) {
+  let a = 0;
+  for (let d = -48; d < 0; d++) a += Math.pow(1 + g, d / 12);
+  return { g, cal: +(a / 48).toFixed(4) };
+}
+const KS_GROWTH = [[-0.1, '縮小（年−10%）'], [-0.05, 'やや縮小（年−5%）'], [0, '横ばい'], [0.05, '成長（年+5%）'], [0.1, '高成長（年+10%）'], [0.15, '急成長（年+15%）']];
+/* 設備の数 ⇔ 規模の倍率 */
+function ksCapToSc(type, n) { const c = ksCapInfo(type); const r = Math.max(0, +n || 0) / c.base; return clamp(c.sqrt ? r * r : r, 0.1, c.maxSc); }
+function ksScToCap(type, sc) { const c = ksCapInfo(type); return Math.max(1, Math.round(c.base * (c.sqrt ? Math.sqrt(sc || 1) : (sc || 1)))); }
+/* これまでの成長（カスタムスタート）：事業の需要の勢い。就任より前は、さかのぼるほど需要が小さい（縮小なら大きい）。
+   就任のあとも勢いは続くが、2年ごとに半分になりながら落ち着く。開始時のキャリブレーションの試算では使わない */
+function ksTrendF(u) {
+  const t = u && u.tr;
+  if (!t || !t.g) return 1;
+  // 開始時のキャリブレーションは、過去4期の平均の需要で合わせる（伸びてきた会社は、就任の時に利益率が業界の水準より高い）
+  if (G.calibRun) return t.cal || 1;
+  const lg = Math.log(1 + t.g);
+  const d = G.m - KS_START_M;
+  if (d <= 0) return Math.exp(lg * d / 12);
+  return Math.exp(lg * (2 / Math.LN2) * (1 - Math.pow(0.5, d / 24)));
 }
 function ksNewGame(o) {
   const seed = (o.seed ?? Math.floor(Math.random() * 2 ** 31)) | 0;
@@ -17548,6 +17778,7 @@ function ksNewGame(o) {
   const parts = [];
   for (const x of list) {
     const u = ksMakeUnit(x.type, x.sc || 1, x.n || null);
+    if (x.g) u.tr = ksTrendMake(x.g);
     u.startM = KS_HIST_START - 12 * randInt(3, Math.max(4, G.firstPeriod - 4));
     const lv = o.lv && o.lv[parts.length];
     if (lv) { u.lv = Object.assign({}, lv); u.calK = lv.k; delete u.lv.k; }
@@ -18621,7 +18852,7 @@ function ksUName(u) { return u.n || ksS(u).name; }
 function ksHasEng(eng) { return ksActiveUnits().some(u => ksS(u).eng === eng); }
 function ksUnitsOf(eng) { return ksActiveUnits().filter(u => ksS(u).eng === eng); }
 /* 成長の要素（20e・29）からの倍率。まだ無いときは1 */
-function ksUpF(u) { return (typeof ksUpgradeF === 'function' ? ksUpgradeF(u, 'demand') : 1) * (typeof ksLawDemandF === 'function' ? ksLawDemandF(u) : 1); }
+function ksUpF(u) { return (typeof ksUpgradeF === 'function' ? ksUpgradeF(u, 'demand') : 1) * (typeof ksLawDemandF === 'function' ? ksLawDemandF(u) : 1) * (typeof ksTrendF === 'function' ? ksTrendF(u) : 1); }
 function ksShrinkF(u) { return typeof ksUpgradeF === 'function' ? ksUpgradeF(u, 'shrink') : 1; }
 function ksEnF(u) { return typeof ksUpgradeF === 'function' ? ksUpgradeF(u, 'energy') : 1; }
 function ksFuelF(u) { return typeof ksUpgradeF === 'function' ? ksUpgradeF(u, 'fuel') : 1; }
@@ -18651,7 +18882,7 @@ function ksCalibRun(u, k, months, warm, hqFixed = 0) {
   try {
     const cu = JSON.parse(JSON.stringify(u));
     G.units = [cu];
-    G.hist = true; G.repT = 1; G.over = null; G.closing = null;
+    G.hist = true; G.calibRun = true; G.repT = 1; G.over = null; G.closing = null;
     const S = ksS(cu), E = KS_ENGINE[S.eng];
     if (k !== 1) E.scale(cu, k);
     // 工事：始める前から抱えている工事も同じ倍率にする（工期が長いと、測る期間に古い大きさの工事の完成が入り、倍率を見誤る）
@@ -18805,6 +19036,7 @@ function ksCloseUnit(u) {
   u.dep = 0;
   G.curU = null;
   u.closedM = G.m;
+  if (typeof ksDeptDropUnit === 'function') ksDeptDropUnit(u.id); // 社内の組織の受け持ちから外す
   return `設備の売却 ${fmtYen(pv.sale)}・退職金 ${fmtYen(pv.sev)}${pv.inv ? `・在庫の処分 ${fmtYen(pv.inv / 2)}` : ''}`;
 }
 
@@ -19958,7 +20190,9 @@ function ksRunAdvance() {
   if (view && !G.closing && !G.over && ksSubById(view) && !ksSubById(view).gone) { ksViewEntity(view); rep = G.monthRep || rep; }
   UI.queue = [];
   if (rep && UI.settings.monthly) UI.queue.push({ name: 'kMonth', args: { m: rep.m } });
-  if (G.closing) { G.closing.view = G.closing.i; UI.queue.push({ name: 'kClose', args: {} }); }
+  // 「質問をとばして結果を見る」設定なら、決算整理をまとめて記帳して結果を出す
+  if (G.closing && UI.settings.autoClose && typeof ksCloseSkipAll === 'function') { ksCloseSkipAll(); UI.queue.push({ name: 'kResult', args: {} }); }
+  else if (G.closing) { G.closing.view = G.closing.i; UI.queue.push({ name: 'kClose', args: {} }); }
   for (const s of (G.pendingModals || [])) UI.queue.push({ name: s.type, args: s });
   G.pendingModals = [];
   if (G.over) UI.queue.push({ name: 'kOver', args: {} });
@@ -20259,15 +20493,6 @@ function ksStartStore() {
   if (seed) k.seed = seed.value;
   if (co) { if (co.value.trim() && co.value.trim() !== ksDefaultCoName(k.units[0].type)) { k.coName = co.value; k.coEdited = true; } else if (!co.value.trim()) { k.coName = ''; k.coEdited = false; } }
 }
-function ksStartTypeRow(S, k) {
-  const sel = k.units.some(x => x.type === S.name);
-  return `<li class="stype${sel ? ' on' : ''}"><span class="indico" aria-hidden="true">${esc(S.icon)}</span><span class="stype-t"><b>${esc(S.name)}</b><span class="small muted">${esc(S.grp)}・${esc(KS_ENG_INFO[S.eng].n)}</span></span>
-    <span class="stype-a">${btn(sel ? '選択中' : 'これにする', 'kStPick', { v: S.name }, `sm${sel ? '' : ' primary'}`, { disabled: sel })}${!sel ? btn('＋加える', 'kStAdd', { v: S.name }, 'sm') : ''}</span></li>`;
-}
-function ksStartTypesHtml(k) {
-  const list = ksSearchTypes(k.q, k.sec, k.eng, 40);
-  return list.length ? `<ul class="stypes">${list.map(S => ksStartTypeRow(S, k)).join('')}</ul>` : '<div class="empty">見つかりません。言葉を変えて探してください</div>';
-}
 function renderStartK() {
   const k = ksStartDefaults();
   k.units = k.units.filter(x => KS_TYPES[x.type]);
@@ -20275,11 +20500,12 @@ function renderStartK() {
   let meta = null;
   try { meta = JSON.parse(lsGet(LSK.meta('a')) || 'null'); } catch (e) { meta = null; }
   const cont = meta && !meta.over && meta.desc ? btn(`続きから（${esc(meta.co)}・${ymLabel(meta.m)}）`, 'loadAuto') : '';
-  const chosen = k.units.map((x, i) => { const S = KS_TYPES[x.type]; return `<li class="sunit"><span class="indico" aria-hidden="true">${esc(S.icon)}</span><span class="stype-t"><b>${esc(S.name)}</b><span class="small muted">${esc(S.d || KS_ENG_INFO[S.eng].desc)}</span></span>
+  const chosen = k.units.map((x, i) => { const S = KS_TYPES[x.type]; const ci = ksCapInfo(x.type); return `<li class="sunit"><span class="indico" aria-hidden="true">${esc(S.icon)}</span><span class="stype-t"><button type="button" class="tname" data-act="kTbInfo" data-ctx="st" data-v="${esc(S.name)}" title="くわしく見る">${esc(S.name)}</button><span class="small muted">${esc(S.d || KS_ENG_INFO[S.eng].desc)}</span><span class="small">${esc(ci.n)} ${fmtNum(ksScToCap(x.type, x.sc || 1), 0)}${esc(ci.u)}${k.cu && k.cu.on && x.g ? `・${esc((KS_GROWTH.find(g => Math.abs(g[0] - x.g) < 1e-9) || [0, ''])[1])}` : ''}</span></span>
     <span class="stype-a"><span class="seg sm" role="radiogroup" aria-label="規模">${[[0.5, '小'], [1, '中'], [2, '大'], [4, '特大']].map(([v, l]) => `<button type="button" data-act="kStSc" data-i="${i}" data-v="${v}" aria-pressed="${x.sc === v}">${l}</button>`).join('')}</span>${k.units.length > 1 ? btn('外す', 'kStDel', { i }, 'sm ghost') : ''}</span></li>`; }).join('');
-  const picks = ksStartPicks().map(n => `<button type="button" class="chip${k.units.some(x => x.type === n) ? ' on' : ''}" data-act="kStPick" data-v="${esc(n)}">${esc(KS_TYPES[n].icon)} ${esc(n)}</button>`).join('');
-  const secs = Object.entries(KS_SECTORS).map(([c, x]) => `<option value="${c}"${k.sec === c ? ' selected' : ''}>${esc(x.n)}（${ksCountTypes(c, null)}）</option>`).join('');
-  const engs = Object.entries(KS_ENG_INFO).map(([c, x]) => `<option value="${c}"${k.eng === c ? ' selected' : ''}>${esc(x.n)}</option>`).join('');
+  // おすすめ：初めは8つ。「ほかのおすすめ」で全部
+  const pickAll = ksStartPicks();
+  const picks = pickAll.slice(0, k.morePicks ? pickAll.length : 8).map(n => `<button type="button" class="chip${k.units.some(x => x.type === n) ? ' on' : ''}" data-act="kStPick" data-v="${esc(n)}">${esc(KS_TYPES[n].icon)} ${esc(n)}</button>`).join('')
+    + (pickAll.length > 8 ? `<button type="button" class="chip" data-act="kStMorePicks" aria-expanded="${!!k.morePicks}">${k.morePicks ? 'たたむ' : `ほかのおすすめ（${pickAll.length - 8}）`}</button>` : '');
   const conds = Object.entries(KS_COND).map(([c, C]) => `<button type="button" data-act="kStCond" data-v="${c}" aria-pressed="${k.cond === c}">${C.n}</button>`).join('');
   const terms = [[10, '10年'], [20, '20年'], [0, '定めない']].map(([v, l]) => `<button type="button" data-act="kStTerm" data-v="${v}" aria-pressed="${k.term === v}">${l}</button>`).join('');
   const setup = `<section class="setup" aria-labelledby="setupTitle">
@@ -20287,9 +20513,7 @@ function renderStartK() {
     ${startModeSwitch()}
     <div class="field"><span>事業（${fmtNum(KS_TYPE_LIST.length, 0)}の業種から。いくつでも組み合わせられます）</span><ul class="sunits">${chosen}</ul></div>
     <div class="field"><span>おすすめ</span><div class="chips">${picks}</div></div>
-    <div class="field"><span>業種を探す</span><div class="row" style="gap:6px;flex-wrap:wrap"><input type="search" id="kstQ" value="${esc(k.q)}" data-in="kStQ" placeholder="例：レーザー、データセンター、航空、海運、新聞、介護" style="flex:1;min-width:12em" aria-label="業種を探す">
-      <select data-ch="kStSec" aria-label="産業"><option value="">すべての産業</option>${secs}</select><select data-ch="kStEng" aria-label="事業の型"><option value="">すべての型</option>${engs}</select></div>
-      <div id="kstList" class="stypes-wrap">${ksStartTypesHtml(k)}</div></div>
+    <div class="field"><span>業種を選ぶ（産業 → 分類 → 業種とたどるか、言葉で探す。名前を押すと、くわしい説明が出ます）</span>${ksTbHtml('st', { id: 'kstQ' })}</div>
     <div class="field"><span>引き継ぐ会社の状態</span><div class="seg" role="radiogroup">${conds}</div><span class="small muted">${esc(KS_COND[k.cond].desc)}</span></div>
     ${typeof ksSgHtml === 'function' ? ksSgHtml(k) : ''}
     ${typeof ksCustomHtml === 'function' ? ksCustomHtml(k) : ''}
@@ -20314,6 +20538,7 @@ Object.assign(ACTIONS, {
   stMode: d => { if (UI.start.mode === 'gyosei') gyStartStore(); else if (UI.start.mode === 'kaisha') ksStartStore(); else if (typeof startStoreInputs === 'function') startStoreInputs(); UI.start.mode = d.v; render(); },
   kStPick: d => { ksStartStore(); const k = UI.start.k; k.units = [{ type: d.v, sc: 1 }]; if (!k.coEdited) k.coName = ''; render(); },
   kStAdd: d => { ksStartStore(); const k = UI.start.k; if (!k.units.some(x => x.type === d.v)) k.units.push({ type: d.v, sc: 1 }); render(); },
+  kStMorePicks: () => { ksStartStore(); UI.start.k.morePicks = !UI.start.k.morePicks; render(); },
   kStDel: d => { ksStartStore(); const k = UI.start.k; if (k.units.length > 1) k.units.splice(+d.i, 1); render(); },
   kStSc: d => { ksStartStore(); const k = UI.start.k; if (k.units[+d.i]) k.units[+d.i].sc = +d.v; render(); },
   kStCond: d => { ksStartStore(); UI.start.k.cond = d.v; render(); },
@@ -20325,7 +20550,8 @@ Object.assign(ACTIONS, {
     let co = (k.coEdited ? k.coName : '').trim() || ksDefaultCoName(k.units[0].type);
     if (!/株式会社|有限会社|合同会社/.test(co)) co = '株式会社' + co;
     const seedN = parseInt(String(k.seed).replace(/[^0-9]/g, ''), 10);
-    const o = { units: k.units.map(x => ({ type: x.type, sc: x.sc })), coName: co, ceo, cond: k.cond, term: k.term };
+    // 成長（g）はカスタムスタートのときだけ使う。設備の数で決めた規模（sc）はいつも使う
+    const o = { units: k.units.map(x => ({ type: x.type, sc: x.sc, g: k.cu && k.cu.on ? (+x.g || 0) : 0 })), coName: co, ceo, cond: k.cond, term: k.term };
     if (Number.isFinite(seedN)) o.seed = seedN;
     if (typeof ksCustomOptions === 'function') Object.assign(o, ksCustomOptions(k));
     if (typeof ksSgOptions === 'function') { const sg = ksSgOptions(k); if (sg.length) o.startGroup = sg; } // 就任の時点のグループの会社
@@ -20340,11 +20566,250 @@ Object.assign(ACTIONS, {
     showModal('kIntro');
   },
 });
-Object.assign(CHANGES, {
-  kStSec: el => { ksStartStore(); UI.start.k.sec = el.value; const b = $('#kstList'); if (b) b.innerHTML = ksStartTypesHtml(UI.start.k); },
-  kStEng: el => { ksStartStore(); UI.start.k.eng = el.value; const b = $('#kstList'); if (b) b.innerHTML = ksStartTypesHtml(UI.start.k); },
+
+/* ---- 23b_kaisha_typepick.js ---- */
+/* =========================================================
+ *  23b_kaisha_typepick.js : 業種を選ぶ一覧（共通の部品）と、業種の「くわしく」
+ *   産業（大分類）→ 分類（中分類）→ 業種 とたどる一覧と、言葉で探す欄。
+ *   開始画面・新しい事業を始める・子会社の設立・就任の時点のグループで同じものを使う。
+ *   くわしく：何をする商売か、売上の立ち方・成功のカギ・主なリスク、ふつうの規模の設備と人、
+ *   お金の入り方、季節の波、許認可と法令、同じ分類の業種。
+ * ========================================================= */
+
+/* 事業の型ごとの補足（業種のカタログに書いていないときに使う） */
+const KS_ENG_TIPS = {
+  shop: { how: '店に来たお客さまに商品やサービスを売り、その場で現金やカードで受け取る。売上は客数×客単価。', kf: '立地と品ぞろえ、在庫の回転、客数に合わせた人手のシフト。', risk: '近くの競合店、売れ残りと廃棄、家賃と人件費の上昇。' },
+  rest: { how: '料理と飲み物を出して、その場で受け取る。売上は席数×回転×客単価。', kf: '食材の原価率と人件費（FL比率）、常連のお客さま、立地。', risk: '食材の値上がり、人手不足、食中毒、近くの新しい店。' },
+  mfg: { how: '設備で製品をつくり、取引先に納めて、1〜2か月後に代金を受け取る（掛け売り）。', kf: '設備の稼働率、材料の歩留まり、品質と納期、取引先の数。', risk: '主な取引先の発注の減少、材料とエネルギーの値上がり、設備の故障と事故。' },
+  build: { how: '見積をして工事を受注し、契約・中間・完成に分けて代金を受け取る。完成までの立替が大きい。', kf: '見積の精度と工程の管理、現場監督の人数、下請けの確保。', risk: '資材の値上がり、工期の遅れ、事故、発注者の支払いの遅れ。' },
+  trade: { how: '仕入れた商品を取引先に掛けで売る。粗利は薄く、売上の額は大きい。', kf: '仕入の条件、取引先の数と与信の管理、在庫の回転、物流。', risk: '取引先の倒産（貸倒れ）、在庫の値下がり、為替。' },
+  pro: { how: '人の時間（人月・時間）を売る。売上は人数×単価×稼働率。', kf: '単価の高い仕事を取る営業、稼働率、採用と離職の少なさ。', risk: '人が辞めること、案件の途切れ、単価の値下がり。' },
+  subs: { how: '会員・利用者から毎月の料金を受け取り、広告や手数料も得る。', kf: '利用者を獲得する費用、解約率、サービスの質。', risk: '競合のサービス、解約の増加、システムの障害と情報の漏えい。' },
+  cap: { how: '施設や設備の能力を使ってもらい、使った分の料金を受け取る。売上は能力×稼働率×単価。', kf: '稼働率を高く保つこと、単価、設備投資に見合う需要。', risk: '需要の落ち込み（固定費が重い）、設備の故障、大きな設備投資の借入。' },
+  trans: { how: '人や物を運んで運賃を受け取る。売上は車両の数×輸送力×利用率×運賃。', kf: '利用率（積載率・搭乗率）、燃料の費用、乗務員の確保、整備。', risk: '燃料の値上がり、事故、乗務員の不足、景気による需要の変動。' },
+};
+const KS_MONTHS_FY = ['4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月', '1月', '2月', '3月'];
+
+/* ---------- 使う場所ごとの決まり ----------
+ * on：選んでいるか  main：行を押したときの操作 [act, data]  acts：行の右のボタン  foot：くわしくの下のボタン  doIt：くわしくから選んだとき */
+const KS_TB_CTX = {
+  // 開始画面：行を押すと「くわしく」。「これにする」（この業種だけにする）か「＋加える」
+  st: {
+    on: S => ksStartDefaults().units.some(x => x.type === S.name),
+    main: S => ['kTbInfo', { ctx: 'st', v: S.name }],
+    acts: (S, on) => on ? '<span class="tag ok">選んでいる</span>' : btn('これにする', 'kStPick', { v: S.name }, 'sm primary') + btn('＋加える', 'kStAdd', { v: S.name }, 'sm'),
+    foot: (S, on) => on ? btn('選んでいる', 'noop', {}, 'primary', { disabled: true }) : btn('＋事業に加える', 'kTiDo', { ctx: 'st', v: S.name, how: 'add' }) + btn('この業種にする', 'kTiDo', { ctx: 'st', v: S.name, how: 'pick' }, 'primary'),
+    doIt: (v, how) => ACTIONS[how === 'add' ? 'kStAdd' : 'kStPick']({ v }),
+  },
+  // 新しい事業を始める：行を押すと右に中身と計画が出る
+  nu: {
+    skip: () => (G ? new Set(ksActiveUnits().map(u => u.type)) : null),
+    on: S => !!(UI.kNU && UI.kNU.sel === S.name),
+    main: S => ['kNUPick', { v: S.name }],
+    acts: () => '',
+    foot: S => btn('この業種を選ぶ', 'kTiDo', { ctx: 'nu', v: S.name }, 'primary'),
+    doIt: v => ACTIONS.kNUPick({ v }),
+  },
+  // 子会社・関連会社の設立
+  gf: {
+    on: S => !!(UI.kGF && UI.kGF.type === S.name),
+    main: S => ['kGFpick', { v: S.name }],
+    acts: S => btn('くわしく', 'kTbInfo', { ctx: 'gf', v: S.name }, 'sm ghost'),
+    foot: (S, on) => on ? btn('選んでいる', 'noop', {}, 'primary', { disabled: true }) : btn('この業種で設立する', 'kTiDo', { ctx: 'gf', v: S.name }, 'primary'),
+    doIt: v => ACTIONS.kGFpick({ v }),
+  },
+  // 就任の時点のグループの会社の事業（押すたびに加える・外す）
+  sg: {
+    on: S => !!(UI.sg && UI.sg.e && UI.sg.e.units.some(x => x.type === S.name)),
+    main: S => ['kSgUAdd', { v: S.name }],
+    acts: S => btn('くわしく', 'kTbInfo', { ctx: 'sg', v: S.name }, 'sm ghost'),
+    foot: (S, on) => btn(on ? 'この会社の事業から外す' : 'この会社の事業に加える', 'kTiDo', { ctx: 'sg', v: S.name }, on ? '' : 'primary'),
+    doIt: v => ACTIONS.kSgUAdd({ v }),
+  },
+};
+function ksTb(ctx) {
+  UI.tb = UI.tb || {};
+  return UI.tb[ctx] || (UI.tb[ctx] = { q: '', sec: '', grp: '', eng: '', lim: 60 });
+}
+function ksTbReset(ctx) { if (UI.tb) delete UI.tb[ctx]; }
+function ksDataAttr(o) { return Object.entries(o).map(([k, v]) => ` data-${k}="${esc(v)}"`).join(''); }
+/* 説明を一覧の1〜2行に収まる長さにする */
+function ksTbShort(s, n = 64) { s = String(s || ''); const i = s.indexOf('。'); const a = i > 0 && i < n ? s.slice(0, i + 1) : s; return a.length > n ? a.slice(0, n - 1) + '…' : a; }
+function ksTbRow(ctx, S, lv) {
+  const C = KS_TB_CTX[ctx];
+  const on = C.on(S);
+  const [act, data] = C.main(S);
+  const meta = lv === 2 ? KS_ENG_INFO[S.eng].n : `${S.grp}・${KS_ENG_INFO[S.eng].n}`;
+  const acts = C.acts(S, on);
+  const press = act === 'kTbInfo' ? '' : ` aria-pressed="${on}"`;
+  return `<li class="tbt${on ? ' on' : ''}"><button type="button" class="tbt-main" data-act="${act}"${ksDataAttr(data)}${press}><span class="indico" aria-hidden="true">${esc(S.icon)}</span><span class="tbt-t"><b>${esc(S.name)}</b><span class="tbt-d">${esc(ksTbShort(S.d || S.gd || KS_ENG_INFO[S.eng].desc))}</span><span class="tbt-m">${esc(meta)}${act === 'kTbInfo' ? '<span class="tbt-more">くわしく</span>' : ''}</span></span></button>${acts ? `<span class="tbt-a">${acts}</span>` : ''}</li>`;
+}
+function ksTbKeep(T, skip) { return S => (!T.eng || S.eng === T.eng) && !(skip && skip.has(S.name)); }
+function ksTbBody(ctx) {
+  const T = ksTb(ctx), C = KS_TB_CTX[ctx];
+  const skip = C.skip ? C.skip() : null;
+  const q = (T.q || '').trim();
+  if (q) {
+    const r = ksTypeFind(q, { eng: T.eng, limit: T.lim, skip });
+    if (!r.total) return `<div class="empty">「${esc(q)}」に当てはまる業種がありません。短い言葉や別の言い方で探すか、下の産業から選んでください。<div class="row" style="justify-content:center;margin-top:8px">${btn('産業から選ぶ', 'kTbClear', { ctx }, 'sm')}</div></div>`;
+    return `<div class="tb-hd"><span>「${esc(q)}」で${fmtNum(r.total, 0)}業種${T.eng ? `（${esc(KS_ENG_INFO[T.eng].n)}）` : ''}。名前に入っているものから順に</span>${btn('産業から選ぶ', 'kTbClear', { ctx }, 'sm ghost')}</div>
+      <ul class="tb-list tbts">${r.list.map(S => ksTbRow(ctx, S, 9)).join('')}</ul>${r.total > r.list.length ? `<div class="tb-more">${btn(`もっと見る（あと${fmtNum(r.total - r.list.length, 0)}業種）`, 'kTbMore', { ctx }, 'sm')}</div>` : ''}`;
+  }
+  const ix = ksGrpIndex();
+  const keep = ksTbKeep(T, skip);
+  if (!T.sec || !KS_SECTORS[T.sec]) {
+    const tiles = Object.entries(KS_SECTORS).map(([c, x]) => {
+      const gs = ix.bySec[c] || [];
+      const n = sum(gs, g => g.types.filter(keep).length);
+      if (!n) return '';
+      return `<button type="button" class="tb-sec" data-act="kTbSec" data-ctx="${ctx}" data-v="${c}"><span class="indico" aria-hidden="true">${esc(x.icon)}</span><span class="tbt-t"><b>${esc(x.n)}</b><span class="tbt-m">${fmtNum(n, 0)}業種・${fmtNum(gs.filter(g => g.types.some(keep)).length, 0)}分類</span></span></button>`;
+    }).join('');
+    return `<div class="tb-hd"><span>産業を選ぶと、その中の分類が出ます。言葉で探すこともできます</span></div><div class="tb-list tb-secs">${tiles}</div>`;
+  }
+  const gs = (ix.bySec[T.sec] || []).filter(g => g.types.some(keep));
+  const g = T.grp ? ix.byKey[T.sec + '|' + T.grp] : null;
+  const secN = esc(KS_SECTORS[T.sec].n);
+  const crumb = `<nav class="tb-crumb" aria-label="いまの分類"><button type="button" data-act="kTbSec" data-ctx="${ctx}" data-v="">すべての産業</button><span aria-hidden="true">›</span>${g ? `<button type="button" data-act="kTbGrp" data-ctx="${ctx}" data-v="">${secN}</button><span aria-hidden="true">›</span><b>${esc(g.grp)}</b>` : `<b>${secN}</b>`}</nav>`;
+  if (!g) {
+    const rows = gs.map(x => {
+      const n = x.types.filter(keep).length;
+      const ex = x.types.filter(keep).slice(0, 3).map(S => S.name).join('、');
+      return `<li><button type="button" class="tb-grp" data-act="kTbGrp" data-ctx="${ctx}" data-v="${esc(x.grp)}"><span class="indico" aria-hidden="true">${esc(x.icon)}</span><span class="tbt-t"><b>${esc(x.grp)}</b><span class="tbt-d">${esc(ksTbShort(x.d, 56))}</span><span class="tbt-m">${esc(ksTbShort(ex, 60))}${n > 3 ? 'など' : ''}</span></span><span class="tb-n">${fmtNum(n, 0)}</span></button></li>`;
+    }).join('');
+    return `${crumb}<div class="tb-hd"><span>${secN}：${fmtNum(gs.length, 0)}分類・${fmtNum(sum(gs, x => x.types.filter(keep).length), 0)}業種</span></div><ul class="tb-list tb-grps">${rows}</ul>`;
+  }
+  const list = g.types.filter(keep);
+  return `${crumb}${g.d ? `<p class="tb-gd">${esc(g.d)}</p>` : ''}<ul class="tb-list tbts">${list.map(S => ksTbRow(ctx, S, 2)).join('') || '<li class="empty">この分類で選べる業種はありません</li>'}</ul>`;
+}
+/* 一覧の全体（探す欄・事業の型・中身） */
+function ksTbHtml(ctx, o = {}) {
+  const T = ksTb(ctx);
+  const engs = Object.entries(KS_ENG_INFO).map(([c, x]) => `<option value="${c}"${T.eng === c ? ' selected' : ''}>${esc(x.n)}</option>`).join('');
+  return `<div class="tb" data-ctx="${ctx}">
+    <div class="tb-bar"><input type="search"${o.id ? ` id="${o.id}"` : ''} class="tb-q" value="${esc(T.q)}" data-in="kTbQ" data-ctx="${ctx}" placeholder="${esc(o.ph || '業種・商品で探す（例：リニア、介護、半導体）')}" aria-label="業種を探す" autocomplete="off">
+      <select data-ch="kTbEng" data-ctx="${ctx}" aria-label="事業の型でしぼる"><option value="">すべての型</option>${engs}</select></div>
+    <div class="tb-body${o.tall ? ' tall' : ''}" id="tbb-${ctx}">${ksTbBody(ctx)}</div></div>`;
+}
+function ksTbRedraw(ctx, top) {
+  const b = document.getElementById('tbb-' + ctx);
+  if (!b) return;
+  const l = b.querySelector('.tb-list');
+  const y = l && !top ? l.scrollTop : 0;
+  b.innerHTML = ksTbBody(ctx);
+  const l2 = b.querySelector('.tb-list');
+  if (l2) l2.scrollTop = y;
+}
+KEEP_SCROLL.push('.tb-list');
+Object.assign(ACTIONS, {
+  kTbSec: d => { const T = ksTb(d.ctx); T.sec = d.v; T.grp = ''; T.q = ''; T.lim = 60; const i = document.querySelector(`.tb[data-ctx="${d.ctx}"] .tb-q`); if (i) i.value = ''; ksTbRedraw(d.ctx, true); },
+  kTbGrp: d => { const T = ksTb(d.ctx); T.grp = d.v; ksTbRedraw(d.ctx, true); },
+  kTbMore: d => { ksTb(d.ctx).lim += 120; ksTbRedraw(d.ctx); },
+  kTbClear: d => { const T = ksTb(d.ctx); T.q = ''; T.lim = 60; T.sec = ''; T.grp = ''; const i = document.querySelector(`.tb[data-ctx="${d.ctx}"] .tb-q`); if (i) i.value = ''; ksTbRedraw(d.ctx, true); },
+  // くわしく：ダイアログの上から開いたら、閉じると元のダイアログに戻る
+  kTbInfo: d => { if (!KS_TYPES[d.v]) return; const back = !!(UI.modal && UI.modal.name !== 'kTypeInfo') || !!(UI.modal && UI.modal.name === 'kTypeInfo' && UI.modal.args.back); if (UI.modal && UI.modal.name !== 'kTypeInfo') pushModalBack('kTypeInfo'); showModal('kTypeInfo', { v: d.v, ctx: d.ctx || '', back }); },
+  kTiDo: d => {
+    const a = UI.modal && UI.modal.args;
+    const v = d.v || (a && a.v);
+    const C = KS_TB_CTX[d.ctx];
+    if (!C || !KS_TYPES[v]) return;
+    closeModal(true);
+    C.doIt(v, d.how);
+  },
+  noop: () => {},
 });
-INPUTS.kStQ = el => { UI.start.k.q = el.value; const b = $('#kstList'); if (b) b.innerHTML = ksStartTypesHtml(UI.start.k); };
+CHANGES.kTbEng = el => { const T = ksTb(el.dataset.ctx); T.eng = el.value; T.lim = 60; ksTbRedraw(el.dataset.ctx, true); };
+INPUTS.kTbQ = el => { const T = ksTb(el.dataset.ctx); T.q = el.value; T.lim = 60; ksTbRedraw(el.dataset.ctx, true); };
+
+/* ---------- 業種の「くわしく」 ---------- */
+function ksSeasonTxt(S) {
+  const s = S.season || [];
+  if (!s.length) return '';
+  const mx = Math.max(...s), mn = Math.min(...s);
+  if (mx / mn < 1.12) return '1年を通して、ほぼ同じ';
+  const hi = s.map((v, i) => [v, i]).filter(x => x[0] >= 1.07).sort((a, b) => b[0] - a[0]).slice(0, 3).map(x => KS_MONTHS_FY[x[1]]);
+  const lo = s.map((v, i) => [v, i]).filter(x => x[0] <= 0.93).sort((a, b) => a[0] - b[0]).slice(0, 2).map(x => KS_MONTHS_FY[x[1]]);
+  const amp = mx / mn >= 1.6 ? '季節の波がとても大きい' : mx / mn >= 1.3 ? '季節の波が大きい' : '季節の波は小さめ';
+  return `${amp}${hi.length ? `。${hi.join('・')}に多く` : ''}${lo.length ? `、${lo.join('・')}に少ない` : ''}`;
+}
+function ksCashTxt(S) {
+  const P = S.p;
+  const pct = x => `${Math.round(x * 100)}%`;
+  switch (S.eng) {
+    case 'shop': case 'rest': return `その場で受け取る日銭の商売${P.card ? `。カード払い（約${pct(P.card)}）は翌月に入金` : ''}${P.ins ? `、保険や公費の分（約${pct(P.ins)}）は2か月後に入金` : ''}`;
+    case 'mfg': return `製品を納めて、約${P.terms}か月後に入金（掛け売り）。材料は先に仕入れ、在庫も持つので、売上が伸びると運転資金が要る`;
+    case 'build': return '契約・中間・完成に分けて受け取る（未成工事受入金）。材料と外注の支払いが先に出るので、つなぎの資金が要る';
+    case 'trade': return `掛けで売り（1〜2か月後に入金。2か月の取引先が約${pct(P.terms2 || 0)}）、掛けで仕入れる。売上が大きく粗利は薄いので、貸倒れが痛い`;
+    case 'pro': return `月末で締めて、約${P.terms}か月後に入金。給料は先に出ていく`;
+    case 'subs': return P.b2b ? '法人に月額を請求し、翌月に入金' : '月額をカードや口座振替で受け取る（多くは翌月に入金）。前もって獲得の費用がかかる';
+    case 'cap': case 'trans': return P.ar >= 0.95 ? `使った分を請求し、約${P.terms}か月後に入金（掛け）` : P.ar <= 0.05 ? 'その場や前払いで受け取る' : `約${pct(1 - P.ar)}はその場で、約${pct(P.ar)}は掛けで約${P.terms}か月後に入金`;
+    default: return '';
+  }
+}
+function ksEqTxt(S) {
+  const rows = [];
+  for (const e of [...(S.eq || []), ...(S.aux || [])]) {
+    const q = KS_EQ[e.k];
+    if (!q) continue;
+    rows.push(`${esc(e.name || q.n)} ×${fmtNum(e.n, 0)}（1つ ${fmtYen(q.c)}）`);
+  }
+  return rows.slice(0, 6).join('<br>');
+}
+function ksProjTxt(S) {
+  return (S.p.proj || []).map(s => { const [k, n] = String(s).split(':'); const p = KS_PROJ_LIB[k]; return p ? `${esc(p.n)}（${fmtYen(p.min)}〜${fmtYen(p.max)}・工期 約${p.dur}か月）年${fmtNum(+n || 0, 0)}件` : ''; }).filter(Boolean).slice(0, 5).join('<br>');
+}
+/* 業種の特徴のしるし（一目でわかるように） */
+function ksTypeBadges(S) {
+  const out = [tag(KS_ENG_INFO[S.eng].n, 'solid')];
+  const eqC = sum([...(S.eq || []), ...(S.aux || [])], e => ((KS_EQ[e.k] || {}).c || 0) * e.n);
+  if (eqC >= 50e8 || S.scale >= 3) out.push(tag('設備投資がとても大きい', 'warn'));
+  else if (eqC >= 5e8 || ['cap', 'trans'].includes(S.eng)) out.push(tag('設備投資が大きい', 'brass'));
+  if (S.lic) out.push(tag('許認可が要る', 'brass'));
+  if ((S.laws || []).length >= 2) out.push(tag('守る法令が多い', 'brass'));
+  const s = S.season || [];
+  if (s.length && Math.max(...s) / Math.min(...s) >= 1.3) out.push(tag('季節の波が大きい', ''));
+  if (['mfg', 'build', 'trade'].includes(S.eng)) out.push(tag('運転資金が要る', ''));
+  if (['shop', 'rest'].includes(S.eng)) out.push(tag('日銭が入る', 'ok'));
+  if (S.eng === 'subs') out.push(tag('毎月の定額収入', 'ok'));
+  return out.join('');
+}
+/* 業種の中身。compact：新しい事業のダイアログの右側に出す短い版 */
+function ksTypeInfoHtml(S, o = {}) {
+  const tip = KS_ENG_TIPS[S.eng] || {};
+  const ci = ksCapInfo(S.name);
+  const three = [['売上の立ち方', S.how || tip.how, 'how'], ['成功のカギ', S.kf || tip.kf, 'kf'], ['主なリスク', S.risk || tip.risk, 'risk']]
+    .map(([h, t, c]) => `<section class="ti-c ti-${c}"><h4>${h}</h4><p>${esc(t || '')}</p></section>`).join('');
+  const rows = [
+    ['ふつうの規模', `${esc(ci.n)} ${fmtNum(ci.base, 0)}${esc(ci.u)}${S.scale > 1 ? `（大きな業種：ふつうの会社の約${S.scale}倍の規模）` : ''}`],
+    S.eng === 'build' ? ['受ける工事', ksProjTxt(S)] : ksEqTxt(S) ? ['主な設備', ksEqTxt(S)] : null,
+    ['働く人', esc(S.roles.map(r => r.n).join('、'))],
+    S.prod.length ? ['商品・サービス', esc(S.prod.slice(0, 6).join('、'))] : null,
+    S.cust.length ? ['お客さま', esc(S.cust.slice(0, 6).join('、'))] : null,
+    ['お金の入り方', esc(ksCashTxt(S))],
+    ['季節', esc(ksSeasonTxt(S))],
+    S.lic ? ['許認可', `${esc(S.lic.n)}（${esc(S.lic.law)}${S.lic.every ? `・${S.lic.every}年ごとに更新` : ''}）`] : null,
+    (S.laws || []).length ? ['とくに守る法令', esc(S.laws.map(l => (LAW_ITEMS[l] || { s: l }).s).join('、'))] : null,
+    ['利益率の目安', `営業利益率 約${fmtNum(KS_ENG_OPM[S.eng] * 100, 1)}%（会社の状態が「ふつう」のときの、就任の時点の水準）`],
+  ];
+  if (o.compact) return `<p class="ti-d">${esc(S.d || S.gd || KS_ENG_INFO[S.eng].desc)}</p><div class="ti-badges">${ksTypeBadges(S)}</div><div class="ti-3 sm">${three}</div>${kv(rows.filter(r => r && /設備|受ける工事|働く人|お客さま|お金|季節|許認可|法令/.test(r[0])))}`;
+  const ix = ksGrpIndex();
+  const g = ix.byKey[S.sec + '|' + S.grp];
+  const sib = g ? g.types.filter(x => x.name !== S.name).slice(0, 14) : [];
+  return `<div class="ti-head"><span class="indico ti-ico" aria-hidden="true">${esc(S.icon)}</span><div><div class="small muted">${esc(KS_SECTORS[S.sec].n)} › ${esc(S.grp)}</div><div class="ti-badges">${ksTypeBadges(S)}</div></div></div>
+    <p class="ti-d">${esc(S.d || S.gd || KS_ENG_INFO[S.eng].desc)}</p>
+    ${S.d && S.gd && S.gd !== S.d ? `<p class="small muted ti-gd">${esc(S.grp)}：${esc(S.gd)}</p>` : ''}
+    <div class="ti-3">${three}</div>
+    <h4 class="ti-h">ふつうの規模で始めると</h4>${kv(rows)}
+    <h4 class="ti-h">事業の型：${esc(KS_ENG_INFO[S.eng].n)}</h4><p class="small" style="margin:0">${esc(KS_ENG_INFO[S.eng].desc)}</p>
+    ${sib.length ? `<h4 class="ti-h">同じ分類の業種（${fmtNum(g.types.length - 1, 0)}）</h4><div class="chips">${sib.map(x => `<button type="button" class="chip" data-act="kTbInfo" data-ctx="${esc(o.ctx || '')}" data-v="${esc(x.name)}">${esc(x.icon)} ${esc(x.name)}</button>`).join('')}</div>` : ''}`;
+}
+MODALS.kTypeInfo = a => {
+  const S = KS_TYPES[a.v];
+  if (!S) return modalFrame('業種', '<div class="empty">この業種はありません</div>', btn('閉じる', 'closeModal'));
+  const C = KS_TB_CTX[a.ctx];
+  const on = C ? C.on(S) : false;
+  const foot = btn(a.back ? '戻る' : '閉じる', 'closeModal') + (C ? C.foot(S, on) : '');
+  return modalFrame(esc(S.name), ksTypeInfoHtml(S, { ctx: a.ctx }), foot, { size: 'wide', label: S.name });
+};
 
 /* ---- 24_kaisha_ops.js ---- */
 /* =========================================================
@@ -21138,34 +21603,23 @@ function ksOpsAlerts() {
 }
 
 /* ---------- 新しい事業を始める ---------- */
-ACTIONS.kNewUnit = () => { UI.kNU = { q: '', sec: '', eng: '', sel: null, sc: 1, plan: null }; showModal('kNewUnit'); };
-function ksNUList() {
-  const N = UI.kNU;
-  const own = new Set(ksActiveUnits().map(u => u.type));
-  return ksSearchTypes(N.q, N.sec, N.eng, 80).filter(S => !own.has(S.name));
-}
+ACTIONS.kNewUnit = () => { UI.kNU = { sel: null, sc: 1, plan: null }; ksTbReset('nu'); showModal('kNewUnit'); };
 MODALS.kNewUnit = () => {
   const N = UI.kNU;
-  const list = ksNUList();
-  const secs = Object.entries(KS_SECTORS).map(([k, x]) => `<option value="${k}"${N.sec === k ? ' selected' : ''}>${esc(x.n)}（${ksCountTypes(k, N.eng)}）</option>`).join('');
-  const engs = Object.entries(KS_ENG_INFO).map(([k, x]) => `<option value="${k}"${N.eng === k ? ' selected' : ''}>${esc(x.n)}</option>`).join('');
-  const items = list.map(S => `<button type="button" class="typeopt${N.sel === S.name ? ' on' : ''}" data-act="kNUPick" data-v="${esc(S.name)}" aria-pressed="${N.sel === S.name}"><span class="indico" aria-hidden="true">${esc(S.icon)}</span><span><b>${esc(S.name)}</b><span class="small muted">${esc(S.grp)}・${esc(KS_ENG_INFO[S.eng].n)}</span></span></button>`).join('');
-  let detail = '<div class="empty">左の一覧から業種を選ぶと、事業の中身と立ち上げの計画が出ます</div>';
+  let detail = '<div class="empty">左の一覧から業種を選ぶと、事業の中身と立ち上げの計画が出ます。産業 → 分類 → 業種とたどるか、言葉で探してください</div>';
   if (N.sel && KS_TYPES[N.sel]) {
     const S = KS_TYPES[N.sel];
     const pl = ksNUPlan();
-    detail = `<h3 style="margin:0 0 4px">${esc(S.name)}</h3><div class="small muted">${esc(KS_SECTORS[S.sec].n)} ／ ${esc(S.grp)} ／ ${esc(KS_ENG_INFO[S.eng].n)}</div>
-      <p class="small">${esc(S.d || KS_ENG_INFO[S.eng].desc)}</p>
-      ${kv([S.prod.length ? ['商品・サービス', esc(S.prod.slice(0, 5).join('・'))] : null, S.cust.length ? ['お客さま', esc(S.cust.slice(0, 5).join('・'))] : null, S.eq.length ? ['主な設備', esc(S.eq.slice(0, 4).map(e => (KS_EQ[e.k] || {}).n).filter(Boolean).join('・'))] : null, ['職種', esc(S.roles.map(r => r.n.replace(/（.*?）/, '')).join('・'))], S.lic ? ['許認可', esc(S.lic.n)] : null, (S.laws || []).length ? ['関わる法令', esc(S.laws.map(l => (LAW_ITEMS[l] || { s: l }).s).join('・'))] : null].filter(Boolean))}
+    detail = `<h3 style="margin:0 0 4px">${esc(S.name)}</h3><div class="small muted">${esc(KS_SECTORS[S.sec].n)} ／ ${esc(S.grp)}</div>
+      ${ksTypeInfoHtml(S, { compact: true })}
+      <div class="row" style="margin-top:4px">${btn('もっとくわしく見る', 'kTbInfo', { ctx: 'nu', v: S.name }, 'sm ghost')}</div>
       <div class="field" style="margin-top:8px"><span>始める規模</span><div class="seg" role="radiogroup">${[[0.5, '小さく'], [1, 'ふつう'], [2, '大きく']].map(([v, l]) => `<button type="button" data-act="kNUSc" data-v="${v}" aria-pressed="${N.sc === v}">${l}</button>`).join('')}</div></div>
       ${typeof ksNUPrefHtml === 'function' ? ksNUPrefHtml(S) : ''}
       ${pl ? `<div class="callout" style="margin-top:8px"><b>${esc(pl.title)}</b><br><span class="small">${esc(pl.desc)}</span><br><span class="small">初めの投資 <b>${fmtYen(sum(pl.items, x => x.cost) + (pl.deposit || 0))}</b>（${pl.items.length}件の設備${pl.deposit ? '・保証金' : ''}）</span></div>` : ''}`;
   }
-  const body = `<div class="nuwrap"><div class="nuleft"><div class="row" style="gap:6px;flex-wrap:wrap"><input type="search" value="${esc(N.q)}" data-in="kNUq" placeholder="業種・商品・お客さまで探す（例：レーザー、データセンター、海運）" style="flex:1;min-width:12em" aria-label="業種を探す">
-      <select data-ch="kNUsec" aria-label="産業"><option value="">すべての産業（${fmtNum(KS_TYPE_LIST.length, 0)}業種）</option>${secs}</select><select data-ch="kNUeng" aria-label="事業の型"><option value="">すべての型</option>${engs}</select></div>
-      <div class="typelist" id="kNUlist">${items || '<div class="empty">見つかりません</div>'}</div></div>
+  const body = `<div class="nuwrap"><div class="nuleft">${ksTbHtml('nu', { tall: true })}</div>
     <div class="nuright">${detail}</div></div>`;
-  return modalFrame('新しい事業を始める', body, btn('やめる', 'closeModal') + (N.sel ? btn('この事業の投資を検討する', 'kNUGo', {}, 'primary') : ''), { size: 'wide', sub: '業種を選んで、立ち上げの投資をします' });
+  return modalFrame('新しい事業を始める', body, btn('やめる', 'closeModal') + (N.sel ? btn('この事業の投資を検討する', 'kNUGo', {}, 'primary') : ''), { size: 'wide', sub: `${fmtNum(KS_TYPE_LIST.length, 0)}の業種から選んで、立ち上げの投資をします` });
 };
 /* 立ち上げの計画（下書きの事業をつくって計画を出す。まだ会社には加えない） */
 function ksNUDraft() {
@@ -21190,7 +21644,12 @@ KS_CAPEX_PRE.unitStart = a => {
   UI.kUnit = u.id;
 };
 Object.assign(ACTIONS, {
-  kNUPick: d => { UI.kNU.sel = d.v; UI.kNU.draft = null; drawModal(); },
+  kNUPick: d => {
+    UI.kNU.sel = d.v; UI.kNU.draft = null; drawModal();
+    // スマホでは中身が一覧の下に出るので、そこまで動かす
+    const r = document.querySelector('#modal-root .nuright');
+    if (r && window.matchMedia && window.matchMedia('(max-width: 760px)').matches) r.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  },
   kNUSc: d => { UI.kNU.sc = +d.v; UI.kNU.draft = null; drawModal(); },
   kNUGo: () => {
     const N = UI.kNU;
@@ -21202,18 +21661,6 @@ Object.assign(ACTIONS, {
     ksCapexOpen(Object.assign({}, pl, { title: `${ksS(u).name}を始める`, pre: 'unitStart', preArg: { draft: u }, fx: pl.fx === 'unitStart' ? 'unitStart' : pl.fx, arg: Object.assign({}, pl.arg, { u: u.id }) }));
   },
 });
-Object.assign(CHANGES, {
-  kNUsec: el => { UI.kNU.sec = el.value; drawModal(); },
-  kNUeng: el => { UI.kNU.eng = el.value; drawModal(); },
-});
-INPUTS.kNUq = el => {
-  UI.kNU.q = el.value;
-  const box = $('#kNUlist');
-  if (!box) return;
-  const N = UI.kNU;
-  box.innerHTML = ksNUList().map(S => `<button type="button" class="typeopt${N.sel === S.name ? ' on' : ''}" data-act="kNUPick" data-v="${esc(S.name)}" aria-pressed="${N.sel === S.name}"><span class="indico" aria-hidden="true">${esc(S.icon)}</span><span><b>${esc(S.name)}</b><span class="small muted">${esc(S.grp)}・${esc(KS_ENG_INFO[S.eng].n)}</span></span></button>`).join('') || '<div class="empty">見つかりません</div>';
-};
-
 /* ---------- 事業から撤退する ---------- */
 ACTIONS.kCloseUnit = d => showModal('kCloseUnit', { u: d.u });
 MODALS.kCloseUnit = a => {
@@ -21488,6 +21935,8 @@ MODALS.kClose = () => {
       ${answered ? `<h4 class="fsh" style="margin-top:12px">${done ? '記帳した仕訳' : '記帳する仕訳'}</h4>${entries.length ? ksJournalTable(entries.map(e => Object.assign({ c: true }, e)), { total: false }) : '<p class="small muted">この手順で新しく記帳する仕訳はありません。工事の費用と代金は、毎月の取引で未成工事支出金・未成工事受入金に記帳済みです。</p>'}` : ''}
       ${c.view === 0 && !done ? `<details style="margin-top:10px"><summary class="small">決算整理前の残高試算表を見る</summary>${ksTrialBalance()}</details>` : ''}`;
   }
+  // 質問をとばして、残りの手順をまとめて記帳し、結果まで進める
+  if (step !== 'done') body += `<div class="row between closeskip"><label class="inline small"><input type="checkbox" data-ch="setting" data-key="autoClose" ${UI.settings.autoClose ? 'checked' : ''}> 次の決算から、質問をとばしてすぐ結果を見る</label>${btn('質問をとばして結果へ', 'kCloseSkip', {}, 'sm')}</div>`;
   let foot = btn('あとで続ける', 'closeModal');
   if (done) foot += btn('いまの手順へ', 'kCloseView', { i: c.i }, 'primary');
   else if (step === 'done') foot += btn('決算を確定する', 'kCloseFinish', {}, 'primary');
@@ -21527,13 +21976,23 @@ Object.assign(ACTIONS, {
     render();
     scheduleSave();
   },
+  kCloseSkip: () => {
+    const c = G.closing;
+    if (!c) return;
+    c.opt = c.opt || {};
+    c.entries = c.entries || {};
+    for (const s of c.steps.slice(c.i)) if (s !== 'done' && s !== 'con') c.entries[s] = ksPostStep(s, c.opt[s] || {});
+    c.i = c.steps.length - 1;
+    ACTIONS.kCloseFinish();
+  },
   kCloseFinish: () => {
     const c = G.closing;
     if (!c) return;
     ksFinishClosing();
     UI.kFy = null;
     UI.modal = null;
-    UI.queue = [];
+    // 締めの月に出た知らせ（定例会・労災・出来事など）は、決算の結果のあとに続けて出す
+    UI.queue = (UI.queue || []).filter(x => x.name !== 'kClose' && x.name !== 'kResult');
     for (const s of (G.pendingModals || [])) UI.queue.push({ name: s.type, args: s });
     G.pendingModals = [];
     render();
@@ -22182,6 +22641,40 @@ function ksLawResolveAccident(id, ch) {
   if (a.sev === 'long' || a.sev === 'death') L.inspNext = Object.assign(L.inspNext || {}, { labor: a.conceal ? 0.15 : a.sev === 'death' ? 0.95 : 0.35 });
 }
 
+/* 起きた労災を、適切な対応でまとめて済ませる（救護・労災保険で治療・報告・待期期間の補償・再発防止）。済ませた件数を返す */
+function ksLawAccidentsAll(prevent = 'equip') {
+  const L = G.law;
+  if (!L) return 0;
+  let n = 0;
+  for (const a of L.acc.filter(x => x.status === 'new')) {
+    ksLawResolveAccident(a.id, { first: 'ok', pay: 'rosai', report: a.sev === 'none' ? 'none' : 'report', comp: 'pay', prevent });
+    n++;
+  }
+  return n;
+}
+/* 法令のやること（期限切れ・要対応・期限が近いもの）をまとめて実施し、立入検査の指摘も直して是正報告書を出す */
+function ksLawDoAllList() {
+  const L = G.law;
+  if (!L) return { tasks: [], insp: [] };
+  return { tasks: ksLawTasks().filter(x => x.st !== 'ok'), insp: L.insp.filter(i => i.status === 'open') };
+}
+function ksLawDoAll() {
+  const L = G.law;
+  const out = { n: 0, cost: 0, names: [], reports: 0 };
+  if (!L) return out;
+  const ot = L.otNow ?? ksOtHours();
+  const { tasks, insp } = ksLawDoAllList();
+  for (const x of tasks) {
+    const c = ksLawDo(x.t.id, x.t.id === 'r36' ? { special: ot > 40 } : {});
+    out.n++; out.cost += +c || 0; out.names.push(x.name);
+  }
+  for (const ins of insp) {
+    for (const f of ins.finds) if (!f.fixed) { ksLawFindingFix(f.item); f.fixed = true; }
+    if (ksLawReport(ins.id)) out.reports++;
+  }
+  return out;
+}
+
 /* ---------- 火災 ---------- */
 function ksLawFires(viol) {
   let mul = 1;
@@ -22501,8 +22994,10 @@ ksInbox = () => {
   }
   const over = ksLawTasks().filter(x => x.st === 'over');
   const due = ksLawTasks().filter(x => x.st === 'due');
-  if (over.length) out.push({ ico: '法', cls: 'warn', t1: `法令で決められたことが${over.length}件、期限切れになっています`, t2: over.map(x => x.name).join('・'), act: btn('法令と安全へ', 'kGo', { tab: 'k_law' }, 'sm') });
-  if (due.length) out.push({ ico: '法', t1: `今月までの法令の手続き：${due.map(x => x.name).join('・')}`, t2: '期限を過ぎると違反になります', act: btn('法令と安全へ', 'kGo', { tab: 'k_law' }, 'sm') });
+  if (over.length) out.push({ ico: '法', cls: 'warn', t1: `法令で決められたことが${over.length}件、期限切れになっています`, t2: over.map(x => x.name).join('・'), act: btn('まとめて実施', 'kLawAll', {}, 'sm primary') + btn('法令と安全へ', 'kGo', { tab: 'k_law' }, 'sm') });
+  if (due.length) out.push({ ico: '法', t1: `今月までの法令の手続き：${due.map(x => x.name).join('・')}`, t2: '期限を過ぎると違反になります', act: btn('まとめて実施', 'kLawAll', {}, 'sm') + btn('法令と安全へ', 'kGo', { tab: 'k_law' }, 'sm') });
+  const accN = G.law.acc.filter(a => a.status === 'new').length;
+  if (accN) out.push({ ico: '災', cls: 'bad', t1: `労働災害${accN}件の対応が済んでいません`, t2: '救護・労災保険・報告・休業補償・再発防止を決めます', act: btn('まとめて対応', 'kRosaiAll', {}, 'sm primary') });
   if (ksPartRoles().length && ksMinWageGap() > 0) out.push({ ico: '賃', cls: 'bad', t1: `パート・アルバイトの時給が最低賃金（${typeof ksMinWageOf === 'function' ? ksMinWageOf(ksPartRoles().slice().sort((a, b) => (ksMinWageOf(b.u) - ksPartHourly(b)) - (ksMinWageOf(a.u) - ksPartHourly(a)))[0].u) : G.law.minWage}円）を下回っています`, t2: '差額を払う義務があり、労働基準監督署に申告されることもあります', act: btn('時給を引き上げる', 'kLawRaise', {}, 'sm primary') });
   const ot = G.law.otNow;
   if (ot > 80 || (ot > 45 && !G.law.special)) out.push({ ico: '時', cls: 'warn', t1: `残業が1人あたり月${fmtNum(ot, 0)}時間になっています`, t2: ot > 80 ? '過労死ライン（月80〜100時間）に近い水準です。人を増やすか仕事の量を調整しましょう' : '月45時間を超えるには36協定の特別条項が必要です', act: btn('法令と安全へ', 'kGo', { tab: 'k_law' }, 'sm') });
@@ -22548,9 +23043,9 @@ KS_SCREENS.k_law = () => {
   const learn = [...new Set(tasks.map(x => x.t.item).concat(['otmax', 'report', 'hinan']))].filter(k => LAW_ITEMS[k]).map(k => { const it = LAW_ITEMS[k]; return `<details class="lawitem"><summary><b>${esc(it.s)}</b><span class="small muted">　${esc(it.law)}</span>${viol.has(k) ? ' <span class="tag bad">違反</span>' : ''}</summary><p class="small">${esc(it.rule)}</p><p class="small"><b>守り方：</b>${esc(it.how)}</p><p class="small muted"><b>罰則など：</b>${esc(it.pen)}　${term('解説', it.tk)}</p></details>`; }).join('');
   return `<h1 class="h1">法令と安全</h1><p class="lead">会社は、労働基準法・労働安全衛生法・消防法などのルールを守る義務があります。守らないと労働災害や火災が起きやすくなり、役所の立入検査で指摘され、直さなければ送検・公表され、銀行の評価も下がります。</p>
     <div class="grid g-side"><div class="stack">
-      ${panel(`法令で決められたこと（${tasks.filter(x => x.st === 'over').length ? `<span class="neg">期限切れ ${tasks.filter(x => x.st === 'over').length}件</span>` : '期限切れなし'}）`, `<div class="tbl-wrap"><table class="t"><thead><tr><th>やること</th><th>所管・法律</th><th>状態</th><th class="n">費用</th><th></th></tr></thead><tbody>${rows}</tbody></table></div><p class="note">費用は、健康診断なら福利厚生費、点検なら支払手数料や修繕費、講習なら採用教育費として仕訳されます（「帳簿」で確かめられます）。</p>`)}
+      ${panel(`法令で決められたこと（${tasks.filter(x => x.st === 'over').length ? `<span class="neg">期限切れ ${tasks.filter(x => x.st === 'over').length}件</span>` : '期限切れなし'}）`, `${ksLawAllBar()}<div class="tbl-wrap"><table class="t"><thead><tr><th>やること</th><th>所管・法律</th><th>状態</th><th class="n">費用</th><th></th></tr></thead><tbody>${rows}</tbody></table></div><p class="note">費用は、健康診断なら福利厚生費、点検なら支払手数料や修繕費、講習なら採用教育費として仕訳されます（「帳簿」で確かめられます）。</p>`)}
       ${panel('役所の立入検査と指摘', insp ? `<div class="tbl-wrap"><table class="t"><thead><tr><th>月</th><th>役所</th><th>指摘</th><th>状態</th></tr></thead><tbody>${insp}</tbody></table></div>` : '<div class="empty">まだ立入検査はありません。労働基準監督署・消防署などは、予告なしに来ることがあります。</div>')}
-      ${panel('労働災害の記録', accs ? `<div class="tbl-wrap"><table class="t"><thead><tr><th>月</th><th>何が起きたか</th><th>程度</th><th>報告</th></tr></thead><tbody>${accs}</tbody></table></div>` : '<div class="empty">労働災害は起きていません</div>')}
+      ${panel('労働災害の記録', accs ? `${L.acc.some(a => a.status === 'new') ? `<div class="row between bulkbar"><span class="small">対応していない労災 <b>${L.acc.filter(a => a.status === 'new').length}件</b></span>${btn('適切な対応でまとめて済ませる', 'kRosaiAll', {}, 'sm primary')}</div>` : ''}<div class="tbl-wrap"><table class="t"><thead><tr><th>月</th><th>何が起きたか</th><th>程度</th><th>報告</th></tr></thead><tbody>${accs}</tbody></table></div>` : '<div class="empty">労働災害は起きていません</div>')}
       ${fires ? panel('火災の記録', `<div class="tbl-wrap"><table class="t"><thead><tr><th>月</th><th>場所・原因</th><th>程度</th><th class="n">損害</th></tr></thead><tbody>${fires}</tbody></table></div>`) : ''}
     </div><div class="stack">
       ${panel('安全と保険の方針', `<div class="stack" style="gap:8px">${pol}</div>`)}
@@ -22561,8 +23056,33 @@ KS_SCREENS.k_law = () => {
     </div></div>`;
 };
 
+/* 法令のやることのまとめて実施（期限切れ・要対応・期限が近いもの、立入検査の指摘） */
+function ksLawAllBar() {
+  const { tasks, insp } = ksLawDoAllList();
+  if (!tasks.length && !insp.length) return '';
+  const cost = sum(tasks, x => x.cost);
+  return `<div class="row between bulkbar"><span class="small">まだのもの <b>${tasks.length}件</b>${insp.length ? `・立入検査の指摘 <b>${insp.length}件</b>` : ''}（費用 約${fmtYen(cost)}）</span>${btn('まとめて実施する', 'kLawAll', {}, 'sm primary')}</div>`;
+}
+MODALS.kLawAll = () => {
+  const { tasks, insp } = ksLawDoAllList();
+  const cost = sum(tasks, x => x.cost);
+  const ot = G.law.otNow ?? ksOtHours();
+  const rows = tasks.map(x => `<li>${esc(x.name)}<span class="small muted">（${KS_ST_TAG[x.st][0]}・${fmtYen(x.cost)}${x.t.id === 'r36' ? `・特別条項${ot > 40 ? 'あり' : 'なし'}` : ''}）</span></li>`).join('');
+  const irows = insp.map(i => `<li>${esc(LAW_AG[i.ag].n)}の指摘（${i.finds.filter(f => !f.fixed).length}件）を直して、是正報告書を出す</li>`).join('');
+  const body = (tasks.length || insp.length) ? `<p class="small" style="margin:0 0 8px">次のものを、まとめて実施します。費用は内容に応じた勘定（福利厚生費・支払手数料など）で仕訳されます。</p><ul class="small" style="padding-left:1.2em;margin:0">${rows}${irows}</ul><p class="small" style="margin:8px 0 0">費用の合計 約<b>${fmtYen(cost)}</b>${insp.length ? '（指摘を直す費用は別）' : ''}</p>` : '<p>まとめて実施するものはありません。</p>';
+  return modalFrame('法令のやることをまとめて実施', body, btn('やめる', 'closeModal') + btn('まとめて実施する', 'kLawAllGo', {}, 'primary', { disabled: !tasks.length && !insp.length }), { size: 'narrow' });
+};
+
 /* ---------- アクション ---------- */
 Object.assign(ACTIONS, {
+  kLawAll: () => showModal('kLawAll'),
+  kLawAllGo: () => {
+    const r = ksLawDoAll();
+    toast(`${r.n}件を実施しました（費用 ${fmtYen(r.cost)}）${r.reports ? `・是正報告書${r.reports}件を提出` : ''}`);
+    closeModal(true);
+    render();
+    autosave();
+  },
   kLawDo: d => {
     const t = ksLawTaskList().find(x => x.id === d.id);
     const cost = ksLawDo(d.id);
@@ -22664,7 +23184,8 @@ MODALS.kRosai = args => {
   const ans = R.ch[step];
   body += `<div class="qz"><div class="qz-q"><span class="qz-tag">判断</span>${qz.q}</div><div class="qz-ch">${qz.ch.map(([v, t]) => `<button type="button" class="qz-b${ans ? (v === qz.ans ? ' ok' : v === ans ? ' ng' : '') : ''}" data-act="kRosaiPick" data-v="${v}"${ans ? ' disabled' : ''}>${t}</button>`).join('')}</div>
     ${ans ? `<div class="qz-a ${ans === qz.ans ? 'ok' : 'ng'}"><b>${ans === qz.ans ? '適切な対応です' : 'この対応には問題があります'}</b>　${qz.ex}</div>` : ''}</div>`;
-  return modalFrame('労働災害への対応', body, btn('次へ', 'kRosaiNext', {}, 'primary', { disabled: !ans }), { noClose: true, sub: `${ymLabel(a.m)}の労災` });
+  const nNew = G.law.acc.filter(x => x.status === 'new').length;
+  return modalFrame('労働災害への対応', body, btn(nNew > 1 ? `適切な対応でまとめて済ませる（${nNew}件）` : '適切な対応で済ませる', 'kRosaiAll', {}, '') + btn('次へ', 'kRosaiNext', {}, 'primary', { disabled: !ans }), { noClose: true, sub: `${ymLabel(a.m)}の労災` });
 };
 MODALS.kRosai.locked = () => true;
 Object.assign(ACTIONS, {
@@ -22680,6 +23201,16 @@ Object.assign(ACTIONS, {
     drawModal();
   },
   kRosaiNext: () => { UI.kRosai.i++; drawModal(); modalTop(); },
+  // 対応していない労災を、適切な対応（救護・労災保険・報告・待期期間の補償・設備の改善と教育）でまとめて済ませる
+  kRosaiAll: () => {
+    const n = ksLawAccidentsAll('equip');
+    UI.kRosai = null;
+    UI.queue = UI.queue.filter(q => q.name !== 'kRosai');
+    toast(n ? `労災${n}件に適切な対応をしました（労災保険で治療・報告・休業の補償・設備の改善と安全教育）` : '対応が必要な労災はありません');
+    if (UI.modal && UI.modal.name === 'kRosai') closeModal(true);
+    render();
+    autosave();
+  },
   kRosaiDone: () => {
     const R = UI.kRosai;
     const ch = Object.assign({ pay: 'rosai', comp: 'pay', report: 'report' }, R.ch);
@@ -24872,6 +25403,7 @@ function ksExtMonth(ctx, res) {
   if (typeof ksMapMonth === 'function' && G.loc) ksMapMonth(ctx, res);
   if (typeof ksLaw2Month === 'function' && G.law) ksLaw2Month(ctx, res);
   if (typeof ksEvt2Month === 'function') ksEvt2Month(ctx, res);
+  if (typeof ksDeptMonth === 'function' && G.org && G.org.nodes.length) ksDeptMonth(ctx, res); // 社内の組織（部の費用・方針・定例会）
 }
 function ksExtAfterClose(fy) {
   if (G.hist) return;
@@ -25089,41 +25621,95 @@ const KS_GOALS = {
    cost(h, x)：1人あたりの毎月の費用（段階 x）。share：対象になる人の割合。tax：従業員の所得税（非課税の要件）。
    acct：会社の勘定科目（salary＝課税される手当として給与に含める）。es・eff：効果 */
 const KS_WF = [
+  /* ===== 手当 ===== */
   { id: 'commute', cat: '手当', n: '通勤手当', base: true, acct: 'travel', tax: '公共交通機関は月15万円まで非課税。マイカー・自転車は片道の距離で月4,200円〜38,700円まで非課税（2025年4月以後の改正。2km未満は課税）。所得税は非課税でも、社会保険料の計算（報酬）には含まれる', d: '通勤の費用を払う。ほとんどの会社にある基本の手当' },
-  { id: 'trip', cat: '手当', n: '出張手当（日当）と宿泊料', lvs: ['旅費規程なし（実費だけ精算）', '日当 2,000円・宿泊 1泊1万円まで', '日当 3,000円・宿泊 1泊1.2万円まで'], cost: (h, x) => ksTripDays() * [0, 2000, 3000][x] + ksTripDays() * 0.4 * [0, 1000, 2000][x], acct: 'travel', es: [0, 2, 3], tax: '旅費規程に基づき、出張に通常必要な額（同業・同規模の会社と比べて妥当な額。役員と社員で極端な差がない）なら非課税。規程がないのに定額で払うと給与として課税される。会社は旅費交通費で処理する', d: '出張の日数に応じて定額の日当を払い、宿泊は上限の範囲で精算する' },
-  { id: 'house', cat: '手当', n: '住宅手当', lvs: ['なし', '月1万円', '月2万円'], cost: (h, x) => [0, 1e4, 2e4][x], share: 0.5, acct: 'salary', es: [0, 3, 5], eff: { quit: [1, 0.96, 0.93] }, tax: '全額が給与として課税され、社会保険料の対象にもなる（会社の法定福利費も増える）', d: '賃貸住宅に住む社員に、家賃の一部を手当として払う。若手の定着に効く' },
-  { id: 'family', cat: '手当', n: '家族手当', lvs: ['なし', '子1人1万円', '配偶者5,000円＋子1人1万円'], cost: (h, x) => [0, 7000, 9000][x], share: 0.45, acct: 'salary', es: [0, 2, 3], tax: '給与として課税（社会保険料の対象）。最近は配偶者の手当を減らし、子の手当を手厚くする会社が多い', d: '扶養する家族に応じて払う' },
-  { id: 'single', cat: '手当', n: '単身赴任手当', lvs: ['なし', '月4万円（帰省の旅費は実費）'], cost: (h, x) => [0, 4e4][x], share: 0.02, acct: 'salary', es: [0, 1], need: () => ksHrMultiSite(), tax: '手当は給与として課税。会社が帰省の旅費を実費で精算する分は、妥当な範囲で非課税', d: '転勤で家族と離れて暮らす社員の二重生活を支える（拠点が複数の会社）' },
-  { id: 'qual', cat: '手当', n: '資格手当', lvs: ['なし', '月5,000円〜1万円'], cost: (h, x) => [0, 8000][x], share: 0.25, acct: 'salary', es: [0, 2], eff: { shrink: [1, 0.98], acc: [1, 0.97] }, tax: '給与として課税', d: '仕事に役立つ資格を持つ社員に毎月払う。技能を高める動機になる' },
-  { id: 'remote', cat: '手当', n: '在宅勤務手当', lvs: ['なし', '月3,000円（定額）', '通信費・電気代の実費（業務分）を精算'], cost: (h, x) => [0, 3000, 2500][x], share: () => ksHrRemoteShare(), acct: ['salary', 'salary', 'fukuri'], es: [0, 2, 2], tax: '定額で払う手当は給与として課税。業務に使った通信費・電気代を合理的に計算して実費で精算する分は非課税', d: 'テレワークの光熱費・通信費を補う。人の力で稼ぐ事業で効果が大きい' },
-  { id: 'shataku', cat: '住宅', n: '借上社宅', lvs: ['なし', '若手と転勤者に（家賃の半分を会社が負担）'], cost: (h, x) => [0, 4e4][x], share: 0.1, acct: 'fukuri', es: [0, 4], eff: { quit: [1, 0.93], hire: [1, 0.92] }, tax: '社員から「賃貸料相当額」（固定資産税の課税標準額などから計算）の50%以上を家賃として受け取れば、会社の負担分は課税されない。社宅の家賃を会社が払う分は地代家賃・福利厚生費', d: '会社が借りた住宅を社員に貸す。採用と定着に大きく効く' },
-  { id: 'meal', cat: '食事', n: '食事補助（食事券・置き社食）', lvs: ['なし', '月3,500円', '月7,500円（非課税の上限）'], cost: (h, x) => [0, 3500, 7500][x], acct: 'fukuri', es: [0, 2, 3], tax: '社員が食事の価額の半分以上を負担し、会社の負担が月7,500円以下（税抜）なら非課税。2026年4月から上限が月3,500円から7,500円に引き上げられた。深夜勤務の夜食代は1回650円まで', d: '昼食代の一部を会社が負担する。費用が小さく満足度が高い' },
-  { id: 'canteen', cat: '食事', n: '社員食堂', lvs: ['なし', '委託で運営（1食あたり200円を会社が負担）'], cost: (h, x) => [0, 4400][x], acct: 'fukuri', es: [0, 3], eff: { acc: [1, 0.98] }, need: () => ksHeadcount() >= 100, tax: '食事補助と同じ要件（社員の負担が半分以上・会社の負担が月7,500円以下）なら非課税', d: '社内の食堂。従業員100人以上から' },
-  { id: 'dock', cat: '健康', n: '人間ドックの補助', lvs: ['なし', '35歳以上に年3万円'], cost: (h, x) => [0, 1500][x], acct: 'fukuri', es: [0, 2], eff: { acc: [1, 0.97], quit: [1, 0.98] }, tax: '一定の年齢以上の全員を対象に、会社が医療機関に直接払えば非課税（役員だけなどは給与になる）', d: '法定の健康診断に上乗せして、詳しい検査の費用を出す' },
-  { id: 'flu', cat: '健康', n: 'インフルエンザの予防接種', lvs: ['なし', '全員に会社負担'], cost: (h, x) => [0, 350][x], acct: 'fukuri', es: [0, 1], eff: { acc: [1, 0.99] }, tax: '全員が対象なら非課税', d: '冬の欠勤を減らす' },
-  { id: 'eap', cat: '健康', n: 'メンタルヘルスの外部相談窓口（EAP）', lvs: ['なし', 'あり'], cost: (h, x) => [0, 400][x], acct: 'fukuri', es: [0, 2], eff: { quit: [1, 0.95] }, tax: '相談の利用は非課税', d: 'カウンセラーに匿名で相談できる。休職と離職を防ぐ（ストレスチェックと組み合わせる）' },
-  { id: 'gym', cat: '健康', n: 'スポーツクラブの法人会員', lvs: ['なし', 'あり'], cost: (h, x) => [0, 1200][x], acct: 'fukuri', es: [0, 1], tax: '全員が同じ条件で使えるなら非課税', d: '健康づくりを支える' },
-  { id: 'nursery', cat: '育児・介護', n: '企業主導型保育所の利用（企業枠）', lvs: ['なし', '提携して企業枠を確保'], cost: (h, x) => [0, 900][x], acct: 'fukuri', es: [0, 2], eff: { quit: [1, 0.95] }, tax: '会社が施設に払う利用料の負担は、一定の条件で課税されない（現金で渡すと給与）', d: '子育て中の社員の復職を支える。女性の定着に大きく効く' },
-  { id: 'sitter', cat: '育児・介護', n: 'ベビーシッターの補助', lvs: ['なし', 'あり'], cost: (h, x) => [0, 600][x], acct: 'fukuri', es: [0, 1], tax: '会社が事業者に直接払う仕組みなら非課税になる場合がある（現金で渡すと給与）', d: '急な残業や病児のときに使える' },
-  { id: 'leave', cat: '育児・介護', n: '育児休業の給付の上乗せ（男性の育休を後押し）', lvs: ['なし', 'あり'], cost: (h, x) => [0, 700][x], acct: 'salary', es: [0, 2], eff: { quit: [1, 0.97] }, tax: '会社の上乗せは給与として課税（育児休業給付は非課税）', d: '雇用保険の給付に上乗せして、休業中の収入を補う。男性の育休の取得が増える' },
-  { id: 'care', cat: '育児・介護', n: '介護の支援（相談窓口・介護休暇の上乗せ）', lvs: ['なし', 'あり'], cost: (h, x) => [0, 300][x], acct: 'fukuri', es: [0, 1], eff: { quit: [1, 0.98] }, tax: '相談などのサービスは非課税、現金の給付は課税', d: '親の介護による離職（介護離職）を防ぐ' },
-  { id: 'holiday', cat: '休暇', n: '特別休暇（リフレッシュ・アニバーサリー・誕生日）', lvs: ['なし', '年3日'], cost: (h, x) => [0, ksHrAvgWage() * 3 / 250 * 0.5][x], acct: 'misc', es: [0, 3], tax: '休んだ日の給与は通常どおり課税（休暇そのものは課税されない）。費用は休む人の仕事を埋める分', d: '年次有給休暇とは別の有給の休暇' },
+  { id: 'trip', cat: '手当', n: '出張手当（日当）と宿泊料', lvs: ['旅費規程なし（実費だけ精算）', '日当 2,000円・宿泊 1泊1万円まで', '日当 3,000円・宿泊 1泊1.2万円まで', '日当 4,000円・宿泊 1泊1.5万円まで（大企業並み）'], cost: (h, x) => ksTripDays() * [0, 2000, 3000, 4000][x] + ksTripDays() * 0.4 * [0, 1000, 2000, 3500][x], acct: 'travel', es: [0, 2, 3, 4], tax: '旅費規程に基づき、出張に通常必要な額（同業・同規模の会社と比べて妥当な額。役員と社員で極端な差がない）なら非課税。規程がないのに定額で払うと給与として課税される。会社は旅費交通費で処理する', d: '出張の日数に応じて定額の日当を払い、宿泊は上限の範囲で精算する' },
+  { id: 'house', cat: '手当', n: '住宅手当', lvs: ['なし', '月1万円', '月2万円', '月3万円', '月5万円（都市部の大企業並み）'], cost: (h, x) => [0, 1e4, 2e4, 3e4, 5e4][x], share: 0.5, acct: 'salary', es: [0, 3, 5, 6, 8], eff: { quit: [1, 0.96, 0.93, 0.91, 0.88], hire: [1, 0.99, 0.98, 0.96, 0.93] }, tax: '全額が給与として課税され、社会保険料の対象にもなる（会社の法定福利費も増える）', d: '賃貸住宅に住む社員に、家賃の一部を手当として払う。若手の定着に効く' },
+  { id: 'family', cat: '手当', n: '家族手当', lvs: ['なし', '子1人1万円', '配偶者5,000円＋子1人1万円', '子1人2万円（子どもの手当を手厚く）'], cost: (h, x) => [0, 7000, 9000, 12000][x], share: 0.45, acct: 'salary', es: [0, 2, 3, 4], eff: { quit: [1, 1, 0.99, 0.97] }, tax: '給与として課税（社会保険料の対象）。最近は配偶者の手当を減らし、子の手当を手厚くする会社が多い', d: '扶養する家族に応じて払う' },
+  { id: 'single', cat: '手当', n: '単身赴任手当', lvs: ['なし', '月4万円（帰省の旅費は実費）', '月6万円＋月2回の帰省の旅費'], cost: (h, x) => [0, 4e4, 7e4][x], share: 0.02, acct: 'salary', es: [0, 1, 2], need: () => ksHrMultiSite(), tax: '手当は給与として課税。会社が帰省の旅費を実費で精算する分は、妥当な範囲で非課税', d: '転勤で家族と離れて暮らす社員の二重生活を支える（拠点が複数の会社）' },
+  { id: 'qual', cat: '手当', n: '資格手当', lvs: ['なし', '月5,000円〜1万円', '月1万〜3万円（難しい資格ほど高く）'], cost: (h, x) => [0, 8000, 15000][x], share: 0.25, acct: 'salary', es: [0, 2, 3], eff: { shrink: [1, 0.98, 0.97], acc: [1, 0.97, 0.95] }, tax: '給与として課税', d: '仕事に役立つ資格を持つ社員に毎月払う。技能を高める動機になる' },
+  { id: 'remote', cat: '手当', n: '在宅勤務手当', lvs: ['なし', '月3,000円（定額）', '通信費・電気代の実費（業務分）を精算', '月5,000円＋在宅の机・椅子の購入補助'], cost: (h, x) => [0, 3000, 2500, 6000][x], share: () => ksHrRemoteShare(), acct: ['salary', 'salary', 'fukuri', 'salary'], es: [0, 2, 2, 3], tax: '定額で払う手当は給与として課税。業務に使った通信費・電気代を合理的に計算して実費で精算する分は非課税', d: 'テレワークの光熱費・通信費を補う。人の力で稼ぐ事業で効果が大きい' },
+  { id: 'seikin', cat: '手当', n: '精勤手当（皆勤手当）', lvs: ['なし', '月5,000円', '月1万円'], cost: (h, x) => [0, 5000, 1e4][x], share: 0.6, acct: 'salary', es: [0, 1, 2], eff: { shrink: [1, 0.99, 0.98] }, tax: '給与として課税。割増賃金（残業代）の計算の基礎にも入る', d: '欠勤や遅刻のない月に払う。シフトの穴を減らしたい店や工場で多い' },
+  { id: 'area', cat: '手当', n: '地域手当（物価の高い都市部）', lvs: ['なし', '月1万円', '月2万円'], cost: (h, x) => [0, 1e4, 2e4][x], share: () => ksHrCityShare(), acct: 'salary', es: [0, 2, 3], eff: { hire: [1, 0.97, 0.95] }, need: () => ksHrCityShare() > 0, tax: '給与として課税', d: '家賃や物価の高い大都市の事業所で働く人に上乗せする' },
+  { id: 'cold', cat: '手当', n: '寒冷地手当（灯油手当）', lvs: ['なし', '冬の5か月に月1万円', '冬の5か月に月2万円'], cost: (h, x) => [0, 1e4 * 5 / 12, 2e4 * 5 / 12][x], acct: 'salary', es: [0, 2, 3], need: () => ksHrColdArea(), tax: '給与として課税', d: '冬の暖房費の重い寒い地方で、11月から3月に払う' },
+  { id: 'night', cat: '手当', n: '深夜・早朝勤務の手当の上乗せ', lvs: ['法定どおり（深夜は25%増し）', '深夜35%増し・早朝手当あり', '深夜50%増し・夜勤明けの休み'], cost: (h, x) => [0, 1500, 3500][x], share: () => ksHrShiftShare(), acct: 'salary', es: [0, 2, 3], eff: { quit: [1, 0.97, 0.95], acc: [1, 1, 0.98] }, need: () => ksHrShiftShare() > 0.05, tax: '給与として課税', d: '夜勤や早朝のシフトがある職場で、法律の割増より多く払う' },
+  { id: 'danger', cat: '手当', n: '特殊勤務手当（高所・危険物・重量物の作業）', lvs: ['なし', '月5,000円', '月1.5万円'], cost: (h, x) => [0, 5000, 15000][x], share: 0.2, acct: 'salary', es: [0, 1, 2], eff: { quit: [1, 0.98, 0.96] }, need: () => ksHrHasEng(['build', 'mfg', 'trans', 'cap']), tax: '給与として課税', d: '危険や負担の大きい作業をする人に払う。現場の人の確保に効く' },
+  { id: 'phone', cat: '手当', n: '業務用の携帯電話・パソコンの貸与', lvs: ['なし（私物を使う）', '会社の携帯電話を貸与', '携帯電話とノートパソコンを貸与'], cost: (h, x) => [0, 3000, 7000][x], share: 0.6, acct: 'fees', es: [0, 1, 2], eff: { leak: [1, 0.9, 0.8] }, tax: '業務に使う物の貸与は課税されない。私物の通信費を定額で補うと給与になる', d: '私物のスマホを仕事に使わせない。情報の漏えいを防ぐ' },
+  /* ===== 住宅 ===== */
+  { id: 'shataku', cat: '住宅', n: '借上社宅', lvs: ['なし', '若手と転勤者に（家賃の半分を会社が負担）', '若手と転勤者に（家賃の7割を会社が負担）', '希望者全員に（家賃の半分を会社が負担）'], cost: (h, x) => [0, 4e4, 5.5e4, 4e4][x], share: x => [0, 0.1, 0.1, 0.3][x], acct: 'fukuri', es: [0, 4, 5, 6], eff: { quit: [1, 0.93, 0.91, 0.9], hire: [1, 0.92, 0.9, 0.88] }, tax: '社員から「賃貸料相当額」（固定資産税の課税標準額などから計算）の50%以上を家賃として受け取れば、会社の負担分は課税されない。社宅の家賃を会社が払う分は地代家賃・福利厚生費', d: '会社が借りた住宅を社員に貸す。採用と定着に大きく効く' },
+  { id: 'dorm', cat: '住宅', n: '社員寮（独身寮）', lvs: ['なし', '借上げの寮（寮費は月1万円）', '自社の寮（朝夕の食事つき）'], cost: (h, x) => [0, 3e4, 4.5e4][x], share: 0.08, acct: 'rent', es: [0, 3, 4], eff: { hire: [1, 0.93, 0.9], quit: [1, 0.97, 0.95] }, need: () => ksHeadcount() >= 30, tax: '寮費として賃貸料相当額の50%以上を受け取れば課税されない。食事は食事補助と同じ要件', d: '新卒や地方から来る若手を受け入れる。人の集まりにくい地域の工場や現場で効く' },
+  { id: 'loan', cat: '住宅', n: '住宅ローンの利子補給', lvs: ['なし', '金利の0.5%分', '金利の1%分'], cost: (h, x) => [0, 3000, 6000][x], share: 0.2, acct: 'salary', es: [0, 1, 2], eff: { quit: [1, 0.98, 0.97] }, tax: '会社が利子の一部を払う分は給与として課税（社内の低利融資は条件により非課税）', d: '家を買った社員のローンの利息を一部負担する。長く勤める人を支える' },
+  { id: 'move', cat: '住宅', n: '引越し費用の補助（入社・転勤）', lvs: ['なし', '実費の半分', '実費の全額'], cost: (h, x) => [0, 400, 800][x], acct: 'travel', es: [0, 1, 2], eff: { hire: [1, 0.98, 0.96] }, tax: '転勤や入社のための引越しの実費は、通常必要な範囲で非課税', d: '遠くから入社する人や転勤する人の引越し代を出す' },
+  /* ===== 食事 ===== */
+  { id: 'meal', cat: '食事', n: '食事補助（食事券・置き社食）', lvs: ['なし', '月3,500円', '月7,500円（非課税の上限）', '月7,500円＋朝食・夜食の無料提供'], cost: (h, x) => [0, 3500, 7500, 9500][x], acct: 'fukuri', es: [0, 2, 3, 4], tax: '社員が食事の価額の半分以上を負担し、会社の負担が月7,500円以下（税抜）なら非課税。2026年4月から上限が月3,500円から7,500円に引き上げられた。深夜勤務の夜食代は1回650円まで', d: '昼食代の一部を会社が負担する。費用が小さく満足度が高い' },
+  { id: 'canteen', cat: '食事', n: '社員食堂', lvs: ['なし', '委託で運営（1食あたり200円を会社が負担）', '1食あたり300円を会社が負担（健康メニュー）'], cost: (h, x) => [0, 4400, 6600][x], acct: 'fukuri', es: [0, 3, 4], eff: { acc: [1, 0.98, 0.97] }, need: () => ksHeadcount() >= 100, tax: '食事補助と同じ要件（社員の負担が半分以上・会社の負担が月7,500円以下）なら非課税', d: '社内の食堂。従業員100人以上から' },
+  { id: 'drink', cat: '食事', n: '飲み物・軽食の無料提供（オフィスコンビニ）', lvs: ['なし', '飲み物（コーヒー・お茶）', '飲み物と軽食・果物'], cost: (h, x) => [0, 800, 2000][x], acct: 'fukuri', es: [0, 1, 2], tax: '職場で全員が自由に使える程度の飲み物・軽食は、福利厚生費として課税されない', d: '職場にコーヒーやお菓子を置く。費用が小さく、会話のきっかけにもなる' },
+  /* ===== 健康 ===== */
+  { id: 'dock', cat: '健康', n: '人間ドックの補助', lvs: ['なし', '35歳以上に年3万円', '30歳以上に年3万円', '全員に年5万円（配偶者も）'], cost: (h, x) => [0, 1500, 2200, 4500][x], acct: 'fukuri', es: [0, 2, 3, 4], eff: { acc: [1, 0.97, 0.96, 0.95], quit: [1, 0.98, 0.97, 0.96] }, tax: '一定の年齢以上の全員を対象に、会社が医療機関に直接払えば非課税（役員だけなどは給与になる）', d: '法定の健康診断に上乗せして、詳しい検査の費用を出す' },
+  { id: 'flu', cat: '健康', n: 'インフルエンザの予防接種', lvs: ['なし', '全員に会社負担', '全員と家族に会社負担'], cost: (h, x) => [0, 350, 800][x], acct: 'fukuri', es: [0, 1, 2], eff: { acc: [1, 0.99, 0.985] }, tax: '全員が対象なら非課税', d: '冬の欠勤を減らす' },
+  { id: 'eap', cat: '健康', n: 'メンタルヘルスの外部相談窓口（EAP）', lvs: ['なし', 'あり', 'あり＋家族も相談できる・復職の支援'], cost: (h, x) => [0, 400, 900][x], acct: 'fukuri', es: [0, 2, 3], eff: { quit: [1, 0.95, 0.93] }, tax: '相談の利用は非課税', d: 'カウンセラーに匿名で相談できる。休職と離職を防ぐ（ストレスチェックと組み合わせる）' },
+  { id: 'gym', cat: '健康', n: 'スポーツクラブの法人会員', lvs: ['なし', 'あり', 'あり＋運動の奨励金（月2,000円）'], cost: (h, x) => [0, 1200, 3200][x], acct: ['fukuri', 'fukuri', 'salary'], es: [0, 1, 2], eff: { acc: [1, 1, 0.99] }, tax: '全員が同じ条件で使えるなら非課税。現金の奨励金は給与として課税', d: '健康づくりを支える' },
+  { id: 'kenko', cat: '健康', n: '健康経営（健診の上乗せ・再検査を勤務時間に）', lvs: ['なし', 'あり', '健康経営優良法人の認定を目指す'], cost: (h, x) => [0, 600, 1500][x], acct: 'fukuri', es: [0, 2, 3], eff: { acc: [1, 0.98, 0.96], quit: [1, 0.98, 0.96], hire: [1, 0.99, 0.96] }, tax: '全員を対象にした健康の取り組みは非課税', d: '社員の健康を経営の課題として取り組む。認定を受けると採用や取引先の評価にも効く' },
+  { id: 'smoke', cat: '健康', n: '禁煙の支援（治療費の補助・敷地内禁煙）', lvs: ['なし', '治療費の補助', '治療費の補助＋禁煙できた人に祝い金'], cost: (h, x) => [0, 150, 500][x], acct: ['fukuri', 'fukuri', 'salary'], es: [0, 1, 1], eff: { acc: [1, 0.99, 0.985] }, tax: '医療機関に直接払う治療費の補助は非課税。祝い金は給与として課税', d: '禁煙外来の費用を出す。火災の心配と病気の休みを減らす' },
+  { id: 'fem', cat: '健康', n: '女性の健康の支援（婦人科検診・生理休暇の有給化）', lvs: ['なし', '婦人科検診の補助', '検診の補助＋生理休暇の有給化（年6日）'], cost: (h, x) => [0, 300, 900][x], share: 0.45, acct: 'fukuri', es: [0, 1, 2], eff: { quit: [1, 0.98, 0.96] }, tax: '検診を会社が医療機関に直接払えば非課税。休暇の日の給与は通常どおり課税', d: '女性の社員が働き続けやすくする。休みの日を有給にすると取りやすくなる' },
+  { id: 'massage', cat: '健康', n: 'ヘルスキーパー（社内のマッサージ）', lvs: ['なし', '週1回', '毎日'], cost: (h, x) => [0, 500, 1500][x], acct: 'fukuri', es: [0, 1, 2], eff: { acc: [1, 0.99, 0.98] }, need: () => ksHeadcount() >= 50, tax: '職場で全員が使えるなら非課税。障害者雇用（視覚障害のある国家資格者を雇う）にもなる', d: '肩こりや腰痛をほぐす。立ち仕事や重い物を運ぶ職場で喜ばれる' },
+  /* ===== 育児・介護 ===== */
+  { id: 'nursery', cat: '育児・介護', n: '企業主導型保育所の利用（企業枠）', lvs: ['なし', '提携して企業枠を確保', '企業枠を増やし、保育料の一部も補助'], cost: (h, x) => [0, 900, 1800][x], acct: 'fukuri', es: [0, 2, 3], eff: { quit: [1, 0.95, 0.93] }, tax: '会社が施設に払う利用料の負担は、一定の条件で課税されない（現金で渡すと給与）', d: '子育て中の社員の復職を支える。女性の定着に大きく効く' },
+  { id: 'sitter', cat: '育児・介護', n: 'ベビーシッターの補助', lvs: ['なし', 'あり', 'あり（病児保育も）'], cost: (h, x) => [0, 600, 1000][x], acct: 'fukuri', es: [0, 1, 2], tax: '会社が事業者に直接払う仕組みなら非課税になる場合がある（現金で渡すと給与）', d: '急な残業や病児のときに使える' },
+  { id: 'leave', cat: '育児・介護', n: '育児休業の給付の上乗せ（男性の育休を後押し）', lvs: ['なし', 'あり', 'あり（休業中の収入を実質10割に）'], cost: (h, x) => [0, 700, 1400][x], acct: 'salary', es: [0, 2, 3], eff: { quit: [1, 0.97, 0.95] }, tax: '会社の上乗せは給与として課税（育児休業給付は非課税）', d: '雇用保険の給付に上乗せして、休業中の収入を補う。男性の育休の取得が増える' },
+  { id: 'care', cat: '育児・介護', n: '介護の支援（相談窓口・介護休暇の上乗せ）', lvs: ['なし', 'あり', 'あり＋介護休業の有給化（30日）'], cost: (h, x) => [0, 300, 700][x], acct: 'fukuri', es: [0, 1, 2], eff: { quit: [1, 0.98, 0.97] }, tax: '相談などのサービスは非課税、現金の給付は課税', d: '親の介護による離職（介護離職）を防ぐ' },
+  { id: 'birth', cat: '育児・介護', n: '出産祝い金', lvs: ['なし', '1人10万円', '1人30万円（第3子以降は100万円）'], cost: (h, x) => [0, 300, 1100][x], acct: 'fukuri', es: [0, 1, 2], eff: { quit: [1, 0.99, 0.98] }, tax: '慶弔の規程に基づく社会通念上相当な額は非課税。極端に高い額は給与として課税されることがある', d: '子どもが生まれた社員にお祝いを出す' },
+  { id: 'fertility', cat: '育児・介護', n: '不妊治療の支援（休暇・費用の補助）', lvs: ['なし', '休暇（年5日・有給）', '休暇＋治療費の補助（年30万円まで）'], cost: (h, x) => [0, 200, 700][x], acct: 'fukuri', es: [0, 1, 2], eff: { quit: [1, 0.99, 0.98] }, tax: '休暇の日の給与は通常どおり課税。治療費の補助は、規程により全員に開かれていれば福利厚生費になることが多い', d: '治療と仕事の両立を支える。通院の休みが取りやすくなる' },
+  { id: 'gakudo', cat: '育児・介護', n: '学童保育・放課後の預かりの補助', lvs: ['なし', '月5,000円', '月1万円'], cost: (h, x) => [0, 5000, 1e4][x], share: 0.08, acct: 'fukuri', es: [0, 1, 2], eff: { quit: [1, 0.99, 0.98] }, tax: '施設に直接払えば非課税になる場合がある（現金で渡すと給与）', d: '小学生の子を持つ社員の「小1の壁」を支える' },
+  { id: 'kango', cat: '育児・介護', n: '子の看護等休暇の有給化', lvs: ['なし（無給）', '年5日を有給', '年10日を有給（小学校卒業まで）'], cost: (h, x) => [0, 300, 600][x], acct: 'misc', es: [0, 1, 2], eff: { quit: [1, 0.99, 0.98] }, tax: '休んだ日の給与は通常どおり課税', d: '子どもの病気や学校の行事で休む日を有給にする（法律は無給でもよい）' },
+  { id: 'tanjikan', cat: '育児・介護', n: '短時間勤務の延長', lvs: ['法定どおり（子が3歳まで）', '小学校入学まで', '小学校卒業まで'], cost: (h, x) => [0, 200, 400][x], acct: 'misc', es: [0, 1, 2], eff: { quit: [1, 0.98, 0.96] }, tax: '費用は短く働く人の仕事を埋める分', d: '1日6時間などの短い勤務を、法律より長く使えるようにする' },
+  /* ===== 休暇 ===== */
+  { id: 'holiday', cat: '休暇', n: '特別休暇（リフレッシュ・アニバーサリー・誕生日）', lvs: ['なし', '年3日', '年5日', '年7日'], cost: (h, x) => [0, 3, 5, 7][x] * ksHrAvgWage() / 250 * 0.5, acct: 'misc', es: [0, 3, 4, 5], tax: '休んだ日の給与は通常どおり課税（休暇そのものは課税されない）。費用は休む人の仕事を埋める分', d: '年次有給休暇とは別の有給の休暇' },
   { id: 'hourly', cat: '休暇', n: '時間単位の年次有給休暇', lvs: ['なし', 'あり（年5日分まで。労使協定）'], cost: () => 0, acct: 'misc', es: [0, 1], tax: '費用はかからない', d: '通院や学校の行事に1時間単位で休める' },
-  { id: 'zaikei', cat: '資産形成・退職', n: '財形貯蓄', lvs: ['なし', 'あり'], cost: (h, x) => [0, 150][x], acct: 'fukuri', es: [0, 1], tax: '財形年金・財形住宅は元利合計550万円まで利子が非課税（一般財形は課税）。会社は給与からの天引きと事務', d: '給与から天引きで積み立てる' },
-  { id: 'esop', cat: '資産形成・退職', n: '社員持株会の奨励金（拠出額の10%）', lvs: ['なし', 'あり'], cost: (h, x) => [0, 700][x], acct: 'salary', es: [0, 1], eff: { quit: [1, 0.98] }, need: () => ksForm(G) === 'kk', tax: '奨励金は給与として課税', d: '社員が自社の株を少しずつ買う。会社が上乗せする（株式会社だけ）' },
-  { id: 'dc', cat: '資産形成・退職', n: '企業型確定拠出年金（企業型DC）', lvs: ['なし', '月5,000円', '月1万円'], cost: (h, x) => [0, 5000, 1e4][x], acct: 'fukuri', es: [0, 3, 4], eff: { quit: [1, 0.95, 0.92], hire: [1, 0.97, 0.95] }, tax: '会社の掛金は給与にならず非課税で、社会保険料の対象にもならない。運用益も非課税で、受け取るときに課税。拠出の上限は2026年12月から月6.2万円（企業年金とiDeCoの共通枠）', d: '会社が掛金を出し、社員が自分で運用する退職金の制度' },
-  { id: 'chutai', cat: '資産形成・退職', n: '中小企業退職金共済（中退共）', lvs: ['なし', '月5,000円', '月1万円'], cost: (h, x) => [0, 5000, 1e4][x], acct: 'fukuri', es: [0, 2, 3], eff: { quit: [1, 0.96, 0.94] }, need: () => ksHrSmall(), tax: '会社の掛金は全額が損金。社員は退職のときに退職所得として課税（退職所得控除がある）', d: '中小企業のための外部に積み立てる退職金（資本金3億円以下または従業員300人以下など）' },
-  { id: 'cert', cat: '自己啓発', n: '資格取得の支援（受験料・講習費・合格祝い金）', lvs: ['なし', 'あり'], cost: (h, x) => [0, 1500][x], acct: 'recruit', es: [0, 2], eff: { shrink: [1, 0.98], acc: [1, 0.97] }, tax: '仕事に必要な資格なら非課税。仕事に関係のない資格は給与として課税', d: '技能と意欲を高める' },
-  { id: 'study', cat: '自己啓発', n: '研修・書籍・語学の補助', lvs: ['なし', 'あり'], cost: (h, x) => [0, 2500][x], acct: 'recruit', es: [0, 2], eff: { quit: [1, 0.97] }, tax: '仕事に関係する研修・書籍なら非課税', d: '社外のセミナーや書籍の費用を出す' },
-  { id: 'trip2', cat: 'レクリエーション', n: '社員旅行', lvs: ['なし', '年1回（1人6万円）'], cost: (h, x) => [0, 5000][x], acct: 'fukuri', es: [0, 1], tax: '4泊5日以内（海外は現地の滞在日数）、参加が全体の50%以上、会社の負担が1人10万円程度までなら非課税。行かない人にお金を渡すと給与になる', d: '若手には人気がないこともある' },
-  { id: 'club', cat: 'レクリエーション', n: '懇親会・部活動の補助', lvs: ['なし', 'あり'], cost: (h, x) => [0, 1000][x], acct: 'fukuri', es: [0, 1], tax: '社会通念の範囲なら非課税（社外の人との飲食は交際費）', d: 'チームの結束を高める' },
+  { id: 'refresh', cat: '休暇', n: '長期のリフレッシュ休暇（勤続の節目）', lvs: ['なし', '勤続10年ごとに5日', '勤続5年ごとに5日＋旅行券'], cost: (h, x) => [0, 0.5, 1.6][x] * ksHrAvgWage() / 250 * 0.5 + [0, 0, 300][x], acct: 'misc', es: [0, 1, 2], eff: { quit: [1, 0.99, 0.98] }, tax: '休暇の日の給与は通常どおり課税。旅行券は給与として課税（永年勤続の表彰の旅行なら非課税の場合あり）', d: '長く勤めた人がまとまって休める' },
+  { id: 'volunteer', cat: '休暇', n: 'ボランティア休暇', lvs: ['なし', '年3日', '年5日'], cost: (h, x) => [0, 0.3, 0.5][x] * ksHrAvgWage() / 250 * 0.5, acct: 'misc', es: [0, 1, 1], tax: '休んだ日の給与は通常どおり課税', d: '災害の復旧や地域の活動に参加するための休み。地域の評判にもなる' },
+  { id: 'tsumitate', cat: '休暇', n: '積立有給休暇（失効した年休を病気や介護に）', lvs: ['なし', '最大20日', '最大40日'], cost: (h, x) => [0, 0.4, 0.7][x] * ksHrAvgWage() / 250 * 0.5, acct: 'misc', es: [0, 1, 2], eff: { quit: [1, 0.99, 0.98] }, tax: '休んだ日の給与は通常どおり課税', d: '使い切れずに消える年休を積み立てて、長い病気や介護のときに使える' },
+  { id: 'sick', cat: '休暇', n: '病気休暇（有給）', lvs: ['なし', '年5日', '年10日'], cost: (h, x) => [0, 0.6, 1.1][x] * ksHrAvgWage() / 250 * 0.5, acct: 'misc', es: [0, 1, 2], eff: { acc: [1, 0.99, 0.98] }, tax: '休んだ日の給与は通常どおり課税', d: '体調の悪いときに年休を使わずに休める。無理に出勤して広げるのを防ぐ' },
+  { id: 'summer', cat: '休暇', n: '夏季休暇・年末年始の休みの上乗せ', lvs: ['なし', '夏季3日', '夏季5日＋年末年始6日'], cost: (h, x) => [0, 3, 7][x] * ksHrAvgWage() / 250 * 0.5, acct: 'misc', es: [0, 2, 3], tax: '休んだ日の給与は通常どおり課税。店や工場では交代で休むので、代わりの人の分の費用がかかる', d: 'お盆や年末年始にまとまった休みを用意する' },
+  /* ===== 働き方 ===== */
+  { id: 'flex', cat: '働き方', n: 'フレックスタイム制', lvs: ['なし', 'コアタイムあり', 'コアタイムなし（スーパーフレックス）'], cost: () => 0, acct: 'misc', es: [0, 2, 3], eff: { ot: [1, 0.97, 0.95], hire: [1, 0.97, 0.95] }, tax: '費用はかからない（労使協定と就業規則が要る）', d: '始業と終業の時刻を社員が決める。店や工場ではシフトがあるので使える人が限られる' },
+  { id: 'telework', cat: '働き方', n: 'テレワーク（在宅勤務）の制度', lvs: ['なし', '週1〜2日', '原則在宅（出社は必要なときだけ）'], cost: (h, x) => [0, 300, 800][x], share: () => ksHrRemoteShare(), acct: 'fees', es: [0, 2, 3], eff: { hire: [1, 0.95, 0.92], quit: [1, 0.97, 0.95], leak: [1, 1.05, 1.1] }, tax: '制度そのものに税はかからない（手当は在宅勤務手当を参照）。費用はVPNなどの仕組み', d: '家で働ける日をつくる。人の力で稼ぐ事業で効果が大きく、情報の管理は難しくなる' },
+  { id: 'shuku3', cat: '働き方', n: '週休3日（選べる制度）', lvs: ['なし', '選べる（給与は日数に応じて）', '選べる（給与は同じ・1日の時間を長く）'], cost: (h, x) => [0, 0, 800][x], acct: 'misc', es: [0, 2, 3], eff: { hire: [1, 0.96, 0.94], ot: [1, 1, 1.03] }, tax: '費用は人の手配の分', d: '週4日で働ける。育児・介護・学び直しの世代に人気がある' },
+  { id: 'fukugyo', cat: '働き方', n: '副業・兼業の許可', lvs: ['禁止', '届出で許可', '推奨（社外の経験を生かす）'], cost: () => 0, acct: 'misc', es: [0, 1, 2], eff: { hire: [1, 0.98, 0.96], quit: [1, 0.99, 0.98], leak: [1, 1.02, 1.04] }, tax: '費用はかからない。労働時間は本業と副業で通算して管理する', d: '社外で働くことを認める。人材の確保に効くが、働きすぎと情報の管理に注意' },
+  { id: 'interval', cat: '働き方', n: '勤務間インターバル', lvs: ['なし', '終業から次の始業まで9時間', '11時間（EUの水準）'], cost: (h, x) => [0, 200, 500][x], acct: 'misc', es: [0, 1, 2], eff: { acc: [1, 0.98, 0.96], ot: [1, 0.98, 0.96] }, tax: '費用は人の手配の分', d: '遅くまで働いた翌日は始業を遅らせる。過労を防ぐ（導入は会社の努力義務）' },
+  { id: 'workcation', cat: '働き方', n: 'サテライトオフィス・ワーケーション', lvs: ['なし', '提携のシェアオフィス', '地方のサテライトオフィス'], cost: (h, x) => [0, 800, 2000][x], share: () => ksHrRemoteShare(), acct: 'rent', es: [0, 1, 2], eff: { hire: [1, 0.98, 0.96] }, tax: '仕事で使う場所の費用は課税されない', d: '自宅の近くや旅先でも働ける場所を用意する' },
+  /* ===== 資産形成・退職 ===== */
+  { id: 'zaikei', cat: '資産形成・退職', n: '財形貯蓄', lvs: ['なし', 'あり', 'あり＋会社の奨励金（積立の5%）'], cost: (h, x) => [0, 150, 600][x], acct: ['fukuri', 'fukuri', 'salary'], es: [0, 1, 2], tax: '財形年金・財形住宅は元利合計550万円まで利子が非課税（一般財形は課税）。奨励金は給与として課税', d: '給与から天引きで積み立てる' },
+  { id: 'esop', cat: '資産形成・退職', n: '社員持株会の奨励金', lvs: ['なし', 'あり（拠出額の10%）', 'あり（拠出額の20%）'], cost: (h, x) => [0, 700, 1400][x], acct: 'salary', es: [0, 1, 2], eff: { quit: [1, 0.98, 0.97] }, need: () => ksForm(G) === 'kk', tax: '奨励金は給与として課税', d: '社員が自社の株を少しずつ買う。会社が上乗せする（株式会社だけ）' },
+  { id: 'dc', cat: '資産形成・退職', n: '企業型確定拠出年金（企業型DC）', lvs: ['なし', '月5,000円', '月1万円', '月2万円', '月3万円（大企業並み）'], cost: (h, x) => [0, 5000, 1e4, 2e4, 3e4][x], acct: 'fukuri', es: [0, 3, 4, 5, 6], eff: { quit: [1, 0.95, 0.92, 0.9, 0.88], hire: [1, 0.97, 0.95, 0.93, 0.91] }, tax: '会社の掛金は給与にならず非課税で、社会保険料の対象にもならない。運用益も非課税で、受け取るときに課税。拠出の上限は2026年12月から月6.2万円（企業年金とiDeCoの共通枠）', d: '会社が掛金を出し、社員が自分で運用する退職金の制度' },
+  { id: 'chutai', cat: '資産形成・退職', n: '中小企業退職金共済（中退共）', lvs: ['なし', '月5,000円', '月1万円', '月2万円', '月3万円（掛金の上限）'], cost: (h, x) => [0, 5000, 1e4, 2e4, 3e4][x], acct: 'fukuri', es: [0, 2, 3, 4, 5], eff: { quit: [1, 0.96, 0.94, 0.92, 0.9] }, need: () => ksHrSmall(), tax: '会社の掛金は全額が損金。社員は退職のときに退職所得として課税（退職所得控除がある）', d: '中小企業のための外部に積み立てる退職金（資本金3億円以下または従業員300人以下など）' },
+  { id: 'db', cat: '資産形成・退職', n: '確定給付企業年金（DB）', lvs: ['なし', '月1万円相当の積立', '月2万円相当の積立'], cost: (h, x) => [0, 1.2e4, 2.4e4][x], acct: 'fukuri', es: [0, 3, 4], eff: { quit: [1, 0.94, 0.9] }, tax: '会社の掛金は損金で、社員の給与にならない。受け取るときに年金・退職所得として課税', d: '会社が運用の責任を持ち、決まった額の年金を約束する。運用が悪いと会社が穴埋めする' },
+  { id: 'seminar', cat: '資産形成・退職', n: 'ライフプランのセミナー（資産形成・年金）', lvs: ['なし', '年1回', '年2回＋個別の相談'], cost: (h, x) => [0, 100, 300][x], acct: 'recruit', es: [0, 1, 1], tax: '全員が受けられる研修は非課税', d: 'お金の知識を学ぶ。企業型DCを入れた会社には運用の教育の努力義務がある' },
+  /* ===== 自己啓発 ===== */
+  { id: 'cert', cat: '自己啓発', n: '資格取得の支援（受験料・講習費・合格祝い金）', lvs: ['なし', 'あり', 'あり＋合格祝い金を手厚く'], cost: (h, x) => [0, 1500, 2500][x], acct: 'recruit', es: [0, 2, 3], eff: { shrink: [1, 0.98, 0.97], acc: [1, 0.97, 0.96] }, tax: '仕事に必要な資格なら非課税。仕事に関係のない資格や祝い金は給与として課税', d: '技能と意欲を高める' },
+  { id: 'study', cat: '自己啓発', n: '研修・書籍・語学の補助', lvs: ['なし', 'あり', 'あり（1人年10万円まで）', 'あり（大学院・MBAの学費も）'], cost: (h, x) => [0, 2500, 5000, 8000][x], acct: 'recruit', es: [0, 2, 3, 4], eff: { quit: [1, 0.97, 0.96, 0.95], hire: [1, 1, 0.98, 0.96] }, tax: '仕事に関係する研修・書籍なら非課税', d: '社外のセミナーや書籍の費用を出す' },
+  { id: 'elearn', cat: '自己啓発', n: 'eラーニングの使い放題', lvs: ['なし', 'あり', 'あり＋受講の時間を勤務として扱う'], cost: (h, x) => [0, 800, 1500][x], acct: 'recruit', es: [0, 1, 2], eff: { quit: [1, 0.99, 0.98], shrink: [1, 1, 0.99] }, tax: '業務に関係する講座なら非課税', d: 'スマホやパソコンで、いつでも講座を受けられる' },
+  { id: 'gogaku', cat: '自己啓発', n: '語学・海外研修', lvs: ['なし', 'オンライン英会話', '海外研修（選抜）'], cost: (h, x) => [0, 600, 2000][x], acct: 'recruit', es: [0, 1, 2], eff: { hire: [1, 0.99, 0.97] }, tax: '仕事に必要な語学・研修なら非課税', d: '海外の取引先や拠点で働ける人を育てる' },
+  /* ===== レクリエーション ===== */
+  { id: 'trip2', cat: 'レクリエーション', n: '社員旅行', lvs: ['なし', '年1回（1人6万円）', '年1回（1人10万円・海外も）'], cost: (h, x) => [0, 5000, 8300][x], acct: 'fukuri', es: [0, 1, 2], tax: '4泊5日以内（海外は現地の滞在日数）、参加が全体の50%以上、会社の負担が1人10万円程度までなら非課税。行かない人にお金を渡すと給与になる', d: '若手には人気がないこともある' },
+  { id: 'club', cat: 'レクリエーション', n: '懇親会・部活動の補助', lvs: ['なし', 'あり', 'あり（懇親会の費用を全額）'], cost: (h, x) => [0, 1000, 2000][x], acct: 'fukuri', es: [0, 1, 2], tax: '社会通念の範囲なら非課税（社外の人との飲食は交際費）', d: 'チームの結束を高める' },
+  { id: 'bday', cat: 'レクリエーション', n: '誕生日のお祝い', lvs: ['なし', 'ギフト（3,000円）', 'ギフト＋誕生日の休暇'], cost: (h, x) => [0, 250, 250 + ksHrAvgWage() / 250 / 12 * 0.5][x], acct: 'fukuri', es: [0, 1, 2], tax: '少額の記念品は非課税。現金や商品券は給与として課税', d: '社員の誕生日に贈り物をする' },
+  { id: 'hoyo', cat: 'レクリエーション', n: '保養所・宿泊の補助', lvs: ['なし', '契約の保養所', '全国の宿の補助（1泊5,000円）'], cost: (h, x) => [0, 500, 1200][x], acct: 'fukuri', es: [0, 1, 2], tax: '全員が同じ条件で使えるなら非課税', d: '家族で休暇を過ごせる宿を安く使える' },
+  { id: 'event', cat: 'レクリエーション', n: '社内イベント（夏祭り・家族招待・表彰式）', lvs: ['なし', '年1回', '年2回＋家族招待'], cost: (h, x) => [0, 500, 1200][x], acct: 'fukuri', es: [0, 1, 2], tax: '全員が参加できる社内の行事は非課税', d: '仕事の成果をたたえ、家族にも職場を知ってもらう' },
+  /* ===== 慶弔・保険 ===== */
   { id: 'keicho', cat: '慶弔・保険', n: '慶弔見舞金', base: true, acct: 'fukuri', tax: '慶弔の規程に基づく社会通念上相当な額は非課税', d: '結婚・出産・弔事・災害のお祝いやお見舞い。ほとんどの会社にある' },
-  { id: 'gltd', cat: '慶弔・保険', n: '団体保険・GLTD（長期の所得補償）', lvs: ['なし', 'あり'], cost: (h, x) => [0, 800][x], acct: 'insur', es: [0, 2], tax: '会社が保険料を負担し全員が加入するなら、給与にならない（受け取る給付金は非課税）', d: '病気やけがで長く働けなくなったときの収入を補う' },
-  { id: 'kinzoku', cat: '慶弔・保険', n: '永年勤続の表彰', lvs: ['なし', '10年ごとに記念品・旅行'], cost: (h, x) => [0, 300][x], acct: 'fukuri', es: [0, 1], tax: '勤続10年以上で、おおむね10年以上の間隔、社会通念上相当な記念品・旅行なら非課税（現金や商品券は課税）', d: '長く勤めた人をたたえる' },
-  { id: 'cafeteria', cat: '働き方・その他', n: '福利厚生の代行サービス（カフェテリアプラン）', lvs: ['なし', 'あり'], cost: (h, x) => [0, 800][x], acct: 'fukuri', es: [0, 2], eff: { hire: [1, 0.97] }, tax: '会社が会費を負担し、全員が同じ条件で使えるなら原則として非課税（特定の人に現金のポイントを渡すと給与）', d: '宿泊・レジャー・育児・介護などの割引のメニューを外部の会社が用意する。中小企業で使いやすい' },
+  { id: 'gltd', cat: '慶弔・保険', n: '団体保険・GLTD（長期の所得補償）', lvs: ['なし', 'あり', 'あり＋がん保険・医療保険の団体加入'], cost: (h, x) => [0, 800, 1500][x], acct: 'insur', es: [0, 2, 3], eff: { quit: [1, 1, 0.99] }, tax: '会社が保険料を負担し全員が加入するなら、給与にならない（受け取る給付金は非課税）', d: '病気やけがで長く働けなくなったときの収入を補う' },
+  { id: 'kinzoku', cat: '慶弔・保険', n: '永年勤続の表彰', lvs: ['なし', '10年ごとに記念品・旅行', '5年ごとに記念品・10年ごとに旅行と特別休暇'], cost: (h, x) => [0, 300, 700][x], acct: 'fukuri', es: [0, 1, 2], tax: '勤続10年以上で、おおむね10年以上の間隔、社会通念上相当な記念品・旅行なら非課税（現金や商品券は課税）', d: '長く勤めた人をたたえる' },
+  { id: 'choi', cat: '慶弔・保険', n: '弔慰金・災害見舞金の上乗せ', lvs: ['規程どおり', '手厚く（遺児の育英年金も）'], cost: (h, x) => [0, 250][x], acct: 'fukuri', es: [0, 1], tax: '社会通念上相当な額の弔慰金・見舞金は非課税', d: '社員や家族に不幸や災害があったときに、手厚く支える' },
+  /* ===== その他 ===== */
+  { id: 'cafeteria', cat: 'その他', n: '福利厚生の代行サービス（カフェテリアプラン）', lvs: ['なし', 'あり', 'あり（ポイントを年3万円分）'], cost: (h, x) => [0, 800, 2500][x], acct: 'fukuri', es: [0, 2, 3], eff: { hire: [1, 0.97, 0.95] }, tax: '会社が会費を負担し、全員が同じ条件で使えるなら原則として非課税（特定の人に現金のポイントを渡すと給与）', d: '宿泊・レジャー・育児・介護などの割引のメニューを外部の会社が用意する。中小企業で使いやすい' },
+  { id: 'discount', cat: 'その他', n: '社員割引（自社の商品・サービス）', lvs: ['なし', '10%引き', '30%引き'], cost: (h, x) => [0, 300, 900][x], acct: 'fukuri', es: [0, 1, 2], need: () => ksHrHasEng(['shop', 'rest', 'cap', 'subs']), tax: '販売価額の70%以上で売り、原価以上なら課税されない', d: '自社の商品やサービスを安く使える。お客の目線を知るきっかけにもなる' },
+  { id: 'uniform', cat: 'その他', n: '制服・作業着の支給とクリーニング', lvs: ['各自で用意', '支給', '支給＋クリーニング・安全靴'], cost: (h, x) => [0, 500, 1100][x], acct: 'supplies', es: [0, 1, 2], eff: { acc: [1, 0.99, 0.97] }, tax: '仕事で着る制服・作業着の支給は非課税', d: '仕事で着る服と靴を会社が用意する。現場の安全にも効く' },
+  { id: 'parking', cat: 'その他', n: '駐車場の無料提供（マイカー通勤）', lvs: ['なし（自己負担）', '会社が負担'], cost: (h, x) => [0, 3000][x], share: 0.3, acct: 'rent', es: [0, 1], eff: { hire: [1, 0.98] }, tax: '通勤のための駐車場は、全員が同じ条件で使えるなら原則として課税されない', d: '車で通う社員の駐車場代を会社が持つ。郊外の店や工場で効く' },
+  { id: 'bus', cat: 'その他', n: '送迎バス（駅と事業所の間）', lvs: ['なし', '朝夕の送迎バス'], cost: (h, x) => [0, 2500][x], acct: 'travel', es: [0, 2], eff: { hire: [1, 0.95] }, need: () => ksHeadcount() >= 50 && ksHrHasEng(['mfg', 'cap', 'trans', 'trade']), tax: '会社が運行する送迎は、通勤のための現物の給付として原則として課税されない', d: '駅から遠い工場や物流センターへの通勤を楽にする' },
 ];
 const KS_WF_BY = Object.fromEntries(KS_WF.map(x => [x.id, x]));
-const KS_WF_CATS = ['手当', '住宅', '食事', '健康', '育児・介護', '休暇', '資産形成・退職', '自己啓発', 'レクリエーション', '慶弔・保険', '働き方・その他'];
+const KS_WF_CATS = ['手当', '住宅', '食事', '健康', '育児・介護', '休暇', '働き方', '資産形成・退職', '自己啓発', 'レクリエーション', '慶弔・保険', 'その他'];
 /* 出張の日数（1人・1か月）：事業の型で違う */
 const KS_TRIP_DAYS = { trade: 1.6, build: 1.2, pro: 1.4, subs: 0.8, mfg: 0.6, cap: 0.4, trans: 0.5, shop: 0.2, rest: 0.15 };
 function ksTripDays() {
@@ -25134,15 +25720,34 @@ function ksTripDays() {
 function ksHrRemoteShare() { const us = ksActiveUnits(); const h = Math.max(1, ksHeadcount()); return us.length ? sum(us, u => ksUnitHead(u) * (['pro', 'subs'].includes(ksS(u).eng) ? 0.6 : 0.08)) / h : 0.3; }
 function ksHrAvgWage() { const us = ksActiveUnits(); const h = Math.max(1, ksHeadcount()); return us.length ? sum(us, u => sum(ksS(u).roles, r => (u.staff[r.id] || 0) * ksRoleWage(r, u))) / h : 30e4; }
 function ksHrSmall() { return (G.bal.capital || 0) <= 3e8 || ksHeadcount() <= 300; }
+/* 大都市（東京・神奈川・大阪・愛知）で働く人の割合 */
+function ksHrCityShare() {
+  if (!G.loc) return 0;
+  const big = [11, 12, 13, 14, 23, 27];
+  const us = ksActiveUnits();
+  const h = Math.max(1, ksHeadcount());
+  if (!us.length) return big.includes(G.loc.hq) ? 1 : 0;
+  return sum(us, u => ksUnitHead(u) * (big.includes(typeof ksUnitPref === 'function' ? ksUnitPref(u) : G.loc.hq) ? 1 : 0)) / h;
+}
+/* 寒い地方（北海道・東北・北陸・長野など）に本社がある */
+function ksHrColdArea() { return !!(G.loc && [1, 2, 3, 4, 5, 6, 7, 15, 16, 17, 18, 20].includes(G.loc.hq)); }
+/* 夜勤・早朝のシフトで働く人の割合（店・飲食・施設・運輸・ライン生産） */
+function ksHrShiftShare() {
+  const us = ksActiveUnits();
+  const h = Math.max(1, ksHeadcount());
+  const f = { shop: 0.3, rest: 0.35, cap: 0.4, trans: 0.5, mfg: 0.25 };
+  return us.length ? sum(us, u => ksUnitHead(u) * (f[ksS(u).eng] || 0)) / h : 0;
+}
+function ksHrHasEng(list) { return ksActiveUnits().some(u => list.includes(ksS(u).eng)); }
 function ksHrMultiSite() { return !!(G.loc && new Set([G.loc.hq, ...ksActiveUnits().map(u => (typeof ksUnitPref === 'function' ? ksUnitPref(u) : 0))]).size > 1); }
-function ksWfShare(W) { return typeof W.share === 'function' ? W.share() : W.share ?? 1; }
+function ksWfShare(W, lv) { return typeof W.share === 'function' ? W.share(lv) : W.share ?? 1; }
 function ksWfLv(id) { return (G.hr && G.hr.wf[id]) || 0; }
 function ksWfAvail(W) { return !W.need || W.need(); }
 /* 1か月の費用（会社全体） */
 function ksWfCostMonth(W, lv = ksWfLv(W.id)) {
   if (W.base || !lv || !ksWfAvail(W)) return 0;
   const h = ksHeadcount();
-  return Math.round(h * ksWfShare(W) * W.cost(h, lv));
+  return Math.round(h * ksWfShare(W, lv) * W.cost(h, lv));
 }
 function ksWfAcct(W, lv) { return Array.isArray(W.acct) ? W.acct[lv] : W.acct; }
 
@@ -26644,14 +27249,12 @@ function ksGrpMakeHtml() {
   const plan = F.type ? ksSubStartPlan(F.type, F.sc) : null;
   const need = plan ? plan.need : 0;
   const amt = F.amt || (plan ? Math.round(need * F.own / 1e6) * 1e6 : 0);
-  const list = F.q ? ksSearchTypes(F.q, '', '', 12) : [];
   const ccOpts = [['jp', '日本'], ...Object.entries(KS_COUNTRIES).map(([k, x]) => [k, x.n])].map(([v, l]) => `<option value="${v}"${F.cc === v ? ' selected' : ''}>${esc(l)}</option>`).join('');
   const prefOpts = Object.values(KS_PREFS).map(p => `<option value="${p.c}"${+F.pref === p.c ? ' selected' : ''}>${esc(p.n)}</option>`).join('');
   const C = F.cc !== 'jp' ? KS_COUNTRIES[F.cc] : null;
   const found = panel('子会社・関連会社を設立する（新しい事業）', `<p class="small" style="margin:0 0 6px">新しい会社をつくって出資し（${term('関係会社株式', 'subShares')}）、その会社で事業を始めます。合弁にすると、相手の会社も持分に応じて出資します。持分が50%以下なら、経営は相手が主導する${term('関連会社', 'mochibunho')}（持分法）になります。子会社が出資すると<b>孫会社</b>になります。海外に設立すると現地法人になり、その国の税率と法律が適用されます。</p>
     <label class="field"><span>出資する会社</span><select data-ch="kGFowner">${owners.map(([v, l]) => `<option value="${v}"${(F.owner || 'root') === v ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select></label>
-    <input type="search" value="${esc(F.q)}" data-in="kGFq" placeholder="業種を探す（例：ソフトウェア、物流、介護）" style="width:100%" aria-label="業種を探す">
-    <div id="kGFlist" class="typelist sm">${ksGFListHtml(list, F)}</div>
+    <div class="field"><span>業種（産業 → 分類 → 業種とたどるか、言葉で探す）</span>${ksTbHtml('gf', { id: 'kGFq', ph: '業種を探す（例：ソフトウェア、物流、介護、リニア）' })}</div>
     ${F.type ? `<div class="callout" style="margin-top:6px"><b>${esc(F.type)}</b>${plan ? `<br><span class="small">立ち上げの設備 ${fmtYen(plan.capex)}・軌道に乗るまでの運転資金の目安 ${fmtYen(plan.work)}・合計の目安 <b>${fmtYen(need)}</b></span>` : ''}</div>` : ''}
     <div class="grid g2" style="gap:8px;margin-top:6px">
       <div class="field"><span>規模</span><div class="seg" role="radiogroup">${[[0.5, '小さく'], [1, 'ふつう'], [2, '大きく']].map(([v, l]) => `<button type="button" data-act="kGFsc" data-v="${v}" aria-pressed="${F.sc === v}">${l}</button>`).join('')}</div></div>
@@ -26688,10 +27291,6 @@ function ksGrpMakeHtml() {
     <p class="note">実際には、株式移転（新しい持株会社をつくる）や会社分割（事業を子会社に移す）を、株主総会の特別決議（3分の2以上）と債権者保護手続を経て行います。</p>`) : '';
   return `<div class="grid g2">${found}${split}</div><div class="grid g2" style="margin-top:10px">${ma}${hd}</div>`;
 }
-function ksGFListHtml(list, F) {
-  return list.map(S => `<button type="button" class="typeopt${F.type === S.name ? ' on' : ''}" data-act="kGFpick" data-v="${esc(S.name)}"><span class="indico" aria-hidden="true">${esc(S.icon)}</span><span><b>${esc(S.name)}</b><span class="small muted">${esc(S.grp)}</span></span></button>`).join('') || (F.q ? '<div class="empty">見つかりません</div>' : '');
-}
-INPUTS.kGFq = el => { UI.kGF.q = el.value; const b = $('#kGFlist'); if (b) b.innerHTML = ksGFListHtml(ksSearchTypes(el.value, '', '', 12), UI.kGF); };
 ACTIONS.kGFpick = d => { UI.kGF.type = d.v; UI.kGF.amt = null; render(); };
 ACTIONS.kGFsc = d => { UI.kGF.sc = +d.v; UI.kGF.amt = null; render(); };
 ACTIONS.kGFown = d => { UI.kGF.own = +d.v; UI.kGF.amt = null; render(); };
@@ -26914,24 +27513,37 @@ ACTIONS.kGoalSet = () => { ksHrSetGoals(UI.kGoals.list); toast('目標を決め�
 /* ---------- 福利厚生と手当 ---------- */
 function ksHrWfHtml() {
   const H = G.hr;
-  const cat = UI.kWfCat || '手当';
-  const cats = KS_WF_CATS.map(c => `<button type="button" data-act="kWfCat" data-v="${esc(c)}" aria-pressed="${c === cat}">${esc(c)}</button>`).join('');
+  const cat = KS_WF_CATS.includes(UI.kWfCat) ? UI.kWfCat : '手当';
+  // 分類ごとに、使っている制度の数を出す
+  const cats = KS_WF_CATS.map(c => {
+    const list = KS_WF.filter(W => W.cat === c && !W.base && ksWfAvail(W));
+    const on = list.filter(W => ksWfLv(W.id) > 0).length;
+    return `<button type="button" data-act="kWfCat" data-v="${esc(c)}" aria-pressed="${c === cat}">${esc(c)}<span class="wfc-n">${on}/${list.length}</span></button>`;
+  }).join('');
   const rows = KS_WF.filter(W => W.cat === cat).map(W => {
     const lv = ksWfLv(W.id), base = (H.wfBase || {})[W.id] || 0;
     const avail = ksWfAvail(W);
-    const ctl = W.base ? '<span class="tag ok">基本の制度（給与・経費に含まれている）</span>'
-      : !avail ? '<span class="small muted">この会社では対象外</span>'
-      : `<div class="seg wrap" role="radiogroup">${W.lvs.map((l, i) => `<button type="button" data-act="kWfSet" data-id="${W.id}" data-v="${i}" aria-pressed="${lv === i}">${esc(l)}${i === base && i ? '（就任の時）' : ''}</button>`).join('')}</div>`;
-    const cost = W.base || !avail ? '' : `<div class="small">会社の費用 月${fmtYen(ksWfCostMonth(W, lv))}${lv !== base ? `<span class="muted">（就任の時より ${ksWfCostMonth(W, lv) >= ksWfCostMonth(W, base) ? '+' : '−'}${fmtYen(Math.abs(ksWfCostMonth(W, lv) - ksWfCostMonth(W, base)))}）</span>` : ''}・${esc(KS_ACCT[ksWfAcct(W, Math.max(1, lv))].n)}${ksWfAcct(W, Math.max(1, lv)) === 'salary' ? '（課税される手当。社会保険料の会社負担も増える）' : ''}</div>`;
-    const eff = !W.base && W.es ? `<div class="small muted">満足度 ＋${W.es[Math.max(1, lv)] || W.es[1]}${W.eff ? `・${Object.entries(W.eff).map(([k, a]) => `${KS_EFF_N[k]} ${Math.round((a[Math.max(1, lv)] - 1) * 100)}%`).join('・')}` : ''}</div>` : '';
-    return `<tr><td><b>${esc(W.n)}</b><div class="small">${esc(W.d)}</div>${cost}${eff}</td><td>${ctl}<details class="small" style="margin-top:4px"><summary>税金の扱い（従業員の所得税）</summary><p style="margin:4px 0 0">${esc(W.tax)}</p></details></td></tr>`;
+    let ctl;
+    if (W.base) ctl = '<span class="tag ok">基本の制度（給与・経費に含まれている）</span>';
+    else if (!avail) ctl = '<span class="small muted">この会社では対象外</span>';
+    else {
+      // 段階ごとに、会社の費用（月）と満足度を並べる
+      ctl = `<div class="wflv" role="radiogroup" aria-label="${esc(W.n)}の段階">${W.lvs.map((l, i) => {
+        const c = ksWfCostMonth(W, i);
+        const effs = i && W.eff ? Object.entries(W.eff).map(([k, a]) => `${KS_EFF_N[k]}${Math.round((a[i] - 1) * 100) >= 0 ? '+' : ''}${Math.round((a[i] - 1) * 100)}%`).filter(t => !/[+−-]0%$/.test(t)).join('・') : '';
+        return `<button type="button" class="wflv-b" data-act="kWfSet" data-id="${W.id}" data-v="${i}" aria-pressed="${lv === i}"><span class="wflv-n">${esc(l)}${i === base && i ? ' <span class="tag">就任の時</span>' : ''}</span>${i ? `<span class="wflv-m">月${fmtYen(c)}${W.es && W.es[i] ? `・満足度＋${W.es[i]}` : ''}${effs ? `・${effs}` : ''}</span>` : ''}</button>`;
+      }).join('')}</div>`;
+    }
+    const cost = W.base || !avail ? '' : `<div class="small">いま：会社の費用 月${fmtYen(ksWfCostMonth(W, lv))}${lv !== base ? `<span class="muted">（就任の時より ${ksWfCostMonth(W, lv) >= ksWfCostMonth(W, base) ? '+' : '−'}${fmtYen(Math.abs(ksWfCostMonth(W, lv) - ksWfCostMonth(W, base)))}）</span>` : ''}・${esc(KS_ACCT[ksWfAcct(W, Math.max(1, lv))].n)}${ksWfAcct(W, Math.max(1, lv)) === 'salary' ? '（課税される手当。社会保険料の会社負担も増える）' : ''}</div>`;
+    return `<li class="wfi${lv ? ' on' : ''}"><div class="wfi-t"><b>${esc(W.n)}</b><div class="small">${esc(W.d)}</div>${cost}<details class="small"><summary>税金の扱い（従業員の所得税）</summary><p style="margin:4px 0 0">${esc(W.tax)}</p></details></div><div class="wfi-c">${ctl}</div></li>`;
   }).join('');
   const extra = ksWfExtraMonth();
   const tot = sum(KS_WF.filter(W => !W.base), W => ksWfCostMonth(W));
   const head = Math.max(1, ksHeadcount());
-  return `<div class="grid g-side"><div>${panel('福利厚生と手当', `<div class="subtabs sm" role="tablist">${cats}</div><div class="tbl-wrap"><table class="t"><tbody>${rows}</tbody></table></div>`)}</div>
-    <div class="stack">${panel('費用と効果', kv([['制度の費用（会社全体）', `月${fmtYen(tot)}（1人あたり${fmtYen(tot / head)}）`], ['就任の時より増えた分', `<b>${extra >= 0 ? '+' : '−'}${fmtYen(Math.abs(extra))}</b>／月`], ['従業員満足度', `${fmtNum(H.es, 0)}点`], ['参考：大企業の法定外福利費', '1人あたり月2.5万円ほど（経団連の調査・2018年度）。中小企業では数千円〜1万円']]) + '<p class="note">課税される手当（住宅手当・家族手当など）は給料手当・労務費として記帳し、社会保険料（会社の負担は約15%）も増えます。非課税の制度（食事補助・社宅・企業型DCなど）は福利厚生費。社員の手取りが同じでも、非課税の制度のほうが社員の得は大きくなります。就任の時の制度の費用は、もとの経費に含まれています。</p>')}
-    ${panel('制度を選ぶときの見方', `<ul class="small" style="margin:0;padding-left:1.2em"><li>若手の採用と定着：借上社宅・住宅手当・食事補助</li><li>子育て・介護の世代：企業主導型保育所・育児休業の上乗せ・介護の支援</li><li>長く勤めてもらう：企業型DC・中退共・永年勤続の表彰</li><li>技能を高める：資格手当・資格取得の支援・研修</li><li>出張の多い仕事（卸売・建設・専門サービス）：出張手当と旅費規程</li></ul>`)}</div></div>`;
+  const nOn = KS_WF.filter(W => !W.base && ksWfAvail(W) && ksWfLv(W.id) > 0).length, nAll = KS_WF.filter(W => !W.base && ksWfAvail(W)).length;
+  return `<div class="grid g-side"><div>${panel(`福利厚生と手当（${nOn}/${nAll}の制度を使っている）`, `<div class="subtabs sm wfcats" role="tablist">${cats}</div><ul class="wflist">${rows}</ul>`)}</div>
+    <div class="stack">${panel('費用と効果', kv([['制度の費用（会社全体）', `月${fmtYen(tot)}（1人あたり${fmtYen(tot / head)}）`], ['就任の時より増えた分', `<b>${extra >= 0 ? '+' : '−'}${fmtYen(Math.abs(extra))}</b>／月`], ['従業員満足度', `${fmtNum(H.es, 0)}点`], ['参考：大企業の法定外福利費', '1人あたり月2.5万円ほど（経団連の調査・2018年度）。中小企業では数千円〜1万円']]) + '<p class="note">課税される手当（住宅手当・家族手当など）は給料手当・労務費として記帳し、社会保険料（会社の負担は約15%）も増えます。非課税の制度（食事補助・社宅・企業型DCなど）は福利厚生費。社員の手取りが同じでも、非課税の制度のほうが社員の得は大きくなります。満足度は、制度を増やすほど上がり方がゆるやかになります。就任の時の制度の費用は、もとの経費に含まれています。</p>')}
+    ${panel('制度を選ぶときの見方', `<ul class="small" style="margin:0;padding-left:1.2em"><li>若手の採用と定着：借上社宅・社員寮・住宅手当・食事補助・テレワーク</li><li>子育て・介護の世代：企業主導型保育所・育児休業の上乗せ・短時間勤務の延長・介護の支援</li><li>長く勤めてもらう：企業型DC・中退共・確定給付企業年金・永年勤続の表彰</li><li>現場の人の確保：特殊勤務手当・深夜の手当・送迎バス・制服と安全靴</li><li>技能を高める：資格手当・資格取得の支援・研修・eラーニング</li><li>出張の多い仕事（卸売・建設・専門サービス）：出張手当と旅費規程</li></ul>`)}</div></div>`;
 }
 ACTIONS.kWfCat = d => { UI.kWfCat = d.v; render(); };
 ACTIONS.kWfSet = d => { if (ksHrSetWf(d.id, +d.v)) { toast(`${KS_WF_BY[d.id].n}を「${KS_WF_BY[d.id].lvs[+d.v]}」にしました`); render(); autosave(); } };
@@ -27404,14 +28016,41 @@ function ksCustomHtml(k) {
     <div class="grid g2" style="gap:12px;margin-top:6px"><div class="field"><span>景気</span><div class="seg" role="radiogroup">${eco}</div></div>
     ${num('fx', '為替（1ドル＝円）', '148', 'min="80" max="250" step="1"')}</div>
     ${num('founded', '創業の年（西暦）', 'そのまま', `min="1868" max="${START_YEAR}" step="1"`)}
+    ${ksCuUnitsHtml(k)}
     <p class="small muted" style="margin:0">就任の時点（2027年1月）の帳簿を、増資・減資・配当・借入・繰上返済の仕訳でこの額に合わせて始めます。仕訳は帳簿の画面で確かめられます。</p></div>
   </details>`;
+}
+/* 事業ごとの設備の数と、これまでの成長 */
+function ksCuCapField(type, sc, act, i, extra = '') {
+  const ci = ksCapInfo(type);
+  const max = ksScToCap(type, ci.maxSc);
+  return `<label class="field cu-cap"><span>${esc(ci.n)}</span><span class="cu-capin"><input type="number" inputmode="numeric" min="1" max="${max}" step="1" value="${ksScToCap(type, sc || 1)}" data-ch="${act}" data-i="${i}"${extra} aria-label="${esc(type)}の${esc(ci.n)}"><span class="small">${esc(ci.u)}</span></span><span class="small muted">中の規模で${fmtNum(ci.base, 0)}${esc(ci.u)}・最大${fmtNum(max, 0)}${esc(ci.u)}</span></label>`;
+}
+function ksCuGrowField(g, act, i, label = 'これまでの成長（売上の伸び）') {
+  return `<label class="field cu-grow"><span>${label}</span><select data-ch="${act}" data-i="${i}">${KS_GROWTH.map(([v, l]) => `<option value="${v}"${Math.abs((+g || 0) - v) < 1e-9 ? ' selected' : ''}>${l}</option>`).join('')}</select></label>`;
+}
+function ksCuUnitsHtml(k) {
+  const rows = k.units.map((x, i) => `<li class="cu-unit"><b>${esc(x.type)}</b><div class="grid g2 cu-ugrid">${ksCuCapField(x.type, x.sc, 'kCuCap', i)}${ksCuGrowField(x.g, 'kCuGrow', i)}</div></li>`).join('');
+  return `<div class="field"><span>事業ごとの設備と成長</span><ul class="cu-units">${rows}</ul>
+    <span class="small muted">設備の数で事業の大きさが決まります（店・機械・車両・客室などの数。上の「規模」のボタンより細かく決められます）。成長を選ぶと、過去4期の決算書の売上がその割合で伸びて（縮んで）いて、就任のあとも勢いが2年ごとに半分になりながら続きます。伸びてきた会社は利益率が高め、縮んできた会社は低めで始まります。子会社は「グループの会社」の各社の設定で決められます。</span></div>`;
 }
 Object.assign(ACTIONS, {
   kCuForm: d => { ksStartStore(); const c = ksCustomDefaults(UI.start.k); c.form = d.v; c.on = true; render(); },
   kCuEco: d => { ksStartStore(); const c = ksCustomDefaults(UI.start.k); c.eco = d.v; c.on = true; render(); },
 });
 Object.assign(CHANGES, {
+  // 設備の数 → 規模の倍率（入れた数が範囲の外なら直して見せる。画面は描き直さない：押そうとしたボタンが消えないように）
+  kCuCap: el => {
+    const k = UI.start.k, x = k.units[+el.dataset.i];
+    if (!x) return;
+    x.sc = ksCapToSc(x.type, el.value);
+    const n = ksScToCap(x.type, x.sc);
+    if (+el.value !== n) el.value = n;
+    for (const b of document.querySelectorAll(`[data-act="kStSc"][data-i="${+el.dataset.i}"]`)) b.setAttribute('aria-pressed', String(Math.abs(+b.dataset.v - x.sc) < 1e-9));
+    const c = ksCustomDefaults(k); c.on = true;
+    const cb = document.querySelector('[data-ch="kCuOn"]'); if (cb) cb.checked = true;
+  },
+  kCuGrow: el => { const k = UI.start.k, x = k.units[+el.dataset.i]; if (!x) return; x.g = +el.value; const c = ksCustomDefaults(k); c.on = true; const cb = document.querySelector('[data-ch="kCuOn"]'); if (cb) cb.checked = true; },
   kCuOn: el => { ksStartStore(); ksCustomDefaults(UI.start.k).on = el.checked; render(); },
   kCuPref: el => { ksStartStore(); const c = ksCustomDefaults(UI.start.k); c.pref = +el.value; c.on = true; render(); },
   kCuLand: el => { ksStartStore(); const c = ksCustomDefaults(UI.start.k); c.hqLand = el.checked; c.on = true; render(); },
@@ -27921,7 +28560,8 @@ function ksSgCanOwn(e) { return !!e && (e.cc || 'jp') === 'jp' && +e.own > 0.5; 
 function ksSgNeedsUnit(e) { return !ksSgCanOwn(e); }
 function ksSgUnits(e) {
   const seen = new Set();
-  return ((e && e.units) || []).filter(x => x && KS_TYPES[x.type] && !seen.has(x.type) && seen.add(x.type)).map(x => ({ type: x.type, sc: KS_SG_SCALES.includes(+x.sc) ? +x.sc : 1 }));
+  return ((e && e.units) || []).filter(x => x && KS_TYPES[x.type] && !seen.has(x.type) && seen.add(x.type))
+    .map(x => ({ type: x.type, sc: clamp(+x.sc || 1, 0.1, ksCapInfo(x.type).maxSc), g: clamp(+x.g || 0, -0.15, 0.2) }));
 }
 function ksSgIsU(id) { return typeof id === 'string' && id.startsWith('u:'); }
 /* 持ち主を直す：持てない会社（関連会社・海外）・なくなった会社・自分の下の会社が持ち主なら、上にたどる（なければ親会社） */
@@ -28062,7 +28702,7 @@ function ksStartGroupBuild(raw, umap = {}) {
       const capital = Math.min(total, e.capital > 0 ? e.capital : clamp(Math.round(total / 2 / 1e7) * 1e7, 1e7, 1e8));
       st = ksFreshCompany({ coName: e.name, ceo, cash: total, capital, seed, cc: e.cc, pref: e.pref || pref0, subId: id, execPay: clamp(Math.round(total / 400 / 1e4) * 1e4, 40e4, 150e4) });
       ksWith(st, () => {
-        for (const x of e.units) ksSubStartUnit(x.type, x.sc);
+        for (const x of e.units) { const r = ksSubStartUnit(x.type, x.sc); if (x.g && r && r.u) r.u.tr = ksTrendMake(x.g); }
         if (e.debt > 0) ksCustomApply({ custom: { debt: e.debt } });
         ksSetODLimit();
         ksBudgetDraft(); ksBudgetApprove(true);
@@ -28156,7 +28796,7 @@ function ksSgOwnTag(e) {
 }
 function ksSgHist(e) { return (e.cc || 'jp') === 'jp' && (e.units || []).length > 0; }
 function ksSgDesc(e, k) {
-  const us = (e.units || []).map(x => `${x.type}（${KS_SG_SCN[x.sc] || '中'}）`);
+  const us = (e.units || []).map(x => `${x.type}（${KS_SG_SCN[x.sc] || `${fmtNum(ksScToCap(x.type, x.sc), 0)}${ksCapInfo(x.type).u}`}${x.g ? `・${x.g > 0 ? '+' : '−'}${Math.round(Math.abs(x.g) * 100)}%/年` : ''}）`);
   const place = (e.cc || 'jp') !== 'jp' ? KS_COUNTRIES[e.cc].n : (KS_PREFS[+e.pref] || KS_PREFS[ksSgRootPref(k)]).n;
   const kind = ksSgHist(e) ? `過去4期の決算書つき・${KS_COND[e.cond] ? KS_COND[e.cond].n : '普通'}` : '就任の時に設立';
   return [us.length ? us.join('・') : '事業なし（株式を持つ会社）', place, kind].join('／');
@@ -28216,21 +28856,7 @@ function ksSgStoreInputs() {
   if (n) D.e.name = n.value;
   for (const el of document.querySelectorAll('#modal-root [data-ch="kSgNum"]')) D.e[el.dataset.k] = el.value;
 }
-function ksSgRedraw() {
-  const l = $('#sgList');
-  const y = l ? l.scrollTop : 0;
-  drawModal();
-  const l2 = $('#sgList');
-  if (l2 && y) l2.scrollTop = y;
-}
-function ksSgTypesHtml(D) {
-  const list = D.q && D.q.trim() ? ksSearchTypes(D.q, '', '', 40) : ksStartPicks().map(n => KS_TYPES[n]).filter(Boolean);
-  if (!list.length) return '<div class="empty">見つかりません。言葉を変えて探してください</div>';
-  return list.map(S => {
-    const on = D.e.units.some(x => x.type === S.name);
-    return `<button type="button" class="typeopt${on ? ' on' : ''}" data-act="kSgUAdd" data-v="${esc(S.name)}" aria-pressed="${on}"><span class="indico" aria-hidden="true">${esc(S.icon)}</span><span><b>${esc(S.name)}</b><span class="small muted">${esc(S.grp)}・${esc(KS_ENG_INFO[S.eng].n)}${on ? '・加えた（もう一度押すと外す）' : ''}</span></span></button>`;
-  }).join('');
-}
+function ksSgRedraw() { drawModal(); } // 業種の一覧の位置は drawModal が保つ
 /* 株式を持つ会社に選べるもの：親会社・事業会社（持株会社のとき）・国内の連結子会社（自分と自分の下の会社は除く） */
 function ksSgOwnerOptions(k, D) {
   const list = ksSgList(k);
@@ -28268,8 +28894,9 @@ MODALS.kSg = () => {
   const ownerName = (owners.find(o => o[0] === e.owner) || owners[0])[1].trim();
   const kids = D.id ? list.filter(x => x.owner === D.id) : [];
   const needUnit = ksSgNeedsUnit(e) && !e.units.length;
-  const chosen = e.units.map((x, i) => { const S = KS_TYPES[x.type]; return `<li class="sunit"><span class="indico" aria-hidden="true">${esc(S.icon)}</span><span class="stype-t"><b>${esc(S.name)}</b><span class="small muted">${esc(S.d || KS_ENG_INFO[S.eng].desc)}</span></span>
-    <span class="stype-a"><span class="seg sm" role="radiogroup" aria-label="規模">${KS_SG_SCALES.map(v => `<button type="button" data-act="kSgSc" data-i="${i}" data-v="${v}" aria-pressed="${x.sc === v}">${KS_SG_SCN[v]}</button>`).join('')}</span>${btn('外す', 'kSgUDel', { i }, 'sm ghost')}</span></li>`; }).join('');
+  const chosen = e.units.map((x, i) => { const S = KS_TYPES[x.type]; return `<li class="sunit sg-unit"><span class="indico" aria-hidden="true">${esc(S.icon)}</span><span class="stype-t"><b>${esc(S.name)}</b><span class="small muted">${esc(S.d || KS_ENG_INFO[S.eng].desc)}</span></span>
+    <span class="stype-a"><span class="seg sm" role="radiogroup" aria-label="規模">${KS_SG_SCALES.map(v => `<button type="button" data-act="kSgSc" data-i="${i}" data-v="${v}" aria-pressed="${x.sc === v}">${KS_SG_SCN[v]}</button>`).join('')}</span>${btn('外す', 'kSgUDel', { i }, 'sm ghost')}</span>
+    <div class="grid g2 cu-ugrid sg-udet">${ksCuCapField(x.type, x.sc, 'kSgCap', i)}${ksCuGrowField(x.g, 'kSgGrow', i, hist ? 'これまでの成長（売上の伸び）' : '就任のあとの勢い（売上の伸び）')}</div></li>`; }).join('');
   const ccOpts = [['jp', '日本'], ...Object.entries(KS_COUNTRIES).map(([c, x]) => [c, x.n])].map(([v, l]) => `<option value="${v}"${e.cc === v ? ' selected' : ''}>${esc(l)}</option>`).join('');
   const own = KS_SG_OWNS.map(v => `<button type="button" data-act="kSgOwn" data-v="${v}" aria-pressed="${Math.abs(e.own - v) < 1e-9}">${Math.round(v * 100)}%</button>`).join('');
   const conds = Object.entries(KS_COND).map(([c, X]) => `<button type="button" data-act="kSgCond" data-v="${c}" aria-pressed="${e.cond === c}">${X.n}</button>`).join('');
@@ -28292,8 +28919,7 @@ MODALS.kSg = () => {
     </div>
     ${notes.join('')}
     <div class="field"><span>事業（いくつでも${ksSgCanOwn(e) ? '。なくてもよい' : ''}）</span>${chosen ? `<ul class="sunits">${chosen}</ul>` : `<div class="small muted">${ksSgCanOwn(e) ? '事業がなければ、ほかの会社の株式を持つだけの会社（中間持株会社）になります。' : 'まだ選んでいません。'}</div>`}</div>
-    <div class="field"><span>業種を探して加える</span><input type="search" id="sgQ" value="${esc(D.q)}" data-in="kSgQ" placeholder="例：ソフトウェア、物流、介護、ホテル" aria-label="業種を探す">
-      <div id="sgList" class="typelist sm sg-types">${ksSgTypesHtml(D)}</div></div>
+    <div class="field"><span>業種を選んで加える（押すたびに加える・外す）</span>${ksTbHtml('sg', { id: 'sgQ', ph: '例：ソフトウェア、物流、介護、ホテル、リニア' })}</div>
     ${hist ? `<div class="field"><span>会社の状態</span><div class="seg" role="radiogroup" aria-label="会社の状態">${conds}</div><span class="small muted">${esc(KS_COND[e.cond].desc)}</span></div>` : ''}
     <div class="grid g3 cu-nums">${num('capital', '資本金（万円）')}${num('cash', '現預金（万円）')}${num('debt', '借入金（万円）')}</div>
     <span class="small muted" style="margin-top:-6px">${hist ? '空欄の項目は、選んだ会社の状態のまま。入れた額に合わせて、増資・減資・配当・借入・繰上返済の仕訳をします。' : '現預金は、立ち上げの設備を買った後に残る額。空欄なら、半年ほどの運転資金を株主が出資します。借入金を入れると、その額を銀行から借りて始めます。'}</span></div>`;
@@ -28302,12 +28928,12 @@ MODALS.kSg = () => {
   return modalFrame(D.id ? '会社の設定を変える' : '会社を加える', body, foot, { size: 'wide', sub: `就任の時点のグループ（${esc(where)}）` });
 };
 Object.assign(ACTIONS, {
-  kSgAdd: d => { ksStartStore(); const k = ksStartDefaults(); ksSgFix(k); UI.sg = { id: null, e: ksSgBlank(d.owner), q: '' }; showModal('kSg'); },
+  kSgAdd: d => { ksStartStore(); const k = ksStartDefaults(); ksSgFix(k); UI.sg = { id: null, e: ksSgBlank(d.owner), q: '' }; ksTbReset('sg'); showModal('kSg'); },
   kSgEdit: d => {
     ksStartStore();
     const e = ksSgList(ksStartDefaults()).find(x => x.id === d.id);
     if (!e) return;
-    UI.sg = { id: e.id, e: Object.assign({}, e, { units: e.units.map(x => Object.assign({}, x)) }), q: '' };
+    UI.sg = { id: e.id, e: Object.assign({}, e, { units: e.units.map(x => Object.assign({}, x)) }), q: '' }; ksTbReset('sg');
     showModal('kSg');
   },
   kSgDel: d => {
@@ -28353,14 +28979,22 @@ Object.assign(CHANGES, {
   kSgOwner: el => { ksSgStoreInputs(); UI.sg.e.owner = el.value; ksSgRedraw(); },
   kSgCc: el => { ksSgStoreInputs(); UI.sg.e.cc = el.value; ksSgRedraw(); },
   kSgPref: el => { if (UI.sg) UI.sg.e.pref = +el.value; },
+  kSgCap: el => {
+    const x = UI.sg && UI.sg.e.units[+el.dataset.i];
+    if (!x) return;
+    x.sc = ksCapToSc(x.type, el.value);
+    const n = ksScToCap(x.type, x.sc);
+    if (+el.value !== n) el.value = n;
+    for (const b of document.querySelectorAll(`[data-act="kSgSc"][data-i="${+el.dataset.i}"]`)) b.setAttribute('aria-pressed', String(Math.abs(+b.dataset.v - x.sc) < 1e-9));
+  },
+  kSgGrow: el => { const x = UI.sg && UI.sg.e.units[+el.dataset.i]; if (x) x.g = +el.value; },
 });
-INPUTS.kSgQ = el => { if (!UI.sg) return; UI.sg.q = el.value; const b = $('#sgList'); if (b) { b.innerHTML = ksSgTypesHtml(UI.sg); b.scrollTop = 0; } };
 
 /* 就任するときに渡す設定（金額は円に） */
 function ksSgOptions(k) {
   ksSgFix(k);
   const man = v => { const s = String(v ?? '').trim(); const n = parseFloat(s.replace(/[^0-9.]/g, '')); return s !== '' && Number.isFinite(n) ? Math.round(n) * 1e4 : null; };
-  return ksSgList(k).map(e => ({ id: e.id, name: e.name, owner: e.owner, own: e.own, cc: e.cc, pref: +e.pref || 0, units: e.units.map(x => ({ type: x.type, sc: x.sc })), cond: e.cond, capital: man(e.capital) || 0, cash: man(e.cash) || 0, debt: man(e.debt) }));
+  return ksSgList(k).map(e => ({ id: e.id, name: e.name, owner: e.owner, own: e.own, cc: e.cc, pref: +e.pref || 0, units: e.units.map(x => ({ type: x.type, sc: x.sc, g: +x.g || 0 })), cond: e.cond, capital: man(e.capital) || 0, cash: man(e.cash) || 0, debt: man(e.debt) }));
 }
 /* 会社が多いときは、「つくっています」と出してから始める（画面が止まって見えないように） */
 const ksSgStart0 = ACTIONS.kStart;
@@ -28380,6 +29014,814 @@ ACTIONS.kStart = d => {
   };
   if (typeof requestAnimationFrame === 'function') requestAnimationFrame(() => setTimeout(go, 0)); else setTimeout(go, 30);
 };
+
+/* ---- 29p_kaisha_org.js ---- */
+/* =========================================================
+ *  29p_kaisha_org.js : 社内の組織（ユニット・部・支店・海外支店）と、部長の方針・レビュー・四半期の定例会
+ *   ・組織の木：社長の下に、ユニット（事業本部）と部をいくつでも、何段でも置ける。部だけでもよい
+ *   ・部の役割：「事業」（受け持つ事業を回す事業部）か、営業・人事・安全管理・品質保証などの機能
+ *   ・所在地が本社と違う部は支店（海外なら海外支店）。人件費と事務所の家賃は所在地で変わる
+ *   ・部長（ユニット長・支店長）は毎年4月に方針を立てる。社長はレビューで評価と指摘をする
+ *   ・四半期ごと（6・9・12・3月の末）に定例会：予算と方針の進み具合を確かめ、部長を評価する
+ *   ・効果：機能の部の人数・部長の力とやる気・方針で、需要・離職・労災・ロス・不祥事などの倍率が変わる
+ *   ・費用：機能の部の人件費（研究開発は研究開発費）、支店の事務所の家賃、役職手当、方針の取り組みの費用（本社費）
+ *   （画面は 29q_kaisha_org_ui.js）
+ * ========================================================= */
+
+const KS_DEPT_KIND = { bu: { n: 'ユニット', head: 'ユニット長', allow: 10e4 }, dept: { n: '部', head: '部長', allow: 5e4 } };
+/* 部の役割。ratio：受け持つ人数に対して要る人数（1人あたり）。eff：効き目の最大（人数が足り、部長が並のとき） */
+const KS_DEPT_FN = {
+  biz: { n: '事業', d: '受け持つ事業を回す事業部。人は事業の人員なので、部としての人件費は役職手当だけ', ratio: 0 },
+  sales: { n: '営業', d: '受け持つ事業（なければ会社の全事業）のお客を増やす。海外支店なら輸出の需要を開く', ratio: 1 / 30, eff: { demand: 0.05 } },
+  pr: { n: '広報・マーケティング', d: '会社の評判を高め、お客と採用の応募を増やす', ratio: 1 / 150, eff: { demand: 0.02, hire: -0.06 } },
+  plan: { n: '経営企画', d: '予算と方針の管理を支える。すべての部の方針の効き目が上がる', ratio: 1 / 200, boost: 0.12 },
+  acct: { n: '経理・財務', d: '数字を正しく早くまとめ、銀行との関係を保つ。不正を防ぐ', ratio: 1 / 70, eff: { viol: -0.1 }, bank: true },
+  admin: { n: '総務', d: '職場の環境と災害への備え、社内の手続きを担う', ratio: 1 / 90, eff: { bcp: -0.15, viol: -0.05 } },
+  hr: { n: '人事', d: '採用・育成・評価を担い、離職と採用の費用を減らす', ratio: 1 / 90, eff: { quit: -0.15, hire: -0.15 } },
+  safety: { n: '安全管理', d: '現場の危険を見つけて減らす。労災が減る', ratio: 1 / 70, eff: { acc: -0.3 } },
+  quality: { n: '品質保証', d: '検査と品質の仕組みをつくる。不良・ロス・食中毒が減る', ratio: 1 / 60, eff: { shrink: -0.12, food: -0.35 } },
+  legal: { n: '法務・コンプライアンス', d: '契約と法令を確かめる。不祥事と法令違反が減る', ratio: 1 / 200, eff: { viol: -0.3 } },
+  it: { n: '情報システム', d: '社内のシステムと情報の守りを担う。情報の漏えいとサイバー攻撃が減る', ratio: 1 / 120, eff: { leak: -0.35 } },
+  rnd: { n: '研究開発', d: '新しい製品・サービスをつくる。需要が伸びる（人件費は研究開発費になる）', ratio: 1 / 40, eff: { demand: 0.035 }, acct: 'rnd' },
+  tech: { n: '技術・設計', d: '設備と工程を改善する。電気代・燃料費・ロスが減る', ratio: 1 / 50, eff: { energy: -0.08, fuel: -0.06, shrink: -0.05 } },
+  buy: { n: '調達・購買', d: '仕入先と交渉し、まとめて買う。仕入の割戻しを受けられる', ratio: 1 / 100, rebate: 0.006 },
+};
+/* 方針のテーマ。eff は方針が承認され、部長が並のときの効き目。costR は受け持つ事業の売上に対する取り組みの費用 */
+const KS_DEPT_THEME = {
+  grow: { n: '売上を伸ばす', kpi: 'sales', eff: { demand: 0.04 }, costR: 0.004, acct: 'ads', acts: ['主なお客への提案を増やす', '販促の企画を毎月打つ', '新しい商品・サービスを1つ出す', 'しばらく取引のないお客に連絡する', '紹介でお客が増える仕組みをつくる', '値上げに見合う付加価値を説明する'] },
+  newmkt: { n: '新しいお客・市場を開く', kpi: 'sales', eff: { demand: 0.035 }, costR: 0.006, acct: 'ads', ramp: 6, acts: ['新しい地域に営業をかける', 'ネットでの販売を始める', '展示会に出る', '新しい業界のお客を開拓する', '代理店と組む', '海外のお客を探す'] },
+  cost: { n: '費用を下げる', kpi: 'cost', eff: { energy: -0.06, fuel: -0.05, shrink: -0.06, demand: -0.005 }, costR: 0, acts: ['仕入先を見直して相見積をとる', '電気の使い方を見直す', 'ムダな作業をなくす', '在庫を減らして廃棄を防ぐ', '外注を内製に切り替える', '会議と書類を減らす'] },
+  quality: { n: '品質を上げる', kpi: 'quality', eff: { shrink: -0.08, food: -0.25, demand: 0.01 }, costR: 0.002, acct: 'fees', acts: ['検査の手順を標準にする', '不良の原因を毎週話し合う', 'お客の声を集めて直す', '衛生の点検を増やす', '品質の資格を取る', '仕入先の品質を監査する'] },
+  safety: { n: '安全を第一に', kpi: 'acc', eff: { acc: -0.25, ot: -0.04 }, costR: 0.0015, acct: 'safety', acts: ['ヒヤリハットを集めて対策する', '危険予知の訓練を毎朝する', '設備の安全カバーを付ける', '残業を減らして疲れをためない', '安全の巡回を月2回する', '新人に安全教育をする'] },
+  people: { n: '人を育てて定着させる', kpi: 'people', eff: { quit: -0.12, hire: -0.06 }, costR: 0.002, acct: 'recruit', acts: ['1対1の面談を毎月する', '研修の計画をつくる', '資格の取得を支える', '仕事の分担を見直す', '若手の相談役（メンター）を付ける', '評価の基準をはっきりさせる'] },
+  comply: { n: '守りを固める（法令・情報）', kpi: 'viol', eff: { viol: -0.2, leak: -0.2 }, costR: 0.001, acct: 'fees', acts: ['法令の点検表をつくる', '情報の持ち出しを管理する', '契約書を確かめる手順をつくる', '内部通報の窓口を知らせる', 'ハラスメントの研修をする', 'パスワードと端末を管理する'] },
+};
+const KS_DEPT_FN_THEME = { biz: 'grow', sales: 'grow', pr: 'grow', plan: 'cost', acct: 'comply', admin: 'cost', hr: 'people', safety: 'safety', quality: 'quality', legal: 'comply', it: 'comply', rnd: 'newmkt', tech: 'cost', buy: 'cost' };
+const KS_DEPT_STYLE = { aggr: { n: '攻め', bias: 6, self: 1, d: '高い目標を立てがち。押しが強い' }, solid: { n: '堅実', bias: 1, self: 0, d: '実現できる目標を立てる' }, careful: { n: '慎重', bias: -3, self: -1, d: '低めの目標を立てがち。失敗を嫌う' } };
+const KS_DEPT_GRADES = ['S', 'A', 'B', 'C', 'D'];
+const KS_DEPT_FB = {
+  up: { n: '目標をもっと高く', d: '目標が低すぎるとき' },
+  down: { n: '目標を現実的に', d: '目標が高すぎるとき' },
+  cut: { n: '費用を削って', d: '取り組みの費用を3割減らす（効き目も少し下がる）' },
+  add: { n: '安全と品質も入れて', d: '労災とロスを減らす取り組みを加える（費用が少し増える）' },
+  basis: { n: '数字の根拠を示して', d: '計画の質が上がる' },
+};
+const KS_DEPT_MEET_FB = {
+  keep: { n: 'この調子で', d: '部長のやる気が少し上がる' },
+  sales: { n: '売上を立て直して', d: '次の四半期、需要に力を入れる（費用が増える）' },
+  cost: { n: '費用を抑えて', d: '次の四半期、取り組みの費用を減らす' },
+  safety: { n: '安全を最優先に', d: '次の四半期、労災を減らす取り組みを強める' },
+  people: { n: '人を育てて', d: '次の四半期、離職を減らす取り組みを強める' },
+};
+const KS_DEPT_SURN = ['佐藤', '鈴木', '高橋', '田中', '伊藤', '渡辺', '山本', '中村', '小林', '加藤', '吉田', '山田', '佐々木', '松本', '井上', '木村', '林', '清水', '山口', '森', '池田', '橋本', '石川', '前田', '藤田', '岡田', '後藤', '長谷川', '村上', '近藤'];
+const KS_DEPT_GIVEN = ['健一', '誠', '大輔', '直樹', '恵子', '美穂', '裕子', '浩二', '亮', '彩', '智子', '修', '翔太', '由美', '拓也', '真一', '香織', '剛', '陽子', '和也', '千尋', '隆', '舞', '悠', '洋平'];
+
+function ksDeptInit() {
+  if (!G.org) G.org = { seq: 0, nodes: [], meets: [], qa: {} };
+  return G.org;
+}
+function ksDeptNodes() { return (G && G.org && G.org.nodes) || []; }
+function ksDeptNode(id) { return ksDeptNodes().find(n => n.id === id) || null; }
+function ksDeptKids(id) { return ksDeptNodes().filter(n => (n.parent || null) === (id || null)); }
+function ksDeptHq() { return { pref: G.loc ? G.loc.hq : KS_HOME_PREF, cc: 'jp' }; }
+/* 支店か（所在地が本社と違う部）・海外支店か */
+function ksDeptIsBranch(n) { return n.kind === 'dept' && ((n.cc || 'jp') !== 'jp' || (+n.pref && +n.pref !== ksDeptHq().pref)); }
+function ksDeptKindName(n) { return n.kind === 'bu' ? 'ユニット' : (n.cc || 'jp') !== 'jp' ? '海外支店' : ksDeptIsBranch(n) ? '支店' : '部'; }
+function ksDeptHeadTitle(n) { return n.kind === 'bu' ? 'ユニット長' : ksDeptIsBranch(n) ? '支店長' : '部長'; }
+function ksDeptPlace(n) {
+  if ((n.cc || 'jp') !== 'jp' && typeof KS_COUNTRIES !== 'undefined' && KS_COUNTRIES[n.cc]) return KS_COUNTRIES[n.cc].n;
+  const p = +n.pref || ksDeptHq().pref;
+  return KS_PREFS[p] ? KS_PREFS[p].n : '';
+}
+function ksDeptNewHead() {
+  return { name: `${pick(KS_DEPT_SURN)} ${pick(KS_DEPT_GIVEN)}`, skill: randInt(2, 5), style: pick(['aggr', 'solid', 'solid', 'careful']), mot: randInt(55, 72), since: G.m };
+}
+/* 受け持つ事業：部に割り当てた事業。なければ、上のユニット・部の事業。どこにもなければ会社の全事業 */
+function ksDeptOwnUnits(n) { const live = new Set(ksActiveUnits().map(u => u.id)); return (n.units || []).filter(id => live.has(id)); }
+function ksDeptSubtreeUnits(n) {
+  const out = new Set(ksDeptOwnUnits(n));
+  const walk = id => { for (const k of ksDeptKids(id)) { for (const x of ksDeptOwnUnits(k)) out.add(x); walk(k.id); } };
+  walk(n.id);
+  return [...out];
+}
+function ksDeptScope(n) {
+  for (let p = n, i = 0; p && i < 200; i++) {
+    const us = ksDeptSubtreeUnits(p);
+    if (us.length) return { units: us, all: false };
+    p = p.parent ? ksDeptNode(p.parent) : null;
+  }
+  return { units: ksActiveUnits().map(u => u.id), all: true };
+}
+function ksDeptScopeHead(sc) { return sum(sc.units.map(id => ksUnit(id)).filter(Boolean), ksUnitHead); }
+/* 部長の力：腕前（1〜5）とやる気（0〜100） */
+function ksDeptHeadF(n) { const h = n.head || { skill: 3, mot: 60 }; return (0.8 + 0.06 * h.skill) * (0.85 + 0.3 * h.mot / 100); }
+/* 機能の部の強さ：要る人数に対する人数の割合（逓減）× 部長の力 */
+function ksDeptNeed(n) { const F = KS_DEPT_FN[n.fn]; if (!F || !F.ratio) return 0; return Math.max(1, Math.round(ksDeptScopeHead(ksDeptScope(n)) * F.ratio)); }
+function ksDeptStrength(n) {
+  const F = KS_DEPT_FN[n.fn];
+  if (!F || !F.ratio) return 0;
+  const c = (n.staff || 0) / ksDeptNeed(n);
+  const base = c <= 1 ? Math.pow(c, 0.8) : 1 + Math.min(0.5, (c - 1) * 0.25);
+  return base * ksDeptHeadF(n);
+}
+/* 経営企画の部があると、すべての方針の効き目が上がる */
+function ksDeptPlanBoost() { return sum(ksDeptNodes().filter(n => n.fn === 'plan'), n => KS_DEPT_FN.plan.boost * Math.min(1.2, ksDeptStrength(n))); }
+/* 方針の効き目の倍率 */
+function ksDeptPolF(n) {
+  const P = n.pol;
+  if (!P || P.fy !== fyOf(G.m)) return 0;
+  let f = (P.status === 'ok' ? 1 : 0.4) * ksDeptHeadF(n) * (P.q || 1) * (1 + ksDeptPlanBoost());
+  if (P.target < P.ideal - 4) f *= 0.85; // 低すぎる目標は、取り組みがゆるむ
+  if (P.cut) f *= 0.92;
+  const T = KS_DEPT_THEME[P.theme];
+  if (T && T.ramp) f *= clamp((G.m - (P.m ?? G.m) + 1) / T.ramp, 0.2, 1);
+  return f;
+}
+/* 効き目の倍率（ksHrF に掛ける）。u がなければ会社全体の倍率。
+   同じ役割の部・同じテーマの方針がいくつあっても、効き目は合わせて1.3倍分まで（重ねがけで際限なく効かないように）。
+   部の範囲と強さは、月と組織の形が同じあいだ覚えておく（計算を軽くする） */
+const KS_DEPT_CACHE = new WeakMap();
+function ksDeptCalc() {
+  const O = G.org;
+  const key = `${G.m}|${O.ver || 0}|${ksActiveUnits().length}|${ksHeadcount()}`;
+  const hit = KS_DEPT_CACHE.get(O);
+  if (hit && hit.key === key) return hit;
+  const head = Math.max(1, ksHeadcount());
+  const items = O.nodes.map(n => {
+    const sc = ksDeptScope(n);
+    return { n, set: new Set(sc.units), share: sc.all ? 1 : ksDeptScopeHead(sc) / head, s: ksDeptStrength(n), pf: ksDeptPolF(n) };
+  });
+  const c = { key, items };
+  KS_DEPT_CACHE.set(O, c);
+  return c;
+}
+function ksDeptTouch() { if (G && G.org) G.org.ver = (G.org.ver || 0) + 1; }
+function ksDeptF(u, key) {
+  const O = G && G.org;
+  if (!O || !O.nodes.length) return 1;
+  const { items } = ksDeptCalc();
+  const fnS = {}, thS = {};
+  let f = 1;
+  for (const it of items) {
+    const n = it.n;
+    const w = u ? (it.set.has(u.id) ? 1 : 0) : it.share;
+    if (!w) continue;
+    const F = KS_DEPT_FN[n.fn];
+    if (F && F.eff && F.eff[key] !== undefined && it.s) {
+      let k = 1;
+      if (key === 'demand' && n.fn === 'sales' && (n.cc || 'jp') !== 'jp' && u && !['mfg', 'trade', 'pro', 'subs'].includes(ksS(u).eng)) k = 0.3; // 海外支店の営業は、輸出できる事業に効く
+      fnS[n.fn] = (fnS[n.fn] || 0) + it.s * w * k;
+    }
+    const P = n.pol, T = P && KS_DEPT_THEME[P.theme];
+    if (T && it.pf && T.eff[key] !== undefined) thS[P.theme] = (thS[P.theme] || 0) + it.pf * w;
+    if (P && it.pf && P.add) { if (key === 'acc') f *= 1 - 0.08 * Math.min(1, it.pf) * w; if (key === 'shrink') f *= 1 - 0.04 * Math.min(1, it.pf) * w; }
+    // 定例会の指摘（次の四半期）
+    const B = P && P.fb2 && P.fb2.until >= G.m ? P.fb2.k : null;
+    if (B === 'sales' && key === 'demand') f *= 1 + 0.015 * w;
+    if (B === 'cost' && (key === 'energy' || key === 'shrink')) f *= 1 - 0.03 * w;
+    if (B === 'safety' && key === 'acc') f *= 1 - 0.1 * w;
+    if (B === 'people' && key === 'quit') f *= 1 - 0.06 * w;
+    // 高すぎる目標を押し付けると、残業と労災が増える
+    if (P && P.fy === fyOf(G.m) && P.status === 'ok' && P.target > P.ideal + 6) { if (key === 'ot') f *= 1 + 0.08 * w; if (key === 'acc') f *= 1 + 0.05 * w; }
+  }
+  for (const [fn, s] of Object.entries(fnS)) f *= 1 + KS_DEPT_FN[fn].eff[key] * Math.min(1.3, s);
+  for (const [th, s] of Object.entries(thS)) f *= 1 + KS_DEPT_THEME[th].eff[key] * Math.min(1.3, s);
+  return clamp(f, 0.4, 1.6);
+}
+
+/* ---------- 部の費用（1か月） ---------- */
+function ksDeptWageF(n) {
+  const cc = n.cc || 'jp';
+  if (cc !== 'jp' && typeof KS_COUNTRIES !== 'undefined' && KS_COUNTRIES[cc]) {
+    const C = KS_COUNTRIES[cc];
+    return clamp((C.wk || 1500) * (G.eco.fx || 148) / 30e4, 0.15, 2.5);
+  }
+  const P = KS_PREFS[+n.pref || ksDeptHq().pref], H = KS_PREFS[ksDeptHq().pref];
+  return P && H ? clamp(P.mw / H.mw, 0.8, 1.3) : 1;
+}
+function ksDeptRentF(n) {
+  const cc = n.cc || 'jp';
+  if (cc !== 'jp') return 0.8;
+  const P = KS_PREFS[+n.pref || ksDeptHq().pref];
+  return P && P.land ? clamp(Math.sqrt(P.land.com / 30e4), 0.5, 3) : 1;
+}
+function ksDeptCost(n) {
+  const out = { staff: 0, rent: 0, allow: 0, pol: 0 };
+  const w = (typeof ksHrAvgWage === 'function' ? ksHrAvgWage() : 30e4) * 1.1;
+  if (KS_DEPT_FN[n.fn] && KS_DEPT_FN[n.fn].ratio) out.staff = Math.round((n.staff || 0) * w * ksDeptWageF(n) * (1 + 2 / 12) * 1.15);
+  if (ksDeptIsBranch(n)) out.rent = Math.round((20e4 + (n.staff || 0) * 3e4) * ksDeptRentF(n));
+  out.allow = Math.round(KS_DEPT_KIND[n.kind].allow * 1.15);
+  const P = n.pol, T = P && KS_DEPT_THEME[P.theme];
+  if (T && T.costR && P.fy === fyOf(G.m)) {
+    const s = sum(ksDeptScope(n).units, id => (((G.flowU || {})[id] || {}).sales || 0));
+    out.pol = Math.round(s * (T.costR + (P.add ? 0.001 : 0)) * (P.cut ? 0.7 : 1) * (P.fb2 && P.fb2.until >= G.m ? (P.fb2.k === 'cost' ? 0.6 : P.fb2.k === 'sales' ? 1.2 : 1) : 1) * (P.status === 'ok' ? 1 : 0.5));
+  }
+  out.total = out.staff + out.rent + out.allow + out.pol;
+  return out;
+}
+/* 先月の費用の見込み（画面用。方針の費用は月の売上が分からないので、前の期の平均で見積もる） */
+function ksDeptCostEst(n) {
+  const c = ksDeptCost(n);
+  const P = n.pol, T = P && KS_DEPT_THEME[P.theme];
+  if (T && T.costR) {
+    const s = sum(ksDeptScope(n).units, id => ksDeptUnitSalesM(id));
+    c.pol = Math.round(s * (T.costR + (P.add ? 0.001 : 0)) * (P.cut ? 0.7 : 1) * (P.status === 'ok' ? 1 : 0.5));
+    c.total = c.staff + c.rent + c.allow + c.pol;
+  }
+  return c;
+}
+/* 事業の売上（直近の月の平均） */
+function ksDeptUnitSalesM(id) {
+  const ms = G.months.slice(-3);
+  return ms.length ? sum(ms, x => (((x.flowU || {})[id] || {}).sales || 0)) / ms.length : 0;
+}
+function ksDeptUnitSalesFY(id, fy) { return sum(G.months.filter(x => fyOf(x.m) === fy), x => (((x.flowU || {})[id] || {}).sales || 0)); }
+
+/* ---------- 部をつくる・変える・なくす ---------- */
+function ksDeptAdd(o) {
+  const O = ksDeptInit();
+  const kind = o.kind === 'bu' ? 'bu' : 'dept';
+  const fn = kind === 'bu' ? 'biz' : (KS_DEPT_FN[o.fn] ? o.fn : 'biz');
+  const n = { id: 'o' + (++O.seq), kind, name: String(o.name || '').trim().slice(0, 30), parent: o.parent && ksDeptNode(o.parent) ? o.parent : null, fn, units: [], staff: 0, pref: +o.pref || 0, cc: o.cc || 'jp', head: ksDeptNewHead(), pol: null, since: G.m, qs: {} };
+  if (!n.name) n.name = ksDeptAutoName(n, o.units || []);
+  O.nodes.push(n);
+  ksDeptSetUnits(n.id, o.units || []);
+  n.staff = KS_DEPT_FN[fn].ratio ? Math.max(0, Math.round(o.staff ?? ksDeptNeed(n))) : 0;
+  ksDeptDraft(n, fyOf(G.m));
+  ksDeptTouch();
+  return n;
+}
+function ksDeptAutoName(n, units) {
+  const loc = ksDeptIsBranch(n) ? ksDeptPlace(n).replace(/[都道府県]$/, '') : '';
+  if (n.kind === 'bu') { const u = ksUnit(units[0]); return `${u ? ksS(u).grp.replace(/（.*?）/g, '').replace(/業$/, '') : '事業'}ユニット`; }
+  if (loc) return `${loc}支店`;
+  if (n.fn === 'biz') { const u = ksUnit(units[0]); return u ? `${ksUName(u).replace(/（.*?）/g, '').slice(0, 12)}事業部` : '事業部'; }
+  return `${KS_DEPT_FN[n.fn].n.split('・')[0]}部`;
+}
+/* 事業の割り当て：1つの事業は、事業部（事業の役割の部・ユニット）の1つにだけ入る */
+function ksDeptSetUnits(id, list) {
+  const n = ksDeptNode(id);
+  if (!n) return;
+  const live = new Set(ksActiveUnits().map(u => u.id));
+  let want = [...new Set(list)].filter(x => live.has(x));
+  // ユニットに入れる事業を、すでに事業部が受け持っていれば、その事業部をユニットの下に移す（事業は事業部のまま）
+  if (n.kind === 'bu') {
+    const below = new Set([n.id]);
+    for (let p = n.parent ? ksDeptNode(n.parent) : null, i = 0; p && i < 200; i++) { below.add(p.id); p = p.parent ? ksDeptNode(p.parent) : null; }
+    for (const o of ksDeptNodes()) {
+      if (o === n || o.kind !== 'dept' || o.fn !== 'biz' || below.has(o.id)) continue;
+      const hit = (o.units || []).filter(x => want.includes(x));
+      if (hit.length) { o.parent = n.id; want = want.filter(x => !hit.includes(x)); }
+    }
+  }
+  if (n.fn === 'biz') for (const o of ksDeptNodes()) if (o !== n && o.fn === 'biz') o.units = (o.units || []).filter(x => !want.includes(x));
+  n.units = want;
+  ksDeptTouch();
+}
+function ksDeptEdit(id, p) {
+  const n = ksDeptNode(id);
+  if (!n) return null;
+  if (p.name !== undefined) n.name = String(p.name || '').trim().slice(0, 30) || n.name;
+  if (p.parent !== undefined) {
+    // 自分と自分の下の部には付けられない
+    const below = new Set([n.id]);
+    let grew = true;
+    while (grew) { grew = false; for (const o of ksDeptNodes()) if (!below.has(o.id) && below.has(o.parent)) { below.add(o.id); grew = true; } }
+    n.parent = p.parent && ksDeptNode(p.parent) && !below.has(p.parent) ? p.parent : null;
+  }
+  if (p.fn !== undefined && n.kind === 'dept' && KS_DEPT_FN[p.fn] && p.fn !== n.fn) { n.fn = p.fn; ksDeptDraft(n, fyOf(G.m)); }
+  if (p.units !== undefined) ksDeptSetUnits(n.id, p.units);
+  if (p.staff !== undefined && KS_DEPT_FN[n.fn].ratio) n.staff = clamp(Math.round(+p.staff || 0), 0, 999);
+  if (p.pref !== undefined) n.pref = +p.pref || 0;
+  if (p.cc !== undefined) n.cc = p.cc || 'jp';
+  if (!KS_DEPT_FN[n.fn].ratio) n.staff = 0;
+  ksDeptTouch();
+  return n;
+}
+function ksDeptRemove(id) {
+  const O = G.org;
+  const n = ksDeptNode(id);
+  if (!n) return false;
+  for (const k of ksDeptKids(id)) k.parent = n.parent || null;
+  O.nodes = O.nodes.filter(x => x !== n);
+  ksDeptTouch();
+  return true;
+}
+/* よく使う形をまとめてつくる */
+function ksDeptTemplate(kind) {
+  ksDeptInit();
+  const made = [];
+  if (kind === 'biz') {
+    for (const u of ksActiveUnits()) if (!ksDeptNodes().some(n => n.fn === 'biz' && (n.units || []).includes(u.id))) made.push(ksDeptAdd({ kind: 'dept', fn: 'biz', units: [u.id] }));
+  } else if (kind === 'admin') {
+    for (const fn of ['admin', 'acct', 'hr']) if (!ksDeptNodes().some(n => n.fn === fn)) made.push(ksDeptAdd({ kind: 'dept', fn }));
+  } else if (kind === 'safe') {
+    for (const fn of ['safety', 'quality']) if (!ksDeptNodes().some(n => n.fn === fn)) made.push(ksDeptAdd({ kind: 'dept', fn }));
+  }
+  return made;
+}
+
+/* ---------- 方針（部長の案）と社長のレビュー ---------- */
+/* 現実的な目標（%）：売上なら、これまでの伸びと景気から。改善の目標（費用・労災など）なら、部長の力から */
+function ksDeptIdeal(n, kpi) {
+  if (kpi === 'sales') {
+    const us = ksDeptScope(n).units.map(id => ksUnit(id)).filter(Boolean);
+    const tr = us.length ? sum(us, u => (u.tr ? u.tr.g * 100 * 0.5 : 0)) / us.length : 0;
+    const eco = G.eco ? (G.eco.idx - 1) * 60 : 0;
+    return clamp(Math.round(2 + tr + eco), -6, 15);
+  }
+  return clamp(Math.round(6 + (n.head ? n.head.skill : 3) * 1.5), 5, 15);
+}
+function ksDeptThemeFor(n) {
+  const base = KS_DEPT_FN_THEME[n.fn] || 'grow';
+  if (n.fn !== 'biz') return base;
+  // 事業部：利益が薄ければ費用、労災が続けば安全、人が辞めれば人材。部長の型でも変わる
+  const us = ksDeptScope(n).units;
+  const accN = G.law ? G.law.acc.filter(a => us.includes(a.u) && G.m - a.m < 12).length : 0;
+  if (accN >= 2) return 'safety';
+  const st = n.head ? n.head.style : 'solid';
+  if (st === 'careful') return chance(0.5) ? 'cost' : 'quality';
+  if (st === 'aggr') return chance(0.6) ? 'grow' : 'newmkt';
+  return pick(['grow', 'cost', 'quality', 'people']);
+}
+function ksDeptDraft(n, fy, theme) {
+  const H = n.head, S = KS_DEPT_STYLE[H.style] || KS_DEPT_STYLE.solid;
+  theme = theme && KS_DEPT_THEME[theme] ? theme : ksDeptThemeFor(n);
+  const T = KS_DEPT_THEME[theme];
+  const ideal = ksDeptIdeal(n, T.kpi);
+  const target = Math.round(ideal + S.bias * (T.kpi === 'sales' ? 1 : 1.5) + (rand() - 0.5) * 4);
+  const acts = [];
+  const pool = T.acts.slice();
+  while (acts.length < 3 && pool.length) acts.push(pool.splice(randInt(0, pool.length - 1), 1)[0]);
+  n.pol = { fy, theme, target, ideal, acts, status: 'draft', q: +(0.92 + H.skill * 0.03).toFixed(2), m: G.m, rev: 0, log: [] };
+  ksDeptSetBudget(n);
+  ksDeptTouch();
+  return n.pol;
+}
+/* 部の予算（年）：売上の予算は、受け持つ事業の前の期の売上に目標の伸びを掛ける。費用の予算は、部の費用の見込みの12か月分 */
+function ksDeptSetBudget(n) {
+  const P = n.pol;
+  if (!P) return;
+  const sc = ksDeptScope(n);
+  const last = sum(sc.units, id => ksDeptUnitSalesFY(id, P.fy - 1)) || sum(sc.units, id => ksDeptUnitSalesM(id)) * 12;
+  P.budS = KS_DEPT_THEME[P.theme].kpi === 'sales' || n.fn === 'biz' || n.fn === 'sales' ? Math.round(last * (1 + (KS_DEPT_THEME[P.theme].kpi === 'sales' ? P.target : 2) / 100)) : 0;
+  P.budS0 = Math.round(last);
+  P.budC = Math.round(ksDeptCostEst(n).total * 12 * (KS_DEPT_THEME[P.theme].kpi === 'cost' ? 1 - P.target / 200 : 1));
+}
+/* 社長のレビュー：rate＝'good'（よい）・'ok'（このままで）・'redo'（作り直し）、fb＝指摘の一覧 */
+function ksDeptReview(id, o = {}) {
+  const n = ksDeptNode(id);
+  const P = n && n.pol;
+  if (!P || P.status === 'ok') return null;
+  const H = n.head;
+  const gap = P.target - P.ideal;
+  const res = { mot: 0, msgs: [] };
+  const add = (m, t) => { res.mot += m; if (t) res.msgs.push(t); };
+  for (const k of o.fb || []) {
+    if (k === 'up') { if (gap < -2) add(3, '目標が低すぎるという指摘に、部長も納得した'); else add(-5, 'すでに高い目標をさらに上げられ、部長は無理を感じている'); P.target += 4; }
+    else if (k === 'down') { if (gap > 3) add(3, '現実的な目標に直し、部長は安心した'); else add(-2, 'もともと控えめな目標をさらに下げ、取り組みがゆるむおそれがある'); P.target -= 4; }
+    else if (k === 'cut') { P.cut = true; add(-1, '取り組みの費用を3割減らした（効き目も少し下がる）'); }
+    else if (k === 'add') { P.add = true; add(1, '安全と品質の取り組みも加えた'); }
+    else if (k === 'basis') { P.q = +Math.min(1.25, P.q + 0.05).toFixed(2); add(0, '数字の根拠を示し、計画の質が上がった'); }
+  }
+  const gap2 = P.target - P.ideal;
+  if (o.rate === 'good') { if (gap2 >= -2 && gap2 <= 3) { add(4, 'よい方針だと評価され、部長は意欲を高めた'); P.q = +Math.min(1.25, P.q + 0.05).toFixed(2); } else { add(1, 'ほめたが、目標の高さには課題が残る'); P.q = +Math.max(0.75, P.q - 0.03).toFixed(2); } }
+  else if (o.rate === 'ok') add(1, '');
+  P.rev = (P.rev || 0) + 1;
+  P.log.push({ m: G.m, rate: o.rate || 'ok', fb: (o.fb || []).slice() });
+  if (o.rate === 'redo') {
+    add(-3, '作り直しを求められ、部長は方針を練り直した');
+    const keep = { fy: P.fy, log: P.log, rev: P.rev, add: P.add, cut: P.cut };
+    const th = o.theme && KS_DEPT_THEME[o.theme] ? o.theme : P.theme;
+    ksDeptDraft(n, P.fy, th);
+    Object.assign(n.pol, keep);
+    n.pol.target = Math.round(n.pol.ideal + (n.pol.target - n.pol.ideal) * 0.5);
+    n.pol.q = +Math.min(1.25, n.pol.q + 0.08).toFixed(2);
+  } else {
+    if (o.theme && KS_DEPT_THEME[o.theme] && o.theme !== P.theme) { P.theme = o.theme; P.acts = KS_DEPT_THEME[o.theme].acts.slice(0, 3); P.ideal = ksDeptIdeal(n, KS_DEPT_THEME[o.theme].kpi); add(-1, 'テーマを社長の指示で変えた'); }
+    P.status = 'ok';
+    P.okM = G.m;
+    ksDeptSetBudget(n);
+  }
+  H.mot = clamp(Math.round(H.mot + res.mot), 0, 100);
+  res.status = n.pol.status;
+  ksDeptTouch();
+  return res;
+}
+/* まだレビューしていない方針を、そのまま承認する */
+function ksDeptApproveAll() { let k = 0; for (const n of ksDeptNodes()) if (n.pol && n.pol.status !== 'ok') { ksDeptReview(n.id, { rate: 'ok' }); k++; } return k; }
+/* レビュー待ちの方針 */
+function ksDeptPending() { return ksDeptNodes().filter(n => n.pol && n.pol.status !== 'ok'); }
+
+/* ---------- 毎月 ---------- */
+function ksDeptMonth() {
+  const O = G.org;
+  if (!O || !O.nodes.length) return;
+  const fy = fyOf(G.m);
+  const mo = calMonth(G.m);
+  // 期のはじめの従業員満足度（「人を育てる」方針の進み具合の基準）
+  if (G.hr) { O.qa.es = O.qa.es || {}; if (O.qa.es[fy] === undefined) O.qa.es[fy] = G.hr.es; }
+  // 部の費用（本社費）
+  for (const n of O.nodes) {
+    if (!n.pol || n.pol.fy !== fy) ksDeptDraft(n, fy);
+    const c = ksDeptCost(n);
+    const F = KS_DEPT_FN[n.fn];
+    const nm = `${n.name}（${ksDeptKindName(n)}）`;
+    if (c.staff > 0) {
+      const wf = Math.round(c.staff * 0.15 / 1.15), base = c.staff - wf;
+      ksPost('orgStaff', [[F.acct || 'salary', base, 0], ['welfare', wf, 0], ['cash', 0, c.staff]], { u: 'HQ', key: n.id, cf: 'payroll', desc: `${nm}の人件費（${n.staff}人）` });
+    }
+    if (c.rent > 0) ksPost('orgRent', [['rent', c.rent, 0], ['cash', 0, c.rent]], { u: 'HQ', key: n.id, cf: 'exp', desc: `${nm}の事務所の家賃` });
+    if (c.allow > 0) ksPost('orgAllow', [['salary', c.allow, 0], ['cash', 0, c.allow]], { u: 'HQ', key: n.id, cf: 'payroll', desc: `${ksDeptHeadTitle(n)}の役職手当（${nm}）` });
+    if (c.pol > 0) ksPost('orgPol', [[KS_DEPT_THEME[n.pol.theme].acct || 'misc', c.pol, 0], ['cash', 0, c.pol]], { u: 'HQ', key: n.id, cf: 'exp', desc: `${nm}の方針「${KS_DEPT_THEME[n.pol.theme].n}」の取り組みの費用` });
+    // 調達・購買：仕入の割戻し
+    if (F.rebate) {
+      const f = G.flow || {}, s = ksDeptStrength(n);
+      for (const k of ['purch', 'matPurch']) { const v = Math.round((f[k] || 0) * F.rebate * Math.min(1.2, s)); if (v > 0) ksPost('orgRebate', [['cash', v, 0], [k, 0, v]], { u: 'HQ', key: n.id + k, cf: 'collect', desc: `仕入割戻し（${nm}の交渉）` }); }
+    }
+    // 経理・財務：銀行との関係
+    if (F.bank && G.banks) { const s = ksDeptStrength(n); for (const b of Object.values(G.banks)) b.rel = Math.min(100, (b.rel || 50) + 0.15 * Math.min(1.2, s)); }
+    // 四半期の集計（売上・費用・労災）
+    const q = n.qs || (n.qs = {});
+    const sc = ksDeptScope(n);
+    q.sales = (q.sales || 0) + sum(sc.units, id => (((G.flowU || {})[id] || {}).sales || 0));
+    q.cost = (q.cost || 0) + c.total;
+    q.n = (q.n || 0) + 1;
+    // やる気：60に少しずつ戻る。高すぎる目標を押し付けられていると下がる
+    const H = n.head;
+    H.mot = clamp(H.mot + (60 - H.mot) * 0.04 - (n.pol && n.pol.status === 'ok' && n.pol.target > n.pol.ideal + 6 ? 1.2 : 0), 0, 100);
+    // やる気が下がりきると、部長が辞める（後任は社内から）
+    if (H.mot < 18 && chance(0.25)) {
+      const old = H.name;
+      n.head = ksDeptNewHead();
+      n.head.skill = Math.max(1, n.head.skill - 1);
+      ksDeptDraft(n, fy);
+      if (!G.isSub) ksNews(`${n.name}の${ksDeptHeadTitle(n)}（${old}）が会社を辞めました。後任に${n.head.name}を選び、方針を作り直します`, 'bad');
+    }
+  }
+  // 四半期の定例会（6・9・12・3月の末）
+  if ([6, 9, 12, 3].includes(mo)) ksDeptMeetMake();
+  // 3月の末：次の期の方針の案（4月から）
+  if (mo === 3) for (const n of O.nodes) ksDeptDraft(n, fy + 1);
+  // 子会社と「自動」にした会社は、部長の案をそのまま承認する
+  if (G.isSub || O.auto) for (const n of O.nodes) if (n.pol && n.pol.status !== 'ok') ksDeptReview(n.id, { rate: 'ok' });
+  ksDeptTouch();
+}
+/* 定例会の記録をつくる */
+function ksDeptQuarter(m) { const mo = calMonth(m); return mo >= 4 && mo <= 6 ? 1 : mo <= 9 && mo >= 7 ? 2 : mo >= 10 ? 3 : 4; }
+function ksDeptMeetMake() {
+  const O = G.org;
+  const fy = fyOf(G.m), qn = ksDeptQuarter(G.m);
+  const qMonths = [G.m - 2, G.m - 1, G.m];
+  const rows = O.nodes.map(n => {
+    const P = n.pol && n.pol.fy === fy ? n.pol : null;
+    const T = P ? KS_DEPT_THEME[P.theme] : null;
+    const q = n.qs || {};
+    const sc = ksDeptScope(n);
+    // 売上の予算（四半期）：年の予算を、受け持つ事業の季節の重みで分ける
+    const us = sc.units.map(id => ksUnit(id)).filter(Boolean);
+    const seasonW = us.length ? sum(qMonths, m => sum(us, u => ksS(u).season[ksMonthIndex(m)])) / Math.max(1, sum(us, u => sum(ksS(u).season, x => x))) : 0.25;
+    const budS = P && P.budS ? Math.round(P.budS * seasonW) : 0;
+    const budC = P && P.budC ? Math.round(P.budC / 4) : 0;
+    const sR = budS ? q.sales / budS : null;
+    const cR = budC ? q.cost / budC : null;
+    // 方針の進み具合（KPI）
+    let kp = 1, kt = '';
+    const kpi = T ? T.kpi : 'sales';
+    if (kpi === 'sales') { kp = sR ?? 1; kt = budS ? `売上 予算の${Math.round(kp * 100)}%` : '売上の予算なし'; }
+    else if (kpi === 'cost') { kp = cR ? clamp(2 - cR, 0.6, 1.4) : 1; kt = budC ? `費用 予算の${Math.round((cR || 0) * 100)}%` : '費用の予算なし'; }
+    else if (kpi === 'acc') { const a = G.law ? G.law.acc.filter(x => qMonths.includes(x.m) && sc.units.includes(x.u)).length : 0; kp = a === 0 ? 1.08 : a === 1 ? 0.92 : 0.78; kt = `労災 ${a}件（目標 0件）`; }
+    else if (kpi === 'people') { const es = G.hr ? G.hr.es : 50; const es0 = (O.qa.es || {})[fy] ?? es; kp = clamp(1 + (es - es0) / 40, 0.8, 1.2); kt = `従業員満足度 ${fmtNum(es, 0)}点（期のはじめ ${fmtNum(es0, 0)}点）`; }
+    else if (kpi === 'viol') { const v = G.law ? ksLawViolations().size : 0; kp = v === 0 ? 1.06 : clamp(1 - v * 0.08, 0.7, 1); kt = `法令違反 ${v}件`; }
+    else { kp = clamp(0.92 + 0.12 * Math.min(1.2, ksDeptPolF(n)) + (rand() - 0.5) * 0.08, 0.8, 1.2); kt = `${T ? T.n : '取り組み'}：部長の報告で 進み ${Math.round(kp * 100)}%`; }
+    const score = kpi === 'sales' ? kp : (sR ? (kp + clamp(sR, 0.7, 1.3)) / 2 : kp) * (cR && kpi !== 'cost' ? clamp(1.1 - (cR - 1) * 0.5, 0.85, 1.1) : 1);
+    const ti = score >= 1.08 ? 0 : score >= 1.02 ? 1 : score >= 0.96 ? 2 : score >= 0.88 ? 3 : 4;
+    const st = KS_DEPT_STYLE[n.head.style] || KS_DEPT_STYLE.solid;
+    const self = clamp(ti - st.self, 0, 4);
+    const say = ti <= 1 ? pick(['計画どおりに進んでいます', '手応えがあります。次も続けます', 'お客の反応がよく、予定より進みました']) : ti === 2 ? pick(['おおむね計画どおりです', '遅れはありますが、取り戻せます']) : pick(['計画より遅れています。原因を調べています', '思うように進みませんでした。手を打ちます', '人手が足りず、取り組みが進みませんでした']);
+    return { id: n.id, name: n.name, kind: ksDeptKindName(n), fn: n.fn, head: n.head.name, style: n.head.style, theme: P ? P.theme : null, status: P ? P.status : 'none', sales: Math.round(q.sales || 0), budS, cost: Math.round(q.cost || 0), budC, kt, kp: +kp.toFixed(3), score: +score.toFixed(3), ti, self, say };
+  });
+  // 会社の予算と実績（四半期と期のはじめから）
+  const b = G.budget && G.budget.fy === fy ? G.budget : null;
+  const ms = G.months.filter(x => fyOf(x.m) === fy);
+  const cur = { sales: (G.flow || {}).sales || 0 };
+  const actS = sum(ms, x => x.mg.sales) + cur.sales;
+  const comp = b ? { budS: b.lines.sales, budO: b.lines.ord, actS, actO: sum(ms, x => x.mg.ord) + ksMonthPLNow(), share: (qn * 3) / 12 } : null;
+  const meet = { id: (O.meetSeq = (O.meetSeq || 0) + 1), m: G.m, fy, q: qn, rows, comp, done: false };
+  O.meets.unshift(meet);
+  if (O.meets.length > 12) O.meets.length = 12;
+  for (const n of O.nodes) n.qs = {};
+  // 子会社と、自動にした会社は、公平な評価で済ませる
+  if (G.isSub || G.hist || (O.auto)) ksDeptMeetResolve(meet.id, null);
+  else G.pendingModals.push({ type: 'kDeptMeet', id: meet.id });
+  return meet;
+}
+/* 定例会の評価：choices = { 部のid: { rate: 'S'〜'D', fb: 'keep'… } }。null なら、実績どおりの公平な評価 */
+function ksDeptMeetResolve(meetId, choices) {
+  const O = G.org;
+  const meet = O && O.meets.find(x => x.id === meetId);
+  if (!meet || meet.done) return null;
+  const out = [];
+  for (const r of meet.rows) {
+    const n = ksDeptNode(r.id);
+    if (!n) continue;
+    const c = (choices && choices[r.id]) || { rate: KS_DEPT_GRADES[r.ti], fb: r.ti >= 3 ? (r.theme === 'safety' ? 'safety' : 'sales') : 'keep' };
+    const gi = Math.max(0, KS_DEPT_GRADES.indexOf(c.rate));
+    const diff = r.ti - gi; // 正：実績より高く評価した
+    let dm = diff === 0 ? 4 : diff === 1 ? 2 : diff >= 2 ? 1 : diff === -1 ? -3 : -10;
+    if (gi <= 1 && diff >= 0) dm += 1;
+    if (c.fb === 'keep') dm += 1;
+    n.head.mot = clamp(Math.round(n.head.mot + dm), 0, 100);
+    if (n.pol && diff >= 2) n.pol.q = +Math.max(0.75, (n.pol.q || 1) - 0.05).toFixed(2); // 甘すぎる評価は、取り組みをゆるめる
+    if (n.pol && c.fb && c.fb !== 'keep' && KS_DEPT_MEET_FB[c.fb]) n.pol.fb2 = { k: c.fb, until: G.m + 3 };
+    r.rate = KS_DEPT_GRADES[gi]; r.fb = c.fb || 'keep'; r.dm = dm;
+    out.push(r);
+  }
+  meet.done = true;
+  meet.doneM = G.m;
+  meet.auto = !choices;
+  ksDeptTouch();
+  return out;
+}
+
+/* ---------- ほかの仕組みへのつなぎ ---------- */
+/* 効き目：方針と人事（ksHrF）に掛ける。ksHrF は、需要・離職・労災・ロス・不祥事などの倍率のもと */
+if (typeof ksHrF === 'function') {
+  const ksHrFDept0 = ksHrF;
+  ksHrF = function (u, key) { return ksHrFDept0(u, key) * (G && G.org && G.org.nodes.length ? ksDeptF(u, key) : 1); };
+}
+/* 事業をやめたとき：部の受け持ちから外す（受け持ちの事業がなくなっても部は残る） */
+function ksDeptDropUnit(uid) { for (const n of ksDeptNodes()) n.units = (n.units || []).filter(x => x !== uid); }
+/* 部の人数（会社全体） */
+function ksDeptStaffTotal() { return sum(ksDeptNodes(), n => n.staff || 0); }
+
+/* ---- 29q_kaisha_org_ui.js ---- */
+/* =========================================================
+ *  29q_kaisha_org_ui.js : 「組織」の画面
+ *   組織図（ユニット・部・支店・海外支店）、部の設定、部長の方針のレビュー、四半期の定例会
+ *   （仕組みは 29p_kaisha_org.js）
+ * ========================================================= */
+
+KS_TABS.splice(KS_TABS.findIndex(t => t[0] === 'k_hr') + 1, 0, ['k_org', '組織']);
+const KS_DEPT_FN_ICON = { biz: '事', sales: '営', pr: '広', plan: '企', acct: '経', admin: '総', hr: '人', safety: '安', quality: '品', legal: '法', it: '情', rnd: '研', tech: '技', buy: '調' };
+
+/* 「組織」のタブのしるし：レビュー待ちの方針と、まだの定例会 */
+function ksDeptOpenMeets() { return G.org ? G.org.meets.filter(x => !x.done) : []; }
+const ksTabBadgeDept0 = ksTabBadge;
+ksTabBadge = id => {
+  if (id !== 'k_org') return ksTabBadgeDept0(id);
+  const n = (G.org ? ksDeptPending().length : 0) + ksDeptOpenMeets().length;
+  return n ? `<span class="badge">${n}</span>` : '';
+};
+/* 社長室の「今月やること」 */
+const ksInboxDept0 = ksInbox;
+ksInbox = () => {
+  const out = ksInboxDept0();
+  if (!G.org || G.over) return out;
+  for (const mt of ksDeptOpenMeets()) out.push({ ico: '会', cls: 'warn', t1: `${ksFyLabel(mt.fy)} 第${mt.q}四半期の定例会`, t2: '予算と方針の進み具合を確かめ、部長を評価します', act: btn('定例会を開く', 'kDeptMeetOpen', { id: mt.id }, 'sm primary') });
+  const pend = ksDeptPending();
+  if (pend.length) out.push({ ico: '方', t1: `部長の方針がレビュー待ちです（${pend.length}件）`, t2: pend.slice(0, 4).map(n => n.name).join('・') + (pend.length > 4 ? ' など' : '') + '。レビューするまで、効き目は半分です', act: btn('組織へ', 'kGo', { tab: 'k_org' }, 'sm') + btn('まとめて承認', 'kDeptApproveAll', {}, 'sm') });
+  return out;
+};
+
+/* ---------- 画面 ---------- */
+function ksDeptUnitNames(ids) { return ids.map(id => ksUnit(id)).filter(Boolean).map(u => ksUName(u)).join('・'); }
+function ksDeptMotBar(m) { const v = Math.round(m); return `<span class="motbar" role="img" aria-label="やる気 ${v}"><span style="width:${v}%" class="${v < 35 ? 'low' : v >= 70 ? 'hi' : ''}"></span></span><span class="small">${v}</span>`; }
+function ksDeptPolTag(n) {
+  const P = n.pol;
+  if (!P) return '';
+  const T = KS_DEPT_THEME[P.theme];
+  const tgt = T.kpi === 'sales' ? `売上 ${P.target >= 0 ? '+' : ''}${P.target}%` : T.kpi === 'cost' ? `費用 −${Math.max(0, P.target)}%` : T.kpi === 'acc' ? '労災ゼロ' : `改善 ${P.target}%`;
+  return `${tag(P.status === 'ok' ? '承認済み' : 'レビュー待ち', P.status === 'ok' ? 'ok' : 'warn')} <b>${esc(T.n)}</b><span class="small muted">（${esc(tgt)}・${P.fy > fyOf(G.m) ? '来期' : ksFyLabel(P.fy)}）</span>`;
+}
+function ksDeptCard(n, depth) {
+  const F = KS_DEPT_FN[n.fn];
+  const kids = ksDeptKids(n.id);
+  const sc = ksDeptScope(n);
+  const own = ksDeptOwnUnits(n);
+  const c = ksDeptCostEst(n);
+  const need = F.ratio ? ksDeptNeed(n) : 0;
+  const st = KS_DEPT_STYLE[n.head.style] || KS_DEPT_STYLE.solid;
+  const where = own.length ? ksDeptUnitNames(own) : n.fn === 'biz' && n.kind === 'dept' && !kids.length ? '（事業を選んでいません。「設定」で受け持つ事業を選べます）' : sc.all ? '会社の全事業' : `${ksDeptUnitNames(sc.units)}（${n.kind === 'bu' ? '下の部の事業' : '上の組織から'}）`;
+  const branch = ksDeptIsBranch(n);
+  const pend = n.pol && n.pol.status !== 'ok';
+  return `<li class="orgn"><div class="orgc${n.kind === 'bu' ? ' bu' : ''}${branch ? ' br' : ''}${pend ? ' pend' : ''}">
+    <div class="orgc-t"><span class="indico" aria-hidden="true">${KS_DEPT_FN_ICON[n.fn] || '部'}</span><b>${esc(n.name)}</b>${tag(ksDeptKindName(n), n.kind === 'bu' ? 'ok' : branch ? 'warn' : '')}${n.kind === 'dept' ? tag(F.n) : ''}${branch ? `<span class="small muted">${esc(ksDeptPlace(n))}</span>` : ''}</div>
+    <div class="orgc-h small">${esc(ksDeptHeadTitle(n))} <b>${esc(n.head.name)}</b>（${esc(st.n)}・${'★'.repeat(n.head.skill)}${'☆'.repeat(5 - n.head.skill)}）<span class="orgc-mot">やる気 ${ksDeptMotBar(n.head.mot)}</span></div>
+    <div class="orgc-d small">受け持ち：${esc(where)}${F.ratio ? `・人数 <b>${n.staff}人</b>（目安 ${need}人）` : ''}・費用 月${fmtYen(c.total)}</div>
+    <div class="orgc-p small">方針：${ksDeptPolTag(n)}</div>
+    <div class="orgc-a">${btn(pend ? '方針をレビュー' : '方針を見る', 'kDeptPol', { id: n.id }, pend ? 'sm primary' : 'sm')}${btn('設定', 'kDeptEdit', { id: n.id }, 'sm')}${btn('＋下に部', 'kDeptAdd', { parent: n.id, kind: 'dept' }, 'sm')}${btn('外す', 'kDeptDel', { id: n.id }, 'sm ghost')}</div></div>
+    ${kids.length ? `<ul class="orgkids2">${kids.map(k => ksDeptCard(k, depth + 1)).join('')}</ul>` : ''}</li>`;
+}
+KS_SCREENS.k_org = () => {
+  const O = G.org;
+  const nodes = ksDeptNodes();
+  const tops = ksDeptKids(null);
+  const tree = `<ul class="orgtree2"><li class="orgn"><div class="orgc ceo"><div class="orgc-t"><span class="indico" aria-hidden="true">長</span><b>代表取締役社長 ${esc(G.ceo)}</b></div><div class="orgc-a">${btn('＋ユニット', 'kDeptAdd', { kind: 'bu' }, 'sm')}${btn('＋部・支店', 'kDeptAdd', { kind: 'dept' }, 'sm primary')}</div></div>
+    ${tops.length ? `<ul class="orgkids2">${tops.map(n => ksDeptCard(n, 0)).join('')}</ul>` : ''}</li></ul>`;
+  const empty = nodes.length ? '' : `<div class="callout small" style="margin-top:10px">まだ部がありません。ユニット（事業本部）や部をつくると、部長が方針を立て、四半期ごとに定例会で進み具合を確かめます。まずは下の「よく使う形」から始められます。</div>`;
+  const tpl = `<div class="row" style="gap:6px;flex-wrap:wrap">${btn('事業ごとに事業部をつくる', 'kDeptTpl', { v: 'biz' }, 'sm')}${btn('管理部門（総務・経理・人事）', 'kDeptTpl', { v: 'admin' }, 'sm')}${btn('安全管理部と品質保証部', 'kDeptTpl', { v: 'safe' }, 'sm')}</div>`;
+  const costs = nodes.map(n => ksDeptCostEst(n));
+  const tot = sum(costs, c => c.total);
+  const effKeys = ['demand', 'quit', 'hire', 'acc', 'shrink', 'viol', 'leak', 'energy', 'bcp', 'ot'];
+  const eff = nodes.length ? effKeys.map(k => { const v = ksDeptF(null, k); return Math.abs(v - 1) >= 0.005 ? `${KS_EFF_N[k]} ${v >= 1 ? '+' : '−'}${fmtNum(Math.abs(v - 1) * 100, 0)}%` : null; }).filter(Boolean).join('・') || 'まだ効き目はありません' : '―';
+  const nextQ = (() => { for (let m = G.m; m < G.m + 4; m++) if ([6, 9, 12, 3].includes(calMonth(m))) return m; return G.m; })();
+  const meets = O ? O.meets.slice(0, 6).map(mt => `<li>${ymLabel(mt.m)} 第${mt.q}四半期 ${mt.done ? `<span class="small muted">${mt.auto ? '自動で評価' : '評価済み'}</span> ${btn('結果', 'kDeptMeetOpen', { id: mt.id }, 'sm ghost')}` : btn('定例会を開く', 'kDeptMeetOpen', { id: mt.id }, 'sm primary')}</li>`).join('') : '';
+  const pend = O ? ksDeptPending() : [];
+  const side = `<div class="stack">
+    ${panel('費用と効き目', kv([['部の数', `${nodes.length}（ユニット ${nodes.filter(n => n.kind === 'bu').length}・支店 ${nodes.filter(n => ksDeptIsBranch(n)).length}）`], ['部の人数（事業の人員とは別）', `${fmtNum(ksDeptStaffTotal(), 0)}人`], ['組織の費用', `月${fmtYen(tot)}（人件費・家賃・役職手当・方針の取り組み）`], ['会社全体への効き目', eff]]) + '<p class="note">機能の部（営業・人事・安全管理など）は、受け持つ人数に対して目安の人数がいると効き目が十分に出ます。同じ役割の部をいくつつくっても、効き目は合わせて1.3倍分までです。部の費用は本社費（給料手当・法定福利費・地代家賃・広告宣伝費など。研究開発部は研究開発費）として記帳します。</p>')}
+    ${panel('方針のレビュー', pend.length ? `<p class="small" style="margin:0 0 6px">レビュー待ち <b>${pend.length}件</b>。レビューするまで、方針の効き目は半分です。</p><ul class="small orgpend">${pend.map(n => `<li>${esc(n.name)}　${btn('レビュー', 'kDeptPol', { id: n.id }, 'sm')}</li>`).join('')}</ul><div class="row" style="margin-top:6px">${btn('まとめて承認する', 'kDeptApproveAll', {}, 'sm')}</div>` : '<p class="small muted" style="margin:0">レビュー待ちの方針はありません。部長は毎年3月の末に、次の期の方針の案を出します。</p>')}
+    ${panel('四半期の定例会', `<p class="small" style="margin:0 0 6px">6・9・12・3月の末に、予算と方針の進み具合を確かめ、部長を評価します。次は <b>${ymLabel(nextQ)}末</b>。</p>${meets ? `<ul class="small orgmeets">${meets}</ul>` : ''}<label class="inline small" style="margin-top:6px"><input type="checkbox" data-ch="kDeptAuto" ${O && O.auto ? 'checked' : ''}> 定例会とレビューを自動で済ませる（実績どおりの公平な評価・部長の案をそのまま承認）</label>`)}
+    ${panel('よく使う形', tpl)}
+  </div>`;
+  return `<h1 class="h1">組織</h1><p class="lead">会社の中に、ユニット（事業本部）・部・支店をつくります。事業部は受け持つ事業を回し、営業・人事・安全管理・品質保証などの部は人数に応じて会社に効きます。本社と違う場所の部は支店（海外なら海外支店）。部長は毎年方針を立て、社長がレビューで評価と指摘をし、四半期ごとの定例会で予算と方針の進み具合を確かめます。</p>
+    <div class="grid g-side"><div>${panel('組織図', tree + empty)}</div>${side}</div>`;
+};
+
+/* ---------- 部をつくる・変える ---------- */
+function ksDeptLocSelect(n) {
+  const hq = ksDeptHq().pref;
+  const cur = (n.cc || 'jp') !== 'jp' ? 'c:' + n.cc : 'p:' + (+n.pref || 0);
+  const prefs = Object.entries(KS_PREF_REG).map(([r, rn]) => `<optgroup label="${esc(rn)}">${Object.values(KS_PREFS).filter(P => P.reg === r && P.c !== hq).map(P => `<option value="p:${P.c}"${cur === 'p:' + P.c ? ' selected' : ''}>${esc(P.n)}（支店）</option>`).join('')}</optgroup>`).join('');
+  const ccs = typeof KS_COUNTRIES !== 'undefined' ? `<optgroup label="海外（海外支店）">${Object.entries(KS_COUNTRIES).map(([c, x]) => `<option value="c:${c}"${cur === 'c:' + c ? ' selected' : ''}>${esc(x.n)}</option>`).join('')}</optgroup>` : '';
+  return `<select data-ch="kDeptLoc" aria-label="所在地"><option value="p:0"${cur === 'p:0' ? ' selected' : ''}>本社と同じ（${esc(KS_PREFS[hq].n)}）</option>${prefs}${ccs}</select>`;
+}
+MODALS.kDeptEdit = () => {
+  const D = UI.orgEd;
+  if (!D) return modalFrame('部の設定', '<p>設定がありません</p>', btn('閉じる', 'closeModal'));
+  const n = D.n;
+  const isNew = !D.id;
+  const F = KS_DEPT_FN[n.fn] || KS_DEPT_FN.biz;
+  // 上の組織に選べるもの（自分と自分の下は除く）
+  const below = new Set();
+  if (D.id) { below.add(D.id); let grew = true; while (grew) { grew = false; for (const o of ksDeptNodes()) if (!below.has(o.id) && below.has(o.parent)) { below.add(o.id); grew = true; } } }
+  const parents = [['', `社長の直下`], ...ksDeptNodes().filter(o => !below.has(o.id)).map(o => [o.id, `${o.name}（${ksDeptKindName(o)}）`])];
+  const fns = Object.entries(KS_DEPT_FN).map(([k, x]) => `<option value="${k}"${n.fn === k ? ' selected' : ''}>${esc(x.n)}</option>`).join('');
+  const units = ksActiveUnits().map(u => {
+    const other = ksDeptNodes().find(o => o.id !== D.id && o.fn === 'biz' && (o.units || []).includes(u.id));
+    return `<label class="inline small"><input type="checkbox" data-ch="kDeptUnit" value="${esc(u.id)}" ${n.units.includes(u.id) ? 'checked' : ''}> ${esc(ksUName(u))}${other && n.fn === 'biz' ? `<span class="muted">（いまは${esc(other.name)}）</span>` : ''}</label>`;
+  }).join('');
+  const tmp = Object.assign({}, n, { id: D.id || '_new' });
+  const need = F.ratio ? Math.max(1, Math.round(ksDeptScopeHead(n.units.length ? { units: n.units } : ksDeptScopeOf(tmp)) * F.ratio)) : 0;
+  const branch = (n.cc || 'jp') !== 'jp' || (+n.pref && +n.pref !== ksDeptHq().pref);
+  const body = `<div class="sg-form">
+    ${isNew ? `<div class="field"><span>種類</span><div class="seg" role="radiogroup">${[['bu', 'ユニット（事業本部）'], ['dept', '部・支店']].map(([k, l]) => `<button type="button" data-act="kDeptEdKind" data-v="${k}" aria-pressed="${n.kind === k}">${l}</button>`).join('')}</div><span class="small muted">${n.kind === 'bu' ? 'いくつかの事業や部をまとめる単位。下に部や支店を置ける' : '事業を受け持つ事業部か、営業・人事などの機能の部。所在地を本社と違う場所にすると支店になる'}</span></div>` : ''}
+    <div class="grid g2 sg-grid">
+      <label class="field"><span>名前</span><input type="text" id="orgName" data-ch="kDeptName" value="${esc(n.name)}" maxlength="30" placeholder="空欄なら自動（例：原子力設計部）"></label>
+      <label class="field"><span>上の組織</span><select data-ch="kDeptParent">${parents.map(([v, l]) => `<option value="${esc(v)}"${(n.parent || '') === v ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select></label>
+    </div>
+    ${n.kind === 'dept' ? `<label class="field"><span>役割</span><select data-ch="kDeptFn">${fns}</select><span class="small muted">${esc(F.d)}</span></label>` : ''}
+    <div class="field"><span>受け持つ事業${n.kind === 'bu' ? '（その事業の事業部があれば、事業部ごとユニットの下に移る）' : n.fn === 'biz' ? '（1つの事業は、事業部・ユニットの1つにだけ入る）' : '（選ばなければ、上の組織か会社の全事業）'}</span><div class="orgunits">${units || '<span class="small muted">事業がありません</span>'}</div></div>
+    ${n.kind === 'dept' && F.ratio ? `<label class="field"><span>部の人数</span><span class="cu-capin"><input type="number" inputmode="numeric" min="0" max="999" step="1" data-ch="kDeptStaff" value="${n.staff}"><span class="small">人</span></span><span class="small muted">受け持つ人数から見た目安は ${need}人。目安に足りないと効き目が弱く、多すぎても効き目はあまり増えません（事業の人員とは別に雇います）</span></label>` : ''}
+    ${n.kind === 'dept' ? `<label class="field"><span>所在地</span>${ksDeptLocSelect(n)}<span class="small muted">${branch ? `支店として、${esc(ksDeptPlace(n))}に事務所を借ります（家賃と人件費は所在地の水準）。${(n.cc || 'jp') !== 'jp' ? '海外支店の営業は、ものづくり・卸売・専門サービス・会員サービスの輸出の需要に効きます。' : ''}` : '本社の中に置きます。'}</span></label>` : ''}
+  </div>`;
+  const foot = btn('やめる', 'closeModal') + btn(isNew ? 'つくる' : 'この設定にする', 'kDeptSave', {}, 'primary');
+  return modalFrame(isNew ? (n.kind === 'bu' ? 'ユニットをつくる' : '部・支店をつくる') : `${esc(D.name0)}の設定`, body, foot, { size: 'wide' });
+};
+function ksDeptScopeOf(n) {
+  // 編集中の部の受け持ち（上の組織の事業か、会社の全事業）
+  for (let p = n.parent ? ksDeptNode(n.parent) : null, i = 0; p && i < 200; i++) { const us = ksDeptSubtreeUnits(p); if (us.length) return { units: us }; p = p.parent ? ksDeptNode(p.parent) : null; }
+  return { units: ksActiveUnits().map(u => u.id) };
+}
+function ksDeptEdStore() { const D = UI.orgEd; if (!D) return; const nm = $('#orgName'); if (nm) D.n.name = nm.value; const sf = document.querySelector('#modal-root [data-ch="kDeptStaff"]'); if (sf) D.n.staff = Math.max(0, Math.round(+sf.value || 0)); }
+Object.assign(ACTIONS, {
+  kDeptAdd: d => {
+    const kind = d.kind === 'bu' ? 'bu' : 'dept';
+    UI.orgEd = { id: null, name0: '', n: { kind, name: '', parent: d.parent || null, fn: kind === 'bu' ? 'biz' : 'biz', units: [], staff: 0, pref: 0, cc: 'jp' } };
+    showModal('kDeptEdit');
+  },
+  kDeptEdit: d => {
+    const n = ksDeptNode(d.id);
+    if (!n) return;
+    UI.orgEd = { id: n.id, name0: n.name, n: { kind: n.kind, name: n.name, parent: n.parent || null, fn: n.fn, units: (n.units || []).slice(), staff: n.staff || 0, pref: n.pref || 0, cc: n.cc || 'jp' } };
+    showModal('kDeptEdit');
+  },
+  kDeptEdKind: d => { ksDeptEdStore(); UI.orgEd.n.kind = d.v === 'bu' ? 'bu' : 'dept'; if (UI.orgEd.n.kind === 'bu') { UI.orgEd.n.fn = 'biz'; UI.orgEd.n.pref = 0; UI.orgEd.n.cc = 'jp'; } drawModal(); },
+  kDeptSave: () => {
+    ksDeptEdStore();
+    const D = UI.orgEd, n = D.n;
+    const F = KS_DEPT_FN[n.fn];
+    if (D.id) {
+      ksDeptEdit(D.id, { name: n.name, parent: n.parent || null, fn: n.fn, units: n.units, staff: n.staff, pref: n.pref, cc: n.cc });
+      toast(`${ksDeptNode(D.id).name}の設定を変えました`);
+    } else {
+      const staffAuto = F.ratio && !(n.staff > 0) ? undefined : n.staff;
+      const x = ksDeptAdd({ kind: n.kind, name: n.name, parent: n.parent, fn: n.fn, units: n.units, staff: staffAuto, pref: n.pref, cc: n.cc });
+      toast(`${x.name}（${ksDeptKindName(x)}）をつくりました。${ksDeptHeadTitle(x)}は${x.head.name}。方針の案が出たので、レビューしてください`);
+    }
+    UI.orgEd = null;
+    closeModal();
+    autosave();
+  },
+  kDeptDel: d => {
+    const n = ksDeptNode(d.id);
+    if (!n) return;
+    confirmBox(`${esc(n.name)}をなくす`, `${esc(n.name)}（${ksDeptKindName(n)}）をなくします。下の部は、上の組織に移ります。部の人（${n.staff || 0}人）は事業の人員には移りません（雇用は続け、費用はなくなる扱い）。`, 'なくす', 'kDeptDelGo', { id: n.id }, true);
+  },
+  kDeptDelGo: d => { const n = ksDeptNode(d.id); if (n && ksDeptRemove(d.id)) toast(`${n.name}をなくしました`); closeModal(true); render(); autosave(); },
+  kDeptTpl: d => { const made = ksDeptTemplate(d.v); toast(made.length ? `${made.map(x => x.name).join('・')}をつくりました。方針をレビューしてください` : 'すでにあります'); render(); autosave(); },
+  kDeptApproveAll: () => { const k = ksDeptApproveAll(); toast(k ? `${k}件の方針を、部長の案のまま承認しました` : 'レビュー待ちの方針はありません'); render(); autosave(); },
+  kDeptMeetOpen: d => showModal('kDeptMeet', { id: +d.id }),
+  kDeptPol: d => { UI.orgPol = { id: d.id, rate: 'ok', fb: [], theme: '' }; showModal('kDeptPolicy'); },
+});
+Object.assign(CHANGES, {
+  kDeptName: el => { if (UI.orgEd) UI.orgEd.n.name = el.value; },
+  kDeptParent: el => { ksDeptEdStore(); UI.orgEd.n.parent = el.value || null; drawModal(); },
+  kDeptFn: el => { ksDeptEdStore(); UI.orgEd.n.fn = el.value; if (!KS_DEPT_FN[el.value].ratio) UI.orgEd.n.staff = 0; drawModal(); },
+  kDeptUnit: el => { ksDeptEdStore(); const u = UI.orgEd.n.units; const i = u.indexOf(el.value); if (el.checked && i < 0) u.push(el.value); if (!el.checked && i >= 0) u.splice(i, 1); drawModal(); },
+  kDeptStaff: el => { if (UI.orgEd) UI.orgEd.n.staff = Math.max(0, Math.round(+el.value || 0)); },
+  kDeptLoc: el => { ksDeptEdStore(); const [t, v] = el.value.split(':'); if (t === 'c') { UI.orgEd.n.cc = v; UI.orgEd.n.pref = 0; } else { UI.orgEd.n.cc = 'jp'; UI.orgEd.n.pref = +v || 0; } drawModal(); },
+  kDeptAuto: el => { ksDeptInit().auto = el.checked; if (el.checked) { ksDeptApproveAll(); for (const mt of ksDeptOpenMeets()) ksDeptMeetResolve(mt.id, null); } render(); autosave(); },
+});
+
+/* ---------- 方針のレビュー ---------- */
+MODALS.kDeptPolicy = () => {
+  const R = UI.orgPol;
+  const n = R && ksDeptNode(R.id);
+  if (!n || !n.pol) return modalFrame('方針', '<p>方針がありません</p>', btn('閉じる', 'closeModal'));
+  const P = n.pol, T = KS_DEPT_THEME[P.theme], H = n.head, st = KS_DEPT_STYLE[H.style] || KS_DEPT_STYLE.solid;
+  const done = P.status === 'ok';
+  const tgt = T.kpi === 'sales' ? `受け持つ事業の売上を ${P.target >= 0 ? '+' : ''}${P.target}%（前の期より）` : T.kpi === 'cost' ? `費用を ${Math.max(0, P.target)}% 減らす` : T.kpi === 'acc' ? `労災ゼロ（危険を${P.target}%減らす）` : `${T.n}：${P.target}% 改善する`;
+  const c = ksDeptCostEst(n);
+  const head = `<div class="orgpol-h"><span class="indico" aria-hidden="true">${KS_DEPT_FN_ICON[n.fn] || '部'}</span><div><b>${esc(n.name)}</b>（${esc(ksDeptKindName(n))}）<div class="small">${esc(ksDeptHeadTitle(n))} ${esc(H.name)}　${esc(st.n)}（${esc(st.d)}）・腕前 ${'★'.repeat(H.skill)}${'☆'.repeat(5 - H.skill)}・やる気 ${Math.round(H.mot)}</div></div></div>`;
+  const plan = `<div class="orgpol-b"><div class="small muted">${P.fy > fyOf(G.m) ? '来期' : ksFyLabel(P.fy)}の方針（${esc(ksDeptHeadTitle(n))}の${done ? '方針' : '案'}）</div>
+    <h3 class="fsh" style="margin:4px 0">${esc(T.n)}</h3>
+    ${kv([['目標', esc(tgt)], ['取り組み', `<ul class="small" style="margin:0;padding-left:1.2em">${P.acts.map(a => `<li>${esc(a)}</li>`).join('')}${P.add ? '<li>安全と品質の取り組み（社長の指摘で追加）</li>' : ''}</ul>`], ['予算', `${P.budS ? `売上 ${fmtYen(P.budS)}／年・` : ''}部の費用 ${fmtYen(P.budC)}／年（月 約${fmtYen(c.total)}）`], ['計画の質', `${Math.round((P.q || 1) * 100)}点`]])}</div>`;
+  if (done) {
+    const log = (P.log || []).map(l => `<li>${ymLabel(l.m)}：${{ good: 'よい', ok: 'このままで', redo: '作り直し' }[l.rate] || l.rate}${l.fb.length ? `（指摘：${l.fb.map(k => KS_DEPT_FB[k].n).join('・')}）` : ''}</li>`).join('');
+    return modalFrame('部長の方針', head + plan + (log ? `<h4 class="fsh" style="margin-top:10px">レビューの記録</h4><ul class="small">${log}</ul>` : ''), btn('閉じる', 'closeModal', {}, 'primary'), { size: 'wide' });
+  }
+  const rates = [['good', 'よい（ほめる）'], ['ok', 'このままで承認'], ['redo', '作り直しを求める']].map(([k, l]) => `<button type="button" data-act="kDeptPolRate" data-v="${k}" aria-pressed="${R.rate === k}">${l}</button>`).join('');
+  const fbs = Object.entries(KS_DEPT_FB).map(([k, x]) => `<label class="fbopt"><input type="checkbox" data-ch="kDeptPolFb" value="${k}" ${R.fb.includes(k) ? 'checked' : ''}><span><b>${esc(x.n)}</b><span class="small muted">${esc(x.d)}</span></span></label>`).join('');
+  const themes = `<select data-ch="kDeptPolTheme" aria-label="テーマ"><option value="">部長の案のまま（${esc(T.n)}）</option>${Object.entries(KS_DEPT_THEME).filter(([k]) => k !== P.theme).map(([k, x]) => `<option value="${k}"${R.theme === k ? ' selected' : ''}>${esc(x.n)}</option>`).join('')}</select>`;
+  const hint = `<p class="note">目標は、高すぎると残業と労災が増え、部長のやる気が下がります。低すぎると取り組みがゆるみます。${st.n === '攻め' ? 'この部長は高い目標を立てがちです。' : st.n === '慎重' ? 'この部長は低めの目標を立てがちです。' : ''}的を射た指摘は部長の納得を生み、的外れな指摘はやる気を下げます。</p>`;
+  const form = `<div class="sg-form" style="margin-top:10px"><div class="field"><span>評価</span><div class="seg wrap" role="radiogroup">${rates}</div></div>
+    <div class="field"><span>指摘（いくつでも）</span><div class="orgfbs">${fbs}</div></div>
+    <label class="field"><span>テーマを変える（社長の指示）</span>${themes}</label>${hint}</div>`;
+  return modalFrame('部長の方針をレビューする', head + plan + form, btn('あとで', 'closeModal') + btn(R.rate === 'redo' ? '作り直しを求める' : 'レビューを返して承認する', 'kDeptPolGo', {}, 'primary'), { size: 'wide' });
+};
+Object.assign(ACTIONS, {
+  kDeptPolRate: d => { UI.orgPol.rate = d.v; drawModal(); },
+  kDeptPolGo: () => {
+    const R = UI.orgPol;
+    const n = ksDeptNode(R.id);
+    if (!n) return;
+    const res = ksDeptReview(R.id, { rate: R.rate, fb: R.fb, theme: R.theme || undefined });
+    if (!res) return;
+    const msg = res.msgs.filter(Boolean).join('。') || '方針を承認しました';
+    toast(`${n.name}：${msg}${res.status === 'ok' ? '' : '。新しい案が出たので、もう一度レビューしてください'}（やる気 ${res.mot >= 0 ? '+' : ''}${res.mot}）`, res.mot < 0 ? 'bad' : '');
+    if (res.status === 'ok') { UI.orgPol = null; closeModal(); } else { UI.orgPol = { id: R.id, rate: 'ok', fb: [], theme: '' }; drawModal(); }
+    render();
+    autosave();
+  },
+});
+Object.assign(CHANGES, {
+  kDeptPolFb: el => { const f = UI.orgPol.fb; const i = f.indexOf(el.value); if (el.checked && i < 0) f.push(el.value); if (!el.checked && i >= 0) f.splice(i, 1); },
+  kDeptPolTheme: el => { UI.orgPol.theme = el.value; },
+});
+
+/* ---------- 四半期の定例会 ---------- */
+MODALS.kDeptMeet = args => {
+  const O = G.org;
+  const mt = O && O.meets.find(x => x.id === args.id);
+  if (!mt) return modalFrame('定例会', '<p>記録がありません</p>', btn('閉じる', 'closeModal', {}, 'primary'));
+  if (!UI.orgMeet || UI.orgMeet.id !== mt.id) UI.orgMeet = { id: mt.id, ch: Object.fromEntries(mt.rows.map(r => [r.id, { rate: KS_DEPT_GRADES[r.self], fb: 'keep' }])) };
+  const C = UI.orgMeet.ch;
+  const pct = (a, b) => (b ? `${Math.round(a / b * 100)}%` : '―');
+  const comp = mt.comp ? `<div class="callout small"><b>会社の予算と実績（${ksFyLabel(mt.fy)}・第${mt.q}四半期まで）</b><br>${ksSalesName()}：実績 ${fmtYen(mt.comp.actS)}／年の予算 ${fmtYen(mt.comp.budS)}（${pct(mt.comp.actS, mt.comp.budS)}・経過 ${Math.round(mt.comp.share * 100)}%）　経常利益：実績 ${fmtYen(mt.comp.actO)}／年の予算 ${fmtYen(mt.comp.budO)}</div>` : '';
+  const rows = mt.rows.map(r => {
+    const c = C[r.id] || { rate: KS_DEPT_GRADES[r.self], fb: 'keep' };
+    const bud = r.budS ? `${ksSalesName()}：実績 ${fmtYen(r.sales)}／四半期の予算 ${fmtYen(r.budS)}（${pct(r.sales, r.budS)}）` : `部の費用：実績 ${fmtYen(r.cost)}／四半期の予算 ${fmtYen(r.budC)}（${pct(r.cost, r.budC)}）`;
+    const rateSeg = mt.done ? `<b>${esc(r.rate || '―')}</b>${r.dm !== undefined ? `<span class="small muted">（やる気 ${r.dm >= 0 ? '+' : ''}${r.dm}）</span>` : ''}` : `<div class="seg sm" role="radiogroup" aria-label="${esc(r.name)}の評価">${KS_DEPT_GRADES.map(g => `<button type="button" data-act="kDeptMeetRate" data-id="${esc(r.id)}" data-v="${g}" aria-pressed="${c.rate === g}">${g}</button>`).join('')}</div>`;
+    const fbSel = mt.done ? `<span class="small">${esc((KS_DEPT_MEET_FB[r.fb] || KS_DEPT_MEET_FB.keep).n)}</span>` : `<select data-ch="kDeptMeetFb" data-id="${esc(r.id)}" aria-label="${esc(r.name)}への指摘">${Object.entries(KS_DEPT_MEET_FB).map(([k, x]) => `<option value="${k}"${c.fb === k ? ' selected' : ''}>${esc(x.n)}</option>`).join('')}</select>`;
+    return `<li class="meetr"><div class="meetr-t"><b>${esc(r.name)}</b>${tag(r.kind)}<span class="small muted">${esc(r.head)}（${esc((KS_DEPT_STYLE[r.style] || KS_DEPT_STYLE.solid).n)}）</span></div>
+      <div class="small">${bud}</div><div class="small">方針：${r.theme ? esc(KS_DEPT_THEME[r.theme].n) : '―'}　${esc(r.kt)}</div>
+      <div class="small meetr-say">「${esc(r.say)}」　自己評価 <b>${KS_DEPT_GRADES[r.self]}</b></div>
+      <div class="meetr-c">${rateSeg}${fbSel}</div></li>`;
+  }).join('');
+  const body = `${comp}<p class="small" style="margin:8px 0">実績に見合った評価は部長の納得とやる気につながります。実績より厳しすぎる評価はやる気を大きく下げ、甘すぎる評価は取り組みをゆるめます。指摘は次の四半期の取り組みに効きます。</p><ul class="meetrows">${rows}</ul>`;
+  const foot = mt.done ? btn('閉じる', 'closeModal', {}, 'primary') : btn('あとで', 'closeModal') + btn('自己評価のとおりにする', 'kDeptMeetSelf', {}, '') + btn('この評価で終える', 'kDeptMeetGo', {}, 'primary');
+  return modalFrame(`${ksFyLabel(mt.fy)} 第${mt.q}四半期の定例会`, body, foot, { size: 'wide', sub: `${ymLabel(mt.m)}末・部とユニット ${mt.rows.length}` });
+};
+Object.assign(ACTIONS, {
+  kDeptMeetRate: d => { const C = UI.orgMeet.ch; C[d.id] = Object.assign({}, C[d.id], { rate: d.v }); drawModal(); },
+  kDeptMeetSelf: () => {
+    const mt = G.org.meets.find(x => x.id === UI.orgMeet.id);
+    for (const r of mt.rows) UI.orgMeet.ch[r.id] = Object.assign({}, UI.orgMeet.ch[r.id], { rate: KS_DEPT_GRADES[r.self] });
+    drawModal();
+  },
+  kDeptMeetGo: () => {
+    const M = UI.orgMeet;
+    const res = ksDeptMeetResolve(M.id, M.ch) || [];
+    const up = res.filter(r => r.dm > 0).length, down = res.filter(r => r.dm < 0).length;
+    toast(`定例会を終えました。部長のやる気：上がった ${up}人・下がった ${down}人`, down > up ? 'bad' : '');
+    UI.orgMeet = null;
+    closeModal(true);
+    render();
+    autosave();
+  },
+});
+CHANGES.kDeptMeetFb = el => { const C = UI.orgMeet.ch; C[el.dataset.id] = Object.assign({}, C[el.dataset.id], { fb: el.value }); };
 
 /* ---- 30_gyosei_core.js ---- */
 /* =========================================================

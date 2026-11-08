@@ -778,6 +778,18 @@ function ksFinishClosing() {
   if (typeof ksExtAfterClose === 'function') ksExtAfterClose(fy); // 目標の評価・連結決算
   ksNextMonth();
 }
+/* 決算整理の残りの手順を、選んだ設定（選んでいなければ標準）でまとめて記帳し、決算を確定する（質問はとばす） */
+function ksCloseSkipAll() {
+  const c = G.closing;
+  if (!c) return false;
+  c.opt = c.opt || {};
+  c.entries = c.entries || {};
+  for (const s of c.steps.slice(c.i)) if (s !== 'done' && s !== 'con') c.entries[s] = ksPostStep(s, c.opt[s] || {});
+  c.i = c.steps.length - 1;
+  c.view = c.i;
+  ksFinishClosing();
+  return true;
+}
 /* 全部の手順を正しく処理する（過去の期・自動処理） */
 function ksAutoClose() {
   if (!G.closing) return;
@@ -1368,9 +1380,52 @@ function ksCompanyDesc(us) {
 /* 開始時の事業のリスト：o.units = [{ type, sc, n }]（o.ind は以前の6業種の id） */
 function ksStartList(o) {
   const raw = o.units && o.units.length ? o.units : [{ type: KS_LEGACY_TYPE[o.ind] || o.ind }];
-  // 事業の数に上限はない（同じ業種は1つにまとめる）
+  // 事業の数に上限はない（同じ業種は1つにまとめる）。規模は設備の数から決めた倍率（0.1〜上限）、g はこれまでの成長（年率）
   const seen = new Set();
-  return raw.map(x => (typeof x === 'string' ? { type: x } : x)).filter(x => KS_TYPES[x.type] && !seen.has(x.type) && seen.add(x.type));
+  return raw.map(x => (typeof x === 'string' ? { type: x } : x)).filter(x => KS_TYPES[x.type] && !seen.has(x.type) && seen.add(x.type))
+    .map(x => Object.assign({}, x, { sc: clamp(+x.sc || 1, 0.1, ksCapInfo(x.type).maxSc), g: clamp(+x.g || 0, -0.15, 0.2) }));
+}
+/* 事業の「設備の数」：規模の倍率 1 のときの数（base）と、その名前・単位。開始の画面で数を入れると、倍率 = 数 ÷ base になる */
+function ksCapInfo(type) {
+  const S = KS_TYPES[type];
+  if (!S) return { n: '規模', u: '', base: 1, maxSc: 40 };
+  const P = S.p;
+  const eqN = list => sum(list || [], e => e.n || 0);
+  const lim = n => clamp(Math.floor(600 / Math.max(1, n)), 4, 40); // 資産の数が多くなりすぎないように
+  switch (S.eng) {
+    case 'shop': return { n: '店舗の数', u: '店', base: P.stores || 1, maxSc: lim(P.stores || 1) };
+    case 'rest': return { n: '店舗の数', u: '店', base: P.shops || 1, maxSc: lim(P.shops || 1) };
+    case 'mfg': { const n = eqN(S.eq) || 1; return P.mode === 'line' ? { n: '生産ラインの数', u: 'ライン', base: n, maxSc: lim(n) } : { n: '機械の数', u: '台', base: n, maxSc: lim(n) }; }
+    case 'build': return { n: `${(S.roles[0] || {}).n || '現場監督'}の人数`, u: '人', base: P.site || 1, maxSc: 40 };
+    case 'trade': return { n: '取引先の数', u: '社', base: P.custN || 10, maxSc: 40, sqrt: true };
+    case 'pro': return { n: `${((S.roles[0] || {}).n || '技術者').replace(/（.*?）/, '')}の人数`, u: '人', base: P.n || 10, maxSc: 40 };
+    case 'subs': return { n: '利用者の数', u: '人', base: P.users || 1000, maxSc: 40 };
+    case 'cap': return { n: `施設の能力（${P.unit || '単位'}）`, u: P.unit || '', base: P.units || 1, maxSc: lim(eqN(S.eq)) };
+    case 'trans': { const q = S.eq[0] ? KS_EQ[S.eq[0].k] : null; const n = S.eq[0] ? S.eq[0].n : 1; return { n: `${q ? q.n.replace(/（.*?）/, '') : '車両'}の数`, u: q && q.a === 'veh' && q.cap > 1000 ? '隻' : '台', base: n, maxSc: lim(eqN(S.eq)) }; }
+    default: return { n: '規模', u: '', base: 1, maxSc: 40 };
+  }
+}
+/* 成長の勢いの記録：g（年率）と、過去4期の需要の平均（キャリブレーションの基準） */
+function ksTrendMake(g) {
+  let a = 0;
+  for (let d = -48; d < 0; d++) a += Math.pow(1 + g, d / 12);
+  return { g, cal: +(a / 48).toFixed(4) };
+}
+const KS_GROWTH = [[-0.1, '縮小（年−10%）'], [-0.05, 'やや縮小（年−5%）'], [0, '横ばい'], [0.05, '成長（年+5%）'], [0.1, '高成長（年+10%）'], [0.15, '急成長（年+15%）']];
+/* 設備の数 ⇔ 規模の倍率 */
+function ksCapToSc(type, n) { const c = ksCapInfo(type); const r = Math.max(0, +n || 0) / c.base; return clamp(c.sqrt ? r * r : r, 0.1, c.maxSc); }
+function ksScToCap(type, sc) { const c = ksCapInfo(type); return Math.max(1, Math.round(c.base * (c.sqrt ? Math.sqrt(sc || 1) : (sc || 1)))); }
+/* これまでの成長（カスタムスタート）：事業の需要の勢い。就任より前は、さかのぼるほど需要が小さい（縮小なら大きい）。
+   就任のあとも勢いは続くが、2年ごとに半分になりながら落ち着く。開始時のキャリブレーションの試算では使わない */
+function ksTrendF(u) {
+  const t = u && u.tr;
+  if (!t || !t.g) return 1;
+  // 開始時のキャリブレーションは、過去4期の平均の需要で合わせる（伸びてきた会社は、就任の時に利益率が業界の水準より高い）
+  if (G.calibRun) return t.cal || 1;
+  const lg = Math.log(1 + t.g);
+  const d = G.m - KS_START_M;
+  if (d <= 0) return Math.exp(lg * d / 12);
+  return Math.exp(lg * (2 / Math.LN2) * (1 - Math.pow(0.5, d / 24)));
 }
 function ksNewGame(o) {
   const seed = (o.seed ?? Math.floor(Math.random() * 2 ** 31)) | 0;
@@ -1395,6 +1450,7 @@ function ksNewGame(o) {
   const parts = [];
   for (const x of list) {
     const u = ksMakeUnit(x.type, x.sc || 1, x.n || null);
+    if (x.g) u.tr = ksTrendMake(x.g);
     u.startM = KS_HIST_START - 12 * randInt(3, Math.max(4, G.firstPeriod - 4));
     const lv = o.lv && o.lv[parts.length];
     if (lv) { u.lv = Object.assign({}, lv); u.calK = lv.k; delete u.lv.k; }

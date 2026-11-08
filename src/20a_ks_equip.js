@@ -380,6 +380,7 @@ const KS_EQ = {
   train_comm: { n: '通勤形電車（1両）', a: 'veh', c: 1.8e8, l: 13, e: 'trans', cap: 150, cu: '人', crew: 0.25, fuel: 60e4, mt: 80e4 },
   train_exp: { n: '特急形電車（1両）', a: 'veh', c: 2.8e8, l: 13, e: 'trans', cap: 60, cu: '人', crew: 0.3, fuel: 70e4, mt: 100e4 },
   train_shin: { n: '新幹線の車両（1両）', a: 'veh', c: 3.5e8, l: 13, e: 'trans', cap: 80, cu: '人', crew: 0.2, fuel: 150e4, mt: 150e4 },
+  train_maglev: { n: '超電導リニアの車両（1両）', a: 'veh', c: 9e8, l: 13, e: 'trans', cap: 68, cu: '人', crew: 0.12, fuel: 320e4, mt: 260e4 },
   train_dmu: { n: '気動車（ディーゼルカー・1両）', a: 'veh', c: 2.5e8, l: 11, e: 'trans', cap: 100, cu: '人', crew: 0.5, fuel: 60e4, mt: 80e4 },
   train_lrt: { n: '路面電車（LRT・1編成）', a: 'veh', c: 3e8, l: 13, e: 'trans', cap: 150, cu: '人', crew: 1, fuel: 30e4, mt: 50e4 },
   train_mono: { n: 'モノレール車両（1両）', a: 'veh', c: 3e8, l: 13, e: 'trans', cap: 100, cu: '人', crew: 0.25, fuel: 40e4, mt: 60e4 },

@@ -379,7 +379,8 @@ MODALS.menu = () => {
     <div class="seg">${[['auto', '端末に合わせる'], ['light', 'ライト'], ['dark', 'ダーク']].map(([k, l]) => `<button type="button" data-act="theme" data-v="${k}" aria-pressed="${theme === k}">${l}</button>`).join('')}</div>
     <div style="margin-top:10px;display:grid;gap:6px"><label class="inline small"><input type="checkbox" data-ch="setting" data-key="monthly" ${UI.settings.monthly ? 'checked' : ''}> 毎月、月次報告を表示する</label>
     <label class="inline small"><input type="checkbox" data-ch="setting" data-key="confirmAdvance" ${UI.settings.confirmAdvance ? 'checked' : ''}> 未処理の案件があるとき月末の締めを確認する</label>
-    <label class="inline small"><input type="checkbox" data-ch="setting" data-key="learn" ${UI.settings.learn !== false ? 'checked' : ''}> 学習サポート（決算書の読み方ガイド・解説）を表示する</label></div>
+    <label class="inline small"><input type="checkbox" data-ch="setting" data-key="learn" ${UI.settings.learn !== false ? 'checked' : ''}> 学習サポート（決算書の読み方ガイド・解説）を表示する</label>
+    <label class="inline small"><input type="checkbox" data-ch="setting" data-key="autoClose" ${UI.settings.autoClose ? 'checked' : ''}> 会社経営：決算整理の質問をとばして、すぐ結果を見る</label></div>
     <hr class="sep">${G ? btn('新しいゲームを始める', 'newGameConfirm', {}, 'danger') : ''}`;
   return modalFrame('メニュー', body, btn('閉じる', 'closeModal', {}, 'primary'));
 };

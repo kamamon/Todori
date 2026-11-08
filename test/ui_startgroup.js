@@ -61,7 +61,7 @@ if (!fs.existsSync(shots)) fs.mkdirSync(shots);
   // 会社の設定のダイアログで、業種を探して加える
   const addUnit = async q => {
     await page.fill('#sgQ', q); await wait(80);
-    const b = await page.$('#sgList .typeopt:not(.on)');
+    const b = await page.$('#tbb-sg .tbt:not(.on) .tbt-main');
     if (!b) { errors.push(`業種「${q}」が見つからない`); return; }
     await b.click(); await wait(80);
   };
@@ -83,7 +83,7 @@ if (!fs.existsSync(shots)) fs.mkdirSync(shots);
   // 1) 事業をいくつも（上限なし）：食品スーパー＋5つ
   for (const q of ['弁当', 'ソフトウェア', 'ホテル', '介護', '印刷']) {
     await page.fill('#kstQ', q); await wait(80);
-    const b = await page.$('#kstList [data-act="kStAdd"]');
+    const b = await page.$('#tbb-st [data-act="kStAdd"]');
     if (!b) { errors.push(`事業「${q}」を加えられない`); continue; }
     await b.click(); await wait(80);
   }
@@ -167,7 +167,7 @@ if (!fs.existsSync(shots)) fs.mkdirSync(shots);
   await page.evaluate(() => { localStorage.clear(); });
   await page.goto(url); await wait(200);
   await page.click('[data-act="stMode"][data-v="kaisha"]'); await wait(80);
-  await page.fill('#kstQ', 'ラーメン'); await wait(80); await click('#kstList [data-act="kStAdd"]', 'add unit');
+  await page.fill('#kstQ', 'ラーメン'); await wait(80); await click('#tbb-st [data-act="kStAdd"]', 'add unit');
   await page.evaluate(() => { const k = window.Toudori.ui().start.k; k.cu = { on: true, form: 'hd', pref: 13, capital: '', cash: '', debt: '', hqLand: false, eco: 'normal', fx: 148, founded: '' }; window.Toudori.render(); });
   await wait(100);
   const uBtn = await page.$('[data-act="kSgAdd"][data-owner^="u:"]');
