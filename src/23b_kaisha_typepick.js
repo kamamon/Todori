@@ -243,7 +243,7 @@ function ksProjTxt(S) {
 function ksTypeBadges(S) {
   const out = [tag(KS_ENG_INFO[S.eng].n, 'solid')];
   const eqC = sum([...(S.eq || []), ...(S.aux || [])], e => ((KS_EQ[e.k] || {}).c || 0) * e.n);
-  if (eqC >= 50e8 || S.scale >= 3) out.push(tag('設備投資がとても大きい', 'warn'));
+  if (eqC >= 50e8) out.push(tag('設備投資がとても大きい', 'warn'));
   else if (eqC >= 5e8 || ['cap', 'trans'].includes(S.eng)) out.push(tag('設備投資が大きい', 'brass'));
   if (S.lic) out.push(tag('許認可が要る', 'brass'));
   if ((S.laws || []).length >= 2) out.push(tag('守る法令が多い', 'brass'));
@@ -261,7 +261,7 @@ function ksTypeInfoHtml(S, o = {}) {
   const three = [['売上の立ち方', S.how || tip.how, 'how'], ['成功のカギ', S.kf || tip.kf, 'kf'], ['主なリスク', S.risk || tip.risk, 'risk']]
     .map(([h, t, c]) => `<section class="ti-c ti-${c}"><h4>${h}</h4><p>${esc(t || '')}</p></section>`).join('');
   const rows = [
-    ['ふつうの規模', `${esc(ci.n)} ${fmtNum(ci.base, 0)}${esc(ci.u)}${S.scale > 1 ? `（大きな業種：ふつうの会社の約${S.scale}倍の規模）` : ''}`],
+    ['ふつうの規模', `${esc(ci.n)} ${fmtNum(ci.base, 0)}${esc(ci.u)}`],
     S.eng === 'build' ? ['受ける工事', ksProjTxt(S)] : ksEqTxt(S) ? ['主な設備', ksEqTxt(S)] : null,
     ['働く人', esc(S.roles.map(r => r.n).join('、'))],
     S.prod.length ? ['商品・サービス', esc(S.prod.slice(0, 6).join('、'))] : null,
