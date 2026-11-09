@@ -228,6 +228,7 @@ Object.assign(CHANGES, {
     x.sc = ksCapToSc(x.type, el.value);
     const n = ksScToCap(x.type, x.sc);
     if (+el.value !== n) el.value = n;
+    if (typeof ksCuCapNoteSet === 'function') ksCuCapNoteSet(el, x.type, n);
     for (const b of document.querySelectorAll(`[data-act="kSgSc"][data-i="${+el.dataset.i}"]`)) b.setAttribute('aria-pressed', String(Math.abs(+b.dataset.v - x.sc) < 1e-9));
   },
   kSgGrow: el => { const x = UI.sg && UI.sg.e.units[+el.dataset.i]; if (x) x.g = +el.value; },

@@ -58,10 +58,13 @@ function ksStaffPanel(u, need = {}, opt = {}) {
     const nd = need[r.id];
     const short = nd !== undefined && n < Math.round(nd) - 0.01;
     const big = (nd || n) >= 30;
+    // 人数の多い職種は、10人と、人数に合わせた大きな単位（100人・1,000人…）でも増減できる
+    const b2 = (nd || n) >= 300 ? Math.pow(10, Math.floor(Math.log10((nd || n) / 3))) : 0;
+    const dn = (v, lab) => btn(lab, 'kHire', { u: u.id, r: r.id, n: -v }, 'sm', { disabled: n < v }), up = (v, lab) => btn(lab, 'kHire', { u: u.id, r: r.id, n: v }, 'sm');
     return `<tr><td><b>${esc(r.n)}</b><div class="small muted">${esc(r.desc)}</div></td>
       <td class="n"><b class="${short ? 'neg' : ''}">${fmtNum(n, 0)}人</b>${nd !== undefined ? `<div class="small muted">目安 ${fmtNum(nd, 0)}人</div>` : ''}</td>
       <td class="n">${fmtYen(ksRoleWage(r, u))}<div class="small muted">${r.cost === 'labor' ? '労務費（原価）' : '給料手当（販管費）'}</div></td>
-      <td class="n nowrap">${big ? btn('−10', 'kHire', { u: u.id, r: r.id, n: -10 }, 'sm', { disabled: n < 10 }) : ''}${btn('−1', 'kHire', { u: u.id, r: r.id, n: -1 }, 'sm', { disabled: n < 1 })}${btn('+1', 'kHire', { u: u.id, r: r.id, n: 1 }, 'sm')}${big ? btn('+10', 'kHire', { u: u.id, r: r.id, n: 10 }, 'sm') : ''}${nd !== undefined && Math.round(nd) !== n ? btn('目安に', 'kHireTo', { u: u.id, r: r.id, n: Math.round(nd) }, 'sm ghost') : ''}</td></tr>`;
+      <td class="n nowrap">${b2 ? dn(b2, `−${fmtNum(b2, 0)}`) : ''}${big ? dn(10, '−10') : ''}${dn(1, '−1')}${up(1, '+1')}${big ? up(10, '+10') : ''}${b2 ? up(b2, `+${fmtNum(b2, 0)}`) : ''}${nd !== undefined && Math.round(nd) !== n ? btn('目安に', 'kHireTo', { u: u.id, r: r.id, n: Math.round(nd) }, 'sm ghost') : ''}</td></tr>`;
   }).join('');
   const pe = ksPayrollEstimate(u);
   return panel('人員', `<div class="tbl-wrap"><table class="t"><thead><tr><th>職種</th><th class="n">人数</th><th class="n">月給（1人）</th><th class="n">採用・退職</th></tr></thead><tbody>${rows}</tbody></table></div>
@@ -74,9 +77,9 @@ function ksHireDo(u, r, n) {
     const cost = ksHireCostOf(r) * n;
     ksPayCash('recruit', cost, 'recruit');
     ksHire(u, r.id, n);
-    if (r.id === 'eng' && u.op.hires) for (let i = 0; i < n; i++) u.op.hires.push(G.m);
+    if (r.id === 'eng' && u.op.hires) ksHiresAdd(u.op, G.m, n);
     G.curU = null;
-    return `${r.n.replace(/（.*?）/, '')}を${n}人採用しました（採用費 ${fmtYen(cost)}）`;
+    return `${r.n.replace(/（.*?）/, '')}を${fmtNum(n, 0)}人採用しました（採用費 ${fmtYen(cost)}）`;
   }
   const k = Math.min(cur, -n);
   if (k <= 0) { G.curU = null; return ''; }
@@ -84,7 +87,7 @@ function ksHireDo(u, r, n) {
   ksPayCash(r.cost === 'labor' ? 'labor' : 'salary', sev, 'retire', 'payroll');
   ksHire(u, r.id, -k);
   G.curU = null;
-  return `${r.n.replace(/（.*?）/, '')}が${k}人退職しました（退職金 ${fmtYen(sev)}）`;
+  return `${r.n.replace(/（.*?）/, '')}が${fmtNum(k, 0)}人退職しました（退職金 ${fmtYen(sev)}）`;
 }
 Object.assign(ACTIONS, {
   kHire: d => { const u = ksUnit(d.u); const r = u && ksS(u).roles.find(x => x.id === d.r); if (!r || !+d.n) return; const t = ksHireDo(u, r, +d.n); if (t) toast(t); render(); },
@@ -241,7 +244,7 @@ function ksEqTable(u, list, opt = {}) {
     const q = ksEqOf(a);
     const age = Math.max(0, (G.m - a.acqM) / 12);
     const old = a.life && age > a.life * 1.2;
-    return `<tr><td>${esc(a.n)}${a.cip ? ` ${tag(`${ymLabel(a.acqM)}完成`, 'warn')}` : ''}${q.pr > 1 ? ' <span class="tag ok">高性能</span>' : ''}<div class="small muted">${KS_ASSET_NAMES[a.acct] || ''}${q.n && q.n !== a.n.replace(/ \d+号$/, '') ? `・${esc(q.n)}` : ''}</div></td>
+    return `<tr><td>${esc(a.n)}${ksEqQ(a) > 1 ? ` <span class="tag">${fmtNum(ksEqQ(a), 0)}${ksEqWord(a.eq)}</span>` : ''}${a.cip ? ` ${tag(`${ymLabel(a.acqM)}完成`, 'warn')}` : ''}${q.pr > 1 ? ' <span class="tag ok">高性能</span>' : ''}<div class="small muted">${KS_ASSET_NAMES[a.acct] || ''}${q.n && q.n !== a.n.replace(/ \d+(〜\d+)?号$/, '') ? `・${esc(q.n)}` : ''}</div></td>
       <td class="n ${old ? 'neg' : ''}">${a.cip ? '―' : `${Math.floor(age)}年`}</td><td class="n small">${opt.cap ? opt.cap(a) : ''}</td><td class="n">${fmtYen(a.cost - a.booked)}</td>
       <td class="n">${!a.cip && opt.sell !== false && a.acct !== 'land' && a.acct !== 'goodwill' ? btn('売る', 'kSellAsset', { id: a.id }, 'sm') : ''}</td></tr>`;
   }).join('');
@@ -260,12 +263,15 @@ MODALS.kEqBuy = () => {
     return `<button type="button" class="eqopt${e.k === k ? ' on' : ''}" data-act="kEqPick" data-v="${k}" aria-pressed="${e.k === k}"><b>${esc(q.n)}</b><span class="small">${fmtYen(cost * p)}・${q.l}年</span><span class="small muted">${ksEqEffText(q, u)}</span></button>`;
   }).join('');
   const q = KS_EQ[e.k];
-  const items = q ? ksEqItems(u, [{ k: e.k, n: e.n }], { priceF: p, numbered: e.n > 1 || ksUA(u).some(a => a.eq === e.k), start: ksUA(u).filter(a => a.eq === e.k).length, part: ksS(u).eng === 'build' ? 'S' : 'C' }) : [];
+  const items = q ? ksEqItems(u, [{ k: e.k, n: e.n }], { priceF: p, numbered: e.n > 1 || ksUA(u).some(a => a.eq === e.k), start: ksEqN(ksUA(u).filter(a => a.eq === e.k)), part: ksS(u).eng === 'build' ? 'S' : 'C' }) : [];
+  // 台数の選び方：持っている設備が多い事業は、50台・100台…もまとめて買える（40台より多いときは1つの記録にまとめる）
+  const own = ksEqN(ksUA(u).filter(a => KS_EQ[a.eq] && KS_EQ[a.eq].e === (q || {}).e));
+  const counts = [1, 2, 3, 5, 10].concat([50, 100, 500, 1000, 5000, 10000].filter(n => own >= n * 2));
   const tot = sum(items, x => x.cost);
-  const lead = q ? ksEqLead(q, items.length ? items[0].cost : 0) : 0;
+  const lead = q ? ksEqLead(q, items.length ? items[0].cost / ksEqQ(items[0]) : 0) : 0;
   const body = `<p class="small" style="margin:0 0 8px">${esc(ksUName(u))}の設備のカタログです。能力の大きい機械・高性能の機械ほど高価です。買うと${term('固定資産', 'fa')}になり、耐用年数で${term('減価償却', 'dep')}します。</p>
     <div class="eqlist">${list || '<div class="empty">この事業で買える設備はありません</div>'}</div>
-    ${q ? `<div class="row" style="margin-top:10px;gap:10px;align-items:center"><span class="small">台数</span>${[1, 2, 3, 5, 10].map(n => btn(`${n}`, 'kEqN', { v: n }, `sm${e.n === n ? ' primary' : ''}`)).join('')}<span class="small">合計 <b>${fmtYen(tot)}</b>${lead ? `・納入まで${lead}か月` : ''}</span></div>` : ''}`;
+    ${q ? `<div class="row" style="margin-top:10px;gap:10px;align-items:center;flex-wrap:wrap"><span class="small">台数</span>${counts.map(n => btn(fmtNum(n, 0), 'kEqN', { v: n }, `sm${e.n === n ? ' primary' : ''}`)).join('')}<span class="small">合計 <b>${fmtYen(tot)}</b>${lead ? `・納入まで${lead}か月` : ''}</span></div>` : ''}`;
   return modalFrame('設備を買う', body, btn('やめる', 'closeModal') + (q ? btn('この設備の投資を検討する', 'kEqBuyGo', {}, 'primary') : ''), { size: 'wide', sub: esc(ksUName(u)) });
 };
 Object.assign(ACTIONS, {
@@ -275,12 +281,12 @@ Object.assign(ACTIONS, {
     const e = UI.kEqBuy;
     const u = ksUnit(e.u);
     const q = KS_EQ[e.k];
-    const items = ksEqItems(u, [{ k: e.k, n: e.n }], { priceF: ksPrice(), numbered: e.n > 1 || ksUA(u).some(a => a.eq === e.k), start: ksUA(u).filter(a => a.eq === e.k).length, part: ksS(u).eng === 'build' ? 'S' : 'C' });
-    const lead = ksEqLead(q, items[0].cost);
+    const items = ksEqItems(u, [{ k: e.k, n: e.n }], { priceF: ksPrice(), numbered: e.n > 1 || ksUA(u).some(a => a.eq === e.k), start: ksEqN(ksUA(u).filter(a => a.eq === e.k)), part: ksS(u).eng === 'build' ? 'S' : 'C' });
+    const lead = ksEqLead(q, items[0].cost / ksEqQ(items[0]));
     if (lead) for (const x of items) x.openM = G.m + lead;
     UI.kEqBuy = null;
     closeModal(true);
-    ksCapexOpen({ title: `${q.n}を${e.n > 1 ? `${e.n}台` : ''}買う`, desc: `${esc(ksUName(u))}の設備を増やします。${ksEqEffText(q, u)}。`, items, fx: 'eqBuy', arg: { u: u.id, open: lead ? G.m + lead : 0 } });
+    ksCapexOpen({ title: `${q.n}を${e.n > 1 ? `${fmtNum(e.n, 0)}${ksEqWord(e.k)}` : ''}買う`, desc: `${esc(ksUName(u))}の設備を増やします。${ksEqEffText(q, u)}。`, items, fx: 'eqBuy', arg: { u: u.id, open: lead ? G.m + lead : 0 } });
   },
 });
 
@@ -319,6 +325,18 @@ KS_SCREENS.k_ops = () => {
     ${ksUnitBar()}${ksUnitHeadHtml(u)}${ops.screen(u)}</div>`;
 };
 
+/* ---------- 店の多い会社（店のまとまり k） ---------- */
+function ksStoreKTag(s) { return ksStoreK(s) > 1 ? ` <span class="tag">${fmtNum(ksStoreK(s), 0)}店</span>` : ''; }
+function ksStoreKOf(u, name) { const s = (u.op.stores || u.op.shops || []).find(x => x.n === name); return ksStoreK(s); }
+function ksStoreListNote(list) {
+  return list.some(s => ksStoreK(s) > 1) ? `<p class="small muted" style="margin:0 0 6px">店の多い会社なので、都道府県ごと（あとから出した店は出したときごと）のまとまりで扱います。改装・設備の更新は、まとまりの店をまとめて行います。</p>` : '';
+}
+/* まとめて出すボタン：店の数に合わせて 10店・100店・1,000店… */
+function ksStoreBulkBtns(u, list, act) {
+  const N = ksStoresN(list);
+  return [10, 100, 1000, 10000].filter(k => N >= k * 3).slice(-2).map(k => btn(`${fmtNum(k, 0)}店まとめて出す`, act, { u: u.id, k }, '')).join('');
+}
+
 /* =========================================================
  *  shop：店舗で売る
  * ========================================================= */
@@ -354,15 +372,15 @@ KS_OPS.shop = {
       const open = s.openM <= G.m;
       const closed = s.openM === 9999;
       const ra = (G.m - s.renovM) / 12, fa = (G.m - s.eqM) / 12;
-      return `<tr><td><b>${esc(s.n)}</b>${closed ? ` ${tag('火災で休業', 'bad')}` : open ? '' : ` ${tag(`${ymLabel(s.openM)}開店`, 'warn')}`}${s.comp && s.comp < 1 ? `<div class="small muted">近くに競合店（客数 ${fmtPct(s.comp * 100, 0)}）</div>` : ''}</td>
+      return `<tr><td><b>${esc(s.n)}</b>${ksStoreKTag(s)}${closed ? ` ${tag('火災で休業', 'bad')}` : open ? '' : ` ${tag(`${ymLabel(s.openM)}開店`, 'warn')}`}${s.comp && s.comp < 0.995 ? `<div class="small muted">近くに競合店（客数 ${fmtPct(s.comp * 100, 0)}）</div>` : ''}</td>
         <td class="n">${open ? `${Math.floor(Math.max(0, ra))}年` : '―'}</td><td class="n ${fa > 8 ? 'neg' : ''}">${open ? `${Math.floor(Math.max(0, fa))}年` : '―'}</td>
         <td class="n nowrap">${open && !closed ? btn('改装', 'kShopRenov', { u: u.id, s: s.n }, 'sm') + btn('設備の更新', 'kShopEq', { u: u.id, s: s.n }, 'sm') : ''}</td></tr>`;
     }).join('');
     const plan = E.plan(u);
     return `<div class="grid g-side"><div class="stack">
       ${ksParamsPanel(u, '売り方', this.params(u), `<p class="note">${term('値入率', 'gpm')}は、売値のうち粗利になる割合の目標です。実際の${term('売上総利益率', 'gpm')}は、廃棄や万引きのロスの分だけ低くなります。</p>`)}
-      ${panel(`店舗（${E.storesOpen(u).length}店）`, `<div class="tbl-wrap"><table class="t"><thead><tr><th>店</th><th class="n">改装から</th><th class="n">${esc(eqn)}</th><th class="n"></th></tr></thead><tbody>${stores}</tbody></table></div>
-        <div class="row" style="margin-top:10px">${btn('新しい店を出す', 'kShopStore', { u: u.id }, 'primary')}<span class="small muted">内装・設備と保証金で約${fmtYen(sum(plan.items, x => x.cost) + (plan.deposit || 0))}。家賃は月${fmtYen(op.rentPer * pr)}。</span></div>`)}
+      ${panel(`店舗（${fmtNum(ksStoresN(E.storesOpen(u)), 0)}店）`, `${ksStoreListNote(op.stores)}<div class="tbl-wrap"${op.stores.length > 12 ? ' style="max-height:420px;overflow:auto"' : ''}><table class="t"><thead><tr><th>店</th><th class="n">改装から</th><th class="n">${esc(eqn)}</th><th class="n"></th></tr></thead><tbody>${stores}</tbody></table></div>
+        <div class="row" style="margin-top:10px">${btn('新しい店を出す', 'kShopStore', { u: u.id }, 'primary')}${ksStoreBulkBtns(u, op.stores, 'kShopStore')}<span class="small muted">1店で、内装・設備と保証金で約${fmtYen(sum(plan.items, x => x.cost) + (plan.deposit || 0))}。家賃は月${fmtYen(op.rentPer * pr)}。</span></div>`)}
       ${ksStaffPanel(u, E.need(u))}
     </div><div class="stack">${ksKpiPanel(this.kpiRows(u, k))}
       ${ksPointsPanel(u, ['売上 ＝ 客数 × 客単価。', '粗利から人件費・家賃・水道光熱費を払った残りが利益。粗利率が1ポイント違うと利益は大きく変わります。', 'お客さんの支払いは現金とカードがほとんど。仕入代金は翌月払いなので、お金は回りやすい商売です。', `決算の${term('実地棚卸', 'stocktake')}で、帳簿より在庫が少ない分は${term('棚卸減耗損', 'shrink')}になります。`])}
@@ -370,9 +388,9 @@ KS_OPS.shop = {
   },
 };
 Object.assign(ACTIONS, {
-  kShopStore: d => { const u = ksUnit(d.u); ksCapexOpen(KS_ENGINE.shop.plan(u)); },
-  kShopRenov: d => { const u = ksUnit(d.u); const P = ksP(u); ksCapexOpen({ title: `${d.s}の改装`, desc: '売場を新しくすると、客足が戻ります（古い店ほど効果が大きい）。', items: [{ n: `${d.s}の改装工事`, acct: 'bldg', cost: Math.round(P.fit * 0.4 * ksPrice()), life: 15, part: 'S', u: u.id }], fx: 'shopRenov', arg: { u: u.id, s: d.s } }); },
-  kShopEq: d => { const u = ksUnit(d.u); const P = ksP(u); ksCapexOpen({ title: `${d.s}の設備の更新`, desc: '新しい設備にすると、電気代・修理代・廃棄が減ります。', items: [{ n: `${d.s}の${(P.eqn && P.eqn[0]) || '店の設備'}`, acct: 'equip', cost: Math.round(P.eqc * ksPrice()), life: 6, part: 'S', u: u.id }], fx: 'shopEq', arg: { u: u.id, s: d.s } }); },
+  kShopStore: d => { const u = ksUnit(d.u); ksCapexOpen(KS_ENGINE.shop.plan(u, +d.k || 1)); },
+  kShopRenov: d => { const u = ksUnit(d.u); const P = ksP(u); const k = ksStoreKOf(u, d.s); ksCapexOpen({ title: `${d.s}の改装`, desc: `売場を新しくすると、客足が戻ります（古い店ほど効果が大きい）。${k > 1 ? `${fmtNum(k, 0)}店をまとめて改装します。` : ''}`, items: [{ n: `${d.s}の改装工事`, acct: 'bldg', cost: Math.round(P.fit * 0.4 * ksPrice() * k), life: 15, part: 'S', u: u.id }], fx: 'shopRenov', arg: { u: u.id, s: d.s } }); },
+  kShopEq: d => { const u = ksUnit(d.u); const P = ksP(u); const k = ksStoreKOf(u, d.s); ksCapexOpen({ title: `${d.s}の設備の更新`, desc: `新しい設備にすると、電気代・修理代・廃棄が減ります。${k > 1 ? `${fmtNum(k, 0)}店の設備をまとめて入れ替えます。` : ''}`, items: [{ n: `${d.s}の${(P.eqn && P.eqn[0]) || '店の設備'}`, acct: 'equip', cost: Math.round(P.eqc * ksPrice() * k), life: 6, part: 'S', u: u.id }], fx: 'shopEq', arg: { u: u.id, s: d.s } }); },
   kGoUnit: d => { UI.tab = 'k_ops'; UI.kUnit = d.u; UI.modal = null; drawModal(); render(); scrollToMain(); },
 });
 
@@ -408,14 +426,14 @@ KS_OPS.rest = {
     const shops = op.shops.map(s => {
       const open = s.openM <= G.m;
       const closed = s.openM === 9999;
-      return `<tr><td><b>${esc(s.n)}</b>${closed ? ` ${tag('火災で休業', 'bad')}` : open ? '' : ` ${tag(`${ymLabel(s.openM)}開店`, 'warn')}`}${s.comp && s.comp < 1 ? `<div class="small muted">近くに競合店</div>` : ''}</td><td class="n">${open ? `${Math.floor(Math.max(0, (G.m - s.renovM) / 12))}年` : '―'}</td><td class="n ${(G.m - s.kitM) / 12 > 7 ? 'neg' : ''}">${open ? `${Math.floor(Math.max(0, (G.m - s.kitM) / 12))}年` : '―'}</td>
+      return `<tr><td><b>${esc(s.n)}</b>${ksStoreKTag(s)}${closed ? ` ${tag('火災で休業', 'bad')}` : open ? '' : ` ${tag(`${ymLabel(s.openM)}開店`, 'warn')}`}${s.comp && s.comp < 0.995 ? `<div class="small muted">近くに競合店</div>` : ''}</td><td class="n">${open ? `${Math.floor(Math.max(0, (G.m - s.renovM) / 12))}年` : '―'}</td><td class="n ${(G.m - s.kitM) / 12 > 7 ? 'neg' : ''}">${open ? `${Math.floor(Math.max(0, (G.m - s.kitM) / 12))}年` : '―'}</td>
         <td class="n nowrap">${open && !closed ? btn('改装', 'kRestRenov', { u: u.id, s: s.n }, 'sm') + btn('厨房機器の更新', 'kRestKitchen', { u: u.id, s: s.n }, 'sm') : ''}</td></tr>`;
     }).join('');
     const plan = E.plan(u);
     return `<div class="grid g-side"><div class="stack">
       ${ksParamsPanel(u, 'メニューと料理', this.params(u), `<p class="note">飲食店の基本の指標は${term('FL比率', 'flRatio')}（食材費＋人件費÷売上）。60%以下が目安です。家賃は売上の10%以内が目安。</p>`)}
-      ${panel(`店舗（${E.shopsOpen(u).length}店）`, `<div class="tbl-wrap"><table class="t"><thead><tr><th>店</th><th class="n">改装から</th><th class="n">厨房機器</th><th class="n"></th></tr></thead><tbody>${shops}</tbody></table></div>
-        <div class="row" style="margin-top:10px">${btn('新しい店を出す', 'kRestShop', { u: u.id }, 'primary')}<span class="small muted">内装・厨房機器・保証金で約${fmtYen(sum(plan.items, x => x.cost) + (plan.deposit || 0))}。家賃は月${fmtYen(op.rentPer)}。</span></div>`)}
+      ${panel(`店舗（${fmtNum(ksStoresN(E.shopsOpen(u)), 0)}店）`, `${ksStoreListNote(op.shops)}<div class="tbl-wrap"${op.shops.length > 12 ? ' style="max-height:420px;overflow:auto"' : ''}><table class="t"><thead><tr><th>店</th><th class="n">改装から</th><th class="n">厨房機器</th><th class="n"></th></tr></thead><tbody>${shops}</tbody></table></div>
+        <div class="row" style="margin-top:10px">${btn('新しい店を出す', 'kRestShop', { u: u.id }, 'primary')}${ksStoreBulkBtns(u, op.shops, 'kRestShop')}<span class="small muted">1店で、内装・厨房機器・保証金で約${fmtYen(sum(plan.items, x => x.cost) + (plan.deposit || 0))}。家賃は月${fmtYen(op.rentPer)}。</span></div>`)}
       ${ksStaffPanel(u, E.need(u))}
     </div><div class="stack">${ksKpiPanel(this.kpiRows(u, k))}
       ${ksPointsPanel(u, ['現金・カードで毎日お金が入る「日銭商売」。在庫は数日分。', `家賃と人件費という固定費が重く、売上が1割落ちると利益が消えます（${term('損益分岐点', 'bep')}）。`, `食材の${term('原価率', 'costRatio')}は30%前後。決算では冷蔵庫の食材を数えて原価を確定します。`])}
@@ -423,9 +441,9 @@ KS_OPS.rest = {
   },
 };
 Object.assign(ACTIONS, {
-  kRestShop: d => { const u = ksUnit(d.u); ksCapexOpen(KS_ENGINE.rest.plan(u)); },
-  kRestRenov: d => { const u = ksUnit(d.u); const P = ksP(u); ksCapexOpen({ title: `${d.s}の改装`, desc: '内装を新しくすると、客足が戻ります。', items: [{ n: `${d.s}の改装工事`, acct: 'bldg', cost: Math.round(P.fit * 0.6 * ksPrice()), life: 15, part: 'S', u: u.id }], fx: 'restRenov', arg: { u: u.id, s: d.s } }); },
-  kRestKitchen: d => { const u = ksUnit(d.u); const P = ksP(u); ksCapexOpen({ title: `${d.s}の厨房機器の更新`, desc: '冷蔵庫・コンロ・食洗機を入れ替えると、故障と修理代が減ります。', items: [{ n: `${d.s}の${(P.eqn && P.eqn[0]) || '厨房機器'}`, acct: 'equip', cost: Math.round(P.eqc * ksPrice()), life: 6, part: 'S', u: u.id }], fx: 'restKitchen', arg: { u: u.id, s: d.s } }); },
+  kRestShop: d => { const u = ksUnit(d.u); ksCapexOpen(KS_ENGINE.rest.plan(u, +d.k || 1)); },
+  kRestRenov: d => { const u = ksUnit(d.u); const P = ksP(u); const k = ksStoreKOf(u, d.s); ksCapexOpen({ title: `${d.s}の改装`, desc: `内装を新しくすると、客足が戻ります。${k > 1 ? `${fmtNum(k, 0)}店をまとめて改装します。` : ''}`, items: [{ n: `${d.s}の改装工事`, acct: 'bldg', cost: Math.round(P.fit * 0.6 * ksPrice() * k), life: 15, part: 'S', u: u.id }], fx: 'restRenov', arg: { u: u.id, s: d.s } }); },
+  kRestKitchen: d => { const u = ksUnit(d.u); const P = ksP(u); const k = ksStoreKOf(u, d.s); ksCapexOpen({ title: `${d.s}の厨房機器の更新`, desc: `冷蔵庫・コンロ・食洗機を入れ替えると、故障と修理代が減ります。${k > 1 ? `${fmtNum(k, 0)}店の厨房機器をまとめて入れ替えます。` : ''}`, items: [{ n: `${d.s}の${(P.eqn && P.eqn[0]) || '厨房機器'}`, acct: 'equip', cost: Math.round(P.eqc * ksPrice() * k), life: 6, part: 'S', u: u.id }], fx: 'restKitchen', arg: { u: u.id, s: d.s } }); },
 });
 
 /* =========================================================
@@ -573,8 +591,8 @@ KS_OPS.trade = {
         <span class="small muted">甘くすると取引先は増えるが、支払の遅い先や倒産しそうな先も増える。厳しくすると増えにくいが、貸倒れは減る。</span></div>${P.fx ? `<p class="note">輸入の割合が大きい商売です（為替の影響 ${fmtPct(P.fx * 100, 0)}）。円安になると仕入値が上がり、粗利が削られます。業界も値上げで転嫁するので、粗利率を${fmtPct((op.gm0 + KS_ENGINE.trade.passT(u)) * 100, 1)}くらいにすれば取引先は離れにくい（値上げの交渉が遅れると、その分の粗利を失います）。予約したレート：1ドル${fmtNum(op.fxLock || 148, 1)}円。</p>` : ''}`)}
       ${panel(`取引先（${op.customers.length}社）`, `<div class="tbl-wrap" style="max-height:420px;overflow:auto"><table class="t"><thead><tr><th>取引先</th><th class="n">月の取引額</th><th class="n">支払</th><th class="n">信用</th><th></th></tr></thead><tbody>${custRows}</tbody></table></div>
         <p class="note">信用はA（安全）〜D（倒産の心配）。取引をやめても、残っている売掛金は期日に回収します。</p>`)}
-      ${P.trucks ? panel('配送', `${kv([['トラック', `${trucks.length}台（月に約${fmtYen(trucks.length * (op.truckCap || 1650e4) * ksPrice())}分を配送できる）`], ['配送の需要', `月に約${fmtYen(pot)}`], ['倉庫・配送の人員', `${u.staff.logi || 0}人（トラック1台に1.1人が目安）`]])}
-        <div class="row" style="margin-top:10px">${btn('トラックを買う', 'kTradeTruck', { u: u.id }, 'primary')}${trucks.length > 1 ? btn('いちばん古いトラックを売る', 'kSellAsset', { id: trucks.slice().sort((a, b) => a.acqM - b.acqM)[0].id }, '') : ''}</div>`) : ''}
+      ${P.trucks ? panel('配送', `${kv([['トラック', `${fmtNum(ksEqN(trucks), 0)}台（月に約${fmtYen(ksEqN(trucks) * (op.truckCap || 1650e4) * ksPrice())}分を配送できる）`], ['配送の需要', `月に約${fmtYen(pot)}`], ['倉庫・配送の人員', `${fmtNum(u.staff.logi || 0, 0)}人（トラック1台に1.1人が目安）`]])}
+        <div class="row" style="margin-top:10px">${btn('トラックを買う', 'kTradeTruck', { u: u.id }, 'primary')}${[10, 100, 1000].filter(k => ksEqN(trucks) >= k * 3).slice(-1).map(k => btn(`${fmtNum(k, 0)}台まとめて買う`, 'kTradeTruck', { u: u.id, k }, '')).join('')}${ksEqN(trucks) > 1 ? (() => { const old = trucks.slice().sort((a, b) => a.acqM - b.acqM)[0]; return btn(ksEqQ(old) > 1 ? `いちばん古いトラック（${fmtNum(ksEqQ(old), 0)}台）を売る` : 'いちばん古いトラックを売る', 'kSellAsset', { id: old.id }, ''); })() : ''}</div>`) : ''}
       ${ksStaffPanel(u, Object.assign({}, E.need(u)))}
     </div><div class="stack">${ksKpiPanel(this.kpiRows(u, k))}
       ${ksPointsPanel(u, [`売上は大きいが粗利は${fmtPct(op.gm0 * 100, 0)}ほど。経費を粗利の内に抑えないと利益が出ません。`, `売ってから入金まで1〜2か月、仕入の支払は1か月後。売上が伸びるほど${term('運転資金', 'wc')}が必要になります。`, `決算では売掛金に${term('貸倒引当金', 'allowance')}を積みます。貸倒れが多いと引当の率も上がります。`])}
@@ -584,7 +602,12 @@ KS_OPS.trade = {
 Object.assign(ACTIONS, {
   kCustDrop: d => { const u = ksUnit(d.u); const c = u.op.customers.find(x => x.id === d.id); if (!c) return; confirmBox('取引をやめる', `${esc(c.n)}との取引をやめます（月に約${fmtYen(c.size * ksPrice())}の取引）。残っている売掛金は期日に回収します。`, '取引をやめる', 'kCustDropGo', { u: u.id, id: c.id }, true); },
   kCustDropGo: d => { const u = ksUnit(d.u); const c = u.op.customers.find(x => x.id === d.id); if (c) { u.op.customers = u.op.customers.filter(x => x !== c); ksNews(`${c.n}との取引をやめました`, 'info'); } closeModal(true); render(); },
-  kTradeTruck: d => { const u = ksUnit(d.u); const n = KS_ENGINE.trade.trucks(u).length + 1; const P = ksP(u); ksCapexOpen({ title: '配送トラックを買う', desc: `月に約${fmtYen((u.op.truckCap || 1650e4) * ksPrice())}分の商品を配送できます。倉庫・配送の人員も1人ほど増やしましょう。`, items: [{ n: `配送トラック ${n}号`, acct: 'veh', cost: Math.round((P.wh === '冷凍' || P.wh === '冷蔵' ? 650e4 : 480e4) * ksPrice()), life: 5, cap: u.op.truckCap, part: 'S', u: u.id }], fx: 'truck', arg: { u: u.id } }); },
+  kTradeTruck: d => {
+    const u = ksUnit(d.u); const n = ksEqN(KS_ENGINE.trade.trucks(u)) + 1; const P = ksP(u); const k = Math.max(1, +d.k || 1);
+    const it = { n: k > 1 ? `配送トラック ${n}〜${n + k - 1}号` : `配送トラック ${n}号`, acct: 'veh', cost: Math.round((P.wh === '冷凍' || P.wh === '冷蔵' ? 650e4 : 480e4) * ksPrice()) * k, life: 5, cap: (u.op.truckCap || 0) * k, part: 'S', u: u.id };
+    if (k > 1) it.q = k;
+    ksCapexOpen({ title: k > 1 ? `配送トラックを${fmtNum(k, 0)}台買う` : '配送トラックを買う', desc: `月に約${fmtYen((u.op.truckCap || 1650e4) * ksPrice() * k)}分の商品を配送できます。倉庫・配送の人員も${k > 1 ? `${fmtNum(Math.round(k * 1.1), 0)}人` : '1人'}ほど増やしましょう。`, items: [it], fx: 'truck', arg: { u: u.id } });
+  },
 });
 
 /* =========================================================
@@ -697,7 +720,7 @@ KS_OPS.subs = {
     const capEq = S.eq.length ? S.eq[0].k : null;
     return `<div class="grid g-side"><div class="stack">
       ${ksParamsPanel(u, '料金と利用者の獲得', this.params(u), `<p class="note">会員の商売は、${term('解約率', 'churn')}と${term('獲得の費用', 'cac')}のバランスで決まります。1人の利用者から生涯に得る売上（${term('LTV', 'ltv')}）が獲得の費用を大きく上回れば、広告を増やすほどもうかります。</p>`)}
-      ${S.eq.length ? panel('設備', `${ksEqTable(u, ksUA(u).filter(a => ksEqOf(a).e === 'subs'), { cap: a => (a.eq === capEq ? `${fmtNum(ksP(u).capPer, 0)}人分` : '') })}
+      ${S.eq.length ? panel('設備', `${ksEqTable(u, ksUA(u).filter(a => ksEqOf(a).e === 'subs'), { cap: a => (a.eq === capEq ? `${fmtNum(ksP(u).capPer * ksEqQ(a), 0)}人分` : '') })}
         <p class="small">今の能力：利用者 ${fmtNum(E.capacity(u), 0)}人まで（利用者 ${fmtNum(op.users, 0)}人）</p>
         <div class="row" style="margin-top:6px">${btn('設備を増やす', 'kEqBuyOpen', { u: u.id }, 'primary')}</div>`) : ''}
       ${ksStaffPanel(u, E.need(u))}
@@ -780,7 +803,7 @@ KS_OPS.trans = {
     const others = ksUA(u).filter(a => !fl.includes(a));
     return `<div class="grid g-side"><div class="stack">
       ${ksParamsPanel(u, '運賃と営業', this.params(u), `<p class="note">予約した燃料の価格：指数${fmtNum((op.oilLock || 1) * 100, 0)}（今は${fmtNum((G.eco.oil || 1) * 100, 0)}）。</p>`)}
-      ${panel(`車両・機体・船（${fl.length}）`, `${ksEqTable(u, fl, { cap: a => { const q = ksEqOf(a); return `${fmtNum(q.cap, q.cap < 10 ? 2 : 0)}${esc(q.cu || '')}`; } })}
+      ${panel(`車両・機体・船（${fmtNum(ksEqN(fl), 0)}）`, `${ksEqTable(u, fl, { cap: a => { const q = ksEqOf(a); const c = (q.cap || 0) * ksEqQ(a); return `${fmtNum(c, c < 10 ? 2 : 0)}${esc(q.cu || '')}`; } })}
         <div class="row" style="margin-top:10px">${btn('車両・機体・船を買う（カタログ）', 'kEqBuyOpen', { u: u.id }, 'primary')}<span class="small muted">高価な機体・船は納入まで時間がかかります。乗務員の採用も忘れずに。</span></div>`)}
       ${others.length ? panel('施設', ksEqTable(u, others, { sell: false })) : ''}
       ${ksStaffPanel(u, E.need(u))}

@@ -215,7 +215,7 @@ KS_ENGINE.subs = {
     const S = ksS(u), P = ksP(u);
     if (!S.eq.length) return Infinity;
     const k0 = S.eq[0].k;
-    const units = ksUA(u).filter(a => a.eq === k0 && !(a.openM > G.m)).length;
+    const units = ksEqN(ksUA(u).filter(a => a.eq === k0 && !(a.openM > G.m)));
     return units * P.capPer;
   },
   init(u, cond) {
@@ -312,7 +312,9 @@ KS_ENGINE.subs = {
     const cap = this.capacity(u);
     const S = ksS(u);
     if (cap !== Infinity && op.users > cap * 0.9 && S.eq.length && G.m % 2 === 0) {
-      const it = ksEqItems(u, [Object.assign({}, S.eq[0], { n: 1 })], { priceF: ksPrice() })[0];
+      // 能力の5%ずつ（少ないときは1台）。何台でも1つの記録にまとめる
+      const n = Math.max(1, Math.round(cap / Math.max(1, P.capPer) * 0.05));
+      const it = ksEqItems(u, [Object.assign({}, S.eq[0], { n })], { priceF: ksPrice(), rows: 1, start: ksEqN(ksUA(u).filter(a => a.eq === S.eq[0].k)) })[0];
       const a = ksNewAsset(Object.assign({}, it, { n: it.n }));
       ksPost('buyAsset', [[a.acct, a.cost, 0], ['cash', 0, a.cost]], { cf: 'capex' });
     }
@@ -421,7 +423,7 @@ KS_ENGINE.cap = {
     ksPayCash('fees', 10e4 * sc + sales * 0.004, 'fees');
     ksPayCash('misc', 8e4 * sc, 'expense');
     if ([6, 9, 12, 2].includes(ctx.mo)) ksPayCash('dues', costAll * 0.0035, 'dues');
-    const ageY = fac.length ? sum(fac, a => (G.m - a.acqM) / 12) / fac.length : 0;
+    const ageY = fac.length ? sum(fac, a => (G.m - a.acqM) / 12 * ksEqQ(a)) / ksEqN(fac) : 0;
     op.rep = clamp(op.rep + 0.01 * ((staffF - 1) * 1.5 - (ageY > 20 ? 0.3 : 0)) - ksRepPull(op.rep), 0.7, 1.3);
     return { mgAdj: 0, kpi: { units: n, occ, occupied, price: op.price, sales, revPer: sales / Math.max(1, n), staffF, ageY, off: off ? (op.offWhy || 'insp') : '', nextInsp: P.nuke ? op.inspAt : undefined, stopUntil: op.stopUntil } };
   },
@@ -472,8 +474,9 @@ KS_ENGINE.trans = {
   newOp(u) { const P = ksP(u); return { fare: 1, yield: 0, rep: 1, ads: 0, hedge: 0, oilLock: G.eco.oil || 1, lf0: P.lf }; },
   fleetAll(u) { return ksUA(u).filter(a => ksEqOf(a).e === 'trans'); },
   fleet(u) { return this.fleetAll(u).filter(a => !(a.openM > G.m)); },
-  capOf(u) { return sum(this.fleet(u), a => ksEqOf(a).cap || 0); },
-  crewNeed(u) { const P = ksP(u); return sum(this.fleet(u), a => ksEqOf(a).crew || 0) * Math.min(1, P.util * 1.1) * 1.05; },
+  // まとめた記録（q 台分）は、カタログの1台分の値に q を掛ける
+  capOf(u) { return sum(this.fleet(u), a => (ksEqOf(a).cap || 0) * ksEqQ(a)); },
+  crewNeed(u) { const P = ksP(u); return sum(this.fleet(u), a => (ksEqOf(a).crew || 0) * ksEqQ(a)) * Math.min(1, P.util * 1.1) * 1.05; },
   init(u, cond) {
     const P = ksP(u), S = ksS(u), sc = u.sc || 1;
     const op = u.op = this.newOp(u);
@@ -482,7 +485,7 @@ KS_ENGINE.trans = {
     const fleetV = sum(this.fleetAll(u), a => a.cost);
     if (P.infraAssets) ksOpenAsset({ n: { rail: '線路・駅・変電所', air: '格納庫・整備施設', sea: '岸壁の施設・事務所' }[P.mode] || '営業所・車庫', acct: 'bldg', cost: Math.round(P.infraAssets * sc ** 0.8), acqM: -300, life: 40, part: 'C', u: u.id });
     else ksOpenAsset({ n: { air: '格納庫・事務所', sea: '事務所', rail: '車庫・駅舎' }[P.mode] || '営業所・車庫', acct: 'bldg', cost: Math.round(Math.max(1500e4, fleetV * 0.05)), acqM: -160, life: 31, part: 'C', u: u.id });
-    const nF = this.fleetAll(u).length;
+    const nF = ksEqN(this.fleetAll(u));
     u.staff = { crew: Math.max(1, Math.round(this.crewNeed(u))), ops: Math.max(1, Math.round(nF * P.ops)), office: Math.max(1, Math.round(2 + nF * 0.08)) };
     op.yield = u.lv && u.lv.yield ? u.lv.yield : this.yieldGuess(u);
     op.ads = Math.round(this.revenueAt(u, P.lf) * 0.004 / 1e4) * 1e4;
@@ -494,8 +497,8 @@ KS_ENGINE.trans = {
   /* 輸送力1単位・1か月（満載・稼働のとき）の運賃収入の初期値（後でキャリブレーションで合わせる） */
   yieldGuess(u) {
     const fl = this.fleetAll(u);
-    const capT = sum(fl, a => ksEqOf(a).cap || 0) || 1;
-    const costM = sum(fl, a => (ksEqOf(a).fuel || 0) + (ksEqOf(a).mt || 0) + a.cost / (a.life || 10) / 12) + ksUnitFixedEst(u);
+    const capT = sum(fl, a => (ksEqOf(a).cap || 0) * ksEqQ(a)) || 1;
+    const costM = sum(fl, a => ((ksEqOf(a).fuel || 0) + (ksEqOf(a).mt || 0)) * ksEqQ(a) + a.cost / (a.life || 10) / 12) + ksUnitFixedEst(u);
     return costM * 1.25 / capT / ksP(u).lf;
   },
   revenueAt(u, lf, fl) { const P = ksP(u); return this.capOf(u) * P.util * lf * u.op.yield * u.op.fare * (fl ?? 1); },
@@ -513,9 +516,9 @@ KS_ENGINE.trans = {
       const costM = sum(items, x => ((KS_EQ[x.eq] || {}).fuel || 0) + ((KS_EQ[x.eq] || {}).mt || 0) + x.cost / (x.life || 10) / 12 + ((KS_EQ[x.eq] || {}).crew || 0) * P.crewWage * 1.3);
       u.op.yield = costM * 1.3 / capT / P.lf;
     }
-    return { title: `${S.name}を始める`, desc: `${q.n}を${n0}${q.cap > 1000 ? '隻' : '台'}そろえて始めます。納入まで${lead}か月（それまでは建設仮勘定）。${S.roles[0].n}の採用と、許可の取得も忘れずに。`, items, fx: 'unitStart', arg: { u: u.id } };
+    return { title: `${S.name}を始める`, desc: `${q.n}を${fmtNum(n0, 0)}${ksEqWord(S.eq[0].k)}そろえて始めます。納入まで${lead}か月（それまでは建設仮勘定）。${S.roles[0].n}の採用と、許可の取得も忘れずに。`, items, fx: 'unitStart', arg: { u: u.id } };
   },
-  need(u) { const P = ksP(u); const nF = this.fleet(u).length; return { crew: this.crewNeed(u), ops: nF * P.ops, office: Math.max(1, Math.round(2 + nF * 0.08)) }; },
+  need(u) { const P = ksP(u); const nF = ksEqN(this.fleet(u)); return { crew: this.crewNeed(u), ops: nF * P.ops, office: Math.max(1, Math.round(2 + nF * 0.08)) }; },
   month(u, ctx) {
     const op = u.op, P = ksP(u), e = G.eco;
     const fl = this.fleet(u);
@@ -523,7 +526,8 @@ KS_ENGINE.trans = {
     const nd = this.need(u);
     const crewF = Math.min(1, (u.staff.crew || 0) / Math.max(1, nd.crew));
     const opsF = Math.min(1, (u.staff.ops || 0) / Math.max(1, nd.ops));
-    const ageF = sum(fl, a => (G.m - a.acqM) / 12 / (a.life || 10)) / fl.length;
+    const nFl = ksEqN(fl);
+    const ageF = sum(fl, a => (G.m - a.acqM) / 12 / (a.life || 10) * ksEqQ(a)) / nFl;
     const availF = crewF * (0.9 + 0.1 * opsF) * (ageF > 1.4 ? 0.95 : 1);
     const market = P.market > 0.1 ? (e.ship || 1) : 1;
     const adsF = 1 + 0.03 * (1 - Math.exp(-op.ads / Math.max(1e4, this.revenueAt(u, P.lf) * 0.006))) - 0.015;
@@ -531,7 +535,7 @@ KS_ENGINE.trans = {
     const capU = this.capOf(u) * P.util * availF;
     const base = capU * lf * op.yield * op.fare * ksPrice() * (P.market > 0.1 ? market ** 0.6 : 1);
     // 燃料サーチャージ：燃料の値上がり（値下がり）の一部を運賃に上乗せする（貨物・航空は多く、鉄道・バス・タクシーは少ない）
-    const fuel1 = sum(fl, a => ksEqOf(a).fuel || 0) * P.util * availF * (0.75 + 0.25 * lf / Math.max(0.1, op.lf0)) * ksFuelF(u);
+    const fuel1 = sum(fl, a => (ksEqOf(a).fuel || 0) * ksEqQ(a)) * P.util * availF * (0.75 + 0.25 * lf / Math.max(0.1, op.lf0)) * ksFuelF(u);
     const sur = Math.round(fuel1 * ((e.oil || 1) - 1) * (KS_SURCHARGE[P.mode] ?? 0.4));
     const sales = Math.max(0, base + sur);
     const ar = sales * P.ar;
@@ -540,8 +544,8 @@ KS_ENGINE.trans = {
     const oil = op.hedge * op.oilLock + (1 - op.hedge) * (e.oil || 1);
     const fuel = fuel1 * oil;
     ksPayCash('fuel', fuel, 'fuel');
-    const maint = sum(fl, a => (ksEqOf(a).mt || 0) * (1 + Math.max(0, (G.m - a.acqM) / 12 / (a.life || 10) - 0.8))) * ksPrice();
-    ksPayCash('svcExp', maint + P.fees * fl.length * ksPrice() + P.infra * ksPrice(), 'svcExp');
+    const maint = sum(fl, a => (ksEqOf(a).mt || 0) * ksEqQ(a) * (1 + Math.max(0, (G.m - a.acqM) / 12 / (a.life || 10) - 0.8))) * ksPrice();
+    ksPayCash('svcExp', maint + P.fees * nFl * ksPrice() + P.infra * ksPrice(), 'svcExp');
     ksPayCash('insur', sum(fl, a => a.cost) * 0.0006, 'expense');
     ksPayCash('ads', op.ads, 'ads');
     const sc = Math.sqrt(u.sc || 1);
@@ -550,7 +554,7 @@ KS_ENGINE.trans = {
     if ([6, 9, 12, 2].includes(ctx.mo)) ksPayCash('dues', sum(fl, a => a.cost) * 0.0025, 'dues');
     op.rep = clamp(op.rep + 0.01 * ((crewF - 1) * 2 + (opsF - 1)) - ksRepPull(op.rep), 0.7, 1.25);
     if (!G.hist && crewF < 0.9 && chance(0.3)) ksNews(`${ksUName(u)}：${ksS(u).roles[0].n}が足りず、運休・減便が出ています`, 'bad');
-    return { mgAdj: 0, kpi: { n: fl.length, cap: capU, lf, sales, sur, fuel, fuelR: fuel / Math.max(1, sales), crewF, yield: op.yield * op.fare * ksPrice(), market, oil: e.oil || 1 } };
+    return { mgAdj: 0, kpi: { n: nFl, cap: capU, lf, sales, sur, fuel, fuelR: fuel / Math.max(1, sales), crewF, yield: op.yield * op.fare * ksPrice(), market, oil: e.oil || 1 } };
   },
   auto(u) { const nd = this.need(u); ksAutoStaff(u, 'crew', nd.crew); ksAutoStaff(u, 'ops', nd.ops); ksAutoStaff(u, 'office', nd.office); u.op.fare = 1; },
   stockCount() { return []; },
@@ -561,7 +565,7 @@ KS_ENGINE.trans = {
     const op = u.op, P = ksP(u);
     const fl = this.fleetAll(u);
     const sc = Math.sqrt(u.sc || 1);
-    const fixed = ksUnitFixedEst(u) + ksUnitDep(u) + sum(fl, a => (ksEqOf(a).fuel || 0) * P.util + (ksEqOf(a).mt || 0) * 1.1) + P.fees * fl.length + P.infra + sum(fl, a => a.cost) * (0.0006 + 0.0025 / 3) + op.ads + (10e4 + 8e4) * sc;
+    const fixed = ksUnitFixedEst(u) + ksUnitDep(u) + sum(fl, a => ((ksEqOf(a).fuel || 0) * P.util + (ksEqOf(a).mt || 0) * 1.1) * ksEqQ(a)) + P.fees * ksEqN(fl) + P.infra + sum(fl, a => a.cost) * (0.0006 + 0.0025 / 3) + op.ads + (10e4 + 8e4) * sc;
     const capU = this.capOf(u) * P.util;
     const need = fixed / Math.max(0.05, 1 - target - 0.003);
     op.yield = need / Math.max(1, capU * P.lf);

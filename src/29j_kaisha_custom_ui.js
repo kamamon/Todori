@@ -38,18 +38,26 @@ function ksCustomHtml(k) {
   </details>`;
 }
 /* 事業ごとの設備の数と、これまでの成長 */
+/* 数に上限はない（店が KS_STORE_ROWS より多いと都道府県ごとにまとめて扱う。年商がおよそ KS_ANNUAL_MAX を超える大きさは、そこまでに縮めて始める） */
+function ksCuCapNote(type, n) {
+  const ci = ksCapInfo(type), S = KS_TYPES[type];
+  const many = S && (S.eng === 'shop' || S.eng === 'rest') && n > KS_STORE_ROWS ? `。${fmtNum(KS_STORE_ROWS, 0)}店より多い店は、都道府県ごとにまとめて扱います` : '';
+  return `中の規模で${fmtNum(ci.base, 0)}${ci.u}・上限なし${many}`;
+}
 function ksCuCapField(type, sc, act, i, extra = '') {
   const ci = ksCapInfo(type);
-  const max = ksScToCap(type, ci.maxSc);
-  return `<label class="field cu-cap"><span>${esc(ci.n)}</span><span class="cu-capin"><input type="number" inputmode="numeric" min="1" max="${max}" step="1" value="${ksScToCap(type, sc || 1)}" data-ch="${act}" data-i="${i}"${extra} aria-label="${esc(type)}の${esc(ci.n)}"><span class="small">${esc(ci.u)}</span></span><span class="small muted">中の規模で${fmtNum(ci.base, 0)}${esc(ci.u)}・最大${fmtNum(max, 0)}${esc(ci.u)}</span></label>`;
+  const n = ksScToCap(type, sc || 1);
+  return `<label class="field cu-cap"><span>${esc(ci.n)}</span><span class="cu-capin"><input type="number" inputmode="numeric" min="1" step="1" value="${n}" data-ch="${act}" data-i="${i}"${extra} aria-label="${esc(type)}の${esc(ci.n)}"><span class="small">${esc(ci.u)}</span></span><span class="small muted cu-capnote">${esc(ksCuCapNote(type, n))}</span></label>`;
 }
+/* 数を入れ直したとき、下の説明（まとめて扱うかどうか）を書き直す */
+function ksCuCapNoteSet(el, type, n) { const c = el.closest('.cu-cap'); const t = c && c.querySelector('.cu-capnote'); if (t) t.textContent = ksCuCapNote(type, n); }
 function ksCuGrowField(g, act, i, label = 'これまでの成長（売上の伸び）') {
   return `<label class="field cu-grow"><span>${label}</span><select data-ch="${act}" data-i="${i}">${KS_GROWTH.map(([v, l]) => `<option value="${v}"${Math.abs((+g || 0) - v) < 1e-9 ? ' selected' : ''}>${l}</option>`).join('')}</select></label>`;
 }
 function ksCuUnitsHtml(k) {
   const rows = k.units.map((x, i) => `<li class="cu-unit"><b>${esc(x.type)}</b><div class="grid g2 cu-ugrid">${ksCuCapField(x.type, x.sc, 'kCuCap', i)}${ksCuGrowField(x.g, 'kCuGrow', i)}</div></li>`).join('');
   return `<div class="field"><span>事業ごとの設備と成長</span><ul class="cu-units">${rows}</ul>
-    <span class="small muted">設備の数で事業の大きさが決まります（店・機械・車両・客室などの数。上の「規模」のボタンより細かく決められます）。成長を選ぶと、過去4期の決算書の売上がその割合で伸びて（縮んで）いて、就任のあとも勢いが2年ごとに半分になりながら続きます。伸びてきた会社は利益率が高め、縮んできた会社は低めで始まります。子会社は「グループの会社」の各社の設定で決められます。</span></div>`;
+    <span class="small muted">設備の数で事業の大きさが決まります（店・機械・車両・客室などの数。上の「規模」のボタンより細かく決められます）。数に上限はなく、何万店のチェーンも作れます（とても大きな会社は、店を都道府県ごとに、設備を何台かずつまとめて扱います。年商がおよそ${fmtNum(KS_ANNUAL_MAX / 1e12, 0)}兆円を超える大きさは、そこまでに縮めて始めます）。成長を選ぶと、過去4期の決算書の売上がその割合で伸びて（縮んで）いて、就任のあとも勢いが2年ごとに半分になりながら続きます。伸びてきた会社は利益率が高め、縮んできた会社は低めで始まります。子会社は「グループの会社」の各社の設定で決められます。</span></div>`;
 }
 Object.assign(ACTIONS, {
   kCuForm: d => { ksStartStore(); const c = ksCustomDefaults(UI.start.k); c.form = d.v; c.on = true; render(); },
@@ -63,6 +71,7 @@ Object.assign(CHANGES, {
     x.sc = ksCapToSc(x.type, el.value);
     const n = ksScToCap(x.type, x.sc);
     if (+el.value !== n) el.value = n;
+    ksCuCapNoteSet(el, x.type, n);
     for (const b of document.querySelectorAll(`[data-act="kStSc"][data-i="${+el.dataset.i}"]`)) b.setAttribute('aria-pressed', String(Math.abs(+b.dataset.v - x.sc) < 1e-9));
     const c = ksCustomDefaults(k); c.on = true;
     const cb = document.querySelector('[data-ch="kCuOn"]'); if (cb) cb.checked = true;
