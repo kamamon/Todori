@@ -92,7 +92,7 @@ function ksMapPrefPanel(p) {
   const riskTxt = [['eq', '地震'], ['ty', '台風'], ['fl', '水害'], ['sn', '大雪']].map(([k, n]) => `${n} <b class="${P.risk[k] >= 3 ? 'neg' : ''}">${KS_RISK_LV[P.risk[k]]}</b>`).join('・');
   const mine = [
     s.hq ? `<li><b>本社</b></li>` : '',
-    ...s.units.map(u => `<li>${esc(ksUName(u))}<span class="small muted">（${esc(ksS(u).name)}・${ksUnitHead(u)}人）</span></li>`),
+    ...s.units.map(u => `<li>${esc(ksUName(u))}<span class="small muted">（${esc(ksS(u).name)}・${fmtNum(ksUnitHead(u), 0)}人）</span></li>`),
     ...s.lands.map(L => `<li>自社の土地：${KS_LAND_USE[L.use]} ${fmtNum(L.area, 0)}㎡${L.bldg ? `（${KS_BLDG_KIND[L.bldg.kind].n}${L.bldg.openM > G.m ? '・建設中' : ''}）` : ''}</li>`),
     ...s.subs.map(x => `<li>子会社：${esc(x.name)}</li>`),
   ].filter(Boolean).join('');

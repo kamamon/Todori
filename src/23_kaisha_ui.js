@@ -101,7 +101,7 @@ function ksStrip() {
     ['今期の経常利益', `<span class="${ytd.ord < 0 ? 'neg' : ''}">${fmtYen(ytd.ord)}</span>`, `<span class="muted">月次の累計</span>`],
     ['自己資本比率', isFinite(eq) ? `<span class="${eq < 10 ? 'neg' : ''}">${fmtPct(eq, 1)}</span>` : '―', `<span class="muted">直近の決算</span>`],
     ['銀行の格付', `${G.grade || '―'}<span class="unit"> /10</span>`, `<span class="muted">${G.grade <= 3 ? '優良' : G.grade <= 6 ? '正常' : G.grade <= 8 ? '要注意' : '破綻懸念'}</span>`],
-    !ksActiveUnits().length && G.group && G.group.hq ? ['本社の社員', `${G.group.hq.staff}<span class="unit">人</span>`, `<span class="muted">持株会社・人件費 月${fmtYen(G.group.hq.staff * G.group.hq.wage)}</span>`] : ['従業員', `${ksHeadcount()}<span class="unit">人</span>`, `<span class="muted">人件費 月${fmtYen(ksPayrollEstimate().total)}</span>`],
+    !ksActiveUnits().length && G.group && G.group.hq ? ['本社の社員', `${fmtNum(G.group.hq.staff, 0)}<span class="unit">人</span>`, `<span class="muted">持株会社・人件費 月${fmtYen(G.group.hq.staff * G.group.hq.wage)}</span>`] : ['従業員', `${fmtNum(ksHeadcount(), 0)}<span class="unit">人</span>`, `<span class="muted">人件費 月${fmtYen(ksPayrollEstimate().total)}</span>`],
     ['資金繰り', short ? '<span class="neg">不足の見込み</span>' : low < ksMonthlyFixedOut() * 0.5 ? '<span class="warnc">注意</span>' : '安全', `<span class="muted">3か月の最低 ${fmtYen(low)}</span>`],
   ];
   void last;

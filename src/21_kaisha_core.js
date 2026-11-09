@@ -1385,29 +1385,31 @@ function ksStartList(o) {
   return raw.map(x => (typeof x === 'string' ? { type: x } : x)).filter(x => KS_TYPES[x.type] && !seen.has(x.type) && seen.add(x.type))
     .map(x => Object.assign({}, x, { sc: clamp(+x.sc || 1, 0.1, ksCapInfo(x.type).maxSc), g: clamp(+x.g || 0, -0.15, 0.2) }));
 }
-/* 事業の「設備の数」：規模の倍率 1 のときの数（base）と、その名前・単位。開始の画面で数を入れると、倍率 = 数 ÷ base になる */
+/* 事業の「設備の数」：規模の倍率 1 のときの数（base）と、その名前・単位。開始の画面で数を入れると、倍率 = 数 ÷ base になる。
+   規模に上限はない（店・設備が多い会社は、記録をまとめて扱う：ksStoreGroups・ksEqItems）。ただし金額の計算の精度を保つため、
+   倍率は KS_SC_MAX まで、会社の年商が KS_ANNUAL_MAX を超える大きさは、そこまでに縮めて始める（ksNewGame） */
+const KS_SC_MAX = 1e9, KS_ANNUAL_MAX = 200e12;
 function ksCapInfo(type) {
   const S = KS_TYPES[type];
-  if (!S) return { n: '規模', u: '', base: 1, maxSc: 40 };
+  if (!S) return { n: '規模', u: '', base: 1, maxSc: KS_SC_MAX };
   const P = S.p;
   const eqN = list => sum(list || [], e => e.n || 0);
-  const lim = n => clamp(Math.floor(600 / Math.max(1, n)), 4, 40); // 資産の数が多くなりすぎないように
+  const maxSc = KS_SC_MAX;
   switch (S.eng) {
-    case 'shop': return { n: '店舗の数', u: '店', base: P.stores || 1, maxSc: lim(P.stores || 1) };
-    case 'rest': return { n: '店舗の数', u: '店', base: P.shops || 1, maxSc: lim(P.shops || 1) };
-    case 'mfg': { const n = eqN(S.eq) || 1; return P.mode === 'line' ? { n: '生産ラインの数', u: 'ライン', base: n, maxSc: lim(n) } : { n: '機械の数', u: '台', base: n, maxSc: lim(n) }; }
-    case 'build': return { n: `${(S.roles[0] || {}).n || '現場監督'}の人数`, u: '人', base: P.site || 1, maxSc: 40 };
-    case 'trade': return { n: '取引先の数', u: '社', base: P.custN || 10, maxSc: 40, sqrt: true };
-    case 'pro': return { n: `${((S.roles[0] || {}).n || '技術者').replace(/（.*?）/, '')}の人数`, u: '人', base: P.n || 10, maxSc: 40 };
-    case 'subs': return { n: '利用者の数', u: '人', base: P.users || 1000, maxSc: 40 };
-    case 'cap': return { n: `施設の能力（${P.unit || '単位'}）`, u: P.unit || '', base: P.units || 1, maxSc: lim(eqN(S.eq)) };
+    case 'shop': return { n: '店舗の数', u: '店', base: P.stores || 1, maxSc };
+    case 'rest': return { n: '店舗の数', u: '店', base: P.shops || 1, maxSc };
+    case 'mfg': { const n = eqN(S.eq) || 1; return P.mode === 'line' ? { n: '生産ラインの数', u: 'ライン', base: n, maxSc } : { n: '機械の数', u: '台', base: n, maxSc }; }
+    case 'build': return { n: `${(S.roles[0] || {}).n || '現場監督'}の人数`, u: '人', base: P.site || 1, maxSc };
+    case 'trade': return { n: '取引先の数', u: '社', base: P.custN || 10, maxSc, sqrt: true };
+    case 'pro': return { n: `${((S.roles[0] || {}).n || '技術者').replace(/（.*?）/, '')}の人数`, u: '人', base: P.n || 10, maxSc };
+    case 'subs': return { n: '利用者の数', u: '人', base: P.users || 1000, maxSc };
+    case 'cap': return { n: `施設の能力（${P.unit || '単位'}）`, u: P.unit || '', base: P.units || 1, maxSc };
     case 'trans': {
       const k = S.eq[0] ? S.eq[0].k : '', q = KS_EQ[k] || null, n = S.eq[0] ? S.eq[0].n : 1;
       // 数え方：船は隻、航空機は機、鉄道の車両は両（路面電車は編成、ケーブルカー・ロープウェイは基）、ほかは台
-      const u = /^ship_/.test(k) || (q && q.cap > 1000) ? '隻' : /^(ac_|heli|bizjet)/.test(k) ? '機' : k === 'train_lrt' ? '編成' : k === 'train_cable' ? '基' : /^(train_|loco)/.test(k) ? '両' : '台';
-      return { n: `${q ? q.n.replace(/（.*?）/, '') : '車両'}の数`, u, base: n, maxSc: lim(eqN(S.eq)) };
+      return { n: `${q ? q.n.replace(/（.*?）/, '') : '車両'}の数`, u: ksEqWord(k), base: n, maxSc };
     }
-    default: return { n: '規模', u: '', base: 1, maxSc: 40 };
+    default: return { n: '規模', u: '', base: 1, maxSc };
   }
 }
 /* 成長の勢いの記録：g（年率）と、過去4期の需要の平均（キャリブレーションの基準） */
@@ -1448,6 +1450,7 @@ function ksNewGame(o) {
     news: [], pendingModals: [], over: null, termYears: o.term ?? KS_TERM_YEARS, quiz: { asked: 0, correct: 0 },
     flags: {}, depShort: 0, lossRate: KS_LOSS_RATE, firstPeriod: 0, founded: 0, supTrust: 3, wageLv: 1, bonusLv: 1,
   };
+  if (o.pref) G.pref0 = +o.pref;                   // 始め方で選んだ本社の都道府県（店を都道府県に配るときの所在地）
   G.firstPeriod = randInt(22, 48);               // 2026年度（fy=0）が第何期か
   G.founded = START_YEAR - G.firstPeriod + 1;     // 創業の年
   const cond = KS_COND[G.cond];
@@ -1466,6 +1469,12 @@ function ksNewGame(o) {
     G.curU = null;
   }
   const annual = Math.max(1, sum(parts, r => r.annual || 0));
+  // 年商が KS_ANNUAL_MAX を超える大きさは、金額の計算の精度を保つため、そこまでに縮めて作り直す（規模の倍率をそろえて縮める）。
+  // キャリブレーションの前は、合わせたあとに売上が大きく変わる業種（卸売・建設は取引の規模で合わせる）もあるので、5倍までは見逃し、
+  // 合わせたあと（lv）の年商で、もう一度だけ確かめる
+  const shrink = f => ksNewGame(Object.assign({}, o, { lv: undefined, execPay: undefined, units: list.map(x => Object.assign({}, x, { sc: Math.max(0.1, (x.sc || 1) * f) })), scCut: (o.scCut || 1) * f, scCutN: (o.scCutN || 0) + 1 }));
+  if (!o.lv && !o.scCutN && annual > KS_ANNUAL_MAX * 5) return shrink(KS_ANNUAL_MAX * 4 / annual);
+  if (o.lv && annual > KS_ANNUAL_MAX * 1.25 && (o.scCutN || 0) < 2) return shrink(KS_ANNUAL_MAX / annual);
   G.execPay = o.execPay ?? (legacy ? KS_INDS[legacy].exec : ksExecPayFor(annual));
   // キャリブレーション：業種の数字から、利益率が業界の水準になるよう基準の単価（卸売・建設は取引の規模）を合わせる。
   // 式で合わせたあと、会社の写しで1年ほど動かして測り、ずれを倍率で直す。役員報酬（社会保険を含む）は、
@@ -1541,6 +1550,7 @@ function ksNewGame(o) {
   if (typeof ksGrowInit === 'function') ksGrowInit();
   if (typeof ksExtInit === 'function') ksExtInit(o); // 方針と人事・拠点・グループ・カスタムスタート
   if (!G.isSub) ksNews(`${G.ceo}氏が${G.coName}の代表取締役社長に就任。${ksCompanyDesc() || '持株会社'}を営む${G.founded}年創業の会社`, 'info');
+  if (o.scCut) ksNews(`${G.isSub ? `${G.coName}：` : ''}選んだ規模では年商がおよそ${fmtNum(KS_ANNUAL_MAX / 1e12, 0)}兆円を超えるため、規模を${o.scCut > 0.5 ? fmtPct(o.scCut * 100, 0) : `約${fmtNum(1 / o.scCut, 1 / o.scCut < 10 ? 1 : 0)}分の1`}に縮めて始めました（金額の計算の精度を保つため）`, 'info');
   return G;
 }
 /* 就任時の会社が、選んだ状態に合っているか */

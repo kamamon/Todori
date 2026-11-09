@@ -42,16 +42,18 @@ function ksUnitBldgName(S) {
   if (S.eng === 'trans') return { rail: '駅・車両基地', air: '格納庫・事務所', sea: '事務所・倉庫' }[S.p.mode] || '営業所・車庫';
   return '事業所';
 }
+/* 店のまとまり（k 店）は1つの記録で k 棟。数えるときは ksBldgN */
 function ksBuildings() {
   const out = [];
   for (const u of ksActiveUnits()) {
     const S = ksS(u), E = KS_ENGINE[S.eng], un = ksUName(u);
-    if (S.eng === 'shop') for (const s of E.storesOpen(u)) out.push({ n: `${un}・${s.n}`, spec: true, key: s, u: u.id });
-    else if (S.eng === 'rest') for (const s of E.shopsOpen(u)) out.push({ n: `${un}・${s.n}`, spec: true, key: s, u: u.id });
+    if (S.eng === 'shop') for (const s of E.storesOpen(u)) out.push({ n: `${un}・${s.n}`, spec: true, key: s, u: u.id, k: ksStoreK(s) });
+    else if (S.eng === 'rest') for (const s of E.shopsOpen(u)) out.push({ n: `${un}・${s.n}`, spec: true, key: s, u: u.id, k: ksStoreK(s) });
     else out.push({ n: `${un}の${ksUnitBldgName(S)}`, spec: ['htl', 'med'].includes(S.bm), u: u.id });
   }
   return out;
 }
+function ksBldgN(list) { return sum(list, b => b.k || 1); }
 function ksUnitBuildings(u) { return ksBuildings().filter(b => b.u === u.id); }
 /* 防火管理者が必要か（収容人員：特定防火対象物は30人以上、それ以外は50人以上） */
 function ksNeedsFireMgr() { return ksBuildings().some(b => b.spec) || ksHeadcount() >= 50; }
@@ -63,13 +65,13 @@ const KS_LAW_TASKS = [
   { id: 'hoken', item: 'hoken', freq: 'fy', dueMo: 7, fromMo: 6, n: '労働保険の年度更新（6月1日〜7月10日）', acct: 'fees', cost: () => 3e4 * Math.max(1, Math.sqrt(ksActiveUnits().length)), why: '労災保険・雇用保険の保険料を申告・納付する（保険料は法定福利費として毎月計上済み。ここでは社会保険労務士への報酬）。' },
   { id: 'kenshin', item: 'kenshin', freq: 'year', n: '定期健康診断', acct: 'fukuri', cost: () => ksHeadcount() * 1.2e4 * ksPrice(), why: '年1回、全員に健康診断を受けさせる（福利厚生費）。' },
   { id: 'taisei', item: 'taisei', freq: 'once', n: () => (ksHeadcount() >= 50 ? '衛生管理者・産業医の選任と衛生委員会' : '安全衛生推進者の選任'), acct: 'recruit', cost: () => (ksHeadcount() >= 50 ? 15e4 : 3e4), applies: () => ksHeadcount() >= 10, why: '10〜49人は安全衛生推進者、50人以上は衛生管理者・産業医（毎月の報酬）と衛生委員会が必要。' },
-  { id: 'machine', item: 'machine', freq: 'year', n: () => (ksUnitsWithLaw('machine').some(u => ksS(u).eng === 'mfg') ? '機械の安全装置の点検と特定自主検査' : 'フォークリフトの特定自主検査'), acct: 'repairs', cost: () => sum(ksUnitsWithLaw('machine'), u => (ksS(u).eng === 'mfg' ? Math.max(1, KS_ENGINE.mfg.machines(u).length) * 6e4 : 2 * 5e4)), applies: () => ksUnitsWithLaw('machine').length > 0, why: '危険な部分に覆いや安全装置を付け、プレス機械やフォークリフトなどは年1回の特定自主検査を受ける。' },
+  { id: 'machine', item: 'machine', freq: 'year', n: () => (ksUnitsWithLaw('machine').some(u => ksS(u).eng === 'mfg') ? '機械の安全装置の点検と特定自主検査' : 'フォークリフトの特定自主検査'), acct: 'repairs', cost: () => sum(ksUnitsWithLaw('machine'), u => (ksS(u).eng === 'mfg' ? Math.max(1, ksEqN(KS_ENGINE.mfg.machines(u))) * 6e4 : 2 * 5e4)), applies: () => ksUnitsWithLaw('machine').length > 0, why: '危険な部分に覆いや安全装置を付け、プレス機械やフォークリフトなどは年1回の特定自主検査を受ける。' },
   { id: 'fall', item: 'fall', freq: 'half', n: '足場・墜落防止の点検と特別教育', acct: 'safety', cost: () => sum(ksUnitsWithLaw('fall'), u => Math.max(2, ksS(u).eng === 'build' ? u.staff.site || 0 : ksUnitHead(u) * 0.2) * 5e4), applies: () => ksUnitsWithLaw('fall').length > 0, why: '高さ2m以上の作業の墜落防止。足場の点検、手すり、フルハーネスの特別教育。' },
   { id: 'chem', item: 'chem', freq: 'once', n: '化学物質のリスクアセスメント', acct: 'fees', cost: () => 15e4 * Math.max(1, ksUnitsWithLaw('chem').length), applies: () => ksUnitsWithLaw('chem').length > 0, why: '溶剤・切削油・洗浄剤・農薬などの危険性を調べ、換気や保護具の対策を決める。' },
-  { id: 'bouka', item: 'bouka', freq: 'once', n: '防火管理者の選任・消防計画の届出', acct: 'recruit', cost: () => ksBuildings().length * 2e4, applies: ksNeedsFireMgr, why: '店舗・飲食店・ホテル・病院などは収容人員30人以上、工場・事務所は50人以上で必要。防火管理講習を受けた人を選ぶ。' },
-  { id: 'tenken', item: 'tenken', freq: 'half', n: '消防用設備等の点検（結果は消防署へ報告）', acct: 'fees', cost: () => ksBuildings().length * 5e4 * ksPrice(), why: '消火器・自動火災報知設備・誘導灯などを半年ごとに点検する（建物ごと）。' },
-  { id: 'kunren', item: 'kunren', freq: () => (ksBuildings().some(b => b.spec) ? 'half' : 'year'), n: '消火・避難訓練', acct: 'misc', cost: () => ksBuildings().length * 1e4, why: '店舗・飲食店・ホテルなど（特定防火対象物）は年2回以上、それ以外も消防計画に従って行う。' },
-  { id: 'haccp', item: 'haccp', freq: 'year', n: 'HACCPの衛生管理計画の見直しと衛生教育', acct: 'fees', cost: () => sum(ksUnitsWithLaw('haccp'), u => Math.max(1, ksUnitBuildings(u).length)) * 5e4, applies: () => ksUnitsWithLaw('haccp').length > 0, why: '食中毒を防ぐ衛生管理の計画と記録。食品衛生責任者を置く。' },
+  { id: 'bouka', item: 'bouka', freq: 'once', n: '防火管理者の選任・消防計画の届出', acct: 'recruit', cost: () => ksBldgN(ksBuildings()) * 2e4, applies: ksNeedsFireMgr, why: '店舗・飲食店・ホテル・病院などは収容人員30人以上、工場・事務所は50人以上で必要。防火管理講習を受けた人を選ぶ。' },
+  { id: 'tenken', item: 'tenken', freq: 'half', n: '消防用設備等の点検（結果は消防署へ報告）', acct: 'fees', cost: () => ksBldgN(ksBuildings()) * 5e4 * ksPrice(), why: '消火器・自動火災報知設備・誘導灯などを半年ごとに点検する（建物ごと）。' },
+  { id: 'kunren', item: 'kunren', freq: () => (ksBuildings().some(b => b.spec) ? 'half' : 'year'), n: '消火・避難訓練', acct: 'misc', cost: () => ksBldgN(ksBuildings()) * 1e4, why: '店舗・飲食店・ホテルなど（特定防火対象物）は年2回以上、それ以外も消防計画に従って行う。' },
+  { id: 'haccp', item: 'haccp', freq: 'year', n: 'HACCPの衛生管理計画の見直しと衛生教育', acct: 'fees', cost: () => sum(ksUnitsWithLaw('haccp'), u => Math.max(1, ksBldgN(ksUnitBuildings(u)))) * 5e4, applies: () => ksUnitsWithLaw('haccp').length > 0, why: '食中毒を防ぐ衛生管理の計画と記録。食品衛生責任者を置く。' },
   { id: 'alcohol', item: 'alcohol', freq: 'year', n: '安全運転管理者とアルコールチェック（検知器の更新）', acct: 'supplies', cost: () => 8e4 * ksUnitsWithLaw('alcohol').length, applies: () => ksUnitsWithLaw('alcohol').length > 0, why: '社用車5台以上（事業用の車は運行管理者の点呼）。運転の前後に検知器で確認し、記録を1年保存する。' },
   { id: 'kyoka', item: 'kyoka', freq: 'five', n: '建設業許可の更新', acct: 'dues', cost: () => 10e4, applies: () => ksUnitsWithLaw('kyoka').length > 0, why: '500万円以上の工事を請け負うのに必要。5年ごとに更新する。' },
   { id: 'privacy', item: 'privacy', freq: 'year', n: '情報セキュリティの点検と社員教育', acct: 'fees', cost: () => 40e4 * Math.sqrt(Math.max(1, ksUnitsWithLaw('privacy').length)), applies: () => ksUnitsWithLaw('privacy').length > 0, why: 'お客さまの個人データを預かる。漏えいすると報告・通知の義務がある。' },
@@ -178,7 +180,7 @@ function ksOtHoursU(u) {
     case 'trade': {
       const pot = sum(u.op.customers, c => c.size * c.ramp) * ksPrice();
       const cap = E.capacity(u);
-      return 20 + (cap === Infinity ? 0 : Math.max(0, pot / Math.max(1, cap) - 0.9) * 160) + Math.max(0, E.trucks(u).length * 1.1 - (u.staff.logi || 0)) * 12;
+      return 20 + (cap === Infinity ? 0 : Math.max(0, pot / Math.max(1, cap) - 0.9) * 160) + Math.max(0, ksEqN(E.trucks(u)) * 1.1 - (u.staff.logi || 0)) * 12;
     }
     case 'pro': return 15 + (k.demand && k.avail ? Math.max(0, Math.min(k.demand, k.avail * 1.3) / Math.max(1, k.avail) - 1) * 150 : 0) + (k.util > 0.98 ? 10 : 0);
     case 'subs': { const nd = E.need(u); return 15 + Math.max(0, 1 - (u.staff.dev || 0) / Math.max(1, nd.dev)) * 120 + Math.max(0, 1 - (u.staff.ops || 0) / Math.max(1, nd.ops)) * 120; }
@@ -485,7 +487,8 @@ function ksLawFires(viol) {
   for (const v of viol) mul *= (LAW_ITEMS[v] && LAW_ITEMS[v].fire) || 1;
   for (const b of ksBuildings()) {
     const u = ksUnit(b.u);
-    if (!chance(KS_FIRE_BASE[ksS(u).eng] * mul * (ksUnitLaws(u).has('kiken') ? 1.5 : 1))) continue;
+    // 店のまとまり（k 店）は、k の4分の1乗だけ起きやすい（大きなチェーンは本部の点検・手順がそろい、1店あたりは少ない。月に何度も火災の知らせが出ないように）
+    if (!chance(KS_FIRE_BASE[ksS(u).eng] * mul * (ksUnitLaws(u).has('kiken') ? 1.5 : 1) * (b.k > 1 ? b.k ** 0.25 : 1))) continue;
     const large = chance(0.18 * (viol.has('tenken') ? 1.6 : 1) * (viol.has('kunren') ? 1.3 : 1));
     ksLawNewFire(b, large, viol);
     break;
@@ -500,6 +503,8 @@ function ksLawNewFire(b, large, viol) {
   const L = G.law;
   const u = ksUnit(b.u);
   const S = ksS(u);
+  // 店のまとまりで大きな火災が出たら、その1店を別の記録に分ける（休業も、焼ける資産も、その1店の分）
+  if (large && b.key && ksStoreK(b.key) > 1) { const one = ksStoreSplit(u, b.key); b = Object.assign({}, b, { key: one, k: 1, n: `${ksUName(u)}・${one.n}` }); }
   const cause = pick(S.bm === 'agr' ? ['乾燥機の過熱', '野焼きの火の粉'] : KS_FIRE_CAUSE[S.eng] || ['電気配線']);
   const f = { id: ++L.seq, m: G.m, b: b.n, u: u.id, store: b.key ? b.key.n : null, cause, large, loss: 0, ins: 0, death: false };
   G.curU = u.id;
@@ -510,12 +515,15 @@ function ksLawNewFire(b, large, viol) {
   } else {
     // 建物・設備・在庫が焼ける（その事業の資産。店の火災はその店の分）
     let loss = 0;
-    const nB = Math.max(1, ksUnitBuildings(u).length);
+    const nB = Math.max(1, ksBldgN(ksUnitBuildings(u)));
     const targets = ksUA(u).filter(a => ['bldg', 'equip', 'mach'].includes(a.acct) && !a.cip);
     const share = uni(0.25, 0.5) / (b.key ? 1 : nB);
     for (const a of targets) {
       const inStore = b.key && a.n.startsWith(b.key.n + 'の');
-      if (b.key ? inStore && chance(0.7) : chance(share * 1.4)) loss += ksLoseAsset(a);
+      if (b.key) { if (inStore && chance(0.7)) loss += ksLoseAsset(a); continue; }
+      // まとめた設備（q 台分）は、焼ける台数だけを分けてなくす
+      const m = ksEqQ(a) > 1 ? ksBinom(ksEqQ(a), Math.min(1, share * 1.4)) : chance(share * 1.4) ? 1 : 0;
+      if (m) loss += ksLoseAsset(ksAssetTake(a, m));
     }
     // 焼けた在庫：三分法では期中の在庫は仕入高（材料仕入高）に入っているので、そこから災害による損失に振り替える
     const sk = { shop: ['purch', 'book', 'hid'], trade: ['purch', 'book', 'hid'], rest: ['purch', 'book', 'hid'], mfg: ['matPurch', 'matBook', 'matHid'] }[S.eng];
@@ -527,7 +535,7 @@ function ksLawNewFire(b, large, viol) {
       if (u.op[sk[2]]) u.op[sk[2]] *= 1 - frac; // 帳簿に出ていない目減りも、焼けた分だけ消える
       loss += inv;
     }
-    const clean = niceAmount(uni(100e4, 400e4) * Math.sqrt(u.sc || 1));
+    const clean = niceAmount(uni(100e4, 400e4) * (b.key ? 1 : Math.sqrt(u.sc || 1))); // 店の火災はその店の分
     ksPost('law_fire', [['disaster', clean, 0], ['cash', 0, clean]], { cf: 'other', desc: '火災の片付け・仮復旧' });
     loss += clean;
     f.loss = loss;
