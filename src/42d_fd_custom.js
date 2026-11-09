@@ -34,7 +34,20 @@ function fdCuCatGap(scen, c, tech) {
   for (const [f, wt] of Object.entries(C.w)) { const g = tech[f]; if (g === null || g === undefined) continue; s += g * wt; w += wt; }
   return w ? Math.round(s / w) : 10;
 }
-const fdCuNum = v => { if (v === '' || v === null || v === undefined) return null; const x = Number(String(v).replace(/[,，\s]/g, '')); return Number.isFinite(x) ? x : null; };
+/* 入力の数を読む。全角の数字、いろいろなマイナス（－ − ー ‐ – —、会計の ▲ △）、区切りの点、末尾の「年」「%」も受け付ける */
+const fdCuNum = v => {
+  if (v === '' || v === null || v === undefined) return null;
+  const t = String(v).trim()
+    .replace(/[０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xfee0))
+    .replace(/[．。]/g, '.')
+    .replace(/[,，、\s]/g, '')
+    .replace(/^[▲△]/, '-')
+    .replace(/[－−ー‐‑‒–—―]/g, '-')
+    .replace(/[年%％]$/, '');
+  if (t === '' || t === '-' || t === '+') return null;
+  const x = Number(t);
+  return Number.isFinite(x) ? x : null;
+};
 
 /* 画面で入れた値（空欄は時代と大きさに合わせた初期値）を、始めるのに使う形にそろえる */
 function fdCuResolve(scen, cu = {}) {

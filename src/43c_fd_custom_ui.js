@@ -4,6 +4,9 @@
  *   空欄の項目は、始める年と会社の大きさに合わせた初期値（史実の会社がその年に手がけていた事業など）で埋める
  * ========================================================= */
 
+/* マイナスを入れる欄（技術や品質の遅れ）は、文字の欄にする。数の欄のキーボード（スマホの数字キー）にはマイナスがないことがあるため。
+   全角の数字や「－」「ー」なども読める（fdCuNum） */
+const FD_SIGNED = 'type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done"';
 /* ---------- 開始画面：カスタムスタート ---------- */
 function fdCuState() {
   const f = fdStartDefaults();
@@ -28,7 +31,7 @@ function fdCustomHtml() {
   const S = FD_SCEN[f.scen];
   const R = fdCuResolve(f.scen, cu);
   const y = R.y;
-  const num = (k, label, ph, attrs = '') => `<label class="field"><span>${label}</span><input type="number" inputmode="decimal" data-ch="fCu" data-k="${k}" value="${esc(cu[k] ?? '')}" placeholder="${esc(ph)}" ${attrs} style="width:100%"></label>`;
+  const num = (k, label, ph, attrs = '', signed = false) => `<label class="field"><span>${label}</span><input ${signed ? `${FD_SIGNED} class="cu-signed"` : 'type="number" inputmode="decimal"'} data-ch="fCu" data-k="${k}" value="${esc(cu[k] ?? '')}" placeholder="${esc(ph)}" ${attrs} style="width:100%"></label>`;
   const bench = fdCuBench(f.scen, y);
   const on = new Set(R.cats.map(k => k.c));
   const catRows = fdCuCats(f.scen, y).map(c => {
@@ -36,7 +39,7 @@ function fdCustomHtml() {
     const lab = t => `aria-label="${esc(C.n)}の${t}"`;
     return `<tr class="${on.has(c) ? '' : 'cu-off'}"><td><label class="inline"><input type="checkbox" data-ch="fCuCatOn" data-c="${c}" ${on.has(c) ? 'checked' : ''}> ${esc(C.n)}</label></td>
       <td><input type="number" class="cu-xs" inputmode="decimal" data-ch="fCuCat" data-c="${c}" data-k="w" value="${esc(o.w ?? '')}" placeholder="自動" min="0" step="1" ${lab('売上の割合')}></td>
-      <td><input type="number" class="cu-xs" inputmode="decimal" data-ch="fCuCat" data-c="${c}" data-k="gap" value="${esc(o.gap ?? '')}" placeholder="${k ? k.gap : fdCuCatGap(f.scen, c, R.tech)}" min="-2" max="80" step="1" ${lab('品質の遅れ')}></td>
+      <td><input ${FD_SIGNED} class="cu-xs cu-signed" data-ch="fCuCat" data-c="${c}" data-k="gap" value="${esc(o.gap ?? '')}" placeholder="${k ? k.gap : fdCuCatGap(f.scen, c, R.tech)}" ${lab('品質の遅れ（先を行くならマイナス）')}></td>
       <td><input type="number" class="cu-xs" inputmode="decimal" data-ch="fCuCat" data-c="${c}" data-k="pr" value="${esc(o.pr ?? '')}" placeholder="100" min="50" max="200" step="1" ${lab('値段')}></td></tr>`;
   }).join('');
   const regRows = fdRegOrder().map(r => {
@@ -50,7 +53,7 @@ function fdCustomHtml() {
   }).join('');
   const techRows = Object.entries(S.fields).map(([fid, F]) => (F.born > y
     ? `<tr><td>${esc(F.n)}</td><td class="small muted">${Math.ceil(F.born)}年ごろに生まれる技術</td></tr>`
-    : `<tr><td>${esc(F.n)}</td><td><input type="number" class="cu-xs" inputmode="decimal" data-ch="fCuTech" data-f="${fid}" value="${esc(cu.techF[fid] ?? '')}" placeholder="${R.tech[fid]}" min="-2" max="80" step="1" aria-label="${esc(F.n)}の遅れ"> 年遅れ</td></tr>`)).join('');
+    : `<tr><td>${esc(F.n)}</td><td><input ${FD_SIGNED} class="cu-xs cu-signed" data-ch="fCuTech" data-f="${fid}" value="${esc(cu.techF[fid] ?? '')}" placeholder="${R.tech[fid]}" aria-label="${esc(F.n)}の遅れ（先を行くならマイナス）"> 年遅れ</td></tr>`)).join('');
   const progs = Object.entries(FD_PROGS).filter(([, P]) => y >= P.from).map(([k, P]) => `<label class="inline small"><input type="checkbox" data-ch="fCuProg" data-k="${k}" ${R.prog[k] ? 'checked' : ''}> ${esc(P.n)}</label>`).join('');
   return `<details class="custom field"${cu.on ? ' open' : ''}><summary>カスタムスタート（始める年・会社の大きさ・技術・事業・販路を決める）</summary>
     <label class="inline" style="margin:6px 0"><input type="checkbox" data-ch="fCuOn" ${cu.on ? 'checked' : ''}> この設定で始める</label>
@@ -59,8 +62,8 @@ function fdCustomHtml() {
     <p class="small muted" style="margin:0">${fdWareki(y)}（${y}年）の1月から。${esc(fdEraText(y))}</p>
     <div class="grid g3 cu-nums">${num('sales', '年商（億円）', Math.round(bench / 1e8), 'min="1" step="1"')}${num('cash', '現金（億円）', '自動', 'min="0" step="1"')}${num('debt', '借入金（億円）', '自動', 'min="0" step="1"')}</div>
     <span class="small muted">金額は今の価値（2025年の円）。空欄の年商は、${esc(S.bench.n)}の${y}年の売上（約${fmtYen(bench)}）。市場の取り分から見込める年商が目安に届くまでブランドを上げ（国内85・海外65まで）、それでも届かない分は小さく始めます。現金は見込みの年商の12%、借入金は2〜3割が初期値です。</span>
-    <div class="grid g3 cu-nums">${num('gap', '技術の遅れ（年）', `約${Math.max(1, Math.round(fdSer(FD_JP_BASE, y) + (y < 1980 ? 2 : 1)))}年`, 'min="-2" max="80" step="1"')}${num('eng', '技術者の数', '自動', 'min="0" step="1"')}${num('ovs', '海外で作る割合（%）', R.ovs ? Math.round(R.ovs * 100) : '0', 'min="0" max="80" step="5"')}</div>
-    <span class="small muted">技術の遅れは世界の先端より何年遅れているか（空欄は日本の産業の地力に合わせる）。技術者は空欄なら売上の4%を研究に使える数。海外で作る割合は、販路が「現地生産」以上の地域に工場を建てて分けます。</span>
+    <div class="grid g3 cu-nums">${num('gap', '技術の遅れ（年）', `約${Math.max(1, Math.round(fdSer(FD_JP_BASE, y) + (y < 1980 ? 2 : 1)))}年`, '', true)}${num('eng', '技術者の数', '自動', 'min="0" step="1"')}${num('ovs', '海外で作る割合（%）', R.ovs ? Math.round(R.ovs * 100) : '0', 'min="0" max="80" step="5"')}</div>
+    <span class="small muted">技術の遅れは世界の先端より何年遅れているか（空欄は日本の産業の地力に合わせる）。先を行くならマイナス（-2まで。品質の遅れも同じ）。技術者は空欄なら売上の4%を研究に使える数。海外で作る割合は、販路が「現地生産」以上の地域に工場を建てて分けます。</span>
     <div class="field"><span>事業（割合は売上の配分の重み。空欄は市場の大きさに合わせる。品質の遅れは年、値段は相場の%）</span>
       <div class="tbl-wrap"><table class="t compact fcu-tbl"><thead><tr><th>分野</th><th>割合</th><th>品質の遅れ</th><th>値段</th></tr></thead><tbody>${catRows}</tbody></table></div></div>
     <div class="field"><span>販路とブランド（0〜100）</span>
@@ -119,6 +122,7 @@ MODALS.fdEdit = (a = {}) => {
   const y = fdYf();
   const real = x => x / fdCpi(y);
   const inp = (attrs, v, extra = '') => `<input type="number" class="cu-sm" inputmode="decimal" ${attrs} value="${esc(String(v))}" ${extra}>`;
+  const inpS = (attrs, v, extra = '') => `<input ${FD_SIGNED} class="cu-sm cu-signed" ${attrs} value="${esc(String(v))}" ${extra}>`;
   const seg = `<div class="seg wrap" role="group" aria-label="編集する項目">${FD_ED_TABS.map(([k, l]) => `<button type="button" data-act="fEdTab" data-v="${k}" aria-pressed="${tab === k}">${l}</button>`).join('')}</div>`;
   let body = '';
   if (tab === 'money') {
@@ -128,17 +132,17 @@ MODALS.fdEdit = (a = {}) => {
   } else if (tab === 'tech') {
     const rows = Object.entries(fdS().fields).filter(([f]) => fdFrontier(f, y) !== null).map(([f, F]) => {
       const g = fdGap(f, y);
-      return `<tr><td>${esc(F.n)}</td><td class="small muted">${g === Infinity ? '手を付けていない' : fdGapTxt(g)}</td><td>${inp(`data-ed="tech" data-f="${f}" min="-2" max="80" step="0.5" aria-label="${esc(F.n)}の遅れ"`, g === Infinity ? '' : fdEdNum(g, 1), g === Infinity ? 'placeholder="―"' : '')} 年遅れ</td></tr>`;
+      return `<tr><td>${esc(F.n)}</td><td class="small muted">${g === Infinity ? '手を付けていない' : fdGapTxt(g)}</td><td>${inpS(`data-ed="tech" data-f="${f}" aria-label="${esc(F.n)}の遅れ（先を行くならマイナス）"`, g === Infinity ? '' : fdEdNum(g, 1), g === Infinity ? 'placeholder="―"' : '')} 年遅れ</td></tr>`;
     }).join('');
     body = `<div class="tbl-wrap"><table class="t compact fcu-tbl"><thead><tr><th>技術</th><th>いま</th><th>世界の先端より</th></tr></thead><tbody>${rows}</tbody></table></div><p class="small muted">マイナスは先端より先を行く（最大2年）。</p>`;
   } else if (tab === 'prod') {
     const ps = fdActiveProds();
-    const rows = ps.map(p => `<tr><td><b>${esc(p.name)}</b><div class="small muted">${esc(fdCat(p.cat).n)}</div></td><td>${inp(`data-ed="pgap" data-p="${p.id}" min="-2" max="80" step="0.5" aria-label="${esc(p.name)}の品質の遅れ"`, fdEdNum(y - p.qy, 1))} 年遅れ</td><td>${inp(`data-ed="ppr" data-p="${p.id}" min="50" max="200" step="1" aria-label="${esc(p.name)}の値段"`, p.pr)} %</td></tr>`).join('');
+    const rows = ps.map(p => `<tr><td><b>${esc(p.name)}</b><div class="small muted">${esc(fdCat(p.cat).n)}</div></td><td>${inpS(`data-ed="pgap" data-p="${p.id}" aria-label="${esc(p.name)}の品質の遅れ（先を行くならマイナス）"`, fdEdNum(y - p.qy, 1))} 年遅れ</td><td>${inp(`data-ed="ppr" data-p="${p.id}" min="50" max="200" step="1" aria-label="${esc(p.name)}の値段"`, p.pr)} %</td></tr>`).join('');
     const newCats = Object.keys(fdS().cats).filter(c => y >= fdCat(c).from && !fdActiveProds(c).length);
     body = `${rows ? `<div class="tbl-wrap"><table class="t compact fcu-tbl"><thead><tr><th>製品</th><th>品質</th><th>値段（相場の%）</th></tr></thead><tbody>${rows}</tbody></table></div>` : '<div class="empty">売っている製品がありません</div>'}
       ${newCats.length ? `<h3 class="cu-h">新しい分野の製品をすぐに出す</h3><div class="row"><select data-ed="newc" aria-label="分野">${newCats.map(c => `<option value="${c}">${esc(fdCat(c).n)}</option>`).join('')}</select>
         <label class="inline small">本社工場にラインを ${inp('data-ed="newcap" min="0" step="1" aria-label="年に作れる数"', '', 'placeholder="年に作れる数" style="width:8.5em"')}</label>${btn('出す', 'fEdAddProd', {}, 'sm')}</div>
-        <p class="small muted">品質は、いまのその分野の技術の水準。ラインの数を空欄にすると、製品だけを出します（作る場所は工場の項目で足せます）。</p>` : ''}`;
+        <p class="small muted">品質の遅れは、先を行くならマイナス（-2まで）。新しい製品の品質は、いまのその分野の技術の水準。ラインの数を空欄にすると、製品だけを出します（作る場所は工場の項目で足せます）。</p>` : ''}`;
   } else if (tab === 'fac') {
     const facs = G.facs.map(f => {
       const lines = f.lines.map(l => `<tr><td>${esc(fdCat(l.cat).n)}</td><td>${inp(`data-ed="lcap" data-f="${f.id}" data-c="${l.cat}" min="0" step="1" aria-label="${esc(f.n)}の${esc(fdCat(l.cat).n)}の能力"`, fdEdNum(l.cap, fdCat(l.cat).kind === 'big' ? 1 : 0))} ${esc(fdCat(l.cat).unit)}/年</td><td>${inp(`data-ed="lauto" data-f="${f.id}" data-c="${l.cat}" min="0" max="${Math.round(fdAutoMax(y) * 100)}" step="5" aria-label="${esc(f.n)}の${esc(fdCat(l.cat).n)}の自動化"`, Math.round((l.auto || 0) * 100))} %</td></tr>`).join('');
