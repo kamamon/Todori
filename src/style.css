@@ -945,6 +945,7 @@ details.custom > summary { cursor: pointer; font-weight: 700; font-size: 13px; c
 /* 創業記：カスタムスタートと途中編集 */
 .cu-sm { width: 6em; }
 .cu-xs { width: 4.4em; }
+input.cu-signed { font-family: var(--f-num); text-align: right; }
 .cu-fac .cu-sm, .cu-wide { width: 8.5em; }
 .fcu-tbl td:first-child { min-width: 7.5em; }
 .fcu-tbl td, .fcu-tbl th { vertical-align: middle; }
