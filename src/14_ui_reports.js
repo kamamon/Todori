@@ -365,14 +365,15 @@ MODALS.menu = () => {
   const L = lsKeys();
   const kmode = L === LSK;
   const gmode = L === LSG;
+  const fmode = typeof LSF !== 'undefined' && L === LSF;
   const slot = i => {
     let meta = null;
     try { meta = JSON.parse(lsGet(L.meta(i)) || 'null'); } catch (e) { meta = null; }
-    const desc = !meta ? '<span class="muted">空き</span>' : gmode ? `${esc(meta.co)}・${ymLabel(meta.m)}・署長 ${esc(meta.ceo)}` : kmode ? `${esc(meta.co)}・${ymLabel(meta.m)}・${esc(meta.desc || '')}` : `${esc(meta.bank)}・${ymLabel(meta.m)}・総資産${fmtYen(meta.ta)}`;
+    const desc = !meta ? '<span class="muted">空き</span>' : fmode ? `${esc(meta.co)}・${meta.y}年・社長 ${esc(meta.ceo)}` : gmode ? `${esc(meta.co)}・${ymLabel(meta.m)}・署長 ${esc(meta.ceo)}` : kmode ? `${esc(meta.co)}・${ymLabel(meta.m)}・${esc(meta.desc || '')}` : `${esc(meta.bank)}・${ymLabel(meta.m)}・総資産${fmtYen(meta.ta)}`;
     return `<tr><td class="nowrap">${i === 'a' ? '自動保存' : 'スロット' + i}</td><td class="small">${desc}</td><td class="n">${i === 'a' ? '' : btn('保存', 'saveSlot', { slot: i }, 'sm', { disabled: !G })} ${btn('読込', i === 'a' ? 'loadAuto' : 'loadSlot', { slot: i }, 'sm', { disabled: !meta })}${i === 'a' || !meta ? '' : ` ${btn('消す', 'delSlot', { slot: i }, 'sm ghost')}`}</td></tr>`;
   };
   const theme = lsGet(LS.theme) || 'auto';
-  const body = `<h3 style="font-size:14px;margin:0 0 6px">セーブとロード（${gmode ? '法令を守らせる' : kmode ? '会社を経営する' : '銀行を経営する'}）</h3><table class="t compact"><tbody>${slot('a')}${slot(1)}${slot(2)}${slot(3)}</tbody></table>
+  const body = `<h3 style="font-size:14px;margin:0 0 6px">セーブとロード（${fmode ? '会社を創業する' : gmode ? '法令を守らせる' : kmode ? '会社を経営する' : '銀行を経営する'}）</h3><table class="t compact"><tbody>${slot('a')}${slot(1)}${slot(2)}${slot(3)}</tbody></table>
     <p class="note">データはこのブラウザ内に保存されます。別の端末で続けるときはファイルに書き出してください。</p>
     <div class="row">${btn('ファイルに書き出す', 'exportSave', {}, '', { disabled: !G })}${btn('ファイルから読み込む', 'importSave')}</div>
     <hr class="sep"><h3 style="font-size:14px;margin:0 0 6px">表示</h3>
@@ -381,6 +382,7 @@ MODALS.menu = () => {
     <label class="inline small"><input type="checkbox" data-ch="setting" data-key="confirmAdvance" ${UI.settings.confirmAdvance ? 'checked' : ''}> 未処理の案件があるとき月末の締めを確認する</label>
     <label class="inline small"><input type="checkbox" data-ch="setting" data-key="learn" ${UI.settings.learn !== false ? 'checked' : ''}> 学習サポート（決算書の読み方ガイド・解説）を表示する</label>
     <label class="inline small"><input type="checkbox" data-ch="setting" data-key="autoClose" ${UI.settings.autoClose ? 'checked' : ''}> 会社経営：決算整理の質問をとばして、すぐ結果を見る</label></div>
+    ${fmode && G && G.mode === 'sogyo' ? `<hr class="sep"><h3 style="font-size:14px;margin:0 0 6px">会社の状態</h3><div class="row">${btn('会社を編集する（途中編集）', 'fEditOpen')}</div><p class="note">お金・技術・製品・工場・販路とブランド・人と仕組みを書き換えます。評価は参考になります。</p>` : ''}
     <hr class="sep">${G ? btn('新しいゲームを始める', 'newGameConfirm', {}, 'danger') : ''}`;
   return modalFrame('メニュー', body, btn('閉じる', 'closeModal', {}, 'primary'));
 };
@@ -452,6 +454,7 @@ function startStoreInputs() {
 function renderStart() {
   if (UI.start.mode === 'kaisha') return renderStartK();
   if (UI.start.mode === 'gyosei') return renderStartG();
+  if (UI.start.mode === 'sogyo') return renderStartF();
   let meta = null;
   try { meta = JSON.parse(lsGet(LS.meta('a')) || 'null'); } catch (e) { meta = null; }
   const s = UI.start, cu = s.custom;

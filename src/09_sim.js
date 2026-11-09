@@ -533,6 +533,7 @@ function deserialize(json) {
   const s = JSON.parse(json);
   if (s && s.mode === 'kaisha') return ksDeserialize(s);
   if (s && s.mode === 'gyosei') return gyDeserialize(s);
+  if (s && s.mode === 'sogyo') return fdDeserialize(s);
   if (!s || s.version !== SAVE_VERSION || !s.ledger) throw new Error('セーブデータの形式が違います');
   G = s;
   G.pendingModals = G.pendingModals || [];
