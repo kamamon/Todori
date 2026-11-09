@@ -64,7 +64,7 @@ function fdCuResolve(scen, cu = {}) {
   for (const [f, F] of Object.entries(S.fields)) {
     if (F.born > y) { tech[f] = null; continue; }
     const g = fdCuNum((cu.techF || {})[f]) ?? gapAll ?? fdCuTechDefault(scen, f, y);
-    tech[f] = clamp(g, -2, 80);
+    tech[f] = Math.min(80, g);
   }
   // 事業：選ばれていなければ、会社の大きさに合わせて中心の分野から順に
   const avail = fdCuCats(scen, y);
@@ -80,7 +80,7 @@ function fdCuResolve(scen, cu = {}) {
     const o = (cu.cats || {})[c] || {};
     const on = anySet ? !!o.on : deflt.includes(c);
     if (!on) continue;
-    cats.push({ c, w: Math.max(0.1, fdCuNum(o.w) ?? 1), wSet: fdCuNum(o.w) !== null, gap: clamp(fdCuNum(o.gap) ?? fdCuCatGap(scen, c, tech), -2, 80), pr: clamp(Math.round(fdCuNum(o.pr) ?? 100), 50, 200) });
+    cats.push({ c, w: Math.max(0.1, fdCuNum(o.w) ?? 1), wSet: fdCuNum(o.w) !== null, gap: Math.min(80, fdCuNum(o.gap) ?? fdCuCatGap(scen, c, tech)), pr: clamp(Math.round(fdCuNum(o.pr) ?? 100), 50, 200) });
   }
   if (!cats.length && avail.length) cats.push({ c: avail[0], w: 1, gap: fdCuCatGap(scen, avail[0], tech), pr: 100 });
   const wsum = sum(cats, k => k.w);
@@ -303,13 +303,13 @@ function fdEditMoney(o) {
   if (msg.length) fdEdited(msg.join('・'));
   return msg.length > 0;
 }
-/* 技術：分野 → 世界の先端より何年遅れているか（マイナスは先を行く。最大2年） */
+/* 技術：分野 → 世界の先端より何年遅れているか（マイナスは先を行く。先を行く年数に上限はない） */
 function fdEditTech(gaps) {
   const y = fdYf();
   let n = 0;
   for (const [f, g] of Object.entries(gaps)) {
     if (!G.tech[f] || g === null || g === undefined || !isFinite(g) || fdFrontier(f, y) === null) continue;
-    const t = fdFrontier(f, y) - clamp(g, -2, 80);
+    const t = fdFrontier(f, y) - Math.min(80, g);
     if (G.tech[f].t === null || Math.abs(G.tech[f].t - t) > 0.05) { G.tech[f].t = t; n++; }
   }
   if (n) { fdAutoRd(); fdEdited(`技術 ${n}分野`); }
@@ -322,7 +322,7 @@ function fdEditProds(map) {
   for (const [id, o] of Object.entries(map)) {
     const p = G.prods.find(x => x.id === id);
     if (!p) continue;
-    if (o.gap !== null && o.gap !== undefined && isFinite(o.gap)) { const qy = y - clamp(o.gap, -2, 80); if (Math.abs(qy - p.qy) > 0.05) { p.qy = qy; const C = fdCat(p.cat); p.spec = C.spec ? C.spec(qy, y) : p.spec; n++; } }
+    if (o.gap !== null && o.gap !== undefined && isFinite(o.gap)) { const qy = y - Math.min(80, o.gap); if (Math.abs(qy - p.qy) > 0.05) { p.qy = qy; const C = fdCat(p.cat); p.spec = C.spec ? C.spec(qy, y) : p.spec; n++; } }
     if (o.pr !== null && o.pr !== undefined && isFinite(o.pr)) { const pr = clamp(Math.round(o.pr), 50, 200); if (pr !== p.pr) { p.pr = pr; n++; } }
   }
   if (n) fdEdited('製品');

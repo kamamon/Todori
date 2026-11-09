@@ -68,7 +68,8 @@ function fdResearch(engR) {
     let d = 0.25 * Math.pow(e, 0.6) * k * Math.pow(0.6, over);
     // 使っている分野は、遅れているほど世の中から学べる（輸入の機械を分解する・人を雇う・雑誌を読む）。日本の地力の水準まで。戦争で海外と切れている間は学べない
     if (fdFieldUsed(f) && !iso) d += 0.22 * clamp((gap - Math.max(4, base + 1)) / 12, 0, 1);
-    T.t = Math.min(F + 2, T.t + d);
+    // 先端より先へ進む上限はない（先へ行くほど研究の効きは鈍る。編集で先に置いた技術も、そのまま持ち越す）
+    T.t += d;
     T.lastD = d * 4;
     if (gap > 0 && F - T.t <= 0 && !T.top) { T.top = G.q; fdChron(`${fdField(f).n}で世界の先端に並ぶ`, true); fdNews(`${fdField(f).n}の技術が世界の先端に並びました`, 'good'); }
   }
@@ -230,7 +231,10 @@ function fdMarket(c, r, q = G.q) {
   const fo = { n: 'その他の会社', Q: y - fdV(fl.lag || [[1910, 14], [1960, 8], [2025, 5]], y), priceK: fdV(fl.pf || 0.85, y), B: 25, D: 0.6, home: fdHomeBias(r, y, c) * 0.6, F: y, fringe: true, extra: Math.log(Math.max(0.05, fdV(fl.w || 3, y) * (FD_REG[r].fringe || 1))) };
   items.push(fo);
   let tot = 0;
-  for (const it of items) { it.U = fdUtil(it); it.e = Math.exp(it.U); tot += it.e; }
+  // いちばん大きい魅力を引いてから指数をとる（はるか先の品質でも、数があふれない）
+  for (const it of items) it.U = fdUtil(it);
+  const uMax = Math.max(...items.map(it => (Number.isFinite(it.U) ? it.U : -Infinity)));
+  for (const it of items) { it.e = Number.isFinite(it.U) ? Math.exp(it.U - uMax) : 0; tot += it.e; }
   for (const it of items) { it.share = it.e / tot; it.units = D * it.share; }
   return { c, r, D, ref: fdRef(c, y), items };
 }
@@ -259,7 +263,8 @@ function fdAutoTyp(y = fdYf()) { return fdAutoMax(y) * 0.7; }
    良くする工夫は重ねるほど効きが鈍る（1より小さい分は0.6乗）。立ち上げたばかりのライン（慣れ）・組織の摩擦・被害は、そのまま重くなる */
 function fdHrsMul(f, line, y = fdYf()) {
   const gap = fdGap(fdProdField(line.cat), y);
-  const techF = gap === Infinity ? 2.5 : gap > 0 ? Math.pow(1.035, gap) : Math.pow(0.98, -gap);
+  // 先を行く分の省力は60年分まで（はるか先の技術でも、工数が0にはならない）
+  const techF = gap === Infinity ? 2.5 : gap > 0 ? Math.pow(1.035, gap) : Math.pow(0.98, Math.min(60, -gap));
   const ak = 0.6 * (fdCat(line.cat).autoK ?? 1);
   const autoF = (1 - ak * (line.auto || 0)) / (1 - ak * fdAutoTyp(y));
   const kzF = 1 - 0.15 * (G.kaizen || 0);
