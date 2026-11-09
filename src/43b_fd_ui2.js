@@ -185,7 +185,7 @@ MODALS.fdLaunch = a => {
   if (!p) return modalFrame('新製品', '', btn('閉じる', 'closeModal', {}, 'primary'));
   const C = fdCat(p.cat);
   const y = fdYf(p.q0);
-  return modalFrame(`新製品「${esc(p.name)}」を発売`, `<p>${esc(C.n)}の新しい製品ができました。</p>${kv([['品質', `${fdGapTxt(y - p.qy)}（${fmtNum(Math.floor(p.qy), 0)}年の世界の水準）`], ['仕様', esc(p.spec || '―')], ['値段', `相場の${p.pr}%（${fmtYen(fdRef(p.cat) * p.pr / 100)}）`]])}
+  return modalFrame(`新製品「${esc(p.name)}」を発売`, `<p>${esc(C.n)}の新しい製品ができました。</p>${kv([['品質', `${fdGapTxt(y - p.qy)}（${fdYearN(p.qy)}年の世界の水準）`], ['仕様', esc(p.spec || '―')], ['値段', `相場の${p.pr}%（${fmtYen(fdRef(p.cat) * p.pr / 100)}）`]])}
     <label class="field" style="margin-top:12px"><span>製品の名前を変える</span><input type="text" id="fdPName" value="${esc(p.name)}" maxlength="24"></label>`, btn('この名前にする', 'fRename', { id: p.id }, 'primary'), { size: 'narrow' });
 };
 MODALS.fdYear = a => {
@@ -212,8 +212,8 @@ MODALS.fdDev = a => {
   const need = fdDevNeed(c);
   const q = fdDevQuarters(c);
   const ps = fdActiveProds(c);
-  const body = ready.ok ? `<p>${esc(C.n)}の${ps.length ? '新しい型' : '初めての製品'}を開発します。いまの技術で作ると、品質は${fdGapTxt(y - fdCatTech(c))}（${fmtNum(Math.floor(fdCatTech(c)), 0)}年の世界の水準）。</p>
-    ${kv([['開発に要る力', `技術者${fmtNum(Math.ceil(need / q), 0)}人で約${q}四半期`], ['いまの技術者', `${fmtNum(G.staff.eng, 0)}人（開発中 ${fmtNum(fdDevEngNeed(), 0)}人）`], ['仕様の目安', esc(C.spec ? C.spec(fdCatTech(c), y) : '―')]])}
+  const body = ready.ok ? `<p>${esc(C.n)}の${ps.length ? '新しい型' : '初めての製品'}を開発します。いまの技術で作ると、品質は${fdGapTxt(y - fdLaunchQy(c))}（${fdYearN(fdLaunchQy(c))}年の世界の水準）${fdEarly(c, y) ? '。世界にまだない製品で、世に出せばライバルのいない市場が生まれます' : ''}。</p>
+    ${kv([['開発に要る力', `技術者${fmtNum(Math.ceil(need / q), 0)}人で約${q}四半期`], ['いまの技術者', `${fmtNum(G.staff.eng, 0)}人（開発中 ${fmtNum(fdDevEngNeed(), 0)}人）`], ['仕様の目安', esc(C.spec ? C.spec(fdLaunchQy(c), y) : '―')]])}
     ${ps.length ? `<p class="small muted">発売すると、いまの「${esc(ps[0].name)}」と入れ替わります（在庫は引き継ぎ）。</p>` : `<p class="small muted">${esc(C.d || '')}</p>`}
     <label class="field"><span>製品の名前</span><input type="text" id="fdDevName" value="${esc(fdModelName(c))}" maxlength="24"></label>
     ${!ps.length ? `<p class="small">初めての分野は、発売の前に工場にラインを足す必要があります（${fmtYen(fdCapexPer(c) * 100)}で年100${esc(C.unit)}分など）。</p>` : ''}` : `<p>${esc(ready.why)}</p>`;
@@ -285,7 +285,7 @@ Object.assign(ACTIONS, {
     UI.modal.args.res = res || '決めました。';
     drawModal(); render();
   },
-  fRename: d => { const p = fdProd(d.id); const el = $('#fdPName'); if (p && el && el.value.trim()) p.name = el.value.trim().slice(0, 24); closeModal(); render(); },
+  fRename: d => { const p = fdProd(d.id); const el = $('#fdPName'); const v = el ? el.value.trim().slice(0, 24) : ''; if (p && v && v !== p.name) { p.name = v; p.auto = false; } closeModal(); render(); },
   fDevGo: d => { const el = $('#fdDevName'); const ps = fdActiveProds(d.c); const r = fdStartDev(d.c, { n: el && el.value.trim() ? el.value.trim().slice(0, 24) : undefined, rep: ps[0] ? ps[0].id : null }); if (!r.ok) toast(r.why, 'bad'); else toast(`「${r.d.n}」の開発を始めました`); closeModal(); render(); },
   fPlanGo: d => { const p = fdProd(d.id); const el = $('#fdPlanQty'); if (p && el) { p.plan = { mode: 'manual', qty: Math.max(0, Math.round(+el.value || 0)) }; } closeModal(); render(); },
   fLineOpen: d => showModal('fdLine', { f: d.f, c: d.c }),

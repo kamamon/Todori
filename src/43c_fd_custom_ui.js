@@ -134,11 +134,12 @@ MODALS.fdEdit = (a = {}) => {
       const g = fdGap(f, y);
       return `<tr><td>${esc(F.n)}</td><td class="small muted">${g === Infinity ? '手を付けていない' : fdGapTxt(g)}</td><td>${inpS(`data-ed="tech" data-f="${f}" aria-label="${esc(F.n)}の遅れ（先を行くならマイナス）"`, g === Infinity ? '' : fdEdNum(g, 1), g === Infinity ? 'placeholder="―"' : '')} 年遅れ</td></tr>`;
     }).join('');
-    body = `<div class="tbl-wrap"><table class="t compact fcu-tbl"><thead><tr><th>技術</th><th>いま</th><th>世界の先端より</th></tr></thead><tbody>${rows}</tbody></table></div><p class="small muted">マイナスは先端より先を行く（何年先でも。先へ行くほど研究では進みにくい）。</p>`;
+    body = `<div class="tbl-wrap"><table class="t compact fcu-tbl"><thead><tr><th>技術</th><th>いま</th><th>世界の先端より</th></tr></thead><tbody>${rows}</tbody></table></div><p class="small muted">マイナスは先端より先を行く（何年先でも。先へ行くほど研究では進みにくい）。技術がその製品の世に出た年の水準に届けば、世界にまだない製品も作れます。</p>
+      <label class="inline small"><input type="checkbox" data-ed="remake" checked> 売っている製品も、この技術の水準で作り直す（品質・仕様と、自動で付いた名前）</label>`;
   } else if (tab === 'prod') {
     const ps = fdActiveProds();
     const rows = ps.map(p => `<tr><td><b>${esc(p.name)}</b><div class="small muted">${esc(fdCat(p.cat).n)}</div></td><td>${inpS(`data-ed="pgap" data-p="${p.id}" aria-label="${esc(p.name)}の品質の遅れ（先を行くならマイナス）"`, fdEdNum(y - p.qy, 1))} 年遅れ</td><td>${inp(`data-ed="ppr" data-p="${p.id}" min="50" max="200" step="1" aria-label="${esc(p.name)}の値段"`, p.pr)} %</td></tr>`).join('');
-    const newCats = Object.keys(fdS().cats).filter(c => y >= fdCat(c).from && !fdActiveProds(c).length);
+    const newCats = Object.keys(fdS().cats).filter(c => fdCatOpen(c, y) && !fdActiveProds(c).length);
     body = `${rows ? `<div class="tbl-wrap"><table class="t compact fcu-tbl"><thead><tr><th>製品</th><th>品質</th><th>値段（相場の%）</th></tr></thead><tbody>${rows}</tbody></table></div>` : '<div class="empty">売っている製品がありません</div>'}
       ${newCats.length ? `<h3 class="cu-h">新しい分野の製品をすぐに出す</h3><div class="row"><select data-ed="newc" aria-label="分野">${newCats.map(c => `<option value="${c}">${esc(fdCat(c).n)}</option>`).join('')}</select>
         <label class="inline small">本社工場にラインを ${inp('data-ed="newcap" min="0" step="1" aria-label="年に作れる数"', '', 'placeholder="年に作れる数" style="width:8.5em"')}</label>${btn('出す', 'fEdAddProd', {}, 'sm')}</div>
@@ -146,7 +147,7 @@ MODALS.fdEdit = (a = {}) => {
   } else if (tab === 'fac') {
     const facs = G.facs.map(f => {
       const lines = f.lines.map(l => `<tr><td>${esc(fdCat(l.cat).n)}</td><td>${inp(`data-ed="lcap" data-f="${f.id}" data-c="${l.cat}" min="0" step="1" aria-label="${esc(f.n)}の${esc(fdCat(l.cat).n)}の能力"`, fdEdNum(l.cap, fdCat(l.cat).kind === 'big' ? 1 : 0))} ${esc(fdCat(l.cat).unit)}/年</td><td>${inp(`data-ed="lauto" data-f="${f.id}" data-c="${l.cat}" min="0" max="${Math.round(fdAutoMax(y) * 100)}" step="5" aria-label="${esc(f.n)}の${esc(fdCat(l.cat).n)}の自動化"`, Math.round((l.auto || 0) * 100))} %</td></tr>`).join('');
-      const cats = Object.keys(fdS().cats).filter(c => y >= fdCat(c).from && !f.lines.some(l => l.cat === c));
+      const cats = Object.keys(fdS().cats).filter(c => fdCatOpen(c, y) && !f.lines.some(l => l.cat === c));
       return `<div class="cu-fac"><div class="row" style="justify-content:space-between"><b>${esc(f.n)}<span class="small muted">（${esc(FD_REG[f.r].n)}・工員${fmtNum(f.wk || 0, 0)}人）</span></b>
         <span class="row small"><label class="inline">腕 ${inp(`data-ed="skill" data-f="${f.id}" min="0.5" max="2" step="0.1" aria-label="${esc(f.n)}の腕"`, fdEdNum(f.skill || 1, 2))}</label>${(f.dmgF || 1) > 1.01 ? `<label class="inline"><input type="checkbox" data-ed="repair" data-f="${f.id}"> 被害を直す</label>` : ''}</span></div>
         ${lines ? `<div class="tbl-wrap"><table class="t compact fcu-tbl"><thead><tr><th>ライン</th><th>能力</th><th>自動化（上限${Math.round(fdAutoMax(y) * 100)}%）</th></tr></thead><tbody>${lines}</tbody></table></div>` : '<p class="small muted">ラインがありません</p>'}
@@ -188,7 +189,7 @@ Object.assign(ACTIONS, {
   fEdApply: d => {
     let n = 0;
     if (d.v === 'money') n = fdEditMoney({ cash: fdEdVal('[data-ed="cash"]') === null ? null : fdEdVal('[data-ed="cash"]') * 1e8, debt: fdEdVal('[data-ed="debt"]') === null ? null : fdEdVal('[data-ed="debt"]') * 1e8 }) ? 1 : 0;
-    else if (d.v === 'tech') { const g = {}; for (const el of fdEdAll('[data-ed="tech"]')) { const v = fdCuNum(el.value); if (v !== null) g[el.dataset.f] = v; } n = fdEditTech(g); }
+    else if (d.v === 'tech') { const g = {}; for (const el of fdEdAll('[data-ed="tech"]')) { const v = fdCuNum(el.value); if (v !== null) g[el.dataset.f] = v; } const rm = document.querySelector('#modal-root [data-ed="remake"]'); n = fdEditTech(g, { prods: !!(rm && rm.checked) }); }
     else if (d.v === 'prod') { const m = {}; for (const el of fdEdAll('[data-ed="pgap"],[data-ed="ppr"]')) { const o = m[el.dataset.p] = m[el.dataset.p] || {}; o[el.dataset.ed === 'pgap' ? 'gap' : 'pr'] = fdCuNum(el.value); } n = fdEditProds(m); }
     else if (d.v === 'fac') {
       const m = {};

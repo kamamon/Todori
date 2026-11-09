@@ -29,10 +29,13 @@ function fdCatTech(c, y = fdYf()) {
   }
   return w ? s / w : y - 40;
 }
+/* その分野の製品を作れる年か：世界に出ている（ahead 年前から見せる）か、自社の技術がその製品の世に出た年の水準に届いている */
+function fdCatOpen(c, y = fdYf(), ahead = 0) { const C = fdCat(c); return y >= C.from - ahead || fdCatTech(c, y) >= C.from - ahead; }
 /* その分野に手を出せるか（開発を始められる技術があるか） */
 function fdCatReady(c, y = fdYf()) {
   const C = fdCat(c);
-  if (y < C.from) return { ok: false, why: `${Math.ceil(C.from)}年ごろまでは、世界にもまだない製品です` };
+  // 世界にまだない製品：その分野の技術が、世に出た年の水準に届いていれば、世界に先がけて作れる
+  if (y < C.from && !(fdCatTech(c, y) >= C.from)) return { ok: false, why: `${Math.ceil(C.from)}年ごろまでは、世界にもまだない製品です（この分野の技術が${Math.ceil(C.from)}年の水準に届けば、世界に先がけて作れます）` };
   for (const [f, need] of Object.entries(C.req || {})) {
     const T = G.tech[f];
     if (!T || T.t === null) return { ok: false, why: `${fdField(f).n}の研究を始めていません` };
@@ -85,7 +88,14 @@ function fdRefReal(c, y = fdYf()) { return fdSer(fdCat(c).price, y, true); }
 const FD_WPI_PASS = 0.7;
 function fdRef(c, y = fdYf()) { return fdRefReal(c, y) * fdCpi(y) * Math.pow(fdWpiShock(y), FD_WPI_PASS); }
 /* 世界の年間需要（台）と、地域の割合 */
-function fdWorldDem(c, y = fdYf()) { const C = fdCat(c); return y < C.from ? 0 : fdSer(C.dem, y, true); }
+/* 世界にまだない製品でも、自社が世に出していれば、自社だけの小さな市場がある（世に出た年の需要から、1年早いごとに4%ずつ小さく） */
+function fdWorldDem(c, y = fdYf()) {
+  const C = fdCat(c);
+  if (y >= C.from) return fdSer(C.dem, y, true);
+  return G && G.prods && fdActiveProds(c).length ? fdSer(C.dem, C.from, true) * Math.exp(-(C.from - y) / 25) : 0;
+}
+/* 世界にまだない製品の年か（自社だけが作れる。ライバルも、その他の会社もいない） */
+function fdEarly(c, y = fdYf()) { return y < fdCat(c).from; }
 function fdRegShare(c, r, y = fdYf()) {
   const C = fdCat(c);
   const tbl = Array.isArray(C.reg) ? C.reg : FD_REGMIX[C.reg || 'ind'];
@@ -225,10 +235,12 @@ function fdMarket(c, r, q = G.q) {
     const o = fdMyOffer(p, r, y);
     items.push(Object.assign(o, { me: true, p, n: p.name }));
   }
-  for (const rv of C.rivals || []) { const o = fdRivalOffer(c, rv, r, y); if (o) items.push(o); }
+  const early = fdEarly(c, y); // 世界にまだない製品なら、ライバルはいない（買わずにこれまでの品で済ませる人だけ）
+  if (!early) for (const rv of C.rivals || []) { const o = fdRivalOffer(c, rv, r, y); if (o) items.push(o); }
   // その他（小さな会社・輸入品の寄せ集め）
   const fl = C.fringe || {};
   const fo = { n: 'その他の会社', Q: y - fdV(fl.lag || [[1910, 14], [1960, 8], [2025, 5]], y), priceK: fdV(fl.pf || 0.85, y), B: 25, D: 0.6, home: fdHomeBias(r, y, c) * 0.6, F: y, fringe: true, extra: Math.log(Math.max(0.05, fdV(fl.w || 3, y) * (FD_REG[r].fringe || 1))) };
+  if (early) fo.n = 'これまでの品で済ませる人';
   items.push(fo);
   let tot = 0;
   // いちばん大きい魅力を引いてから指数をとる（はるか先の品質でも、数があふれない）
@@ -646,7 +658,9 @@ function fdStartDev(c, o = {}) {
   const ready = fdCatReady(c);
   if (!ready.ok) return { ok: false, why: ready.why };
   const need = fdDevNeed(c);
-  const d = { id: 'D' + (++G.seq), cat: c, n: o.n || fdModelName(c), prog: 0, need, eng: Math.ceil(need / Math.max(1, fdDevQuarters(c))), q0: G.q, pt: o.pt || null, rep: o.rep || null };
+  // 名前を自分で付けなかったら、発売のときの技術に合わせた型の名前にする（auto）
+  const auto = !o.n || o.n === fdModelName(c);
+  const d = { id: 'D' + (++G.seq), cat: c, n: o.n || fdModelName(c), auto, prog: 0, need, eng: Math.ceil(need / Math.max(1, fdDevQuarters(c))), q0: G.q, pt: o.pt || null, rep: o.rep || null };
   G.devs.push(d);
   fdNews(`${C.n}の新しい製品「${d.n}」の開発を始めました`);
   return { ok: true, d };
@@ -666,26 +680,34 @@ function fdDevelop() {
   for (const d of done) { G.devs = G.devs.filter(x => x !== d); fdLaunch(d); }
   return Math.max(0, avail - need * k);
 }
-/* 製品の名前（分野・時代の型から） */
-function fdModelName(c, y = fdYf()) {
+/* 製品の名前（分野と、品質の技術の年 ty の型から。先を行く技術なら、先の時代の型になる）。n は何代目か */
+function fdModelName(c, y = fdYf(), ty = fdCatTech(c, y), n = (G.gen[c] || 0) + 1) {
   const C = fdCat(c);
-  const n = (G.gen[c] || 0) + 1;
-  const ty = fdCatTech(c, y);
   return C.model ? C.model(ty, n, y) : `${C.n} ${n}号`;
 }
+/* 製品の品質の年を変え、仕様（と自動で付けた名前）をその技術に合わせる */
+function fdSetProdQy(p, qy, y = fdYf()) {
+  const C = fdCat(p.cat);
+  p.qy = qy;
+  if (C.spec) p.spec = C.spec(qy, y);
+  if (p.auto) p.name = fdModelName(p.cat, y, qy, p.gen);
+}
+/* 新しい製品の品質：その分野の技術の水準そのまま（先を行く技術なら、何年先でもその品になる）。研究所があれば少し上 */
+function fdLaunchQy(c, y = fdYf()) { return fdCatTech(c, y) + (G.prog.lab ? 0.5 : 0); }
 function fdLaunch(d) {
   const C = fdCat(d.cat);
   const y = fdYf();
-  const qy = Math.min(y + 3, fdCatTech(d.cat, y) + (G.prog.lab ? 0.5 : 0));
+  const qy = fdLaunchQy(d.cat, y);
+  const name = d.auto ? fdModelName(d.cat, y, qy) : d.n;
   G.gen[d.cat] = (G.gen[d.cat] || 0) + 1;
   const old = d.rep ? fdProd(d.rep) : null;
-  const p = { id: 'P' + (++G.seq), cat: d.cat, name: d.n, gen: G.gen[d.cat], qy, q0: G.q, pr: old ? old.pr : 100, stock: old ? old.stock : 0, stockCost: old ? old.stockCost : 0, cum: 0, sold: old ? old.sold : 0, want: old ? old.want : 0, made: 0, plan: old && old.plan ? Object.assign({}, old.plan) : { mode: 'auto', qty: 0 }, def: fdDefect(d.cat), active: true, pt: d.pt, ban: fdLicBans(d.cat) };
+  const p = { id: 'P' + (++G.seq), cat: d.cat, name, auto: !!d.auto, gen: G.gen[d.cat], qy, q0: G.q, pr: old ? old.pr : 100, stock: old ? old.stock : 0, stockCost: old ? old.stockCost : 0, cum: 0, sold: old ? old.sold : 0, want: old ? old.want : 0, made: 0, plan: old && old.plan ? Object.assign({}, old.plan) : { mode: 'auto', qty: 0 }, def: fdDefect(d.cat), active: true, pt: d.pt, ban: fdLicBans(d.cat) };
   p.spec = C.spec ? C.spec(qy, y) : '';
   if (old) { old.active = false; old.end = G.q; old.stock = 0; old.stockCost = 0; }
   G.prods.push(p);
   // ラインの段取り替え（型・治具）。新しい分野ならラインはまだない
   const first = !G.miles['cat_' + d.cat];
-  if (first) { G.miles['cat_' + d.cat] = G.q; fdChron(`${C.n}に進出。「${p.name}」を発売`, true); }
+  if (first) { G.miles['cat_' + d.cat] = G.q; fdChron(y < C.from ? `世界に先がけて${C.n}を世に出す。「${p.name}」を発売` : `${C.n}に進出。「${p.name}」を発売`, true); }
   else fdChron(`「${p.name}」を発売（${C.n}）`);
   fdNews(`${C.n}の新製品「${p.name}」を発売しました。品質は${fdTechWord(qy - y)}${p.spec ? `（${p.spec}）` : ''}`, 'good');
   G.pendingModals.push({ type: 'fdLaunch', id: p.id });

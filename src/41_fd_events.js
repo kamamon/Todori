@@ -406,7 +406,7 @@ const FD_RANDOM = [
   },
   {
     id: 'genius', p: 0.025, cool: 12, need: () => G.staff.eng >= 5, k: 'good', t: () => '若い技術者が新しい工夫を生み出しました',
-    fx: () => { const cand = Object.entries(G.tech).filter(([f, T]) => T.t !== null && fdFrontier(f) !== null); if (!cand.length) return; const [f, T] = pick(cand); T.t = Math.min(fdYf() + 3, T.t + 1.2); fdNews(`若い技術者の工夫で、${fdField(f).n}の水準が1年あまり進みました`, 'good'); },
+    fx: () => { const cand = Object.entries(G.tech).filter(([f, T]) => T.t !== null && fdFrontier(f) !== null); if (!cand.length) return; const [f, T] = pick(cand); T.t += 1.2; fdNews(`若い技術者の工夫で、${fdField(f).n}の水準が1年あまり進みました`, 'good'); },
   },
   {
     id: 'bigorder', p: 0.05, cool: 8, k: 'good', need: () => fdActiveProds().some(p => ['cap', 'big'].includes(fdCat(p.cat).kind)), show: true, title: '大口の注文', t: () => '大口の注文の打診がありました',

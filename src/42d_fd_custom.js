@@ -236,7 +236,7 @@ function fdCuLine(f, c, cap, y) {
 function fdCuProd(c, qy, pr, capT, f, y) {
   const C = fdCat(c);
   G.gen[c] = 0;
-  const p = { id: 'P' + (++G.seq), cat: c, name: fdModelName(c), gen: 1, qy, q0: -4, pr, stock: 0, stockCost: 0, cum: 0, sold: 0, want: 0, made: 0, def: fdDefect(c), active: true, plan: { mode: 'auto', qty: 0 }, ban: [] };
+  const p = { id: 'P' + (++G.seq), cat: c, name: fdModelName(c, y, qy, 1), auto: true, gen: 1, qy, q0: -4, pr, stock: 0, stockCost: 0, cum: 0, sold: 0, want: 0, made: 0, def: fdDefect(c), active: true, plan: { mode: 'auto', qty: 0 }, ban: [] };
   p.spec = C.spec ? C.spec(qy, y) : '';
   G.gen[c] = 1; G.miles['cat_' + c] = -4;
   G.prods.push(p);
@@ -303,8 +303,9 @@ function fdEditMoney(o) {
   if (msg.length) fdEdited(msg.join('・'));
   return msg.length > 0;
 }
-/* 技術：分野 → 世界の先端より何年遅れているか（マイナスは先を行く。先を行く年数に上限はない） */
-function fdEditTech(gaps) {
+/* 技術：分野 → 世界の先端より何年遅れているか（マイナスは先を行く。先を行く年数に上限はない）。
+   o.prods：売っている製品も、新しい技術の水準で作り直す（品質・仕様と、自動で付けた名前） */
+function fdEditTech(gaps, o = {}) {
   const y = fdYf();
   let n = 0;
   for (const [f, g] of Object.entries(gaps)) {
@@ -312,7 +313,20 @@ function fdEditTech(gaps) {
     const t = fdFrontier(f, y) - Math.min(80, g);
     if (G.tech[f].t === null || Math.abs(G.tech[f].t - t) > 0.05) { G.tech[f].t = t; n++; }
   }
-  if (n) { fdAutoRd(); fdEdited(`技術 ${n}分野`); }
+  const np = o.prods ? fdRemakeProds(y) : 0;
+  if (n) fdAutoRd();
+  if (n || np) fdEdited([n ? `技術 ${n}分野` : '', np ? `製品 ${np}点を作り直す` : ''].filter(Boolean).join('・'));
+  return n + np;
+}
+/* 売っている製品を、いまの技術の水準で作り直す（新しく開発したときと同じ品質。数を返す） */
+function fdRemakeProds(y = fdYf()) {
+  let n = 0;
+  for (const p of fdActiveProds()) {
+    const qy = fdLaunchQy(p.cat, y);
+    if (Math.abs(qy - p.qy) <= 0.05) continue;
+    fdSetProdQy(p, qy, y);
+    n++;
+  }
   return n;
 }
 /* 製品：id → { gap（品質の遅れ）, pr（値段 %） } */
@@ -322,7 +336,7 @@ function fdEditProds(map) {
   for (const [id, o] of Object.entries(map)) {
     const p = G.prods.find(x => x.id === id);
     if (!p) continue;
-    if (o.gap !== null && o.gap !== undefined && isFinite(o.gap)) { const qy = y - Math.min(80, o.gap); if (Math.abs(qy - p.qy) > 0.05) { p.qy = qy; const C = fdCat(p.cat); p.spec = C.spec ? C.spec(qy, y) : p.spec; n++; } }
+    if (o.gap !== null && o.gap !== undefined && isFinite(o.gap)) { const qy = y - Math.min(80, o.gap); if (Math.abs(qy - p.qy) > 0.05) { fdSetProdQy(p, qy, y); n++; } }
     if (o.pr !== null && o.pr !== undefined && isFinite(o.pr)) { const pr = clamp(Math.round(o.pr), 50, 200); if (pr !== p.pr) { p.pr = pr; n++; } }
   }
   if (n) fdEdited('製品');
@@ -332,14 +346,15 @@ function fdEditProds(map) {
 function fdEditAddProd(c, cap) {
   const C = fdCat(c);
   const y = fdYf();
-  if (!C || y < C.from) return { ok: false, why: 'その年にはまだない製品です' };
+  if (!C) return { ok: false, why: 'その分野はありません' };
+  if (!fdCatOpen(c, y)) return { ok: false, why: `${Math.ceil(C.from)}年ごろまでは世界にもまだない製品です（この分野の技術が${Math.ceil(C.from)}年の水準に届けば出せます）` };
   if (fdActiveProds(c).length) return { ok: false, why: 'その分野の製品はもう売っています' };
   const f = G.facs.find(x => x.r === 'jp') || G.facs[0];
   const lineCap = sum(G.facs, x => sum(x.lines.filter(l => l.cat === c), l => l.cap));
   if (cap > 0 && f) fdEditAddLine(f.id, c, cap, true);
   // 初めの四半期から作れるよう、ラインに見合う売れる見込みと在庫を持たせる（在庫の分は純資産で受ける）
   const inv0 = G.bs.inv;
-  const p = fdCuProd(c, fdCatTech(c, y), 100, lineCap + (cap > 0 ? cap : 0), f, y);
+  const p = fdCuProd(c, fdLaunchQy(c, y), 100, lineCap + (cap > 0 ? cap : 0), f, y);
   G.bs.cap += G.bs.inv - inv0;
   p.q0 = G.q;
   G.gen[c] = Math.max(1, G.gen[c] || 1);
