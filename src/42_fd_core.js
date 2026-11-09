@@ -194,10 +194,12 @@ function fdLoanRate() {
   const spread = eqr > 0.4 ? -0.3 : eqr > 0.25 ? 0 : eqr > 0.1 ? 0.8 : 2;
   return Math.max(0.3, fdRate(fdYf()) * fdModMul('rate', null, null) + spread + (G.bank.spread || 0));
 }
-function fdBorrow(amt, termY = 5, why = '運転資金') {
+function fdBorrow(amt, termY = 5, why = '運転資金', graceY = 0) {
   amt = Math.round(amt);
   if (amt <= 0) return null;
   const l = { id: 'L' + (++G.seq), amt, bal: amt, rate: fdLoanRate(), q: G.q, termQ: Math.max(1, Math.round(termY * 4)), why };
+  // 据え置き：大きな工場の借入は、建って稼ぎ始めるまで元本を返さない
+  if (graceY > 0) l.grace = G.q + Math.round(graceY * 4);
   G.loans.push(l);
   G.bs.cash += amt; G.bs.debt += amt;
   return l;
@@ -217,7 +219,8 @@ function fdLoansQuarter() {
     int += l.bal * l.rate / 100 / 4;
     const left = l.q + l.termQ - G.q;
     if (left <= 0) continue;
-    if (l.termQ > 4) fdRepay(l, l.amt / l.termQ);
+    if (l.grace && G.q < l.grace) continue;
+    if (l.termQ > 4) fdRepay(l, l.amt / Math.max(1, l.termQ - (l.grace ? l.grace - l.q : 0)));
   }
   G.loans = G.loans.filter(l => l.bal > 0.5);
   // 預金の利息（現金の一部を預けている）

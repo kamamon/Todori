@@ -865,7 +865,7 @@ function fdStaffAuto() {
     if (f.ready > G.q) { if (f.ready - G.q <= 1) f.wk = Math.max(f.wk || 0, Math.ceil(fdFacWkFull(f, y) * 0.5)); continue; }
     const need = Math.ceil((f.needWk || 0) * 1.03);
     const cur = f.wk || 0;
-    if (need > cur) f.wk = cur + Math.min(need - cur, Math.max(5, Math.ceil(cur * 0.35)));
+    if (need > cur) f.wk = cur + Math.min(need - cur, Math.max(5, Math.ceil(cur * 0.35), Math.ceil(need * 0.25)));
     else if (G.policy.noLayoff === false) f.wk = need;
     else f.wk = Math.max(need, Math.floor(cur * (1 - attr)));
   }
@@ -1099,6 +1099,8 @@ function fdCashCheck() {
   const need = -G.bs.cash * 1.15 + fdNominal(fdSer([[1910, 5e6], [2000, 1e8]], fdYf(), true));
   const room = fdCreditLimit() - fdDebt();
   if (room > need) { fdBorrow(need, 1, '資金繰り（自動）'); fdNews(`資金が足りなくなり、銀行から${fmtYen(need)}を借りました（期間1年）`, 'warn'); return; }
+  // 敗戦の直後は、古い借金が凍結され、足りない運転資金は復興金融金庫が貸してくれる
+  if (fdModsOf('reconFin', null, 'jp').length) { fdBorrow(need, 5, '復興金融金庫の融資', 2); fdNews(`復興金融金庫から${fmtYen(need)}を借りました`, 'warn'); return; }
   if (room > 0) fdBorrow(room, 1, '資金繰り（自動）');
   if (G.bs.cash < 0) {
     G.crisis = (G.crisis || 0) + 1;

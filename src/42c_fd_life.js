@@ -361,7 +361,7 @@ function fdAuto(o = {}) {
   const rdTgt = sales * rdK / Math.max(1, fdPayQ('eng') * 4 * 1.35);
   const engNeed = Math.max(fdDevEngNeed() + 2, Math.round(rdTgt));
   if (G.staff.eng < engNeed && G.bs.cash > fdPayQ('eng') * 8) fdHireEng(Math.min(engNeed - G.staff.eng, Math.max(1, Math.ceil(G.staff.eng * 0.25))));
-  else if (losing && G.staff.eng > engNeed * 1.3) fdHireEng(-Math.ceil((G.staff.eng - engNeed) * 0.15));
+  else if (losing && G.staff.eng > engNeed * 1.3) fdHireEng(-Math.ceil((G.staff.eng - engNeed) * (fdLastQ('sales') * 0.4 < G.staff.eng * fdPayQ('eng') ? 0.4 : 0.15)));
   // 新しい製品：今の製品が先端より遅れ、技術が3年以上進んでいれば作り直す。新しい分野は、技術が届いたら入る
   for (const c of Object.keys(fdS().cats)) {
     if (G.devs.some(d => d.cat === c)) continue;

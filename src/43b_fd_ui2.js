@@ -72,12 +72,12 @@ FD_SCREENS.f_world = () => {
     return `<tr><td><b>${esc(RR.n)}</b><div class="small muted">${esc(fdStageN(r, R.st))}</div></td><td class="n">${R.st ? fmtPct(R.dist * 100, 0) : '―'}</td><td class="n">${R.st ? fmtNum(R.brand, 0) : '―'}</td><td class="n">${sales ? fmtYen(sales) : '―'}</td>
       <td class="n nowrap">${act}${nx <= 4 && !(r !== 'jp' && nx === 3) && acc >= 1 ? `<div class="small muted">${fmtYen(fdRegStepCost(r, nx))}</div>` : ''}</td></tr>`;
   }).join('');
-  const fx = fdFx(y), rer = fdRer(y);
+  const fx = fdFx(y), rel = fdRerRel(y);
   return `<h1 class="h1">世界</h1><p class="lead">地域ごとに、輸出（商社を通す）→ 販売会社 → 現地生産 → 現地で開発、と進めます。販路が広がるほど多く売れ、ブランドは年月と品質で育ちます。日本から輸出すると、関税・運賃・為替の影響を受けます。</p>
     <div class="grid g-side"><div class="stack">
       ${panel('地域', `<div class="tbl-wrap"><table class="t"><thead><tr><th>地域</th><th class="n">販路</th><th class="n">ブランド</th><th class="n">去年の売上</th><th class="n">次の一手</th></tr></thead><tbody>${rows}</tbody></table></div>`, { flush: true })}
     </div><div class="stack">
-      ${panel('為替', `${kv([['1ドル', `${fmtNum(fx, fx < 10 ? 2 : 0)}円`], ['円の実力（2025年＝1）', `${fmtNum(rer, 2)}`]])}<p class="small muted" style="margin:8px 0 0">${rer > 1.3 ? '円が強い：日本から輸出する品は海外で割高になり、輸入品は日本で割安になります。海外で作ると有利です。' : rer < 0.7 ? '円が弱い：日本から輸出する品は海外で割安になり、輸入品は日本で割高です。輸出に有利です。' : '円の強さはふつうです。'}</p>`)}
+      ${panel('為替', `${kv([['1ドル', `${fmtNum(fx, fx < 10 ? 2 : 0)}円`], ['円の強さ（前後の年の平均＝1）', `${fmtNum(rel, 2)}`], ['輸出品の海外での値段', `${fmtPct((fdFxPass(y) - 1) * 100, 0, { sign: true })}`], ['輸出の円での手取り', `${fmtPct((fdFxTake(y) - 1) * 100, 0, { sign: true })}`]])}<p class="small muted" style="margin:8px 0 0">${rel > 1.15 ? '円が強い：日本から輸出する品は海外で割高になり、輸入品は日本で割安になります。海外で作ると有利です。' : rel < 0.87 ? '円が弱い：日本から輸出する品は海外で割安になり、輸入品は日本で割高です。輸出に有利です。' : '円の強さはふつうです。'}</p>`)}
       ${panel('地域の事情', `<ul class="small" style="margin:0;padding-left:18px">${fdRegOrder().filter(r => r !== 'jp').map(r => `<li><b>${esc(FD_REG[r].n)}</b>：${esc(fdRegNote(r))}</li>`).join('')}</ul>`)}
     </div></div>`;
 };
@@ -128,7 +128,9 @@ FD_SCREENS.f_hist = () => {
     if (hy.length < 2) body = '<div class="empty">決算が2回終わると出ます</div>';
     else {
       const L = hy.map(h => String(h.y));
-      body = panel('売上（今の価値・対数）', lineChart({ labels: L, series: [{ name: '売上', color: 's1', values: hy.map(h => Math.log10(Math.max(1, h.sales / h.cpi))) }], yFmt: v => axisYen(Math.pow(10, v)), tipFmt: v => fmtYen(Math.pow(10, v)) }))
+      const B = fdS().bench;
+      const bser = B ? [{ name: '史実', color: 's3', dash: true, values: hy.map(h => Math.log10(Math.max(1, fdSer(B.pts, h.y + 0.5, true)))) }] : [];
+      body = panel('売上（今の価値・対数）', lineChart({ labels: L, series: [{ name: '売上', color: 's1', values: hy.map(h => Math.log10(Math.max(1, h.sales / h.cpi))) }].concat(bser), yFmt: v => axisYen(Math.pow(10, v)), tipFmt: v => fmtYen(Math.pow(10, v)) }))
         + panel('社員の数', lineChart({ labels: L, series: [{ name: '社員', color: 's2', values: hy.map(h => h.head) }], yFmt: v => fmtNum(v, 0), tipFmt: v => `${fmtNum(v, 0)}人`, minZero: true }))
         + panel('海外の売上の割合', lineChart({ labels: L, series: [{ name: '海外', color: 's3', values: hy.map(h => { const t = sum(Object.values(h.reg), x => x); return t ? (1 - (h.reg.jp || 0) / t) * 100 : 0; }) }], yFmt: axisPct(0), tipFmt: v => fmtPct(v, 1), minZero: true }));
     }

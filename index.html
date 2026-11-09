@@ -41419,6 +41419,7 @@ const FD_EVENTS = [
       fdM('dem', '*', 'jp', 0.45, 1946, 1946.75, '戦後の混乱');
       fdM('dem', '*', 'jp', 0.65, 1947, 1947.75, '戦後の混乱');
       fdM('dem', '*', 'jp', 0.8, 1948, 1948.75, '復興の途中');
+      fdM('reconFin', '*', 'jp', 1, 1945.5, 1949.25, '会社経理応急措置法と復興金融金庫：古い借金は凍結され、足りない運転資金は国が貸す');
       fdM('dem', 'pcar', 'jp', 0.05, 1945.5, 1949.5, 'GHQが乗用車の製造を制限');
       fdM('rival', '*', 'jp', 0.15, 1945.5, 1950.0, '輸入の禁止', { o: 'foreign' });
       fdM('credit', '*', '*', 0.5, 1945.5, 1946.75, '戦後の混乱');
@@ -41596,7 +41597,7 @@ const FD_EVENTS = [
     d: '巣ごもりの需要で半導体の取り合いが起きた。3月にはルネサスの那珂工場で火事があり、車の制御に使う半導体が一層足りなくなった。自動車の会社は、2021年9月に世界の生産を4割減らす計画を出すほどだった。半導体の値段は上がり、半導体の会社は空前の好況だ。',
     fx: () => { fdM('cap', 'pcar', '*', 0.8, 2021.25, 2022.75, '半導体の不足'); fdM('dem', 'chip', '*', 1.25, 2021, 2022.5, '半導体の不足'); },
   },
-  { id: 'ukraine', y: 2022, q: 0, tag: '戦争', k: 'bad', t: 'ロシアがウクライナに侵攻。資源の値段が上がり、円安と物価高が進む', fx: () => { fdM('cost', '*', '*', 1.08, 2022, 2023.0, '資源の値上がり'); fdM('access', '*', 'eu', 4, 2022, 2022, ''); } },
+  { id: 'ukraine', y: 2022, q: 0, tag: '戦争', k: 'bad', t: 'ロシアがウクライナに侵攻。資源の値段が上がり、円安と物価高が進む', fx: () => { fdM('cost', '*', '*', 1.08, 2022, 2023.0, '資源の値上がり'); } },
   { id: 'evchina', y: 2023, q: 0, tag: '競争', k: 'bad', need: () => fdCatsTagged('pcar').length > 0, t: '中国の電気自動車の会社が値下げ合戦で台頭し、中国での日本車の取り分が急に減る（2025年は約1割）', fx: () => { fdM('jpPen', 'pcar', 'cn', 0.6, 2023, 2050, '中国の会社の台頭'); } },
   {
     id: 'tariff25', y: 2025, q: 1, tag: '貿易', big: true, k: 'bad', show: true, title: '米国の関税', t: '米国が輸入の車に25%の関税をかける。7月の日米合意で15%に',
@@ -41604,7 +41605,6 @@ const FD_EVENTS = [
     fx: () => {
       fdM('tariff', 'pcar', 'na', 22.5, 2025.25, 2025.5, '米国の追加関税');
       fdM('tariff', 'pcar', 'na', 12.5, 2025.75, 2050, '日米合意の関税（15%）');
-      fdM('tariff', 'truck', 'na', 0, 2025.25, 2050, '');
       fdM('tariff', 'cap', 'na', 10, 2025.25, 2025.5, '米国の相互関税');
       fdM('tariff', 'cap', 'na', 15, 2025.75, 2050, '日米合意の関税');
       fdM('tariff', 'dur', 'na', 10, 2025.25, 2025.5, '米国の相互関税');
@@ -41739,7 +41739,7 @@ FD_SCEN.denki = {
   img: 'fdhero',
   intro: `<p>1910年（明治43年）、茨城の銅山。発電所から坑道の巻上機まで、山の機械はすべて輸入品だ。壊れれば、直すにも部品を取り寄せるにも、何か月もかかる。</p>
 <p>鉱山の工作課長である<b>あなた</b>は、5人の仲間と修理小屋で輸入のモーターをばらし、巻線を手で巻き直しながら、仕組みを学んできた。そして今年、自分たちの手で<b>5馬力の誘導電動機</b>を3台作り上げた。「モーターは回るものだが、なかなか回らなかった」。</p>
-<p>親会社の鉱山は、修理の仕事と、山で使うモーターの注文をくれる。だが、外の客に売るには、米国・ドイツ・英国の大会社の品と競わなければならない。技術は世界より20年遅れ、名前を知る人もいない。</p>
+<p>親会社の鉱山は、修理の仕事と、山で使うモーターの注文をくれる。だが、外の客に売るには、米国・ドイツ・英国の大会社の品と競わなければならない。技術は世界より十数年遅れ、名前を知る人もいない。</p>
 <p>ここから、発電機・変圧器・機関車・家電・コンピューターへ。2025年、この会社は世界のどこに立っているだろうか。</p>
 <p class="small muted">史実の日立製作所の売上（今の価値）は、1920年に約160億円、1937年に約3,200億円、1970年に約4.8兆円、2024年に約10兆円。「社史」の「数字の歩み」で、あなたの会社と比べられます。</p>`,
   heir: { n: '大森 正一', born: 1903, abil: { tech: 3, prod: 3, sales: 3, fin: 3, lead: 4 }, trait: 'steady', d: '創業者の長男。帝大の電気工学科を出て、工場の現場で叩き上げた。' },
@@ -42271,7 +42271,7 @@ FD_SCEN.jidosha = {
       dem: [[1896, 100], [1905, 3000], [1910, 1e4], [1915, 8e4], [1918, 2.5e5], [1920, 3e5], [1925, 6e5], [1929, 8e5], [1932, 3.5e5], [1937, 9e5], [1939, 8e5], [1942, 1.2e6], [1944, 1.4e6], [1946, 1e6], [1950, 1.8e6], [1960, 3e6], [1970, 5e6], [1980, 7e6], [1990, 8e6], [2000, 9e6], [2009, 8.5e6], [2010, 1.2e7], [2025, 1.5e7], [2050, 1.8e7]],
       price: [[1896, 3e7], [1910, 1.5e7], [1920, 6e6], [1930, 5e6], [1950, 5e6], [1970, 4.5e6], [1990, 5e6], [2025, 6e6]],
       reg: [[1910, { jp: 0.002, as: 0.01, cn: 0.003, na: 0.6, eu: 0.37, ot: 0.015 }], [1920, { jp: 0.005, as: 0.02, cn: 0.005, na: 0.75, eu: 0.18, ot: 0.04 }], [1935, { jp: 0.03, as: 0.03, cn: 0.02, na: 0.6, eu: 0.25, ot: 0.07 }], [1950, { jp: 0.03, as: 0.03, cn: 0.02, na: 0.5, eu: 0.3, ot: 0.12 }], [1970, { jp: 0.17, as: 0.05, cn: 0.04, na: 0.33, eu: 0.25, ot: 0.16 }], [1990, { jp: 0.15, as: 0.1, cn: 0.08, na: 0.3, eu: 0.22, ot: 0.15 }], [2010, { jp: 0.06, as: 0.15, cn: 0.32, na: 0.2, eu: 0.14, ot: 0.13 }], [2025, { jp: 0.05, as: 0.2, cn: 0.28, na: 0.2, eu: 0.13, ot: 0.14 }]],
-      sgaK: 0.8, mat: [[1900, 0.6], [1960, 0.65], [2025, 0.68]], hrs: [[1905, 1500], [1915, 500], [1925, 250], [1950, 180], [1970, 90], [1990, 50], [2025, 35]], capex: [[1900, 0.4], [2025, 0.35]], dev: { q: 6, eq: 30 },
+      sgaK: 0.6, mat: [[1900, 0.6], [1960, 0.65], [2025, 0.68]], hrs: [[1905, 1500], [1915, 500], [1925, 250], [1950, 180], [1970, 90], [1990, 50], [2025, 35]], capex: [[1900, 0.4], [2025, 0.35]], dev: { q: 6, eq: 30 },
       model: (ty, n, y) => (y < 1950 ? `${['G', 'GA', 'GB', 'KB', 'KC', 'BM'][(n - 1) % 6]}型 トラック` : `${['ダイナモ', 'エースワン', 'ストロング', 'コースタル'][(n - 1) % 4]} ${n}代目`),
       spec: ty => `積載 ${fdOne(fdSer([[1900, 1], [1935, 1.5], [1960, 4], [1990, 8], [2025, 10]], ty), 1)}t・${fdOne(fdSer([[1900, 20], [1920, 40], [1935, 65], [1960, 130], [1990, 250], [2025, 350]], ty))}馬力`,
       rivals: [FDC.rouge(), FDC.mich(),
@@ -42292,7 +42292,7 @@ FD_SCEN.jidosha = {
       dem: [[1886, 100], [1900, 1e4], [1905, 4e4], [1910, 2.4e5], [1913, 5e5], [1916, 1.2e6], [1920, 2e6], [1925, 3.8e6], [1929, 4.3e6], [1932, 1.3e6], [1937, 3.9e6], [1938, 2.4e6], [1941, 3.5e6], [1942, 4e5], [1945, 1.5e5], [1946, 2.5e6], [1950, 6.6e6], [1955, 8.5e6], [1960, 8e6], [1965, 1e7], [1970, 1.05e7], [1975, 9e6], [1980, 8.5e6], [1990, 1.2e7], [2000, 1.3e7], [2008, 1.3e7], [2009, 1.05e7], [2010, 1.4e7], [2018, 1.3e7], [2020, 9e6], [2025, 8e6], [2050, 4e6]],
       price: [[1886, 2e7], [1905, 1.2e7], [1910, 7e6], [1915, 4e6], [1925, 2.5e6], [1930, 2.6e6], [1950, 3.6e6], [1970, 4e6], [1990, 4.5e6], [2010, 4.2e6], [2025, 4.8e6]],
       reg: [[1910, { jp: 0.002, as: 0.01, cn: 0.003, na: 0.75, eu: 0.22, ot: 0.015 }], [1925, { jp: 0.005, as: 0.015, cn: 0.005, na: 0.8, eu: 0.15, ot: 0.025 }], [1950, { jp: 0.002, as: 0.01, cn: 0.003, na: 0.8, eu: 0.15, ot: 0.035 }], [1965, { jp: 0.05, as: 0.02, cn: 0.003, na: 0.65, eu: 0.22, ot: 0.06 }], [1980, { jp: 0.12, as: 0.04, cn: 0.005, na: 0.48, eu: 0.25, ot: 0.1 }], [2000, { jp: 0.1, as: 0.08, cn: 0.05, na: 0.4, eu: 0.25, ot: 0.12 }], [2015, { jp: 0.07, as: 0.1, cn: 0.3, na: 0.25, eu: 0.17, ot: 0.11 }], [2025, { jp: 0.07, as: 0.12, cn: 0.3, na: 0.22, eu: 0.16, ot: 0.13 }]],
-      sgaK: 0.8, mat: [[1900, 0.6], [1960, 0.65], [2025, 0.68]], hrs: [[1900, 2000], [1910, 400], [1914, 150], [1925, 110], [1950, 90], [1970, 50], [1990, 30], [2025, 22]], capex: [[1900, 0.4], [1950, 0.35], [2025, 0.35]], dev: { q: 8, eq: 60 },
+      sgaK: 0.6, mat: [[1900, 0.6], [1960, 0.65], [2025, 0.68]], hrs: [[1900, 2000], [1910, 400], [1914, 150], [1925, 110], [1950, 90], [1970, 50], [1990, 30], [2025, 22]], capex: [[1900, 0.4], [1950, 0.35], [2025, 0.35]], dev: { q: 8, eq: 60 },
       model: (ty, n, y) => (y < 1950 ? `${['AA', 'AB', 'AC', 'AE', 'SA'][(n - 1) % 5]}型 乗用車` : `「${['ロイヤル', 'ノーブル', 'グランデ', 'エテルナ', 'セレス', 'ミストラル'][(n - 1) % 6]}」${n > 6 ? `${Math.ceil(n / 6)}代目` : ''}`),
       spec: ty => `${fdOne(fdSer([[1890, 4], [1908, 20], [1930, 40], [1955, 48], [1970, 100], [1990, 150], [2025, 180]], ty))}馬力・燃費 ${fdOne(fdSer([[1900, 5], [1950, 9], [1970, 10], [1980, 13], [2000, 15], [2025, 18]], ty), 1)}km/L`,
       rivals: [FDC.rouge(), FDC.mich(), FDC.detroit(), FDC.wolf(), FDC.seine(), FDC.piem(), FDC.midland(), FDC.nitto(), FDC.hama({ from: 1976 }), FDC.hyon({ from: 1985 }), FDC.jiangnan(), FDC.shenhai({ from: 2008 })],
@@ -42305,7 +42305,7 @@ FD_SCEN.jidosha = {
       dem: [[1920, 5e4], [1925, 2e5], [1930, 4e5], [1937, 8e5], [1942, 1e5], [1945, 3e4], [1948, 4e5], [1950, 1.4e6], [1955, 3e6], [1960, 5e6], [1965, 8.5e6], [1970, 1.2e7], [1975, 1.5e7], [1980, 1.8e7], [1985, 2e7], [1990, 2.2e7], [2000, 2.3e7], [2008, 3e7], [2009, 2.9e7], [2010, 3.2e7], [2017, 3.4e7], [2020, 2.4e7], [2025, 2e7], [2050, 1.2e7]],
       price: [[1920, 2.5e6], [1940, 1.6e6], [1955, 1.8e6], [1966, 1.6e6], [1980, 1.9e6], [2000, 2.1e6], [2025, 2.4e6]],
       reg: [[1920, { jp: 0.005, as: 0.01, cn: 0.002, na: 0.25, eu: 0.7, ot: 0.013 }], [1950, { jp: 0.01, as: 0.01, cn: 0.002, na: 0.08, eu: 0.85, ot: 0.048 }], [1965, { jp: 0.1, as: 0.02, cn: 0.002, na: 0.12, eu: 0.66, ot: 0.098 }], [1980, { jp: 0.18, as: 0.04, cn: 0.005, na: 0.22, eu: 0.43, ot: 0.125 }], [2000, { jp: 0.13, as: 0.12, cn: 0.06, na: 0.15, eu: 0.38, ot: 0.16 }], [2015, { jp: 0.09, as: 0.2, cn: 0.25, na: 0.08, eu: 0.25, ot: 0.13 }], [2025, { jp: 0.09, as: 0.27, cn: 0.2, na: 0.06, eu: 0.22, ot: 0.16 }]],
-      sgaK: 0.8, mat: [[1920, 0.62], [2025, 0.69]], hrs: [[1920, 150], [1950, 80], [1970, 40], [1990, 22], [2025, 16]], capex: [[1920, 0.4], [2025, 0.35]], dev: { q: 8, eq: 50 },
+      sgaK: 0.6, mat: [[1920, 0.62], [2025, 0.69]], hrs: [[1920, 150], [1950, 80], [1970, 40], [1990, 22], [2025, 16]], capex: [[1920, 0.4], [2025, 0.35]], dev: { q: 8, eq: 50 },
       model: (ty, n, y) => (y < 1960 ? `小型乗用車 ${['SA', 'SB', 'SD'][(n - 1) % 3]}型` : `「${['ポプラ', 'ミモザ', 'リンデン', 'アカシア', 'メイプル', 'オリーブ'][(n - 1) % 6]}」${n > 6 ? `${Math.ceil(n / 6)}代目` : ''}`),
       spec: ty => `${fdOne(fdSer([[1920, 15], [1950, 30], [1966, 60], [1990, 100], [2025, 120]], ty))}馬力・燃費 ${fdOne(fdSer([[1950, 12], [1966, 15], [1980, 18], [2000, 20], [2025, 24]], ty), 1)}km/L`,
       rivals: [FDC.wolf(), FDC.seine(), FDC.piem(), FDC.midland(), FDC.rouge({ reach: fdRch(0.03, 0.2, [[1995, 0.15]], [[1970, 0.5], [2000, 0.5], [2025, 0.2]], 0.5, 0.4) }), FDC.mich({ reach: fdRch(0.02, 0.2, [[2000, 0.4]], [[1970, 0.5], [2000, 0.5], [2025, 0.2]], [[1950, 0.5], [2017, 0]], 0.4) }), FDC.nitto(), FDC.hama(),
@@ -42337,7 +42337,7 @@ FD_SCEN.jidosha = {
       dem: [[1941, 1e5], [1946, 2e5], [1960, 6e5], [1970, 1.5e6], [1980, 2.5e6], [1990, 4.5e6], [2000, 8.5e6], [2010, 1.45e7], [2018, 2.6e7], [2020, 2.4e7], [2025, 2.6e7], [2050, 2e7]],
       price: [[1941, 4e6], [1970, 4e6], [1990, 4.5e6], [2025, 5.6e6]],
       reg: [[1950, { jp: 0.01, as: 0.02, cn: 0, na: 0.6, eu: 0.1, ot: 0.27 }], [1980, { jp: 0.05, as: 0.06, cn: 0, na: 0.62, eu: 0.08, ot: 0.19 }], [2000, { jp: 0.05, as: 0.07, cn: 0.02, na: 0.65, eu: 0.08, ot: 0.13 }], [2015, { jp: 0.04, as: 0.08, cn: 0.25, na: 0.38, eu: 0.13, ot: 0.12 }], [2025, { jp: 0.05, as: 0.1, cn: 0.3, na: 0.28, eu: 0.15, ot: 0.12 }]],
-      sgaK: 0.8, mat: [[1941, 0.62], [2025, 0.66]], hrs: [[1941, 150], [1970, 60], [1990, 32], [2025, 22]], capex: [[1941, 0.4], [2025, 0.35]], dev: { q: 8, eq: 60 },
+      sgaK: 0.6, mat: [[1941, 0.62], [2025, 0.66]], hrs: [[1941, 150], [1970, 60], [1990, 32], [2025, 22]], capex: [[1941, 0.4], [2025, 0.35]], dev: { q: 8, eq: 60 },
       model: (ty, n, y) => (y < 1990 ? `「${['ランドロード', 'ハイリフト', 'レンジャー'][(n - 1) % 3]}」${n > 3 ? `${Math.ceil(n / 3)}代目` : ''}` : `SUV「${['トレイル', 'サバンナ', 'シエラ', 'タイガ'][(n - 1) % 4]}」`),
       spec: ty => `${fdOne(fdSer([[1941, 60], [1970, 130], [1990, 180], [2025, 250]], ty))}馬力・4輪駆動・悪路の走破 ${fdOne(clamp(40 + (ty - 1940) * 0.6, 40, 99))}点`,
       rivals: [FDC.detroit({ id: 'jeep', n: 'デトロイト・モーター（ジープ）', from: 1941, br: [[1941, 80], [2025, 75]] }), FDC.rouge({ reach: fdRch(0.03, 0.15, [[2000, 0.15]], 0.95, 0.3, 0.5) }), FDC.mich({ reach: fdRch(0.02, 0.15, [[2000, 0.3]], 0.95, 0.2, 0.45) }), FDC.nitto(), FDC.hama({ from: 1995 }),
@@ -42453,7 +42453,7 @@ FD_SCEN.jidosha = {
       id: 'j_koromo', y: 1937, q: 2, tag: '工場', big: true, need: () => fdActiveProds('truck').length + fdActiveProds('car').length > 0, show: true, title: '大きな自動車工場', t: '月に2,000台を作る、大きな自動車工場を建てるか',
       d: '自動車の部門を独立した会社にし、郊外の広い土地に、月2,000台を作れる大きな工場を建てる計画がある。土地は15万坪。建物と機械で、今の会社の何倍ものお金がかかる。成功すれば日本一の自動車工場だ。',
       ch: [
-        { l: '建てる（大きな借入）', d: '年24,000台のトラックのラインができる', fx: () => { const cost = fdFacCost('jp') + fdCapexPer('truck', 'jp') * 24000; fdBorrow(cost * 1.05, 15, '大きな自動車工場'); const r = fdBuildFac('jp', '豊田（挙母）', { n: '挙母工場' }); if (r.ok) fdAddLine(r.f.id, 'truck', 24000); return `挙母工場の建設を始めた（${fmtYen(cost)}）。`; } },
+        { l: '建てる（大きな借入）', d: '年24,000台のトラックのラインができる', can: () => G.bs.cash + Math.max(0, fdCreditLimit() - fdDebt()) * 1.5 > (fdFacCost('jp') + fdCapexPer('truck', 'jp') * 24000) * 0.8, cant: '銀行が、これほどの金額は貸せないと言っている', fx: () => { const cost = fdFacCost('jp') + fdCapexPer('truck', 'jp') * 24000; fdBorrow(cost * 1.05, 15, '大きな自動車工場', 4); const r = fdBuildFac('jp', '豊田（挙母）', { n: '挙母工場' }); if (r.ok) fdAddLine(r.f.id, 'truck', 24000); return `挙母工場の建設を始めた（${fmtYen(cost)}）。`; } },
         { l: '小さく始める', d: '今の工場を少しずつ広げる', fx: () => '小さく始めることにした。' },
       ],
     },
@@ -42757,10 +42757,12 @@ function fdLoanRate() {
   const spread = eqr > 0.4 ? -0.3 : eqr > 0.25 ? 0 : eqr > 0.1 ? 0.8 : 2;
   return Math.max(0.3, fdRate(fdYf()) * fdModMul('rate', null, null) + spread + (G.bank.spread || 0));
 }
-function fdBorrow(amt, termY = 5, why = '運転資金') {
+function fdBorrow(amt, termY = 5, why = '運転資金', graceY = 0) {
   amt = Math.round(amt);
   if (amt <= 0) return null;
   const l = { id: 'L' + (++G.seq), amt, bal: amt, rate: fdLoanRate(), q: G.q, termQ: Math.max(1, Math.round(termY * 4)), why };
+  // 据え置き：大きな工場の借入は、建って稼ぎ始めるまで元本を返さない
+  if (graceY > 0) l.grace = G.q + Math.round(graceY * 4);
   G.loans.push(l);
   G.bs.cash += amt; G.bs.debt += amt;
   return l;
@@ -42780,7 +42782,8 @@ function fdLoansQuarter() {
     int += l.bal * l.rate / 100 / 4;
     const left = l.q + l.termQ - G.q;
     if (left <= 0) continue;
-    if (l.termQ > 4) fdRepay(l, l.amt / l.termQ);
+    if (l.grace && G.q < l.grace) continue;
+    if (l.termQ > 4) fdRepay(l, l.amt / Math.max(1, l.termQ - (l.grace ? l.grace - l.q : 0)));
   }
   G.loans = G.loans.filter(l => l.bal > 0.5);
   // 預金の利息（現金の一部を預けている）
@@ -43717,7 +43720,7 @@ function fdStaffAuto() {
     if (f.ready > G.q) { if (f.ready - G.q <= 1) f.wk = Math.max(f.wk || 0, Math.ceil(fdFacWkFull(f, y) * 0.5)); continue; }
     const need = Math.ceil((f.needWk || 0) * 1.03);
     const cur = f.wk || 0;
-    if (need > cur) f.wk = cur + Math.min(need - cur, Math.max(5, Math.ceil(cur * 0.35)));
+    if (need > cur) f.wk = cur + Math.min(need - cur, Math.max(5, Math.ceil(cur * 0.35), Math.ceil(need * 0.25)));
     else if (G.policy.noLayoff === false) f.wk = need;
     else f.wk = Math.max(need, Math.floor(cur * (1 - attr)));
   }
@@ -43951,6 +43954,8 @@ function fdCashCheck() {
   const need = -G.bs.cash * 1.15 + fdNominal(fdSer([[1910, 5e6], [2000, 1e8]], fdYf(), true));
   const room = fdCreditLimit() - fdDebt();
   if (room > need) { fdBorrow(need, 1, '資金繰り（自動）'); fdNews(`資金が足りなくなり、銀行から${fmtYen(need)}を借りました（期間1年）`, 'warn'); return; }
+  // 敗戦の直後は、古い借金が凍結され、足りない運転資金は復興金融金庫が貸してくれる
+  if (fdModsOf('reconFin', null, 'jp').length) { fdBorrow(need, 5, '復興金融金庫の融資', 2); fdNews(`復興金融金庫から${fmtYen(need)}を借りました`, 'warn'); return; }
   if (room > 0) fdBorrow(room, 1, '資金繰り（自動）');
   if (G.bs.cash < 0) {
     G.crisis = (G.crisis || 0) + 1;
@@ -44324,7 +44329,7 @@ function fdAuto(o = {}) {
   const rdTgt = sales * rdK / Math.max(1, fdPayQ('eng') * 4 * 1.35);
   const engNeed = Math.max(fdDevEngNeed() + 2, Math.round(rdTgt));
   if (G.staff.eng < engNeed && G.bs.cash > fdPayQ('eng') * 8) fdHireEng(Math.min(engNeed - G.staff.eng, Math.max(1, Math.ceil(G.staff.eng * 0.25))));
-  else if (losing && G.staff.eng > engNeed * 1.3) fdHireEng(-Math.ceil((G.staff.eng - engNeed) * 0.15));
+  else if (losing && G.staff.eng > engNeed * 1.3) fdHireEng(-Math.ceil((G.staff.eng - engNeed) * (fdLastQ('sales') * 0.4 < G.staff.eng * fdPayQ('eng') ? 0.4 : 0.15)));
   // 新しい製品：今の製品が先端より遅れ、技術が3年以上進んでいれば作り直す。新しい分野は、技術が届いたら入る
   for (const c of Object.keys(fdS().cats)) {
     if (G.devs.some(d => d.cat === c)) continue;
@@ -44856,12 +44861,12 @@ FD_SCREENS.f_world = () => {
     return `<tr><td><b>${esc(RR.n)}</b><div class="small muted">${esc(fdStageN(r, R.st))}</div></td><td class="n">${R.st ? fmtPct(R.dist * 100, 0) : '―'}</td><td class="n">${R.st ? fmtNum(R.brand, 0) : '―'}</td><td class="n">${sales ? fmtYen(sales) : '―'}</td>
       <td class="n nowrap">${act}${nx <= 4 && !(r !== 'jp' && nx === 3) && acc >= 1 ? `<div class="small muted">${fmtYen(fdRegStepCost(r, nx))}</div>` : ''}</td></tr>`;
   }).join('');
-  const fx = fdFx(y), rer = fdRer(y);
+  const fx = fdFx(y), rel = fdRerRel(y);
   return `<h1 class="h1">世界</h1><p class="lead">地域ごとに、輸出（商社を通す）→ 販売会社 → 現地生産 → 現地で開発、と進めます。販路が広がるほど多く売れ、ブランドは年月と品質で育ちます。日本から輸出すると、関税・運賃・為替の影響を受けます。</p>
     <div class="grid g-side"><div class="stack">
       ${panel('地域', `<div class="tbl-wrap"><table class="t"><thead><tr><th>地域</th><th class="n">販路</th><th class="n">ブランド</th><th class="n">去年の売上</th><th class="n">次の一手</th></tr></thead><tbody>${rows}</tbody></table></div>`, { flush: true })}
     </div><div class="stack">
-      ${panel('為替', `${kv([['1ドル', `${fmtNum(fx, fx < 10 ? 2 : 0)}円`], ['円の実力（2025年＝1）', `${fmtNum(rer, 2)}`]])}<p class="small muted" style="margin:8px 0 0">${rer > 1.3 ? '円が強い：日本から輸出する品は海外で割高になり、輸入品は日本で割安になります。海外で作ると有利です。' : rer < 0.7 ? '円が弱い：日本から輸出する品は海外で割安になり、輸入品は日本で割高です。輸出に有利です。' : '円の強さはふつうです。'}</p>`)}
+      ${panel('為替', `${kv([['1ドル', `${fmtNum(fx, fx < 10 ? 2 : 0)}円`], ['円の強さ（前後の年の平均＝1）', `${fmtNum(rel, 2)}`], ['輸出品の海外での値段', `${fmtPct((fdFxPass(y) - 1) * 100, 0, { sign: true })}`], ['輸出の円での手取り', `${fmtPct((fdFxTake(y) - 1) * 100, 0, { sign: true })}`]])}<p class="small muted" style="margin:8px 0 0">${rel > 1.15 ? '円が強い：日本から輸出する品は海外で割高になり、輸入品は日本で割安になります。海外で作ると有利です。' : rel < 0.87 ? '円が弱い：日本から輸出する品は海外で割安になり、輸入品は日本で割高です。輸出に有利です。' : '円の強さはふつうです。'}</p>`)}
       ${panel('地域の事情', `<ul class="small" style="margin:0;padding-left:18px">${fdRegOrder().filter(r => r !== 'jp').map(r => `<li><b>${esc(FD_REG[r].n)}</b>：${esc(fdRegNote(r))}</li>`).join('')}</ul>`)}
     </div></div>`;
 };
@@ -44912,7 +44917,9 @@ FD_SCREENS.f_hist = () => {
     if (hy.length < 2) body = '<div class="empty">決算が2回終わると出ます</div>';
     else {
       const L = hy.map(h => String(h.y));
-      body = panel('売上（今の価値・対数）', lineChart({ labels: L, series: [{ name: '売上', color: 's1', values: hy.map(h => Math.log10(Math.max(1, h.sales / h.cpi))) }], yFmt: v => axisYen(Math.pow(10, v)), tipFmt: v => fmtYen(Math.pow(10, v)) }))
+      const B = fdS().bench;
+      const bser = B ? [{ name: '史実', color: 's3', dash: true, values: hy.map(h => Math.log10(Math.max(1, fdSer(B.pts, h.y + 0.5, true)))) }] : [];
+      body = panel('売上（今の価値・対数）', lineChart({ labels: L, series: [{ name: '売上', color: 's1', values: hy.map(h => Math.log10(Math.max(1, h.sales / h.cpi))) }].concat(bser), yFmt: v => axisYen(Math.pow(10, v)), tipFmt: v => fmtYen(Math.pow(10, v)) }))
         + panel('社員の数', lineChart({ labels: L, series: [{ name: '社員', color: 's2', values: hy.map(h => h.head) }], yFmt: v => fmtNum(v, 0), tipFmt: v => `${fmtNum(v, 0)}人`, minZero: true }))
         + panel('海外の売上の割合', lineChart({ labels: L, series: [{ name: '海外', color: 's3', values: hy.map(h => { const t = sum(Object.values(h.reg), x => x); return t ? (1 - (h.reg.jp || 0) / t) * 100 : 0; }) }], yFmt: axisPct(0), tipFmt: v => fmtPct(v, 1), minZero: true }));
     }
