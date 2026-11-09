@@ -12,8 +12,8 @@ function fdNewGame(o) {
   const st = S.start;
   G = {
     mode: 'sogyo', version: FD_SAVE_VERSION, rs: seed, seed, scen: o.scen, diff: o.diff || 'normal',
-    co: o.coName || st.coName, founder: o.founder || st.founder, y0: st.y0, q: 0, endY: o.endY || 2025,
-    bs: fdNewBooks(), yr: { y: st.y0, pl: fdNewPL() }, qr: { pl: fdNewPL() }, assets: [], loans: [], bank: { n: st.bank || '第一銀行', years: 0, trust: 1 },
+    co: o.coName || st.coName, founder: o.founder || st.founder, y0: o.cu ? o.cu.y : st.y0, q: 0, endY: o.cu ? o.cu.endY : o.endY || 2025,
+    bs: fdNewBooks(), yr: { y: o.cu ? o.cu.y : st.y0, pl: fdNewPL() }, qr: { pl: fdNewPL() }, assets: [], loans: [], bank: { n: st.bank || '第一銀行', years: 0, trust: 1 },
     owners: { founder: st.own ? st.own.founder : 1, parent: st.own ? st.own.parent : 0, outside: 0 }, listed: false, shares: 0,
     prods: [], devs: [], gen: {}, cum: {}, tech: {}, lics: [], facs: [], reg: {}, staff: { wk: 0, eng: 0, sal: 0, adm: 0 }, skill: { eng: 1 },
     people: [], ceo: null, org: { st: 0, fixed: {} }, prog: {}, kaizen: 0, qc: 0, policy: { wage: 0, mkt: 1, div: 0.25, autoStaff: true, autoRd: true, noLayoff: true },
@@ -28,6 +28,8 @@ function fdNewGame(o) {
   G.reg.jp.st = st.jpSt ?? 1; G.reg.jp.dist = FD_STAGES_JP[G.reg.jp.st].dist * 0.6; G.reg.jp.since = -8;
   // ライバルのばらつき（ゲームごと）
   for (const [c, C] of Object.entries(S.cats)) for (const rv of C.rivals || []) G.rv[c + ':' + rv.id] = { dq: Math.round(randn() * 12) / 10, dp: Math.round(randn() * 3) / 100, alive: true };
+  // カスタムスタート：始める年・大きさ・技術・事業・販路を決めて組み立てる
+  if (o.cu) return fdCustomBuild(o.cu);
   // お金（今の価値で決めてある元手を、その年の円に）
   const y = fdYf(0);
   const cash = fdNominal(st.cash * (G.diff === 'easy' ? 1.5 : G.diff === 'hard' ? 0.7 : 1), y);
@@ -258,7 +260,8 @@ function fdScore() {
   const total = sum(parts, p => p[1]);
   const rankL = total >= 85 ? 'S' : total >= 70 ? 'A' : total >= 50 ? 'B' : total >= 30 ? 'C' : 'D';
   const title = { S: '世界を代表する企業を一代で築いた創業者', A: '世界に名を知られる企業を育てた名経営者', B: '日本を代表する企業に育てた経営者', C: '堅実な中堅企業を残した経営者', D: '志半ばの創業者' }[rankL];
-  return { parts, total, rank: rankL, title };
+  const note = G.flags.edited ? `途中で会社を編集した（${G.flags.edited}回）ので、この評価は参考です。` : G.custom ? `${G.y0}年からのカスタムスタート（年商 今の約${fmtYen(G.custom.plan || G.custom.sales)}から）なので、この評価は参考です。` : '';
+  return { parts, total, rank: rankL, title, note };
 }
 
 /* ---------- 保存 ---------- */

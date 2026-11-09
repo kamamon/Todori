@@ -48,6 +48,11 @@ FD_SCEN.denki = {
 <p class="small muted">史実の日立製作所の売上（今の価値）は、1920年に約160億円、1937年に約3,200億円、1970年に約4.8兆円、2024年に約10兆円。「社史」の「数字の歩み」で、あなたの会社と比べられます。</p>`,
   heir: { n: '大森 正一', born: 1903, abil: { tech: 3, prod: 3, sales: 3, fin: 3, lead: 4 }, trait: 'steady', d: '創業者の長男。帝大の電気工学科を出て、工場の現場で叩き上げた。' },
   focus: ['motor', 'kikai', 'trafo', 'gen', 'rail', 'elev', 'kaden', 'tv', 'aircon', 'comp', 'chip', 'it', 'nuke'],
+  // カスタムスタートで、始める年に史実の会社が手がけていた事業（空欄のときの初期値）
+  cuCats: [[1910, ['motor']], [1915, ['motor', 'kikai', 'trafo', 'gen']], [1924, ['motor', 'kikai', 'trafo', 'gen', 'rail']], [1932, ['motor', 'kikai', 'trafo', 'gen', 'rail', 'elev', 'kaden']],
+    [1956, ['motor', 'kikai', 'trafo', 'gen', 'rail', 'elev', 'kaden', 'tv']], [1960, ['motor', 'kikai', 'trafo', 'gen', 'rail', 'elev', 'kaden', 'tv', 'aircon', 'comp', 'chip']],
+    [1970, ['motor', 'kikai', 'trafo', 'gen', 'rail', 'elev', 'kaden', 'tv', 'aircon', 'comp', 'chip', 'nuke', 'it']], [2003, ['motor', 'kikai', 'trafo', 'gen', 'rail', 'elev', 'kaden', 'tv', 'aircon', 'comp', 'nuke', 'it']],
+    [2012, ['motor', 'kikai', 'trafo', 'gen', 'rail', 'elev', 'kaden', 'aircon', 'comp', 'nuke', 'it']], [2021, ['motor', 'kikai', 'trafo', 'gen', 'rail', 'elev', 'kaden', 'nuke', 'it']]],
   bench: { n: '史実の日立製作所', pts: [[1911, 1.65e9], [1914, 3.2e9], [1918, 1.44e10], [1920, 1.6e10], [1925, 2.9e10], [1929, 4.9e10], [1931, 3.3e10], [1934, 8.7e10], [1936, 1.56e11], [1937, 3.2e11], [1941, 5.9e11], [1944, 7.8e11], [1946, 2e11], [1950, 2.9e11], [1955, 3.9e11], [1960, 1.3e12], [1965, 2.2e12], [1970, 4.8e12], [1975, 3.9e12], [1980, 5.5e12], [1985, 7.4e12], [1991, 9.4e12], [1995, 9.6e12], [2000, 9.8e12], [2007, 1.36e13], [2009, 1.09e13], [2015, 1.17e13], [2020, 9.95e12], [2022, 1.21e13], [2024, 1.02e13], [2025, 1.06e13]] },
   fields: {
     em: { n: '電気機械（回転機）', born: 1880, d0: 30, tau: 24 },

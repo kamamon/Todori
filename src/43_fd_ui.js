@@ -47,7 +47,7 @@ function fdMast() {
   const y = fdY();
   return `<header class="mast fmast era-${fdEraKey()}">
     <div class="mast-brand">${ksSeal(S.seal || '創')}<div style="min-width:0"><div class="bank-name"><span class="bn">${esc(G.co)}</span></div><div class="bank-sub">社長 ${esc(ceo ? ceo.n : G.founder)}<span class="hide-m">　${esc(S.short)}</span></div></div></div>
-    <div class="mast-date"><div class="wareki">${fdQWareki()} ${FD_QN[fdQo()]}</div><div class="sub">${y}年・創業${y - G.y0 + 1}年目${G.over ? '・終了' : ''}</div></div>
+    <div class="mast-date"><div class="wareki">${fdQWareki()} ${FD_QN[fdQo()]}</div><div class="sub">${y}年・創業${y - fdFounded() + 1}年目${G.over ? '・終了' : ''}</div></div>
     <div class="mast-actions"><button type="button" class="mbtn" data-act="menu">メニュー</button><button type="button" class="mbtn" data-act="help">遊び方</button>
     <button type="button" class="mbtn hide-m" data-act="fYearRun"${G.over ? ' disabled' : ''}>1年進める</button>
     <button type="button" class="btn-advance" data-act="advance"${G.over ? ' disabled' : ''}>${fdQo() === 3 ? '12月で締めて決算へ' : '四半期を締めて次へ'}</button></div>
@@ -126,7 +126,7 @@ FD_SCREENS.f_dash = () => {
   const lastCh = G.chron.slice(-5).reverse().map(c => `<li><span class="when">${fdY(c.q)}</span><span class="what">${c.big ? '<b>' : ''}${esc(c.t)}${c.big ? '</b>' : ''}</span></li>`).join('');
   const prods = fdActiveProds().slice(0, 6).map(p => `<tr><td><b>${esc(p.name)}</b><div class="small muted">${esc(fdCat(p.cat).n)}</div></td><td class="n">${fdGapTxt(fdYf() - p.qy)}</td><td class="n">${fmtNum(p.sold || 0, 0)}${esc(fdCat(p.cat).unit)}</td><td class="n">${fmtYen((p.rev || 0) * 4)}</td></tr>`).join('');
   return `<div class="era-band era-${fdEraKey()}"><div class="era-y">${fdWareki(y)}<span>${y}年</span></div><div class="era-t">${esc(era)}</div></div>
-    <h1 class="h1">社長室</h1><p class="lead">${esc(S.lead)}</p>
+    <div class="row" style="justify-content:space-between;align-items:baseline"><h1 class="h1">社長室</h1>${btn('会社を編集する', 'fEditOpen', {}, 'sm ghost')}</div><p class="lead">${esc(S.lead)}</p>
     <div class="grid g-side"><div class="stack">
       ${panel('いま考えること', fdInboxHtml(items), { flush: true })}
       ${panel('製品（この四半期）', prods ? `<div class="tbl-wrap"><table class="t"><thead><tr><th>製品</th><th class="n">品質</th><th class="n">売れた数</th><th class="n">年に直した売上</th></tr></thead><tbody>${prods}</tbody></table></div>` : '<div class="empty">まだ売っている製品がありません</div>', { flush: true, aside: btn('製品と市場へ', 'fGo', { tab: 'f_prod' }, 'sm ghost') })}

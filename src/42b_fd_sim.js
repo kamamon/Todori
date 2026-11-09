@@ -131,7 +131,8 @@ function fdRerRel(y = fdYf()) {
   const k0 = Math.round(y * 4) / 4;
   if (FD_RERR[k0] !== undefined) return FD_RERR[k0];
   let a = 0, n = 0;
-  for (let k = -12; k <= 12; k += 1) { const yy = k0 + k; if (yy > 2030) continue; a += Math.log(fdRer(yy)); n++; }
+  // 2030年より先は見込み（横ばい）なので、2030年の値で数える（2040年代でも平均が取れるように）
+  for (let k = -12; k <= 12; k += 1) { const yy = Math.min(2030, k0 + k); a += Math.log(fdRer(yy)); n++; }
   return (FD_RERR[k0] = clamp(fdRer(k0) / Math.exp(a / n), 0.4, 2.5));
 }
 function fdFxPass(y = fdYf()) { return Math.pow(fdRerRel(y), FD_FX_PASS); }
@@ -205,7 +206,9 @@ function fdLocalShare(c, r) {
   if (r === 'jp') return 1;
   const cap = sum(G.facs.filter(f => f.r === r && f.ready <= G.q), f => sum(f.lines.filter(l => l.cat === c), l => l.cap / 4));
   if (!cap) return 0;
-  const want = Math.max(1, (G.mk[c] && G.mk[c][r] ? G.mk[c][r].want : 0) || cap);
+  // ならした需要と比べる（その四半期の需要と比べると、現地の割合と売れ行きが交互に振れる）
+  const m = G.mk[c] && G.mk[c][r];
+  const want = Math.max(1, (m ? m.wantS ?? m.want : 0) || cap);
   return clamp(cap / want, 0, 1);
 }
 /* 市場の計算：需要・相場・各社の魅力と取り分。me は自社の製品ごとの「売りたい台数」 */
@@ -567,7 +570,9 @@ function fdSell() {
       mkt[r] = M;
       const mine = M.items.filter(it => it.me);
       for (const it of mine) wantBy.set(it.p, (wantBy.get(it.p) || 0) + it.units);
-      G.mk[c][r] = { D: M.D, ref: M.ref, share: sum(mine, it => it.share), want: sum(mine, it => it.units), top: M.items.slice().sort((a, b) => b.share - a.share).slice(0, 6).map(it => ({ n: it.n, s: it.share, me: !!it.me, o: it.o, Q: it.Q, pk: it.priceK })) };
+      const wantNow = sum(mine, it => it.units);
+      const prevS = G.mk[c][r] && G.mk[c][r].wantS;
+      G.mk[c][r] = { D: M.D, ref: M.ref, share: sum(mine, it => it.share), want: wantNow, wantS: prevS ? prevS * 0.75 + wantNow * 0.25 : wantNow, top: M.items.slice().sort((a, b) => b.share - a.share).slice(0, 6).map(it => ({ n: it.n, s: it.share, me: !!it.me, o: it.o, Q: it.Q, pk: it.priceK })) };
     }
     for (const p of fdActiveProds(c)) {
       const want = wantBy.get(p) || 0;

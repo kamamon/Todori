@@ -138,7 +138,8 @@ FD_SCREENS.f_hist = () => {
     const all = [{ id: 'export', t: '初めての輸出' }, { id: 'ipo', t: '株式の上場' }].concat(FD_MILES);
     body = `<div class="tbl-wrap"><table class="t"><tbody>${all.map(M => `<tr><td>${esc(M.t)}</td><td class="n">${G.miles[M.id] !== undefined ? `<b>${fdY(G.miles[M.id])}年</b>` : '<span class="muted">まだ</span>'}</td></tr>`).join('')}</tbody></table></div>`;
   }
-  return `<h1 class="h1">社史</h1><p class="lead">${esc(G.co)}の歩み。${fdWareki(G.y0)}（${G.y0}年）の創業から、いままで。</p>${sub}<div class="stack">${body}</div>`;
+  const since = fdFounded() < G.y0 ? `${fdFounded()}年の創業。${fdWareki(G.y0)}（${G.y0}年）から経営して、いままで。` : `${fdWareki(G.y0)}（${G.y0}年）の${G.custom ? '始まり' : '創業'}から、いままで。`;
+  return `<h1 class="h1">社史</h1><p class="lead">${esc(G.co)}の歩み。${since}</p>${sub}<div class="stack">${body}</div>`;
 };
 
 /* ---------- 四半期の締め ---------- */
@@ -194,7 +195,7 @@ MODALS.fdYear = a => {
   const d = (v, pv) => (pv ? `<span class="small ${v >= pv ? 'pos' : 'neg'}">${v >= pv ? '+' : ''}${fmtPct((v / pv - 1) * 100, 0)}</span>` : '');
   const top = Object.entries(h.share || {}).sort((a2, b2) => b2[1] - a2[1]).slice(0, 3).map(([c, s]) => `${fdCat(c).n} ${fmtPct(s * 100, 1)}`).join('・');
   const rank = fdWorldRank(a.y);
-  return modalFrame(`${a.y}年の決算（第${a.y - G.y0 + 1}期）`, `<div class="fs-mini">${kv([
+  return modalFrame(`${a.y}年の決算（第${a.y - fdFounded() + 1}期）`, `<div class="fs-mini">${kv([
     ['売上高', `<b>${fmtYen(h.sales)}</b> ${d(h.sales / h.cpi, prev ? prev.sales / prev.cpi : 0)}<div class="small muted">今の価値で約${fmtYen(h.sales / h.cpi)}</div>`],
     ['営業利益', `<span class="${h.opi < 0 ? 'neg' : ''}">${fmtYen(h.opi)}</span>（売上の${h.sales ? fmtPct(h.opi / h.sales * 100, 1) : '―'}）`],
     ['当期純利益', `<span class="${h.net < 0 ? 'neg' : ''}">${fmtYen(h.net)}</span>${h.div ? `・配当 ${fmtYen(h.div)}` : ''}`],
@@ -268,12 +269,13 @@ MODALS.fdEnd = () => {
   const sc = fdScore();
   const chron = G.chron.filter(c => c.big).slice(-14).map(c => `<li><span class="when">${fdY(c.q)}年</span><span class="what">${esc(c.t)}</span></li>`).join('');
   return modalFrame(G.over && G.over.type === 'bankrupt' ? '倒産' : `${G.endY}年、${esc(G.co)}の今`, `${G.over && G.over.type === 'bankrupt' ? '<p>会社は倒産しました。</p>' : `<p class="endtitle">${esc(sc.title)}</p><div class="endrank">評価 <b>${sc.rank}</b>（${sc.total}点）</div>`}
-    <div class="tbl-wrap"><table class="t"><tbody>${sc.parts.map(([k, v, d]) => `<tr><td>${esc(k)}</td><td class="n"><b>${v}</b></td><td class="small">${esc(d)}</td></tr>`).join('')}</tbody></table></div>
+    <div class="tbl-wrap"><table class="t"><tbody>${sc.parts.map(([k, v, d]) => `<tr><td>${esc(k)}</td><td class="n"><b>${v}</b></td><td class="small">${esc(d)}</td></tr>`).join('')}</tbody></table></div>${sc.note ? `<p class="small muted">${esc(sc.note)}</p>` : ''}
     <h3 style="margin:14px 0 6px">社史の大きな節目</h3><ul class="newslist">${chron}</ul>`,
     btn('社史を見る', 'fGo', { tab: 'f_hist' }) + (G.over && G.over.type === 'end' && G.endY < 2050 ? btn('2050年まで続ける', 'fContinue', {}, '') : '') + btn('閉じる', 'closeModal', {}, 'primary'), { size: 'narrow' });
 };
 MODALS.fdIntro = () => {
   const S = fdS();
+  if (G.custom) return modalFrame(esc(S.title), `${scene(S.img || 'fdhero', { cls: 'evimg' })}<div class="evtext"><p>${fdWareki(G.y0)}（${G.y0}年）。${esc(G.founder)}は、${fdFounded() < G.y0 ? `${fdFounded()}年に生まれた` : '新しく興した'}${esc(G.co)}の社長として経営を始める。年商の見込みは今の価値で約${fmtYen(G.custom.plan || G.custom.sales)}、社員は${fmtNum(fdHead(), 0)}人。</p><p>${esc(fdEraText(G.y0))}</p><p>ここから${G.endY}年まで、世界の会社と競いながら、技術と事業と販路を育てる。会社の状態は、メニューの「会社を編集する」でいつでも書き換えられる。</p></div>`, btn('始める', 'closeModal', {}, 'primary'), { size: 'narrow' });
   return modalFrame(esc(S.title), `${scene(S.img || 'fdhero', { cls: 'evimg' })}<div class="evtext">${S.intro}</div>`, btn('始める', 'closeModal', {}, 'primary'), { size: 'narrow' });
 };
 
@@ -355,17 +357,23 @@ function renderStartF() {
     <div class="field"><span>創業の道</span><div class="presets indgrid">${scens}</div></div>
     <div class="field"><span>難しさ</span><div class="seg" role="radiogroup">${diffs}</div><span class="small muted">${{ easy: '元手が多く、宣伝の効き目が大きい。', normal: '標準的な難しさ。', hard: '元手が少なく、銀行も厳しい。' }[f.diff]}</span></div>
     <label class="field"><span>シード（同じ数字なら同じ展開）</span><input type="text" id="fstSeed" value="${esc(f.seed)}" placeholder="空欄でランダム" inputmode="numeric"></label>
+    ${fdCustomHtml()}
     <p class="small muted" style="margin:0">${esc(S.pickLong || '')} ほかのモードとは別に保存されます。</p>
   </section>`;
   const st = S.start;
+  // カスタムスタートでは、決めた年から（月は1月）
+  const cuOn = f.cu && f.cu.on;
+  const cuR = cuOn ? fdCuResolve(f.scen, f.cu) : null;
+  const y0 = cuR ? cuR.y : st.y0;
+  const yF = cuR ? cuR.founded : st.y0;
   const letter = `<div class="appoint fdletter">
     <h1>設立趣意書</h1><div class="gametitle">創業記 ― 小さな工場から世界企業へ</div>
-    <div class="body-text">${fdWareki(st.y0)}、${esc(st.place)}において、<br>
+    <div class="body-text">${fdWareki(yF)}、${esc(st.place)}において、<br>
     <label><input type="text" id="fstFounder" value="${esc(f.founder)}" placeholder="${esc(st.founder)}" maxlength="12" aria-label="創業者の氏名"></label> は、${esc(st.vow)}<br>
     社名を <label><input type="text" id="fstCo" value="${esc(f.co)}" placeholder="${esc(st.coName)}" maxlength="16" aria-label="会社の名前" style="width:9em"></label> とする。<br>
     ${esc(st.motto)}</div>
-    <div class="issuer">${fdWareki(st.y0)}${st.mo || 1}月<br>創業者</div>
-    <div class="start">${btn('創業する', 'fStart', {}, 'primary')}${btn('ファイルから読み込む', 'importSave')}${btn('遊び方', 'help')}</div>
+    <div class="issuer">${fdWareki(y0)}${cuOn ? 1 : st.mo || 1}月<br>${cuOn ? '社長' : '創業者'}</div>
+    <div class="start">${btn(cuOn ? 'この設定で始める' : '創業する', 'fStart', {}, 'primary')}${btn('ファイルから読み込む', 'importSave')}${btn('遊び方', 'help')}</div>
   </div>`;
   return `${scene('fdhero', { cls: 'hero', alt: '明治の町工場で、職人がモーターの巻線を手で巻いている' })}<div class="startwrap${artSrc('fdhero') ? ' with-hero' : ''}">${setup}${letter}</div>`;
 }

@@ -942,6 +942,18 @@ details.custom[open] { border-style: solid; }
 details.custom > summary { cursor: pointer; font-weight: 700; font-size: 13px; color: var(--ink); }
 .cu-body { display: grid; gap: 8px; }
 .cu-body.off { opacity: .6; }
+/* 創業記：カスタムスタートと途中編集 */
+.cu-sm { width: 6em; }
+.cu-xs { width: 4.4em; }
+.cu-fac .cu-sm, .cu-wide { width: 8.5em; }
+.fcu-tbl td:first-child { min-width: 7.5em; }
+.fcu-tbl td, .fcu-tbl th { vertical-align: middle; }
+.fcu-tbl select { max-width: 15em; }
+.fcu-tbl tr.cu-off td { color: var(--ink-3, var(--muted)); }
+.cu-checks { display: flex; flex-wrap: wrap; gap: 6px 16px; }
+.cu-fac { border: 1px solid var(--rule); border-radius: var(--r-m); padding: 8px 10px; margin-bottom: 10px; display: grid; gap: 6px; }
+.cu-h { font-size: 13px; margin: 12px 0 6px; }
+.cu-body details > summary { cursor: pointer; }
 .cu-nums { gap: 8px; }
 .cu-body select { max-width: 100%; }
 

@@ -955,6 +955,18 @@ details.custom[open] { border-style: solid; }
 details.custom > summary { cursor: pointer; font-weight: 700; font-size: 13px; color: var(--ink); }
 .cu-body { display: grid; gap: 8px; }
 .cu-body.off { opacity: .6; }
+/* 創業記：カスタムスタートと途中編集 */
+.cu-sm { width: 6em; }
+.cu-xs { width: 4.4em; }
+.cu-fac .cu-sm, .cu-wide { width: 8.5em; }
+.fcu-tbl td:first-child { min-width: 7.5em; }
+.fcu-tbl td, .fcu-tbl th { vertical-align: middle; }
+.fcu-tbl select { max-width: 15em; }
+.fcu-tbl tr.cu-off td { color: var(--ink-3, var(--muted)); }
+.cu-checks { display: flex; flex-wrap: wrap; gap: 6px 16px; }
+.cu-fac { border: 1px solid var(--rule); border-radius: var(--r-m); padding: 8px 10px; margin-bottom: 10px; display: grid; gap: 6px; }
+.cu-h { font-size: 13px; margin: 12px 0 6px; }
+.cu-body details > summary { cursor: pointer; }
 .cu-nums { gap: 8px; }
 .cu-body select { max-width: 100%; }
 
@@ -9224,6 +9236,7 @@ MODALS.menu = () => {
     <label class="inline small"><input type="checkbox" data-ch="setting" data-key="confirmAdvance" ${UI.settings.confirmAdvance ? 'checked' : ''}> 未処理の案件があるとき月末の締めを確認する</label>
     <label class="inline small"><input type="checkbox" data-ch="setting" data-key="learn" ${UI.settings.learn !== false ? 'checked' : ''}> 学習サポート（決算書の読み方ガイド・解説）を表示する</label>
     <label class="inline small"><input type="checkbox" data-ch="setting" data-key="autoClose" ${UI.settings.autoClose ? 'checked' : ''}> 会社経営：決算整理の質問をとばして、すぐ結果を見る</label></div>
+    ${fmode && G && G.mode === 'sogyo' ? `<hr class="sep"><h3 style="font-size:14px;margin:0 0 6px">会社の状態</h3><div class="row">${btn('会社を編集する（途中編集）', 'fEditOpen')}</div><p class="note">お金・技術・製品・工場・販路とブランド・人と仕組みを書き換えます。評価は参考になります。</p>` : ''}
     <hr class="sep">${G ? btn('新しいゲームを始める', 'newGameConfirm', {}, 'danger') : ''}`;
   return modalFrame('メニュー', body, btn('閉じる', 'closeModal', {}, 'primary'));
 };
@@ -41744,6 +41757,11 @@ FD_SCEN.denki = {
 <p class="small muted">史実の日立製作所の売上（今の価値）は、1920年に約160億円、1937年に約3,200億円、1970年に約4.8兆円、2024年に約10兆円。「社史」の「数字の歩み」で、あなたの会社と比べられます。</p>`,
   heir: { n: '大森 正一', born: 1903, abil: { tech: 3, prod: 3, sales: 3, fin: 3, lead: 4 }, trait: 'steady', d: '創業者の長男。帝大の電気工学科を出て、工場の現場で叩き上げた。' },
   focus: ['motor', 'kikai', 'trafo', 'gen', 'rail', 'elev', 'kaden', 'tv', 'aircon', 'comp', 'chip', 'it', 'nuke'],
+  // カスタムスタートで、始める年に史実の会社が手がけていた事業（空欄のときの初期値）
+  cuCats: [[1910, ['motor']], [1915, ['motor', 'kikai', 'trafo', 'gen']], [1924, ['motor', 'kikai', 'trafo', 'gen', 'rail']], [1932, ['motor', 'kikai', 'trafo', 'gen', 'rail', 'elev', 'kaden']],
+    [1956, ['motor', 'kikai', 'trafo', 'gen', 'rail', 'elev', 'kaden', 'tv']], [1960, ['motor', 'kikai', 'trafo', 'gen', 'rail', 'elev', 'kaden', 'tv', 'aircon', 'comp', 'chip']],
+    [1970, ['motor', 'kikai', 'trafo', 'gen', 'rail', 'elev', 'kaden', 'tv', 'aircon', 'comp', 'chip', 'nuke', 'it']], [2003, ['motor', 'kikai', 'trafo', 'gen', 'rail', 'elev', 'kaden', 'tv', 'aircon', 'comp', 'nuke', 'it']],
+    [2012, ['motor', 'kikai', 'trafo', 'gen', 'rail', 'elev', 'kaden', 'aircon', 'comp', 'nuke', 'it']], [2021, ['motor', 'kikai', 'trafo', 'gen', 'rail', 'elev', 'kaden', 'nuke', 'it']]],
   bench: { n: '史実の日立製作所', pts: [[1911, 1.65e9], [1914, 3.2e9], [1918, 1.44e10], [1920, 1.6e10], [1925, 2.9e10], [1929, 4.9e10], [1931, 3.3e10], [1934, 8.7e10], [1936, 1.56e11], [1937, 3.2e11], [1941, 5.9e11], [1944, 7.8e11], [1946, 2e11], [1950, 2.9e11], [1955, 3.9e11], [1960, 1.3e12], [1965, 2.2e12], [1970, 4.8e12], [1975, 3.9e12], [1980, 5.5e12], [1985, 7.4e12], [1991, 9.4e12], [1995, 9.6e12], [2000, 9.8e12], [2007, 1.36e13], [2009, 1.09e13], [2015, 1.17e13], [2020, 9.95e12], [2022, 1.21e13], [2024, 1.02e13], [2025, 1.06e13]] },
   fields: {
     em: { n: '電気機械（回転機）', born: 1880, d0: 30, tau: 24 },
@@ -42217,6 +42235,9 @@ FD_SCEN.jidosha = {
 <p class="small muted">史実のトヨタ自動車の売上（今の価値）は、1955年に約1,200億円、1970年に約3.1兆円、1990年に約11.5兆円、2024年に約50兆円。「社史」の「数字の歩み」で、あなたの会社と比べられます。</p>`,
   heir: { n: '杉浦 喜作', born: 1894, abil: { tech: 5, prod: 4, sales: 2, fin: 2, lead: 3 }, trait: 'pioneer', d: '創業者の長男。帝大の機械工学科を出た技術者。自動車に夢を抱いている。' },
   focus: ['cloth', 'loom', 'truck', 'car', 'carS', 'lux', 'suv', 'xev', 'lift'],
+  // カスタムスタートで、始める年に史実の会社（豊田の紡織・織機と自動車）が手がけていた事業（空欄のときの初期値）
+  cuCats: [[1910, ['cloth', 'loom']], [1936, ['cloth', 'loom', 'truck', 'car']], [1956, ['cloth', 'loom', 'truck', 'car', 'lift']], [1961, ['cloth', 'loom', 'truck', 'car', 'carS', 'lift']],
+    [1967, ['cloth', 'loom', 'truck', 'car', 'carS', 'suv', 'lift']], [1989, ['loom', 'truck', 'car', 'carS', 'suv', 'lux', 'lift']], [1997, ['loom', 'truck', 'car', 'carS', 'suv', 'lux', 'xev', 'lift']]],
   bench: { n: '史実のトヨタ（豊田の紡織・織機を含む）', pts: [[1912, 6.5e8], [1916, 1.02e10], [1919, 1.24e10], [1926, 3.4e10], [1929, 4.2e10], [1931, 3.5e10], [1935, 6.4e10], [1938, 8.8e10], [1940, 1.73e11], [1945, 2e10], [1950, 6.3e10], [1955, 1.22e11], [1960, 6.7e11], [1965, 1.19e12], [1970, 3.09e12], [1975, 4.31e12], [1980, 5.16e12], [1985, 8.19e12], [1990, 1.15e13], [1995, 1.26e13], [2000, 1.57e13], [2005, 2.54e13], [2007, 3.18e13], [2008, 2.44e13], [2010, 2.32e13], [2015, 3.32e13], [2020, 3.1e13], [2023, 4.83e13], [2024, 4.99e13], [2025, 5.07e13]] },
   fields: {
     mech: { n: '機械（機構の設計）', born: 1800, d0: 25, tau: 24, base: [[1900, 14], [1915, 8], [1925, 4], [1935, 4], [1945, 9], [1955, 5], [1970, 1], [1980, 0]] },
@@ -42986,7 +43007,8 @@ function fdRerRel(y = fdYf()) {
   const k0 = Math.round(y * 4) / 4;
   if (FD_RERR[k0] !== undefined) return FD_RERR[k0];
   let a = 0, n = 0;
-  for (let k = -12; k <= 12; k += 1) { const yy = k0 + k; if (yy > 2030) continue; a += Math.log(fdRer(yy)); n++; }
+  // 2030年より先は見込み（横ばい）なので、2030年の値で数える（2040年代でも平均が取れるように）
+  for (let k = -12; k <= 12; k += 1) { const yy = Math.min(2030, k0 + k); a += Math.log(fdRer(yy)); n++; }
   return (FD_RERR[k0] = clamp(fdRer(k0) / Math.exp(a / n), 0.4, 2.5));
 }
 function fdFxPass(y = fdYf()) { return Math.pow(fdRerRel(y), FD_FX_PASS); }
@@ -43060,7 +43082,9 @@ function fdLocalShare(c, r) {
   if (r === 'jp') return 1;
   const cap = sum(G.facs.filter(f => f.r === r && f.ready <= G.q), f => sum(f.lines.filter(l => l.cat === c), l => l.cap / 4));
   if (!cap) return 0;
-  const want = Math.max(1, (G.mk[c] && G.mk[c][r] ? G.mk[c][r].want : 0) || cap);
+  // ならした需要と比べる（その四半期の需要と比べると、現地の割合と売れ行きが交互に振れる）
+  const m = G.mk[c] && G.mk[c][r];
+  const want = Math.max(1, (m ? m.wantS ?? m.want : 0) || cap);
   return clamp(cap / want, 0, 1);
 }
 /* 市場の計算：需要・相場・各社の魅力と取り分。me は自社の製品ごとの「売りたい台数」 */
@@ -43422,7 +43446,9 @@ function fdSell() {
       mkt[r] = M;
       const mine = M.items.filter(it => it.me);
       for (const it of mine) wantBy.set(it.p, (wantBy.get(it.p) || 0) + it.units);
-      G.mk[c][r] = { D: M.D, ref: M.ref, share: sum(mine, it => it.share), want: sum(mine, it => it.units), top: M.items.slice().sort((a, b) => b.share - a.share).slice(0, 6).map(it => ({ n: it.n, s: it.share, me: !!it.me, o: it.o, Q: it.Q, pk: it.priceK })) };
+      const wantNow = sum(mine, it => it.units);
+      const prevS = G.mk[c][r] && G.mk[c][r].wantS;
+      G.mk[c][r] = { D: M.D, ref: M.ref, share: sum(mine, it => it.share), want: wantNow, wantS: prevS ? prevS * 0.75 + wantNow * 0.25 : wantNow, top: M.items.slice().sort((a, b) => b.share - a.share).slice(0, 6).map(it => ({ n: it.n, s: it.share, me: !!it.me, o: it.o, Q: it.Q, pk: it.priceK })) };
     }
     for (const p of fdActiveProds(c)) {
       const want = wantBy.get(p) || 0;
@@ -43980,8 +44006,8 @@ function fdNewGame(o) {
   const st = S.start;
   G = {
     mode: 'sogyo', version: FD_SAVE_VERSION, rs: seed, seed, scen: o.scen, diff: o.diff || 'normal',
-    co: o.coName || st.coName, founder: o.founder || st.founder, y0: st.y0, q: 0, endY: o.endY || 2025,
-    bs: fdNewBooks(), yr: { y: st.y0, pl: fdNewPL() }, qr: { pl: fdNewPL() }, assets: [], loans: [], bank: { n: st.bank || '第一銀行', years: 0, trust: 1 },
+    co: o.coName || st.coName, founder: o.founder || st.founder, y0: o.cu ? o.cu.y : st.y0, q: 0, endY: o.cu ? o.cu.endY : o.endY || 2025,
+    bs: fdNewBooks(), yr: { y: o.cu ? o.cu.y : st.y0, pl: fdNewPL() }, qr: { pl: fdNewPL() }, assets: [], loans: [], bank: { n: st.bank || '第一銀行', years: 0, trust: 1 },
     owners: { founder: st.own ? st.own.founder : 1, parent: st.own ? st.own.parent : 0, outside: 0 }, listed: false, shares: 0,
     prods: [], devs: [], gen: {}, cum: {}, tech: {}, lics: [], facs: [], reg: {}, staff: { wk: 0, eng: 0, sal: 0, adm: 0 }, skill: { eng: 1 },
     people: [], ceo: null, org: { st: 0, fixed: {} }, prog: {}, kaizen: 0, qc: 0, policy: { wage: 0, mkt: 1, div: 0.25, autoStaff: true, autoRd: true, noLayoff: true },
@@ -43996,6 +44022,8 @@ function fdNewGame(o) {
   G.reg.jp.st = st.jpSt ?? 1; G.reg.jp.dist = FD_STAGES_JP[G.reg.jp.st].dist * 0.6; G.reg.jp.since = -8;
   // ライバルのばらつき（ゲームごと）
   for (const [c, C] of Object.entries(S.cats)) for (const rv of C.rivals || []) G.rv[c + ':' + rv.id] = { dq: Math.round(randn() * 12) / 10, dp: Math.round(randn() * 3) / 100, alive: true };
+  // カスタムスタート：始める年・大きさ・技術・事業・販路を決めて組み立てる
+  if (o.cu) return fdCustomBuild(o.cu);
   // お金（今の価値で決めてある元手を、その年の円に）
   const y = fdYf(0);
   const cash = fdNominal(st.cash * (G.diff === 'easy' ? 1.5 : G.diff === 'hard' ? 0.7 : 1), y);
@@ -44226,7 +44254,8 @@ function fdScore() {
   const total = sum(parts, p => p[1]);
   const rankL = total >= 85 ? 'S' : total >= 70 ? 'A' : total >= 50 ? 'B' : total >= 30 ? 'C' : 'D';
   const title = { S: '世界を代表する企業を一代で築いた創業者', A: '世界に名を知られる企業を育てた名経営者', B: '日本を代表する企業に育てた経営者', C: '堅実な中堅企業を残した経営者', D: '志半ばの創業者' }[rankL];
-  return { parts, total, rank: rankL, title };
+  const note = G.flags.edited ? `途中で会社を編集した（${G.flags.edited}回）ので、この評価は参考です。` : G.custom ? `${G.y0}年からのカスタムスタート（年商 今の約${fmtYen(G.custom.plan || G.custom.sales)}から）なので、この評価は参考です。` : '';
+  return { parts, total, rank: rankL, title, note };
 }
 
 /* ---------- 保存 ---------- */
@@ -44531,6 +44560,426 @@ function fdOrgReform() {
   return { ok: true, cost };
 }
 
+/* ---- 42d_fd_custom.js ---- */
+/* =========================================================
+ *  42d_fd_custom.js : 創業記モードのカスタムスタートと途中編集（画面に依存しない）
+ *   カスタムスタート：始める年・終わりの年・創業の年・年商・現金と借入・技術の遅れ（分野ごとにも）・
+ *     事業（売上の割合・品質の遅れ・値段）・販路とブランド・海外での生産の割合・技術者・仕組み・上場・物語の出来事を決めて始める。
+ *     始める年より前の時代の出来事は、市場への効き目（関税・統制・需要・進出の制限など）のうち、まだ続いているものだけを引き継ぐ。
+ *   途中編集：お金・技術・製品・工場とライン・販路とブランド・人と仕組みを、ゲームの途中で書き換える。
+ *     帳簿の貸借は、増えた・減った分を純資産（資本金）で受けて合わせる。編集した会社の評価は「参考」になる
+ * ========================================================= */
+
+const FD_CU_YMIN = 1910, FD_CU_YMAX = 2045, FD_CU_ENDMAX = 2050;
+const FD_SALES_STAFF = [[1910, 4e7], [1960, 6e7], [2000, 1.5e8], [2025, 2e8]];
+
+/* ---------- 時代の目安（開始画面でも使うので、G に頼らない） ---------- */
+/* 史実の会社のその年の売上（今の価値の円） */
+function fdCuBench(scen, y) { const B = FD_SCEN[scen].bench; return B ? fdSer(B.pts, y + 0.5, true) : 1e10; }
+/* その地域で、その時代にどこまで商売できるか（0〜4。出来事による制限は数えない） */
+function fdCuAccess(r, y) { if (r === 'jp') return 4; const R = FD_REG[r]; return Math.floor((R.access ? fdSer(R.access, y) : 4) + 1e-9); }
+/* 分野の、日本の産業の地力の遅れ（年） */
+function fdCuBase(scen, f, y) { const F = FD_SCEN[scen].fields[f]; return fdSer(F.base || FD_JP_BASE, y); }
+/* その年にある製品の分野（シナリオの中心の分野から順に） */
+function fdCuCats(scen, y) {
+  const S = FD_SCEN[scen];
+  const fo = S.focus || [];
+  const idx = c => (fo.indexOf(c) < 0 ? 99 : fo.indexOf(c));
+  return Object.keys(S.cats).filter(c => S.cats[c].from <= y).sort((a, b) => idx(a) - idx(b));
+}
+/* 分野の技術の遅れの初期値：日本の地力より2年ほど後ろ（1980年からは1年） */
+function fdCuTechDefault(scen, f, y) { return Math.max(1, Math.round(fdCuBase(scen, f, y) + (y < 1980 ? 2 : 1))); }
+/* 製品の分野の技術の遅れ：使う技術の遅れを重みで平均 */
+function fdCuCatGap(scen, c, tech) {
+  const C = FD_SCEN[scen].cats[c];
+  let s = 0, w = 0;
+  for (const [f, wt] of Object.entries(C.w)) { const g = tech[f]; if (g === null || g === undefined) continue; s += g * wt; w += wt; }
+  return w ? Math.round(s / w) : 10;
+}
+const fdCuNum = v => { if (v === '' || v === null || v === undefined) return null; const x = Number(String(v).replace(/[,，\s]/g, '')); return Number.isFinite(x) ? x : null; };
+
+/* 画面で入れた値（空欄は時代と大きさに合わせた初期値）を、始めるのに使う形にそろえる */
+function fdCuResolve(scen, cu = {}) {
+  const S = FD_SCEN[scen], st = S.start;
+  const y = clamp(Math.round(fdCuNum(cu.y) ?? st.y0), FD_CU_YMIN, FD_CU_YMAX);
+  const endY = clamp(Math.round(fdCuNum(cu.endY) ?? Math.max(2025, y + 10)), Math.min(FD_CU_ENDMAX, y + 3), FD_CU_ENDMAX);
+  const founded = clamp(Math.round(fdCuNum(cu.founded) ?? y), 1850, y);
+  const sales = Math.max(1e8, (fdCuNum(cu.sales) ?? fdCuBench(scen, y) / 1e8) * 1e8);
+  // 現金と借入：空欄なら、市場から見込める年商に合わせて組み立てるときに決める（null）
+  const cash = fdCuNum(cu.cash) === null ? null : Math.max(0, fdCuNum(cu.cash) * 1e8);
+  const debt = fdCuNum(cu.debt) === null ? null : Math.max(0, fdCuNum(cu.debt) * 1e8);
+  const gapAll = fdCuNum(cu.gap);
+  const tech = {};
+  for (const [f, F] of Object.entries(S.fields)) {
+    if (F.born > y) { tech[f] = null; continue; }
+    const g = fdCuNum((cu.techF || {})[f]) ?? gapAll ?? fdCuTechDefault(scen, f, y);
+    tech[f] = clamp(g, -2, 80);
+  }
+  // 事業：選ばれていなければ、会社の大きさに合わせて中心の分野から順に
+  const avail = fdCuCats(scen, y);
+  const nDef = clamp(Math.round(Math.log10(Math.max(1, sales / 1e9)) * 2), 1, avail.length);
+  const anySet = avail.some(c => cu.cats && cu.cats[c] && cu.cats[c].on !== undefined);
+  // 初期値：史実の会社がその年に手がけていた事業（シナリオに書いてあれば）。なければ大きさに合わせて中心の分野から順に
+  let hist = null;
+  for (const [yy, L] of S.cuCats || []) if (y >= yy) hist = L;
+  const deflt = hist ? hist.filter(c => avail.includes(c)) : avail.filter(c => S.cats[c].from <= y - 5).slice(0, nDef);
+  if (!deflt.length && avail.length) deflt.push(avail[0]);
+  const cats = [];
+  for (const c of avail) {
+    const o = (cu.cats || {})[c] || {};
+    const on = anySet ? !!o.on : deflt.includes(c);
+    if (!on) continue;
+    cats.push({ c, w: Math.max(0.1, fdCuNum(o.w) ?? 1), wSet: fdCuNum(o.w) !== null, gap: clamp(fdCuNum(o.gap) ?? fdCuCatGap(scen, c, tech), -2, 80), pr: clamp(Math.round(fdCuNum(o.pr) ?? 100), 50, 200) });
+  }
+  if (!cats.length && avail.length) cats.push({ c: avail[0], w: 1, gap: fdCuCatGap(scen, avail[0], tech), pr: 100 });
+  const wsum = sum(cats, k => k.w);
+  for (const k of cats) k.w /= wsum;
+  // 販路とブランド
+  const regs = {};
+  for (const r of fdRegOrder()) {
+    const o = (cu.regs || {})[r] || {};
+    const acc = fdCuAccess(r, y);
+    const stD = r === 'jp' ? (y < 1915 ? 1 : y < 1950 ? 2 : sales > 5e11 ? 4 : 3)
+      : acc <= 0 ? 0 : y < 1950 ? ((r === 'as' || r === 'cn') && sales > 1e11 ? 1 : 0)
+      : y < 1975 ? (sales > 3e11 ? (r === 'na' || r === 'as' ? 2 : 1) : sales > 5e10 ? 1 : 0)
+      : sales > 1e12 ? 3 : sales > 2e11 ? 2 : 1;
+    const stv = clamp(Math.round(fdCuNum(o.st) ?? stD), 0, r === 'jp' ? 4 : Math.min(4, acc));
+    const bD = r === 'jp' ? clamp(Math.round(15 + 9 * Math.log10(Math.max(1, sales / 1e9))), 10, 85) : stv ? clamp(stv * 8 + 5 + Math.round(4 * Math.log10(Math.max(1, sales / 1e11))), 5, 60) : 0;
+    regs[r] = { st: r === 'jp' ? Math.max(1, stv) : stv, brand: clamp(Math.round(fdCuNum(o.brand) ?? bD), 0, 100), brandSet: fdCuNum(o.brand) !== null };
+  }
+  const abroad = fdRegOrder().filter(r => r !== 'jp' && regs[r].st >= 3);
+  const ovs = abroad.length ? clamp((fdCuNum(cu.ovs) ?? (y < 1990 ? 15 : 30)) / 100, 0, 0.8) : 0;
+  const eng = fdCuNum(cu.eng);
+  // 仕組み（その年にあるものだけ）
+  const progD = { school: y >= 1915 && sales > 1e11, lab: y >= 1935 && sales > 3e11, kaizen: scen === 'jidosha' && y >= 1960, qc: y >= 1960 && sales > 1e11 };
+  const prog = {};
+  for (const k of Object.keys(FD_PROGS)) { if (y < FD_PROGS[k].from) continue; const v = cu.prog && cu.prog[k] !== undefined ? !!cu.prog[k] : progD[k]; if (v) prog[k] = true; }
+  const kz = prog.kaizen ? clamp((fdCuNum(cu.kz) ?? 50) / 100, 0, 1) : 0;
+  const qcLv = prog.qc ? clamp((fdCuNum(cu.qcLv) ?? 50) / 100, 0, 1) : 0;
+  const listed = y >= 1950 && (cu.listed === undefined || cu.listed === null ? sales > 1e11 : !!cu.listed);
+  return { y, endY, founded, sales, cash, debt, tech, cats, regs, ovs, eng: eng === null ? null : Math.max(0, Math.round(eng)), prog, kz, qcLv, listed, story: cu.story !== false };
+}
+
+/* ---------- カスタムスタートで会社を組み立てる（fdNewGame から呼ぶ。G の骨組みとライバルはできている） ---------- */
+function fdCustomBuild(R) {
+  const S = fdS(), st = S.start;
+  const y = fdYf(0);
+  G.custom = { y: R.y, sales: R.sales, founded: R.founded };
+  G.founded = R.founded;
+  G.bank.years = Math.min(15, R.y - R.founded);
+  // 技術（世界の先端から何年遅れているか）
+  for (const f of Object.keys(S.fields)) G.tech[f] = { t: R.tech[f] === null || R.tech[f] === undefined ? null : y - R.tech[f], a: 0 };
+  // 仕組み（カイゼン・品質管理の身につき具合も）
+  for (const k of Object.keys(R.prog)) G.prog[k] = -8;
+  G.kaizen = R.kz; G.qc = R.qcLv;
+  // 販路とブランド
+  for (const r of fdRegOrder()) { const o = R.regs[r], Rg = G.reg[r]; Rg.st = o.st; Rg.dist = (r === 'jp' ? FD_STAGES_JP : FD_STAGES)[o.st].dist; Rg.brand = o.brand; Rg.since = o.st > 0 ? -8 : null; }
+  // 工場：日本の本社工場と、現地生産の地域ごとに1つ
+  const f0 = (st.facs || [])[0];
+  const main = fdBuildFac('jp', f0 ? f0.loc : FD_REG.jp.locs[0], { n: f0 ? f0.n : undefined, free: true, now: true, quiet: true }).f;
+  const abroad = fdRegOrder().filter(r => r !== 'jp' && R.regs[r].st >= 3 && fdRegAccess(r, y) >= 3);
+  const facOf = { jp: main };
+  for (const r of abroad) facOf[r] = fdBuildFac(r, FD_REG[r].locs[0], { free: true, now: true, quiet: true }).f;
+  // 事業：製品を先に作り、市場の取り分から見込める売上を出す。見込みが目安の年商に届くまで、ブランドを上げる（入れた値は動かさない）
+  const prods = R.cats.map(k => fdCuProd(k.c, y - k.gap, k.pr, 0, null, y));
+  const units = {};
+  const est = () => R.cats.map(k => sum(fdRegOrder(), r => { const M = fdMarket(k.c, r); const it = M.items.find(x => x.me); units[k.c + ':' + r] = { M, u: it ? it.units : 0, s: it ? it.share : 0 }; return it ? it.units * 4 * fdRefReal(k.c, y) * k.pr / 100 : 0; }));
+  let V = est();
+  const bMax = r => (r === 'jp' ? 85 : 65);
+  for (let it = 0; it < 16; it++) {
+    const tot = sum(V, v => v);
+    const adj = fdRegOrder().filter(r => !R.regs[r].brandSet && G.reg[r].st > 0 && G.reg[r].brand < bMax(r));
+    if (tot >= R.sales * 0.97 || !adj.length) break;
+    for (const r of adj) G.reg[r].brand = Math.min(bMax(r), G.reg[r].brand + (tot < R.sales * 0.5 ? 8 : 3));
+    V = est();
+  }
+  // 割合を決めていない事業は、見込める売上に比例させる（決めた事業の割合はそのまま）
+  const setW = sum(R.cats.filter(k => k.wSet), k => k.w);
+  const freeV = sum(R.cats.map((k, i) => (k.wSet ? 0 : V[i])), v => v);
+  if (freeV > 0) R.cats.forEach((k, i) => { if (!k.wSet) k.w = (1 - Math.min(0.95, setW)) * V[i] / freeV; });
+  // 目安の年商を事業の割合で配る。見込める売上の1.15倍を超える分は、余裕のある事業へ回す（どこにも入らない分だけ、年商は目安より小さくなる）
+  let alloc = R.cats.map(k => R.sales * k.w);
+  for (let pass = 0; pass < 4; pass++) {
+    const lim = V.map(v => v * 1.15);
+    let extra = 0;
+    alloc = alloc.map((a, i) => { if (a > lim[i]) { extra += a - lim[i]; return lim[i]; } return a; });
+    const room = alloc.map((a, i) => Math.max(0, lim[i] - a));
+    const rs = sum(room, x => x);
+    if (extra <= 1 || rs <= 1) break;
+    alloc = alloc.map((a, i) => a + Math.min(room[i], extra * room[i] / rs));
+  }
+  G.custom.plan = sum(alloc, a => a);
+  // 市場の記録を、見込みで初めておく（現地で作る割合の計算が、初めの四半期から落ち着くように）
+  for (const k of R.cats) {
+    G.mk[k.c] = G.mk[k.c] || {};
+    for (const r of fdRegOrder()) { const x = units[k.c + ':' + r]; if (x) G.mk[k.c][r] = { D: x.M.D, ref: x.M.ref, share: x.s, want: x.u, wantS: x.u, top: [] }; }
+  }
+  // 事業ごとのライン（見込む売上 ÷ 値段 ÷ 稼働85%）
+  R.cats.forEach((k, ki) => {
+    const C = fdCat(k.c);
+    const units = alloc[ki] / (fdRefReal(k.c, y) * k.pr / 100) / 0.85;
+    const capT = C.kind === 'big' ? Math.max(0.5, Math.round(units * 10) / 10) : Math.max(10, Math.round(units));
+    const wts = abroad.map(r => fdRegShare(k.c, r, y));
+    const wsum = sum(wts, x => x);
+    let left = capT;
+    if (R.ovs > 0 && wsum > 0) abroad.forEach((r, i) => { const cp = C.kind === 'big' ? Math.round(capT * R.ovs * wts[i] / wsum * 10) / 10 : Math.round(capT * R.ovs * wts[i] / wsum); if (cp > 0 && cp < left) { fdCuLine(facOf[r], k.c, cp, y); left -= cp; } });
+    fdCuLine(main, k.c, left, y);
+    G.cum[k.c] = capT * 3;
+  });
+  // 現地の工場を入れて、市場の記録が落ち着くまで回す（初めの四半期の売れ行きが跳ねないように）。売れる見込みと在庫はそのあとで
+  for (let it = 0; it < 4; it++) for (const k of R.cats) for (const r of fdRegOrder()) {
+    const M = fdMarket(k.c, r); const me = M.items.find(x => x.me); const u = me ? me.units : 0;
+    G.mk[k.c][r] = { D: M.D, ref: M.ref, share: me ? me.share : 0, want: u, wantS: u, top: [] };
+  }
+  R.cats.forEach((k, ki) => fdCuStock(prods[ki], sum(G.facs, f => sum(f.lines.filter(l => l.cat === k.c), l => l.cap)), main, y));
+  // 建物（工場ごと。ラインの大きさに合わせる）
+  for (const f of G.facs) {
+    const lineV = sum(G.assets.filter(a => a.f === f.id && a.kind === 'line'), a => a.cost);
+    fdNewAsset({ n: `${f.n}の建物・土地`, cost: fdFacCost(f.r, y) * 0.6 + lineV * 0.25, life: 40, f: f.id, kind: 'bld', q: -1 });
+  }
+  // 人：工員はラインの85%を動かせるだけ、技術者は売上の4%を研究開発に使える数、営業と事務は大きさに合わせて
+  for (const f of G.facs) { f.wk = Math.ceil(fdFacWkFull(f, y) * 0.85); f.skill = 1 + clamp((R.y - R.founded) / 60, 0, 0.4); }
+  G.staff.wk = sum(G.facs, f => f.wk || 0);
+  const salesN = fdNominal(G.custom.plan, y);
+  G.staff.eng = R.eng ?? Math.max(3, Math.round(salesN * 0.04 / (fdPayQ('eng') * 4 * 1.35)));
+  const ns = fdNeedStaff({ sales: salesN / 4 });
+  G.staff.sal = ns.sal;
+  G.staff.adm = fdNeedStaff({ sales: salesN / 4 }).adm;
+  // 組織：これまでの段階の改革は済んでいる
+  const head = fdHead();
+  let ost = 0;
+  while (FD_ORG[ost + 1] && head > FD_ORG[ost + 1].min) { G.org.fixed[FD_ORG[ost].fix] = -4; ost++; }
+  G.org.st = ost;
+  // 社長と幹部
+  const ceo = fdNewPerson('ceo', { n: G.founder, born: R.y - 45, abil: st.ceoAbil || { tech: 4, lead: 4, prod: 3, sales: 3, fin: 3 }, trait: st.trait || 'pioneer', founder: R.founded === R.y });
+  G.ceo = ceo.id;
+  for (const role of R.sales > 3e10 ? ['cto', 'coo', 'cso', 'cfo'] : R.sales > 5e9 ? ['cto', 'coo'] : ['cto']) fdNewPerson(role);
+  // 上場・労働組合
+  if (R.listed) { G.listed = -4; G.owners = { founder: 0.08, parent: 0, outside: 0.92 }; }
+  if (R.y + 0.125 >= 1946.25) G.union = { mood: 0.5, since: -4 };
+  // お金：現金と借入、残りを純資産（資本金と、これまでの利益の積み上げ）に
+  const plan = G.custom.plan;
+  G.bs.cash = fdNominal(R.cash ?? Math.max(plan * 0.12, 2e8), y);
+  const debt = R.debt ?? plan * (R.y < 1950 ? 0.15 : R.y < 1990 ? 0.3 : 0.2);
+  if (debt > 0) { const l = fdBorrow(fdNominal(debt, y), 10, 'これまでの借入'); G.bs.cash -= l.amt; }
+  const eq = G.bs.cash + G.bs.ar + G.bs.inv + G.bs.ppe + G.bs.inv2 - G.bs.ap - G.bs.debt - G.bs.taxp;
+  G.bs.cap = eq > 0 ? Math.round(eq * 0.4) : fdNominal(1e8, y);
+  G.bs.re = eq - G.bs.cap;
+  // 始める年より前の出来事
+  fdCuPastEvents(R);
+  G.news = [];
+  fdChron(`${fdWareki(R.y)}（${R.y}年）、${G.founder}が${G.co}の社長として経営を始める（${R.founded < R.y ? `${R.founded}年創業。` : ''}年商は今の価値で約${fmtYen(G.custom.plan)}）`, true);
+  fdNews(`${G.founder}、${G.co}の社長として経営を始める。年商の見込みは今の価値で約${fmtYen(G.custom.plan)}`, 'info');
+  if (G.custom.plan < R.sales * 0.8) fdNews(`市場の取り分から見込める年商は、目安（今の価値で約${fmtYen(R.sales)}）に届きません。品質・ブランド・販路を強めると伸びます`, 'warn');
+  fdAutoRd();
+  return G;
+}
+/* ライン（能力 cap 台/年）。自動化は時代のふつう。機械は少し使い込んだ帳簿の値で持っている */
+function fdCuLine(f, c, cap, y) {
+  if (!(cap > 0)) return;
+  const r = fdAddLine(f.id, c, cap, { free: true, now: true });
+  r.line.auto = Math.round(fdAutoTyp(y) * 100) / 100;
+  fdNewAsset({ n: `${f.n}の${fdCat(c).n}のライン`, cost: fdCapexPer(c, f.r, y) * cap * 0.55, life: fdCat(c).lineLife || 15, f: f.id, kind: 'line', cat: c, q: -1 });
+}
+/* 売っている製品（品質の年 qy・値段 pr）。capT>0 なら、初めの四半期から作れるよう、売れる見込みと半期分の在庫を持たせる */
+function fdCuProd(c, qy, pr, capT, f, y) {
+  const C = fdCat(c);
+  G.gen[c] = 0;
+  const p = { id: 'P' + (++G.seq), cat: c, name: fdModelName(c), gen: 1, qy, q0: -4, pr, stock: 0, stockCost: 0, cum: 0, sold: 0, want: 0, made: 0, def: fdDefect(c), active: true, plan: { mode: 'auto', qty: 0 }, ban: [] };
+  p.spec = C.spec ? C.spec(qy, y) : '';
+  G.gen[c] = 1; G.miles['cat_' + c] = -4;
+  G.prods.push(p);
+  if (capT > 0 && f) fdCuStock(p, capT, f, y);
+  return p;
+}
+function fdCuStock(p, capT, f, y) {
+  const C = fdCat(p.cat);
+  const mk = G.mk[p.cat];
+  const dem = mk ? sum(Object.values(mk), m => m.want || 0) : 0;
+  p.want = p.sold = dem > 0 ? Math.min(dem, capT / 4 * 0.95) : capT / 4 * 0.85;
+  const n = C.kind === 'big' ? Math.floor(p.want * 0.5 * 10) / 10 : Math.round(p.want * 0.5);
+  if (n > 0 && f) { const uc = fdUnitCost(p.cat, f, y).v; p.stock += n; p.stockCost += n * uc; G.bs.inv += n * uc; }
+}
+/* 始める年より前の出来事：起きたことにする。歴史の出来事の、市場への効き目（関税・統制・需要・進出の制限など）のうち、
+   始める時点でまだ続いているものだけを引き継ぐ（会社への直接の効き目は引き継がない）。物語の出来事を起こさないときは、先の分も起きたことにする */
+function fdCuPastEvents(R) {
+  const real = G;
+  for (const E of fdEventList()) {
+    const hist = FD_EVENTS.includes(E);
+    if (E.y === undefined) { if (!hist && !R.story) real.ev.done[E.id] = -1; continue; }
+    const qE = fdQOf(E.y, E.q || 0);
+    if (qE >= 0) { if (!hist && !R.story) real.ev.done[E.id] = -1; continue; }
+    real.ev.done[E.id] = qE;
+    if (!hist || !E.fx) continue;
+    const scratch = JSON.parse(JSON.stringify(real));
+    const n0 = scratch.mods.length;
+    G = scratch;
+    try { E.fx(); } catch (e) { /* 会社の状態に頼る出来事は、市場への効き目だけ拾えればよい */ }
+    const add = G.mods.slice(n0).filter(m => m.to >= 0);
+    G = real;
+    for (const m of add) G.mods.push(m);
+  }
+  G = real;
+}
+
+/* ---------- 途中編集 ----------
+   金額は今の価値の円で受け取る。増えた・減った資産と負債の差は、純資産（資本金）で受ける */
+function fdEdited(what) {
+  G.flags.edited = (G.flags.edited || 0) + 1;
+  fdChron(`会社の状態を編集した（${what}）`, false);
+  fdNews(`会社の状態を編集しました（${what}）。この会社の評価は参考になります`, 'warn');
+}
+function fdEditMoney(o) {
+  const y = fdYf();
+  const msg = [];
+  if (o.cash !== null && o.cash !== undefined && isFinite(o.cash)) {
+    const d = fdNominal(Math.max(0, o.cash), y) - G.bs.cash;
+    if (Math.abs(d) >= 1) { G.bs.cash += d; G.bs.cap += d; msg.push('現金'); }
+  }
+  if (o.debt !== null && o.debt !== undefined && isFinite(o.debt)) {
+    const d = fdNominal(Math.max(0, o.debt), y) - fdDebt();
+    if (d >= 1) { const l = fdBorrow(d, 10, '編集による借入'); G.bs.cash -= l.amt; G.bs.cap -= l.amt; msg.push('借入'); }
+    else if (d <= -1) {
+      let x = -d;
+      for (const l of G.loans) { if (x <= 0) break; const r = Math.min(l.bal, x); l.bal -= r; x -= r; }
+      const cut = -d - x;
+      G.bs.debt -= cut; G.bs.cap += cut;
+      G.loans = G.loans.filter(l => l.bal > 0.5);
+      G.bs.debt = fdDebt();
+      msg.push('借入');
+    }
+  }
+  if (msg.length) fdEdited(msg.join('・'));
+  return msg.length > 0;
+}
+/* 技術：分野 → 世界の先端より何年遅れているか（マイナスは先を行く。最大2年） */
+function fdEditTech(gaps) {
+  const y = fdYf();
+  let n = 0;
+  for (const [f, g] of Object.entries(gaps)) {
+    if (!G.tech[f] || g === null || g === undefined || !isFinite(g) || fdFrontier(f, y) === null) continue;
+    const t = fdFrontier(f, y) - clamp(g, -2, 80);
+    if (G.tech[f].t === null || Math.abs(G.tech[f].t - t) > 0.05) { G.tech[f].t = t; n++; }
+  }
+  if (n) { fdAutoRd(); fdEdited(`技術 ${n}分野`); }
+  return n;
+}
+/* 製品：id → { gap（品質の遅れ）, pr（値段 %） } */
+function fdEditProds(map) {
+  const y = fdYf();
+  let n = 0;
+  for (const [id, o] of Object.entries(map)) {
+    const p = G.prods.find(x => x.id === id);
+    if (!p) continue;
+    if (o.gap !== null && o.gap !== undefined && isFinite(o.gap)) { const qy = y - clamp(o.gap, -2, 80); if (Math.abs(qy - p.qy) > 0.05) { p.qy = qy; const C = fdCat(p.cat); p.spec = C.spec ? C.spec(qy, y) : p.spec; n++; } }
+    if (o.pr !== null && o.pr !== undefined && isFinite(o.pr)) { const pr = clamp(Math.round(o.pr), 50, 200); if (pr !== p.pr) { p.pr = pr; n++; } }
+  }
+  if (n) fdEdited('製品');
+  return n;
+}
+/* 新しい分野の製品をすぐに出す（その分野の技術の水準で。cap>0 なら本社工場にラインも足す） */
+function fdEditAddProd(c, cap) {
+  const C = fdCat(c);
+  const y = fdYf();
+  if (!C || y < C.from) return { ok: false, why: 'その年にはまだない製品です' };
+  if (fdActiveProds(c).length) return { ok: false, why: 'その分野の製品はもう売っています' };
+  const f = G.facs.find(x => x.r === 'jp') || G.facs[0];
+  const lineCap = sum(G.facs, x => sum(x.lines.filter(l => l.cat === c), l => l.cap));
+  if (cap > 0 && f) fdEditAddLine(f.id, c, cap, true);
+  // 初めの四半期から作れるよう、ラインに見合う売れる見込みと在庫を持たせる（在庫の分は純資産で受ける）
+  const inv0 = G.bs.inv;
+  const p = fdCuProd(c, fdCatTech(c, y), 100, lineCap + (cap > 0 ? cap : 0), f, y);
+  G.bs.cap += G.bs.inv - inv0;
+  p.q0 = G.q;
+  G.gen[c] = Math.max(1, G.gen[c] || 1);
+  fdEdited(`${C.n}の製品「${p.name}」を出す`);
+  return { ok: true, p };
+}
+/* 工場：fid → { skill, repair, lines: { cat: { cap, auto } } }。能力を増やした分は、機械を資産として持たせる */
+function fdEditFacs(map) {
+  const y = fdYf();
+  let n = 0;
+  for (const [fid, o] of Object.entries(map)) {
+    const f = G.facs.find(x => x.id === fid);
+    if (!f) continue;
+    if (o.skill !== null && o.skill !== undefined && isFinite(o.skill)) { const s = clamp(o.skill, 0.5, 2); if (Math.abs(s - (f.skill || 1)) > 0.005) { f.skill = s; n++; } }
+    if (o.repair && (f.dmgF || 1) > 1) { f.dmgF = 1; n++; }
+    for (const [c, lo] of Object.entries(o.lines || {})) {
+      const line = f.lines.find(l => l.cat === c);
+      if (!line) continue;
+      if (lo.cap !== null && lo.cap !== undefined && isFinite(lo.cap)) {
+        const cap = Math.max(0, fdCat(c).kind === 'big' ? Math.round(lo.cap * 10) / 10 : Math.round(lo.cap));
+        const d = cap - line.cap;
+        if (d > 0) { const cost = fdCapexPer(c, f.r, y) * d; fdNewAsset({ n: `${f.n}の${fdCat(c).n}のライン`, cost, life: fdCat(c).lineLife || 15, f: f.id, kind: 'line', cat: c }); G.bs.cap += cost; }
+        if (Math.abs(d) > 1e-9) { line.cap = cap; n++; }
+      }
+      if (lo.auto !== null && lo.auto !== undefined && isFinite(lo.auto)) { const a = clamp(lo.auto, 0, fdAutoMax(y)); if (Math.abs(a - line.auto) > 0.004) { line.auto = Math.round(a * 100) / 100; n++; } }
+    }
+    f.lines = f.lines.filter(l => l.cap > 0);
+  }
+  if (n) fdEdited('工場');
+  return n;
+}
+/* ラインを足す（すぐに動く）。quiet：記録は呼び出し側で */
+function fdEditAddLine(fid, c, cap, quiet) {
+  const f = G.facs.find(x => x.id === fid);
+  const y = fdYf();
+  if (!f || !fdCat(c) || !(cap > 0)) return { ok: false, why: '工場・分野・能力を確かめてください' };
+  const r = fdAddLine(f.id, c, cap, { free: true, now: true });
+  r.line.ready = Math.min(r.line.ready, G.q);
+  if (f.ready > G.q) f.ready = G.q;
+  const cost = fdCapexPer(c, f.r, y) * cap;
+  fdNewAsset({ n: `${f.n}の${fdCat(c).n}のライン`, cost, life: fdCat(c).lineLife || 15, f: f.id, kind: 'line', cat: c });
+  G.bs.cap += cost;
+  G.cum[c] = Math.max(G.cum[c] || 0, cap * 3);
+  if (!quiet) fdEdited(`${f.n}に${fdCat(c).n}のライン`);
+  return { ok: true };
+}
+/* 工場をすぐに建てる（その地域で工場を建てられる時代だけ） */
+function fdEditAddFac(r, loc) {
+  const y = fdYf();
+  if (r !== 'jp' && fdRegAccess(r, y) < 3) return { ok: false, why: 'この時代、この地域には工場を建てられません' };
+  const res = fdBuildFac(r, loc, { free: true, now: true, quiet: true });
+  if (!res.ok) return res;
+  const cost = fdFacCost(r, y);
+  fdNewAsset({ n: `${res.f.n}の建物・土地`, cost, life: 40, f: res.f.id, kind: 'bld' });
+  G.bs.cap += cost;
+  fdEdited(`${FD_REG[r].n}に${res.f.n}`);
+  return res;
+}
+/* 販路とブランド：地域 → { st（段階）, brand（0〜100） } */
+function fdEditRegs(map) {
+  const y = fdYf();
+  let n = 0;
+  for (const [r, o] of Object.entries(map)) {
+    const R = G.reg[r];
+    if (!R) continue;
+    if (o.st !== null && o.st !== undefined && isFinite(o.st)) {
+      const stv = clamp(Math.round(o.st), r === 'jp' ? 1 : 0, r === 'jp' ? 4 : Math.min(4, fdRegAccess(r, y)));
+      if (stv !== R.st) { R.st = stv; R.dist = (r === 'jp' ? FD_STAGES_JP : FD_STAGES)[stv].dist; if (stv > 0 && R.since === null) R.since = G.q; n++; }
+    }
+    if (o.brand !== null && o.brand !== undefined && isFinite(o.brand)) { const b = clamp(o.brand, 0, 100); if (Math.abs(b - R.brand) > 0.4) { R.brand = b; n++; } }
+  }
+  if (n) fdEdited('販路とブランド');
+  return n;
+}
+/* 人と仕組み：{ eng, prog: { k: bool }, kz（0〜1）, qc（0〜1） } */
+function fdEditOrg(o) {
+  const y = fdYf();
+  let n = 0;
+  if (o.eng !== null && o.eng !== undefined && isFinite(o.eng)) { const e = Math.max(0, Math.round(o.eng)); if (e !== G.staff.eng) { G.staff.eng = e; n++; } }
+  for (const [k, on] of Object.entries(o.prog || {})) {
+    if (!FD_PROGS[k] || y < FD_PROGS[k].from) continue;
+    if (on && !G.prog[k]) { G.prog[k] = G.q; n++; } else if (!on && G.prog[k] !== undefined) { delete G.prog[k]; n++; }
+  }
+  if (o.kz !== null && o.kz !== undefined && isFinite(o.kz)) { const v = clamp(o.kz, 0, 1); if (Math.abs(v - (G.kaizen || 0)) > 0.004) { G.kaizen = v; n++; } }
+  if (o.qc !== null && o.qc !== undefined && isFinite(o.qc)) { const v = clamp(o.qc, 0, 1); if (Math.abs(v - (G.qc || 0)) > 0.004) { G.qc = v; n++; } }
+  if (n) fdEdited('人と仕組み');
+  return n;
+}
+/* 会社が生まれた年（カスタムスタートでは、始めた年より前のこともある） */
+function fdFounded() { return G.founded ?? G.y0; }
+
 /* ---- 43_fd_ui.js ---- */
 /* =========================================================
  *  43_fd_ui.js : 創業記モードの画面（その1）
@@ -44580,7 +45029,7 @@ function fdMast() {
   const y = fdY();
   return `<header class="mast fmast era-${fdEraKey()}">
     <div class="mast-brand">${ksSeal(S.seal || '創')}<div style="min-width:0"><div class="bank-name"><span class="bn">${esc(G.co)}</span></div><div class="bank-sub">社長 ${esc(ceo ? ceo.n : G.founder)}<span class="hide-m">　${esc(S.short)}</span></div></div></div>
-    <div class="mast-date"><div class="wareki">${fdQWareki()} ${FD_QN[fdQo()]}</div><div class="sub">${y}年・創業${y - G.y0 + 1}年目${G.over ? '・終了' : ''}</div></div>
+    <div class="mast-date"><div class="wareki">${fdQWareki()} ${FD_QN[fdQo()]}</div><div class="sub">${y}年・創業${y - fdFounded() + 1}年目${G.over ? '・終了' : ''}</div></div>
     <div class="mast-actions"><button type="button" class="mbtn" data-act="menu">メニュー</button><button type="button" class="mbtn" data-act="help">遊び方</button>
     <button type="button" class="mbtn hide-m" data-act="fYearRun"${G.over ? ' disabled' : ''}>1年進める</button>
     <button type="button" class="btn-advance" data-act="advance"${G.over ? ' disabled' : ''}>${fdQo() === 3 ? '12月で締めて決算へ' : '四半期を締めて次へ'}</button></div>
@@ -44659,7 +45108,7 @@ FD_SCREENS.f_dash = () => {
   const lastCh = G.chron.slice(-5).reverse().map(c => `<li><span class="when">${fdY(c.q)}</span><span class="what">${c.big ? '<b>' : ''}${esc(c.t)}${c.big ? '</b>' : ''}</span></li>`).join('');
   const prods = fdActiveProds().slice(0, 6).map(p => `<tr><td><b>${esc(p.name)}</b><div class="small muted">${esc(fdCat(p.cat).n)}</div></td><td class="n">${fdGapTxt(fdYf() - p.qy)}</td><td class="n">${fmtNum(p.sold || 0, 0)}${esc(fdCat(p.cat).unit)}</td><td class="n">${fmtYen((p.rev || 0) * 4)}</td></tr>`).join('');
   return `<div class="era-band era-${fdEraKey()}"><div class="era-y">${fdWareki(y)}<span>${y}年</span></div><div class="era-t">${esc(era)}</div></div>
-    <h1 class="h1">社長室</h1><p class="lead">${esc(S.lead)}</p>
+    <div class="row" style="justify-content:space-between;align-items:baseline"><h1 class="h1">社長室</h1>${btn('会社を編集する', 'fEditOpen', {}, 'sm ghost')}</div><p class="lead">${esc(S.lead)}</p>
     <div class="grid g-side"><div class="stack">
       ${panel('いま考えること', fdInboxHtml(items), { flush: true })}
       ${panel('製品（この四半期）', prods ? `<div class="tbl-wrap"><table class="t"><thead><tr><th>製品</th><th class="n">品質</th><th class="n">売れた数</th><th class="n">年に直した売上</th></tr></thead><tbody>${prods}</tbody></table></div>` : '<div class="empty">まだ売っている製品がありません</div>', { flush: true, aside: btn('製品と市場へ', 'fGo', { tab: 'f_prod' }, 'sm ghost') })}
@@ -44927,7 +45376,8 @@ FD_SCREENS.f_hist = () => {
     const all = [{ id: 'export', t: '初めての輸出' }, { id: 'ipo', t: '株式の上場' }].concat(FD_MILES);
     body = `<div class="tbl-wrap"><table class="t"><tbody>${all.map(M => `<tr><td>${esc(M.t)}</td><td class="n">${G.miles[M.id] !== undefined ? `<b>${fdY(G.miles[M.id])}年</b>` : '<span class="muted">まだ</span>'}</td></tr>`).join('')}</tbody></table></div>`;
   }
-  return `<h1 class="h1">社史</h1><p class="lead">${esc(G.co)}の歩み。${fdWareki(G.y0)}（${G.y0}年）の創業から、いままで。</p>${sub}<div class="stack">${body}</div>`;
+  const since = fdFounded() < G.y0 ? `${fdFounded()}年の創業。${fdWareki(G.y0)}（${G.y0}年）から経営して、いままで。` : `${fdWareki(G.y0)}（${G.y0}年）の${G.custom ? '始まり' : '創業'}から、いままで。`;
+  return `<h1 class="h1">社史</h1><p class="lead">${esc(G.co)}の歩み。${since}</p>${sub}<div class="stack">${body}</div>`;
 };
 
 /* ---------- 四半期の締め ---------- */
@@ -44983,7 +45433,7 @@ MODALS.fdYear = a => {
   const d = (v, pv) => (pv ? `<span class="small ${v >= pv ? 'pos' : 'neg'}">${v >= pv ? '+' : ''}${fmtPct((v / pv - 1) * 100, 0)}</span>` : '');
   const top = Object.entries(h.share || {}).sort((a2, b2) => b2[1] - a2[1]).slice(0, 3).map(([c, s]) => `${fdCat(c).n} ${fmtPct(s * 100, 1)}`).join('・');
   const rank = fdWorldRank(a.y);
-  return modalFrame(`${a.y}年の決算（第${a.y - G.y0 + 1}期）`, `<div class="fs-mini">${kv([
+  return modalFrame(`${a.y}年の決算（第${a.y - fdFounded() + 1}期）`, `<div class="fs-mini">${kv([
     ['売上高', `<b>${fmtYen(h.sales)}</b> ${d(h.sales / h.cpi, prev ? prev.sales / prev.cpi : 0)}<div class="small muted">今の価値で約${fmtYen(h.sales / h.cpi)}</div>`],
     ['営業利益', `<span class="${h.opi < 0 ? 'neg' : ''}">${fmtYen(h.opi)}</span>（売上の${h.sales ? fmtPct(h.opi / h.sales * 100, 1) : '―'}）`],
     ['当期純利益', `<span class="${h.net < 0 ? 'neg' : ''}">${fmtYen(h.net)}</span>${h.div ? `・配当 ${fmtYen(h.div)}` : ''}`],
@@ -45057,12 +45507,13 @@ MODALS.fdEnd = () => {
   const sc = fdScore();
   const chron = G.chron.filter(c => c.big).slice(-14).map(c => `<li><span class="when">${fdY(c.q)}年</span><span class="what">${esc(c.t)}</span></li>`).join('');
   return modalFrame(G.over && G.over.type === 'bankrupt' ? '倒産' : `${G.endY}年、${esc(G.co)}の今`, `${G.over && G.over.type === 'bankrupt' ? '<p>会社は倒産しました。</p>' : `<p class="endtitle">${esc(sc.title)}</p><div class="endrank">評価 <b>${sc.rank}</b>（${sc.total}点）</div>`}
-    <div class="tbl-wrap"><table class="t"><tbody>${sc.parts.map(([k, v, d]) => `<tr><td>${esc(k)}</td><td class="n"><b>${v}</b></td><td class="small">${esc(d)}</td></tr>`).join('')}</tbody></table></div>
+    <div class="tbl-wrap"><table class="t"><tbody>${sc.parts.map(([k, v, d]) => `<tr><td>${esc(k)}</td><td class="n"><b>${v}</b></td><td class="small">${esc(d)}</td></tr>`).join('')}</tbody></table></div>${sc.note ? `<p class="small muted">${esc(sc.note)}</p>` : ''}
     <h3 style="margin:14px 0 6px">社史の大きな節目</h3><ul class="newslist">${chron}</ul>`,
     btn('社史を見る', 'fGo', { tab: 'f_hist' }) + (G.over && G.over.type === 'end' && G.endY < 2050 ? btn('2050年まで続ける', 'fContinue', {}, '') : '') + btn('閉じる', 'closeModal', {}, 'primary'), { size: 'narrow' });
 };
 MODALS.fdIntro = () => {
   const S = fdS();
+  if (G.custom) return modalFrame(esc(S.title), `${scene(S.img || 'fdhero', { cls: 'evimg' })}<div class="evtext"><p>${fdWareki(G.y0)}（${G.y0}年）。${esc(G.founder)}は、${fdFounded() < G.y0 ? `${fdFounded()}年に生まれた` : '新しく興した'}${esc(G.co)}の社長として経営を始める。年商の見込みは今の価値で約${fmtYen(G.custom.plan || G.custom.sales)}、社員は${fmtNum(fdHead(), 0)}人。</p><p>${esc(fdEraText(G.y0))}</p><p>ここから${G.endY}年まで、世界の会社と競いながら、技術と事業と販路を育てる。会社の状態は、メニューの「会社を編集する」でいつでも書き換えられる。</p></div>`, btn('始める', 'closeModal', {}, 'primary'), { size: 'narrow' });
   return modalFrame(esc(S.title), `${scene(S.img || 'fdhero', { cls: 'evimg' })}<div class="evtext">${S.intro}</div>`, btn('始める', 'closeModal', {}, 'primary'), { size: 'narrow' });
 };
 
@@ -45144,17 +45595,23 @@ function renderStartF() {
     <div class="field"><span>創業の道</span><div class="presets indgrid">${scens}</div></div>
     <div class="field"><span>難しさ</span><div class="seg" role="radiogroup">${diffs}</div><span class="small muted">${{ easy: '元手が多く、宣伝の効き目が大きい。', normal: '標準的な難しさ。', hard: '元手が少なく、銀行も厳しい。' }[f.diff]}</span></div>
     <label class="field"><span>シード（同じ数字なら同じ展開）</span><input type="text" id="fstSeed" value="${esc(f.seed)}" placeholder="空欄でランダム" inputmode="numeric"></label>
+    ${fdCustomHtml()}
     <p class="small muted" style="margin:0">${esc(S.pickLong || '')} ほかのモードとは別に保存されます。</p>
   </section>`;
   const st = S.start;
+  // カスタムスタートでは、決めた年から（月は1月）
+  const cuOn = f.cu && f.cu.on;
+  const cuR = cuOn ? fdCuResolve(f.scen, f.cu) : null;
+  const y0 = cuR ? cuR.y : st.y0;
+  const yF = cuR ? cuR.founded : st.y0;
   const letter = `<div class="appoint fdletter">
     <h1>設立趣意書</h1><div class="gametitle">創業記 ― 小さな工場から世界企業へ</div>
-    <div class="body-text">${fdWareki(st.y0)}、${esc(st.place)}において、<br>
+    <div class="body-text">${fdWareki(yF)}、${esc(st.place)}において、<br>
     <label><input type="text" id="fstFounder" value="${esc(f.founder)}" placeholder="${esc(st.founder)}" maxlength="12" aria-label="創業者の氏名"></label> は、${esc(st.vow)}<br>
     社名を <label><input type="text" id="fstCo" value="${esc(f.co)}" placeholder="${esc(st.coName)}" maxlength="16" aria-label="会社の名前" style="width:9em"></label> とする。<br>
     ${esc(st.motto)}</div>
-    <div class="issuer">${fdWareki(st.y0)}${st.mo || 1}月<br>創業者</div>
-    <div class="start">${btn('創業する', 'fStart', {}, 'primary')}${btn('ファイルから読み込む', 'importSave')}${btn('遊び方', 'help')}</div>
+    <div class="issuer">${fdWareki(y0)}${cuOn ? 1 : st.mo || 1}月<br>${cuOn ? '社長' : '創業者'}</div>
+    <div class="start">${btn(cuOn ? 'この設定で始める' : '創業する', 'fStart', {}, 'primary')}${btn('ファイルから読み込む', 'importSave')}${btn('遊び方', 'help')}</div>
   </div>`;
   return `${scene('fdhero', { cls: 'hero', alt: '明治の町工場で、職人がモーターの巻線を手で巻いている' })}<div class="startwrap${artSrc('fdhero') ? ' with-hero' : ''}">${setup}${letter}</div>`;
 }
@@ -45174,6 +45631,229 @@ Object.assign(ACTIONS, {
     window.scrollTo({ top: 0 });
     autosave();
     showModal('fdIntro');
+  },
+});
+
+/* ---- 43c_fd_custom_ui.js ---- */
+/* =========================================================
+ *  43c_fd_custom_ui.js : 創業記モードのカスタムスタート（開始画面）と途中編集（ゲーム中のモーダル）
+ *   空欄の項目は、始める年と会社の大きさに合わせた初期値（史実の会社がその年に手がけていた事業など）で埋める
+ * ========================================================= */
+
+/* ---------- 開始画面：カスタムスタート ---------- */
+function fdCuState() {
+  const f = fdStartDefaults();
+  if (!f.cu) f.cu = { on: false, y: '', endY: '', founded: '', sales: '', cash: '', debt: '', gap: '', eng: '', ovs: '', kz: '', qcLv: '', story: true, listed: null, cats: {}, regs: {}, techF: {}, prog: {} };
+  return f.cu;
+}
+/* 事業の選び方を初めて変えるとき、いま選ばれている事業（初期値）を書き写す（ほかの事業が外れないように） */
+function fdCuFillCats() {
+  const f = fdStartDefaults(), cu = fdCuState();
+  const R = fdCuResolve(f.scen, cu);
+  const on = new Set(R.cats.map(k => k.c));
+  for (const c of fdCuCats(f.scen, R.y)) { const o = cu.cats[c] = cu.cats[c] || {}; if (o.on === undefined) o.on = on.has(c); }
+}
+function fdCuMarkOn() {
+  const cu = fdCuState();
+  cu.on = true;
+  const cb = document.querySelector('[data-ch="fCuOn"]'); if (cb) cb.checked = true;
+  const b = document.querySelector('.cu-body'); if (b) b.classList.remove('off');
+}
+function fdCustomHtml() {
+  const f = fdStartDefaults(), cu = fdCuState();
+  const S = FD_SCEN[f.scen];
+  const R = fdCuResolve(f.scen, cu);
+  const y = R.y;
+  const num = (k, label, ph, attrs = '') => `<label class="field"><span>${label}</span><input type="number" inputmode="decimal" data-ch="fCu" data-k="${k}" value="${esc(cu[k] ?? '')}" placeholder="${esc(ph)}" ${attrs} style="width:100%"></label>`;
+  const bench = fdCuBench(f.scen, y);
+  const on = new Set(R.cats.map(k => k.c));
+  const catRows = fdCuCats(f.scen, y).map(c => {
+    const C = S.cats[c], o = cu.cats[c] || {}, k = R.cats.find(x => x.c === c);
+    const lab = t => `aria-label="${esc(C.n)}の${t}"`;
+    return `<tr class="${on.has(c) ? '' : 'cu-off'}"><td><label class="inline"><input type="checkbox" data-ch="fCuCatOn" data-c="${c}" ${on.has(c) ? 'checked' : ''}> ${esc(C.n)}</label></td>
+      <td><input type="number" class="cu-xs" inputmode="decimal" data-ch="fCuCat" data-c="${c}" data-k="w" value="${esc(o.w ?? '')}" placeholder="自動" min="0" step="1" ${lab('売上の割合')}></td>
+      <td><input type="number" class="cu-xs" inputmode="decimal" data-ch="fCuCat" data-c="${c}" data-k="gap" value="${esc(o.gap ?? '')}" placeholder="${k ? k.gap : fdCuCatGap(f.scen, c, R.tech)}" min="-2" max="80" step="1" ${lab('品質の遅れ')}></td>
+      <td><input type="number" class="cu-xs" inputmode="decimal" data-ch="fCuCat" data-c="${c}" data-k="pr" value="${esc(o.pr ?? '')}" placeholder="100" min="50" max="200" step="1" ${lab('値段')}></td></tr>`;
+  }).join('');
+  const regRows = fdRegOrder().map(r => {
+    const acc = fdCuAccess(r, y), o = R.regs[r];
+    const max = r === 'jp' ? 4 : Math.min(4, acc);
+    const stages = r === 'jp' ? FD_STAGES_JP : FD_STAGES;
+    const opts = stages.map((s, i) => (i > max || (r === 'jp' && i === 0) ? '' : `<option value="${i}"${i === o.st ? ' selected' : ''}>${esc(s.n)}</option>`)).join('');
+    return `<tr><td>${esc(FD_REG[r].n)}${max <= 0 ? '<div class="small muted">この時代は商売できない</div>' : ''}</td>
+      <td><select data-ch="fCuReg" data-r="${r}" data-k="st" aria-label="${esc(FD_REG[r].n)}の販路"${max <= 0 ? ' disabled' : ''}>${opts || '<option value="0">未進出</option>'}</select></td>
+      <td><input type="number" class="cu-xs" inputmode="decimal" data-ch="fCuReg" data-r="${r}" data-k="brand" value="${esc((cu.regs[r] || {}).brand ?? '')}" placeholder="${o.brand || '自動'}" min="0" max="100" step="1" aria-label="${esc(FD_REG[r].n)}のブランド"></td></tr>`;
+  }).join('');
+  const techRows = Object.entries(S.fields).map(([fid, F]) => (F.born > y
+    ? `<tr><td>${esc(F.n)}</td><td class="small muted">${Math.ceil(F.born)}年ごろに生まれる技術</td></tr>`
+    : `<tr><td>${esc(F.n)}</td><td><input type="number" class="cu-xs" inputmode="decimal" data-ch="fCuTech" data-f="${fid}" value="${esc(cu.techF[fid] ?? '')}" placeholder="${R.tech[fid]}" min="-2" max="80" step="1" aria-label="${esc(F.n)}の遅れ"> 年遅れ</td></tr>`)).join('');
+  const progs = Object.entries(FD_PROGS).filter(([, P]) => y >= P.from).map(([k, P]) => `<label class="inline small"><input type="checkbox" data-ch="fCuProg" data-k="${k}" ${R.prog[k] ? 'checked' : ''}> ${esc(P.n)}</label>`).join('');
+  return `<details class="custom field"${cu.on ? ' open' : ''}><summary>カスタムスタート（始める年・会社の大きさ・技術・事業・販路を決める）</summary>
+    <label class="inline" style="margin:6px 0"><input type="checkbox" data-ch="fCuOn" ${cu.on ? 'checked' : ''}> この設定で始める</label>
+    <div class="cu-body${cu.on ? '' : ' off'}">
+    <div class="grid g3 cu-nums">${num('y', '始める年（西暦）', S.start.y0, `min="${FD_CU_YMIN}" max="${FD_CU_YMAX}" step="1"`)}${num('endY', '終わりの年', R.endY, `min="${FD_CU_YMIN + 3}" max="${FD_CU_ENDMAX}" step="1"`)}${num('founded', '創業の年', y, `min="1850" max="${y}" step="1"`)}</div>
+    <p class="small muted" style="margin:0">${fdWareki(y)}（${y}年）の1月から。${esc(fdEraText(y))}</p>
+    <div class="grid g3 cu-nums">${num('sales', '年商（億円）', Math.round(bench / 1e8), 'min="1" step="1"')}${num('cash', '現金（億円）', '自動', 'min="0" step="1"')}${num('debt', '借入金（億円）', '自動', 'min="0" step="1"')}</div>
+    <span class="small muted">金額は今の価値（2025年の円）。空欄の年商は、${esc(S.bench.n)}の${y}年の売上（約${fmtYen(bench)}）。市場の取り分から見込める年商が目安に届くまでブランドを上げ（国内85・海外65まで）、それでも届かない分は小さく始めます。現金は見込みの年商の12%、借入金は2〜3割が初期値です。</span>
+    <div class="grid g3 cu-nums">${num('gap', '技術の遅れ（年）', `約${Math.max(1, Math.round(fdSer(FD_JP_BASE, y) + (y < 1980 ? 2 : 1)))}年`, 'min="-2" max="80" step="1"')}${num('eng', '技術者の数', '自動', 'min="0" step="1"')}${num('ovs', '海外で作る割合（%）', R.ovs ? Math.round(R.ovs * 100) : '0', 'min="0" max="80" step="5"')}</div>
+    <span class="small muted">技術の遅れは世界の先端より何年遅れているか（空欄は日本の産業の地力に合わせる）。技術者は空欄なら売上の4%を研究に使える数。海外で作る割合は、販路が「現地生産」以上の地域に工場を建てて分けます。</span>
+    <div class="field"><span>事業（割合は売上の配分の重み。空欄は市場の大きさに合わせる。品質の遅れは年、値段は相場の%）</span>
+      <div class="tbl-wrap"><table class="t compact fcu-tbl"><thead><tr><th>分野</th><th>割合</th><th>品質の遅れ</th><th>値段</th></tr></thead><tbody>${catRows}</tbody></table></div></div>
+    <div class="field"><span>販路とブランド（0〜100）</span>
+      <div class="tbl-wrap"><table class="t compact fcu-tbl"><thead><tr><th>地域</th><th>販路</th><th>ブランド</th></tr></thead><tbody>${regRows}</tbody></table></div></div>
+    <details class="field"><summary class="small">分野ごとの技術の遅れ</summary><div class="tbl-wrap"><table class="t compact fcu-tbl"><tbody>${techRows}</tbody></table></div></details>
+    <div class="field"><span>仕組み</span><div class="cu-checks">${progs || '<span class="small muted">この年に始められる仕組みはまだありません</span>'}</div>
+      ${R.prog.kaizen || R.prog.qc ? `<div class="grid g2 cu-nums">${R.prog.kaizen ? num('kz', 'カイゼンの身につき具合（%）', 50, 'min="0" max="100" step="5"') : ''}${R.prog.qc ? num('qcLv', '品質管理の身につき具合（%）', 50, 'min="0" max="100" step="5"') : ''}</div>` : ''}</div>
+    <div class="cu-checks"><label class="inline small"><input type="checkbox" data-ch="fCuFlag" data-k="listed" ${R.listed ? 'checked' : ''}${y < 1950 ? ' disabled' : ''}> 株式を上場している${y < 1950 ? '（1950年から）' : ''}</label>
+      <label class="inline small"><input type="checkbox" data-ch="fCuFlag" data-k="story" ${R.story ? 'checked' : ''}> この道の物語の出来事（独立・合併・特許・大きな工場など）も起こす</label></div>
+    <p class="small muted" style="margin:0">始める年より前の時代の出来事は、関税・統制・需要・進出の制限など、まだ続いている市場への効き目だけを引き継ぎます。工場とラインは見込める売上に合わせて建てておき、工員・営業・事務は大きさに合わせてそろえます。ゲームの途中でも、メニューの「会社を編集する」で書き換えられます。カスタムスタートの評価は参考です。</p></div>
+  </details>`;
+}
+/* 描き直しは、イベントが終わってから（欄から離れたときの change の途中で描き直すと、ブラウザがエラーにする） */
+function fdCuRerender() { setTimeout(() => { if (!G) { fdStartStore(); render(); } }, 0); }
+Object.assign(CHANGES, {
+  fCuOn: el => { fdCuState().on = el.checked; fdCuRerender(); },
+  fCu: el => {
+    const cu = fdCuState();
+    cu[el.dataset.k] = el.value;
+    if (el.dataset.k === 'y') { cu.cats = {}; }
+    fdCuMarkOn();
+    // 年と年商は、選べる事業・初期値・説明が変わるので描き直す
+    if (/^(y|sales)$/.test(el.dataset.k)) fdCuRerender();
+  },
+  fCuCatOn: el => { fdCuFillCats(); const cu = fdCuState(); cu.cats[el.dataset.c].on = el.checked; fdCuMarkOn(); fdCuRerender(); },
+  fCuCat: el => { fdCuFillCats(); const cu = fdCuState(); cu.cats[el.dataset.c][el.dataset.k] = el.value; fdCuMarkOn(); },
+  fCuReg: el => { const cu = fdCuState(); (cu.regs[el.dataset.r] = cu.regs[el.dataset.r] || {})[el.dataset.k] = el.value; fdCuMarkOn(); },
+  fCuTech: el => { fdCuState().techF[el.dataset.f] = el.value; fdCuMarkOn(); },
+  fCuProg: el => { fdCuState().prog[el.dataset.k] = el.checked; fdCuMarkOn(); fdCuRerender(); },
+  fCuFlag: el => { fdCuState()[el.dataset.k] = el.checked; fdCuMarkOn(); },
+});
+Object.assign(ACTIONS, {
+  fStScen: d => { fdStartStore(); UI.start.f.scen = d.v; const cu = UI.start.f.cu; if (cu) { cu.cats = {}; cu.techF = {}; } render(); },
+  fStart: () => {
+    fdStartStore();
+    const f = UI.start.f;
+    const S = FD_SCEN[f.scen];
+    const seedN = parseInt(String(f.seed).replace(/[^0-9]/g, ''), 10);
+    const o = { scen: f.scen, diff: f.diff, coName: (f.co || '').trim() || S.start.coName, founder: (f.founder || '').trim() || S.start.founder };
+    if (Number.isFinite(seedN)) o.seed = seedN;
+    if (f.cu && f.cu.on) o.cu = fdCuResolve(f.scen, f.cu);
+    fdNewGame(o);
+    UI.tab = 'f_dash'; UI.fCat = null; UI.fReg = 'jp'; UI.fHist = 'chron';
+    render();
+    window.scrollTo({ top: 0 });
+    autosave();
+    showModal('fdIntro');
+  },
+});
+
+/* ---------- ゲーム中：途中編集 ---------- */
+const FD_ED_TABS = [['money', 'お金'], ['tech', '技術'], ['prod', '製品'], ['fac', '工場'], ['reg', '販路とブランド'], ['org', '人と仕組み']];
+const fdEdNum = (v, d = 1) => (Number.isFinite(v) ? Math.round(v * 10 ** d) / 10 ** d : '');
+MODALS.fdEdit = (a = {}) => {
+  const tab = UI.fEdTab || 'money';
+  const y = fdYf();
+  const real = x => x / fdCpi(y);
+  const inp = (attrs, v, extra = '') => `<input type="number" class="cu-sm" inputmode="decimal" ${attrs} value="${esc(String(v))}" ${extra}>`;
+  const seg = `<div class="seg wrap" role="group" aria-label="編集する項目">${FD_ED_TABS.map(([k, l]) => `<button type="button" data-act="fEdTab" data-v="${k}" aria-pressed="${tab === k}">${l}</button>`).join('')}</div>`;
+  let body = '';
+  if (tab === 'money') {
+    body = `<div class="grid g2 cu-nums"><label class="field"><span>現金（今の価値・億円）</span>${inp('data-ed="cash" min="0" step="1"', fdEdNum(real(G.bs.cash) / 1e8, 1), 'style="width:100%"')}</label>
+      <label class="field"><span>借入金（今の価値・億円）</span>${inp('data-ed="debt" min="0" step="1"', fdEdNum(real(fdDebt()) / 1e8, 1), 'style="width:100%"')}</label></div>
+      <p class="small muted">いま：現金 ${fmtYen(G.bs.cash)}・借入金 ${fmtYen(fdDebt())}・純資産 ${fmtYen(fdEquity())}（その時代の円）。借入を増やすと純資産が減り、減らすと増えます。</p>`;
+  } else if (tab === 'tech') {
+    const rows = Object.entries(fdS().fields).filter(([f]) => fdFrontier(f, y) !== null).map(([f, F]) => {
+      const g = fdGap(f, y);
+      return `<tr><td>${esc(F.n)}</td><td class="small muted">${g === Infinity ? '手を付けていない' : fdGapTxt(g)}</td><td>${inp(`data-ed="tech" data-f="${f}" min="-2" max="80" step="0.5" aria-label="${esc(F.n)}の遅れ"`, g === Infinity ? '' : fdEdNum(g, 1), g === Infinity ? 'placeholder="―"' : '')} 年遅れ</td></tr>`;
+    }).join('');
+    body = `<div class="tbl-wrap"><table class="t compact fcu-tbl"><thead><tr><th>技術</th><th>いま</th><th>世界の先端より</th></tr></thead><tbody>${rows}</tbody></table></div><p class="small muted">マイナスは先端より先を行く（最大2年）。</p>`;
+  } else if (tab === 'prod') {
+    const ps = fdActiveProds();
+    const rows = ps.map(p => `<tr><td><b>${esc(p.name)}</b><div class="small muted">${esc(fdCat(p.cat).n)}</div></td><td>${inp(`data-ed="pgap" data-p="${p.id}" min="-2" max="80" step="0.5" aria-label="${esc(p.name)}の品質の遅れ"`, fdEdNum(y - p.qy, 1))} 年遅れ</td><td>${inp(`data-ed="ppr" data-p="${p.id}" min="50" max="200" step="1" aria-label="${esc(p.name)}の値段"`, p.pr)} %</td></tr>`).join('');
+    const newCats = Object.keys(fdS().cats).filter(c => y >= fdCat(c).from && !fdActiveProds(c).length);
+    body = `${rows ? `<div class="tbl-wrap"><table class="t compact fcu-tbl"><thead><tr><th>製品</th><th>品質</th><th>値段（相場の%）</th></tr></thead><tbody>${rows}</tbody></table></div>` : '<div class="empty">売っている製品がありません</div>'}
+      ${newCats.length ? `<h3 class="cu-h">新しい分野の製品をすぐに出す</h3><div class="row"><select data-ed="newc" aria-label="分野">${newCats.map(c => `<option value="${c}">${esc(fdCat(c).n)}</option>`).join('')}</select>
+        <label class="inline small">本社工場にラインを ${inp('data-ed="newcap" min="0" step="1" aria-label="年に作れる数"', '', 'placeholder="年に作れる数" style="width:8.5em"')}</label>${btn('出す', 'fEdAddProd', {}, 'sm')}</div>
+        <p class="small muted">品質は、いまのその分野の技術の水準。ラインの数を空欄にすると、製品だけを出します（作る場所は工場の項目で足せます）。</p>` : ''}`;
+  } else if (tab === 'fac') {
+    const facs = G.facs.map(f => {
+      const lines = f.lines.map(l => `<tr><td>${esc(fdCat(l.cat).n)}</td><td>${inp(`data-ed="lcap" data-f="${f.id}" data-c="${l.cat}" min="0" step="1" aria-label="${esc(f.n)}の${esc(fdCat(l.cat).n)}の能力"`, fdEdNum(l.cap, fdCat(l.cat).kind === 'big' ? 1 : 0))} ${esc(fdCat(l.cat).unit)}/年</td><td>${inp(`data-ed="lauto" data-f="${f.id}" data-c="${l.cat}" min="0" max="${Math.round(fdAutoMax(y) * 100)}" step="5" aria-label="${esc(f.n)}の${esc(fdCat(l.cat).n)}の自動化"`, Math.round((l.auto || 0) * 100))} %</td></tr>`).join('');
+      const cats = Object.keys(fdS().cats).filter(c => y >= fdCat(c).from && !f.lines.some(l => l.cat === c));
+      return `<div class="cu-fac"><div class="row" style="justify-content:space-between"><b>${esc(f.n)}<span class="small muted">（${esc(FD_REG[f.r].n)}・工員${fmtNum(f.wk || 0, 0)}人）</span></b>
+        <span class="row small"><label class="inline">腕 ${inp(`data-ed="skill" data-f="${f.id}" min="0.5" max="2" step="0.1" aria-label="${esc(f.n)}の腕"`, fdEdNum(f.skill || 1, 2))}</label>${(f.dmgF || 1) > 1.01 ? `<label class="inline"><input type="checkbox" data-ed="repair" data-f="${f.id}"> 被害を直す</label>` : ''}</span></div>
+        ${lines ? `<div class="tbl-wrap"><table class="t compact fcu-tbl"><thead><tr><th>ライン</th><th>能力</th><th>自動化（上限${Math.round(fdAutoMax(y) * 100)}%）</th></tr></thead><tbody>${lines}</tbody></table></div>` : '<p class="small muted">ラインがありません</p>'}
+        ${cats.length ? `<div class="row small"><select data-ed="lc" data-f="${f.id}" aria-label="${esc(f.n)}に足すラインの分野">${cats.map(c => `<option value="${c}">${esc(fdCat(c).n)}</option>`).join('')}</select>${inp(`data-ed="lcn" data-f="${f.id}" min="0" step="1" aria-label="${esc(f.n)}に足すラインの能力"`, '', 'placeholder="年に作れる数"')}${btn('ラインを足す', 'fEdAddLine', { f: f.id }, 'sm')}</div>` : ''}</div>`;
+    }).join('');
+    const regs = fdRegOrder().filter(r => r === 'jp' || fdRegAccess(r, y) >= 3);
+    body = `${facs}<h3 class="cu-h">工場をすぐに建てる</h3><div class="row"><select data-ed="facr" aria-label="地域">${regs.map(r => `<option value="${r}">${esc(FD_REG[r].n)}</option>`).join('')}</select><input type="text" data-ed="facloc" placeholder="場所（空欄はその地域の代表的な場所）" aria-label="場所" style="min-width:12em">${btn('建てる', 'fEdAddFac', {}, 'sm')}</div>
+      <p class="small muted">能力を増やした分の機械と、建てた工場は、資産として持たせます。</p>`;
+  } else if (tab === 'reg') {
+    const rows = fdRegOrder().map(r => {
+      const R = G.reg[r], acc = fdRegAccess(r, y);
+      const max = r === 'jp' ? 4 : Math.min(4, acc);
+      const stages = r === 'jp' ? FD_STAGES_JP : FD_STAGES;
+      const opts = stages.map((s, i) => (i > max || (r === 'jp' && i === 0) ? '' : `<option value="${i}"${i === R.st ? ' selected' : ''}>${esc(s.n)}</option>`)).join('');
+      return `<tr><td>${esc(FD_REG[r].n)}${max <= 0 ? '<div class="small muted">いまは商売できない</div>' : ''}</td><td><select data-ed="rst" data-r="${r}" aria-label="${esc(FD_REG[r].n)}の販路"${max <= 0 ? ' disabled' : ''}>${opts || `<option value="${R.st}">${esc(stages[R.st].n)}</option>`}</select></td><td>${inp(`data-ed="rbr" data-r="${r}" min="0" max="100" step="1" aria-label="${esc(FD_REG[r].n)}のブランド"`, Math.round(R.brand))}</td></tr>`;
+    }).join('');
+    body = `<div class="tbl-wrap"><table class="t compact fcu-tbl"><thead><tr><th>地域</th><th>販路</th><th>ブランド（0〜100）</th></tr></thead><tbody>${rows}</tbody></table></div><p class="small muted">販路の段階を変えると、売り込める広さがすぐにその段階になります（現地生産の段階でも、工場は「工場」の項目で建てます）。</p>`;
+  } else {
+    const progs = Object.entries(FD_PROGS).filter(([, P]) => y >= P.from).map(([k, P]) => `<label class="inline small"><input type="checkbox" data-ed="prog" data-k="${k}" ${G.prog[k] !== undefined ? 'checked' : ''}> ${esc(P.n)}</label>`).join('');
+    body = `<div class="grid g3 cu-nums"><label class="field"><span>技術者の数</span>${inp('data-ed="eng" min="0" step="1"', G.staff.eng, 'style="width:100%"')}</label>
+      <label class="field"><span>カイゼンの身につき具合（%）</span>${inp('data-ed="kz" min="0" max="100" step="5"', Math.round((G.kaizen || 0) * 100), 'style="width:100%"')}</label>
+      <label class="field"><span>品質管理の身につき具合（%）</span>${inp('data-ed="qc" min="0" max="100" step="5"', Math.round((G.qc || 0) * 100), 'style="width:100%"')}</label></div>
+      <div class="field"><span>仕組み</span><div class="cu-checks">${progs || '<span class="small muted">いま始められる仕組みはありません</span>'}</div></div>
+      <p class="small muted">工員・営業・事務の数は、作る量と売上に合わせて四半期ごとに自動でそろいます。</p>`;
+  }
+  const msg = a.msg ? `<div class="callout ${a.bad ? 'warn' : 'ok'}" role="status">${esc(a.msg)}</div>` : '';
+  const apply = tab === 'prod' && !fdActiveProds().length ? '' : btn('この内容で書き換える', 'fEdApply', { v: tab }, 'primary');
+  return modalFrame('会社を編集する', `${seg}${msg}<div class="cu-body" style="margin-top:10px">${body}</div>
+    <p class="small muted" style="margin:10px 0 0">金額は今の価値（2025年の円）。編集で増えた・減ったお金・借入・設備は、純資産（資本金）で受けて帳簿を合わせます。編集すると、この会社の評価は参考になります${G.flags.edited ? `（これまでに${G.flags.edited}回）` : ''}。</p>`,
+  apply + btn('閉じる', 'closeModal'), { size: 'wide' });
+};
+/* モーダルの中の入力を読む */
+function fdEdVal(sel) { const el = document.querySelector('#modal-root ' + sel); return el ? fdCuNum(el.value) : null; }
+function fdEdAll(sel) { return Array.from(document.querySelectorAll('#modal-root ' + sel)); }
+function fdEdDone(msg, bad) { UI.modal.args = { msg, bad: !!bad }; drawModal(); render(); }
+Object.assign(ACTIONS, {
+  fEditOpen: () => { UI.fEdTab = UI.fEdTab || 'money'; showModal('fdEdit', {}); },
+  fEdTab: d => { UI.fEdTab = d.v; UI.modal.args = {}; drawModal(); },
+  fEdApply: d => {
+    let n = 0;
+    if (d.v === 'money') n = fdEditMoney({ cash: fdEdVal('[data-ed="cash"]') === null ? null : fdEdVal('[data-ed="cash"]') * 1e8, debt: fdEdVal('[data-ed="debt"]') === null ? null : fdEdVal('[data-ed="debt"]') * 1e8 }) ? 1 : 0;
+    else if (d.v === 'tech') { const g = {}; for (const el of fdEdAll('[data-ed="tech"]')) { const v = fdCuNum(el.value); if (v !== null) g[el.dataset.f] = v; } n = fdEditTech(g); }
+    else if (d.v === 'prod') { const m = {}; for (const el of fdEdAll('[data-ed="pgap"],[data-ed="ppr"]')) { const o = m[el.dataset.p] = m[el.dataset.p] || {}; o[el.dataset.ed === 'pgap' ? 'gap' : 'pr'] = fdCuNum(el.value); } n = fdEditProds(m); }
+    else if (d.v === 'fac') {
+      const m = {};
+      const of = id => (m[id] = m[id] || { lines: {} });
+      for (const el of fdEdAll('[data-ed="skill"]')) of(el.dataset.f).skill = fdCuNum(el.value);
+      for (const el of fdEdAll('[data-ed="repair"]')) of(el.dataset.f).repair = el.checked;
+      for (const el of fdEdAll('[data-ed="lcap"],[data-ed="lauto"]')) { const o = of(el.dataset.f).lines[el.dataset.c] = of(el.dataset.f).lines[el.dataset.c] || {}; const v = fdCuNum(el.value); if (el.dataset.ed === 'lcap') o.cap = v; else o.auto = v === null ? null : v / 100; }
+      n = fdEditFacs(m);
+    } else if (d.v === 'reg') { const m = {}; for (const el of fdEdAll('[data-ed="rst"],[data-ed="rbr"]')) { const o = m[el.dataset.r] = m[el.dataset.r] || {}; o[el.dataset.ed === 'rst' ? 'st' : 'brand'] = fdCuNum(el.value); } n = fdEditRegs(m); }
+    else {
+      const prog = {};
+      for (const el of fdEdAll('[data-ed="prog"]')) prog[el.dataset.k] = el.checked;
+      const kz = fdEdVal('[data-ed="kz"]'), qc = fdEdVal('[data-ed="qc"]');
+      n = fdEditOrg({ eng: fdEdVal('[data-ed="eng"]'), prog, kz: kz === null ? null : kz / 100, qc: qc === null ? null : qc / 100 });
+    }
+    fdEdDone(n ? '書き換えました。' : '変わったところはありません。');
+  },
+  fEdAddProd: () => {
+    const c = (document.querySelector('#modal-root [data-ed="newc"]') || {}).value;
+    const r = fdEditAddProd(c, fdEdVal('[data-ed="newcap"]') || 0);
+    fdEdDone(r.ok ? `「${r.p.name}」を出しました。` : r.why, !r.ok);
+  },
+  fEdAddLine: d => {
+    const c = (document.querySelector(`#modal-root [data-ed="lc"][data-f="${d.f}"]`) || {}).value;
+    const n = fdEdVal(`[data-ed="lcn"][data-f="${d.f}"]`);
+    const r = fdEditAddLine(d.f, c, n || 0);
+    fdEdDone(r.ok ? 'ラインを足しました。売る製品がない分野は、製品の項目で出してください。' : r.why, !r.ok);
+  },
+  fEdAddFac: () => {
+    const r = (document.querySelector('#modal-root [data-ed="facr"]') || {}).value;
+    const locIn = ((document.querySelector('#modal-root [data-ed="facloc"]') || {}).value || '').trim();
+    const res = fdEditAddFac(r, locIn || FD_REG[r].locs[0]);
+    fdEdDone(res.ok ? `${res.f.n}を建てました。ラインはこの項目で足せます。` : res.why, !res.ok);
   },
 });
 

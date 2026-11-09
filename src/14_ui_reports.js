@@ -382,6 +382,7 @@ MODALS.menu = () => {
     <label class="inline small"><input type="checkbox" data-ch="setting" data-key="confirmAdvance" ${UI.settings.confirmAdvance ? 'checked' : ''}> 未処理の案件があるとき月末の締めを確認する</label>
     <label class="inline small"><input type="checkbox" data-ch="setting" data-key="learn" ${UI.settings.learn !== false ? 'checked' : ''}> 学習サポート（決算書の読み方ガイド・解説）を表示する</label>
     <label class="inline small"><input type="checkbox" data-ch="setting" data-key="autoClose" ${UI.settings.autoClose ? 'checked' : ''}> 会社経営：決算整理の質問をとばして、すぐ結果を見る</label></div>
+    ${fmode && G && G.mode === 'sogyo' ? `<hr class="sep"><h3 style="font-size:14px;margin:0 0 6px">会社の状態</h3><div class="row">${btn('会社を編集する（途中編集）', 'fEditOpen')}</div><p class="note">お金・技術・製品・工場・販路とブランド・人と仕組みを書き換えます。評価は参考になります。</p>` : ''}
     <hr class="sep">${G ? btn('新しいゲームを始める', 'newGameConfirm', {}, 'danger') : ''}`;
   return modalFrame('メニュー', body, btn('閉じる', 'closeModal', {}, 'primary'));
 };

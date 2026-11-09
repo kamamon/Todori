@@ -1,6 +1,7 @@
 // 創業記モードの画面を Playwright で一通り操作し、エラーがないか確かめる
-//   node test/ui_fd.js [denki|jidosha] [四半期の数] [--shots] [--mobile]
+//   node test/ui_fd.js [denki|jidosha] [四半期の数] [--shots] [--mobile] [--custom=年]
 //   出来事は最初の選択肢を選び、救済は受ける。ときどき各画面を開き、ボタン（ライン・工場・開発・値段）も押す
+//   --custom=1965 なら、開始画面のカスタムスタートで年・年商・事業・販路・仕組みを入れて始め、途中編集のすべての項目を書き換える
 const { chromium } = require('playwright');
 const path = require('path');
 const fs = require('fs');
@@ -10,6 +11,8 @@ const scen = process.argv[2] && !process.argv[2].startsWith('--') ? process.argv
 const quarters = +(process.argv[3] && !process.argv[3].startsWith('--') ? process.argv[3] : 60);
 const doShots = process.argv.includes('--shots');
 const mobile = process.argv.includes('--mobile');
+const cuArg = process.argv.find(a => a.startsWith('--custom'));
+const cuY = cuArg ? +(cuArg.split('=')[1] || 1965) : 0;
 if (!fs.existsSync(shots)) fs.mkdirSync(shots);
 
 (async () => {
@@ -24,7 +27,7 @@ if (!fs.existsSync(shots)) fs.mkdirSync(shots);
   await page.route('**/fonts.gstatic.com/**', r => r.abort());
   await page.goto(url);
   await page.waitForTimeout(250);
-  const tag = (mobile ? 'm' : 'd') + scen[0];
+  const tag = (mobile ? 'm' : 'd') + scen[0] + (cuY ? 'c' : '');
   const shot = async (name, full = true) => { if (doShots) await page.screenshot({ path: `${shots}/f${tag}_${name}.png`, fullPage: full }); };
   const screenErr = async where => { const t = await page.evaluate(() => { const e = document.querySelector('#main .callout.bad'); return e && /エラー/.test(e.textContent) ? e.textContent : ''; }); if (t) errors.push(`${where}: ${t}`); };
   const modalErr = async where => { const t = await page.evaluate(() => { const e = document.querySelector('#modal-root .mb'); return e && /表示エラー/.test(e.textContent) ? e.textContent : ''; }); if (t) errors.push(`${where}: ${t}`); };
@@ -49,7 +52,39 @@ if (!fs.existsSync(shots)) fs.mkdirSync(shots);
   await click('[data-act="stMode"][data-v="sogyo"]', 120);
   await shot('start');
   if (!(await click(`[data-act="fStScen"][data-v="${scen}"]`, 120))) errors.push('道の選択ボタンがない');
+  // カスタムスタート：欄を開き、年・年商・事業・販路・仕組み・技術を入れる（入れるたびに描き直されるので、そのつど探す）
+  const fill = async (sel, v) => { const el = await page.$(sel); if (!el) { errors.push(`カスタムスタートの欄がない ${sel}`); return; } await el.fill(String(v)); await el.dispatchEvent('change'); await page.waitForTimeout(80); };
+  if (cuY) {
+    if (!(await click('details.custom > summary', 120))) errors.push('カスタムスタートの欄がない');
+    await fill('[data-ch="fCu"][data-k="y"]', cuY);
+    await fill('[data-ch="fCu"][data-k="sales"]', cuY < 1950 ? 800 : 20000);
+    await fill('[data-ch="fCu"][data-k="founded"]', cuY - 20);
+    const cats = await page.$$eval('[data-ch="fCuCatOn"]', els => els.map(e => ({ c: e.dataset.c, on: e.checked })));
+    if (cats.length < 2) errors.push('選べる事業が少ない');
+    const off = cats.find(x => !x.on);
+    if (off) await click(`[data-ch="fCuCatOn"][data-c="${off.c}"]`, 150);
+    await fill(`[data-ch="fCuCat"][data-c="${cats[0].c}"][data-k="w"]`, 50);
+    await fill(`[data-ch="fCuCat"][data-c="${cats[0].c}"][data-k="pr"]`, 105);
+    const sel = await page.$('[data-ch="fCuReg"][data-r="na"][data-k="st"]:not([disabled])');
+    if (sel) { await sel.selectOption(String(cuY < 1950 ? 1 : 3)); await page.waitForTimeout(80); }
+    await fill('[data-ch="fCuReg"][data-r="jp"][data-k="brand"]', 70);
+    await fill('[data-ch="fCu"][data-k="ovs"]', 30);
+    await click('details.custom details > summary', 80);
+    const f0 = await page.$eval('[data-ch="fCuTech"]', e => e.dataset.f).catch(() => null);
+    if (f0) await fill(`[data-ch="fCuTech"][data-f="${f0}"]`, 3);
+    await click('[data-ch="fCuProg"]', 150);
+    await screenErr('カスタムスタート');
+    if (mobile) await overflow('カスタムスタート');
+    await shot('custom');
+    const label = await page.$eval('[data-act="fStart"]', b => b.textContent).catch(() => '');
+    if (!/この設定で始める/.test(label)) errors.push(`開始のボタンが「この設定で始める」になっていない（${label}）`);
+  }
   if (!(await click('[data-act="fStart"]', 300))) errors.push('「創業する」ボタンがない');
+  if (cuY) {
+    const st = await page.evaluate(() => { const G = window.Toudori.G; return { y0: G.y0, custom: !!G.custom, prods: G.prods.length, facs: G.facs.length, founded: G.founded }; });
+    if (st.y0 !== cuY || !st.custom) errors.push(`カスタムスタートの年が反映されていない ${JSON.stringify(st)}`);
+    if (st.founded !== cuY - 20) errors.push(`創業の年が反映されていない ${st.founded}`);
+  }
   await shot('intro', false);
   await handleModals('開始');
   await screenErr('開始');
@@ -85,6 +120,47 @@ if (!fs.existsSync(shots)) fs.mkdirSync(shots);
   };
   await visitAll('r1');
   await pokeButtons('r1');
+  // 途中編集：すべての項目を開き、値を変えて書き換える
+  if (cuY) {
+    const before = await page.evaluate(() => window.Toudori.G.flags.edited || 0);
+    if (!(await click('[data-act="fEditOpen"]', 150))) errors.push('「会社を編集する」ボタンがない');
+    const apply = async (tab, act) => {
+      await click(`#modal-root [data-act="fEdTab"][data-v="${tab}"]`, 100);
+      await modalErr(`編集 ${tab}`);
+      if (mobile) await overflow(`編集 ${tab}`);
+      await act();
+      if (!(await click('#modal-root [data-act="fEdApply"]', 150))) errors.push(`編集 ${tab}：書き換えるボタンがない`);
+      await modalErr(`編集 ${tab} のあと`);
+      const msg = await page.$eval('#modal-root .callout', e => e.textContent).catch(() => '');
+      if (!/書き換えました/.test(msg)) errors.push(`編集 ${tab}：書き換わらない（${msg}）`);
+      if (tab === 'fac') await shot('edit_fac', false);
+    };
+    const setIn = async (sel, v) => { const el = await page.$('#modal-root ' + sel); if (!el) { errors.push(`編集の欄がない ${sel}`); return; } await el.fill(String(v)); };
+    await apply('money', async () => { await setIn('[data-ed="cash"]', 12345); await setIn('[data-ed="debt"]', 100); });
+    await apply('tech', async () => { await setIn('[data-ed="tech"]', 1); });
+    await apply('prod', async () => { await setIn('[data-ed="pgap"]', 0); await setIn('[data-ed="ppr"]', 95); });
+    await apply('fac', async () => { await setIn('[data-ed="lcap"]', 5000); await setIn('[data-ed="lauto"]', 40); await setIn('[data-ed="skill"]', 1.4); });
+    await apply('reg', async () => { await setIn('[data-ed="rbr"]', 80); });
+    await apply('org', async () => { await setIn('[data-ed="eng"]', 777); await setIn('[data-ed="kz"]', 30); });
+    // 製品・ライン・工場を足す
+    await click('#modal-root [data-act="fEdTab"][data-v="prod"]', 100);
+    if (await page.$('#modal-root [data-ed="newc"]')) { await setIn('[data-ed="newcap"]', 1000); await click('#modal-root [data-act="fEdAddProd"]', 150); const m = await page.$eval('#modal-root .callout', e => e.textContent).catch(() => ''); if (!/出しました/.test(m)) errors.push(`製品を出せない（${m}）`); }
+    await click('#modal-root [data-act="fEdTab"][data-v="fac"]', 100);
+    if (await page.$('#modal-root [data-ed="lc"]')) { await setIn('[data-ed="lcn"]', 300); await click('#modal-root [data-act="fEdAddLine"]', 150); }
+    await click('#modal-root [data-act="fEdAddFac"]', 150);
+    const m2 = await page.$eval('#modal-root .callout', e => e.textContent).catch(() => '');
+    if (!/建てました/.test(m2)) errors.push(`工場を建てられない（${m2}）`);
+    await modalErr('編集の追加');
+    await click('#modal-root .mf [data-act="closeModal"]', 80);
+    const after = await page.evaluate(() => ({ n: window.Toudori.G.flags.edited || 0, eng: window.Toudori.G.staff.eng, check: window.Toudori.check() || [] }));
+    if (after.n < before + 6) errors.push(`編集の回数が少ない ${after.n}`);
+    if (after.eng !== 777) errors.push(`技術者の数が書き換わらない ${after.eng}`);
+    if (after.check.length) errors.push('編集のあとの帳簿：' + after.check.join(' / '));
+    // メニューからも開ける
+    await click('[data-act="menu"]', 120);
+    if (!(await click('#modal-root [data-act="fEditOpen"]', 150))) errors.push('メニューに「会社を編集する」がない');
+    await handleModals('メニュー');
+  }
   let q = 0;
   for (; q < quarters; q++) {
     const over = await page.evaluate(() => !!(window.Toudori.G && window.Toudori.G.over));
