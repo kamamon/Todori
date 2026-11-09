@@ -63,7 +63,7 @@ function fdCustomHtml() {
     <div class="grid g3 cu-nums">${num('sales', '年商（億円）', Math.round(bench / 1e8), 'min="1" step="1"')}${num('cash', '現金（億円）', '自動', 'min="0" step="1"')}${num('debt', '借入金（億円）', '自動', 'min="0" step="1"')}</div>
     <span class="small muted">金額は今の価値（2025年の円）。空欄の年商は、${esc(S.bench.n)}の${y}年の売上（約${fmtYen(bench)}）。市場の取り分から見込める年商が目安に届くまでブランドを上げ（国内85・海外65まで）、それでも届かない分は小さく始めます。現金は見込みの年商の12%、借入金は2〜3割が初期値です。</span>
     <div class="grid g3 cu-nums">${num('gap', '技術の遅れ（年）', `約${Math.max(1, Math.round(fdSer(FD_JP_BASE, y) + (y < 1980 ? 2 : 1)))}年`, '', true)}${num('eng', '技術者の数', '自動', 'min="0" step="1"')}${num('ovs', '海外で作る割合（%）', R.ovs ? Math.round(R.ovs * 100) : '0', 'min="0" max="80" step="5"')}</div>
-    <span class="small muted">技術の遅れは世界の先端より何年遅れているか（空欄は日本の産業の地力に合わせる）。先を行くならマイナス（-2まで。品質の遅れも同じ）。技術者は空欄なら売上の4%を研究に使える数。海外で作る割合は、販路が「現地生産」以上の地域に工場を建てて分けます。</span>
+    <span class="small muted">技術の遅れは世界の先端より何年遅れているか（空欄は日本の産業の地力に合わせる）。先を行くならマイナス（何年先でも。品質の遅れも同じ）。技術者は空欄なら売上の4%を研究に使える数。海外で作る割合は、販路が「現地生産」以上の地域に工場を建てて分けます。</span>
     <div class="field"><span>事業（割合は売上の配分の重み。空欄は市場の大きさに合わせる。品質の遅れは年、値段は相場の%）</span>
       <div class="tbl-wrap"><table class="t compact fcu-tbl"><thead><tr><th>分野</th><th>割合</th><th>品質の遅れ</th><th>値段</th></tr></thead><tbody>${catRows}</tbody></table></div></div>
     <div class="field"><span>販路とブランド（0〜100）</span>
@@ -134,7 +134,7 @@ MODALS.fdEdit = (a = {}) => {
       const g = fdGap(f, y);
       return `<tr><td>${esc(F.n)}</td><td class="small muted">${g === Infinity ? '手を付けていない' : fdGapTxt(g)}</td><td>${inpS(`data-ed="tech" data-f="${f}" aria-label="${esc(F.n)}の遅れ（先を行くならマイナス）"`, g === Infinity ? '' : fdEdNum(g, 1), g === Infinity ? 'placeholder="―"' : '')} 年遅れ</td></tr>`;
     }).join('');
-    body = `<div class="tbl-wrap"><table class="t compact fcu-tbl"><thead><tr><th>技術</th><th>いま</th><th>世界の先端より</th></tr></thead><tbody>${rows}</tbody></table></div><p class="small muted">マイナスは先端より先を行く（最大2年）。</p>`;
+    body = `<div class="tbl-wrap"><table class="t compact fcu-tbl"><thead><tr><th>技術</th><th>いま</th><th>世界の先端より</th></tr></thead><tbody>${rows}</tbody></table></div><p class="small muted">マイナスは先端より先を行く（何年先でも。先へ行くほど研究では進みにくい）。</p>`;
   } else if (tab === 'prod') {
     const ps = fdActiveProds();
     const rows = ps.map(p => `<tr><td><b>${esc(p.name)}</b><div class="small muted">${esc(fdCat(p.cat).n)}</div></td><td>${inpS(`data-ed="pgap" data-p="${p.id}" aria-label="${esc(p.name)}の品質の遅れ（先を行くならマイナス）"`, fdEdNum(y - p.qy, 1))} 年遅れ</td><td>${inp(`data-ed="ppr" data-p="${p.id}" min="50" max="200" step="1" aria-label="${esc(p.name)}の値段"`, p.pr)} %</td></tr>`).join('');
@@ -142,7 +142,7 @@ MODALS.fdEdit = (a = {}) => {
     body = `${rows ? `<div class="tbl-wrap"><table class="t compact fcu-tbl"><thead><tr><th>製品</th><th>品質</th><th>値段（相場の%）</th></tr></thead><tbody>${rows}</tbody></table></div>` : '<div class="empty">売っている製品がありません</div>'}
       ${newCats.length ? `<h3 class="cu-h">新しい分野の製品をすぐに出す</h3><div class="row"><select data-ed="newc" aria-label="分野">${newCats.map(c => `<option value="${c}">${esc(fdCat(c).n)}</option>`).join('')}</select>
         <label class="inline small">本社工場にラインを ${inp('data-ed="newcap" min="0" step="1" aria-label="年に作れる数"', '', 'placeholder="年に作れる数" style="width:8.5em"')}</label>${btn('出す', 'fEdAddProd', {}, 'sm')}</div>
-        <p class="small muted">品質の遅れは、先を行くならマイナス（-2まで）。新しい製品の品質は、いまのその分野の技術の水準。ラインの数を空欄にすると、製品だけを出します（作る場所は工場の項目で足せます）。</p>` : ''}`;
+        <p class="small muted">品質の遅れは、先を行くならマイナス（何年先でも）。新しい製品の品質は、いまのその分野の技術の水準。ラインの数を空欄にすると、製品だけを出します（作る場所は工場の項目で足せます）。</p>` : ''}`;
   } else if (tab === 'fac') {
     const facs = G.facs.map(f => {
       const lines = f.lines.map(l => `<tr><td>${esc(fdCat(l.cat).n)}</td><td>${inp(`data-ed="lcap" data-f="${f.id}" data-c="${l.cat}" min="0" step="1" aria-label="${esc(f.n)}の${esc(fdCat(l.cat).n)}の能力"`, fdEdNum(l.cap, fdCat(l.cat).kind === 'big' ? 1 : 0))} ${esc(fdCat(l.cat).unit)}/年</td><td>${inp(`data-ed="lauto" data-f="${f.id}" data-c="${l.cat}" min="0" max="${Math.round(fdAutoMax(y) * 100)}" step="5" aria-label="${esc(f.n)}の${esc(fdCat(l.cat).n)}の自動化"`, Math.round((l.auto || 0) * 100))} %</td></tr>`).join('');

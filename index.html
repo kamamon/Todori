@@ -41727,6 +41727,14 @@ function fdRch(jp, as, cn, na, eu, ot) { return { jp, as, cn, na, eu, ot }; }
 function fdIroha(n) { return 'イロハニホヘトチリヌルヲワカヨタレソツネナラムウヰノオクヤマケフコエテアサキユメミシヱヒモセス'[(n - 1) % 47]; }
 function fdKan(n) { return ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十'][(n - 1) % 10]; }
 function fdOne(v, d = 0) { return fmtNum(v, d); }
+/* 大きな数：10億を超えたら「1.2×10²⁰」の形にする（先端よりはるか先の品の性能を書くときに、桁があふれないように） */
+const FD_SUP = '⁰¹²³⁴⁵⁶⁷⁸⁹';
+function fdBig(v, d = 0) {
+  if (!Number.isFinite(v)) return '測れないほど大きい';
+  if (Math.abs(v) < 1e9) return fmtNum(v, d);
+  const e = Math.floor(Math.log10(Math.abs(v)));
+  return `${(v / 10 ** e).toFixed(1)}×10${String(e).split('').map(ch => FD_SUP[ch] || ch).join('')}`;
+}
 
 /* よく出るライバル（電機） */
 const FDR = {
@@ -41961,7 +41969,7 @@ FD_SCEN.denki = {
       reg: [[1951, { jp: 0, as: 0, cn: 0, na: 0.85, eu: 0.15, ot: 0 }], [1965, { jp: 0.05, as: 0.01, cn: 0, na: 0.7, eu: 0.22, ot: 0.02 }], [1980, { jp: 0.14, as: 0.03, cn: 0.01, na: 0.5, eu: 0.28, ot: 0.04 }], [2000, { jp: 0.12, as: 0.06, cn: 0.04, na: 0.45, eu: 0.27, ot: 0.06 }], [2025, { jp: 0.05, as: 0.08, cn: 0.2, na: 0.45, eu: 0.15, ot: 0.07 }]],
       mat: [[1951, 0.5], [1990, 0.6], [2025, 0.64]], hrs: [[1951, 4e4], [1970, 4000], [1990, 300], [2000, 60], [2010, 14], [2025, 8]], capex: [[1951, 0.4], [2025, 0.3]], dev: { q: 6, eq: 40 },
       model: (ty, n, y) => (y < 1990 ? `${G.co.slice(0, 2)}計算機 ${n * 100 + 1000}形` : `サーバー ${String.fromCharCode(64 + ((n - 1) % 26) + 1)}シリーズ`),
-      spec: ty => `処理の速さ ${fmtNum(Math.pow(2, (ty - 1965) / 2), ty < 1965 ? 3 : 0)}（1965年の大型機＝1）`,
+      spec: ty => `処理の速さ ${fdBig(Math.pow(2, (ty - 1965) / 2), ty < 1965 ? 3 : 0)}（1965年の大型機＝1）`,
       rivals: [fdRv('atlas', 'アトラス計算機（米）', 'na', 1952, fdRch([[1955, 0.6], [1980, 0.45], [2000, 0.4]], 0.7, [[1980, 0.3]], 0.95, 0.85, 0.7), [[1952, 0], [1990, 0.5], [2025, 1.5]], 1.15, 95, { big: true, loc: { eu: 0.8, jp: [[1960, 0.7]] } }),
         fdRv('univ', 'ユニバース計算機（米）', 'na', 1951, fdRch(0.1, 0.2, 0, 0.6, 0.4, 0.3), [[1951, 0], [1970, 1.5], [1986, 3]], 1.05, 70, { to: 1986 }),
         fdRv('maynard', 'メイナード計算機（米）', 'na', 1960, fdRch(0.1, 0.2, 0.05, 0.6, 0.45, 0.2), [[1960, 0], [1985, 0], [1998, 3]], 1.0, 75, { to: 1998 }),
@@ -42002,7 +42010,7 @@ FD_SCEN.denki = {
       reg: [[1960, { jp: 0.05, as: 0, cn: 0, na: 0.7, eu: 0.23, ot: 0.02 }], [1980, { jp: 0.12, as: 0.02, cn: 0, na: 0.55, eu: 0.28, ot: 0.03 }], [2000, { jp: 0.12, as: 0.04, cn: 0.02, na: 0.5, eu: 0.28, ot: 0.04 }], [2025, { jp: 0.08, as: 0.07, cn: 0.07, na: 0.45, eu: 0.25, ot: 0.08 }]],
       mat: [[1960, 0.14], [2025, 0.12]], hrs: [[1960, 190], [1980, 160], [2000, 140], [2025, 125]], capex: [[1960, 0.15], [2025, 0.1]], dev: { q: 4, eq: 20 },
       model: (ty, n, y) => `${y < 1975 ? 'オンライン' : y < 1995 ? '勘定系' : y < 2012 ? 'ネットワーク' : y < 2020 ? 'クラウド' : 'デジタル変革'}サービス ${n}`,
-      spec: ty => `開発の生産性 ${fdOne(Math.pow(1.04, ty - 1965), 1)}倍（1965年＝1）`,
+      spec: ty => `開発の生産性 ${fdBig(Math.pow(1.04, ty - 1965), 1)}倍（1965年＝1）`,
       rivals: [fdRv('atlas', 'アトラス計算機（米）', 'na', 1960, fdRch([[1960, 0.5], [2000, 0.4]], 0.6, [[1990, 0.3]], 0.9, 0.8, 0.6), [[1960, 0], [2025, 1]], 1.15, 92, { big: true, loc: { jp: 0.9, eu: 0.9, as: 0.7 } }),
         fdRv('texinfo', 'テキサス情報サービス（米）', 'na', 1962, fdRch(0.05, 0.2, 0.05, 0.7, 0.4, 0.3), [[1962, 0], [2008, 2]], 1.0, 70, { to: 2008, loc: { eu: 0.9 } }),
         fdRv('glocon', 'グローバル・コンサルティング（米）', 'na', 1989, fdRch(0.25, 0.4, 0.3, 0.8, 0.75, 0.5), [[1989, 0], [2025, -0.5]], 1.1, 88, { big: true, loc: { jp: 0.9, eu: 0.9, as: 0.9, cn: 0.9, ot: 0.9 } }),
@@ -42192,7 +42200,7 @@ FD_SCEN.denki = {
 function fdDramLabel(ty) {
   const b = ty <= 1997 ? 10 + 2 * (ty - 1970) / 3 : 28 + (ty - 1997) / 4.3;
   const bits = Math.pow(2, Math.max(8, Math.round(b)));
-  return bits >= 2 ** 30 ? `${fmtNum(bits / 2 ** 30, 0)}ギガビット` : bits >= 2 ** 20 ? `${fmtNum(bits / 2 ** 20, 0)}メガビット` : `${fmtNum(bits / 2 ** 10, 0)}キロビット`;
+  return bits >= 2 ** 30 ? `${fdBig(Math.pow(2, Math.max(8, Math.round(b)) - 30), 0)}ギガビット` : bits >= 2 ** 20 ? `${fmtNum(bits / 2 ** 20, 0)}メガビット` : `${fmtNum(bits / 2 ** 10, 0)}キロビット`;
 }
 
 /* ---- 41c_fd_jidosha.js ---- */
@@ -42945,7 +42953,8 @@ function fdResearch(engR) {
     let d = 0.25 * Math.pow(e, 0.6) * k * Math.pow(0.6, over);
     // 使っている分野は、遅れているほど世の中から学べる（輸入の機械を分解する・人を雇う・雑誌を読む）。日本の地力の水準まで。戦争で海外と切れている間は学べない
     if (fdFieldUsed(f) && !iso) d += 0.22 * clamp((gap - Math.max(4, base + 1)) / 12, 0, 1);
-    T.t = Math.min(F + 2, T.t + d);
+    // 先端より先へ進む上限はない（先へ行くほど研究の効きは鈍る。編集で先に置いた技術も、そのまま持ち越す）
+    T.t += d;
     T.lastD = d * 4;
     if (gap > 0 && F - T.t <= 0 && !T.top) { T.top = G.q; fdChron(`${fdField(f).n}で世界の先端に並ぶ`, true); fdNews(`${fdField(f).n}の技術が世界の先端に並びました`, 'good'); }
   }
@@ -43107,7 +43116,10 @@ function fdMarket(c, r, q = G.q) {
   const fo = { n: 'その他の会社', Q: y - fdV(fl.lag || [[1910, 14], [1960, 8], [2025, 5]], y), priceK: fdV(fl.pf || 0.85, y), B: 25, D: 0.6, home: fdHomeBias(r, y, c) * 0.6, F: y, fringe: true, extra: Math.log(Math.max(0.05, fdV(fl.w || 3, y) * (FD_REG[r].fringe || 1))) };
   items.push(fo);
   let tot = 0;
-  for (const it of items) { it.U = fdUtil(it); it.e = Math.exp(it.U); tot += it.e; }
+  // いちばん大きい魅力を引いてから指数をとる（はるか先の品質でも、数があふれない）
+  for (const it of items) it.U = fdUtil(it);
+  const uMax = Math.max(...items.map(it => (Number.isFinite(it.U) ? it.U : -Infinity)));
+  for (const it of items) { it.e = Number.isFinite(it.U) ? Math.exp(it.U - uMax) : 0; tot += it.e; }
   for (const it of items) { it.share = it.e / tot; it.units = D * it.share; }
   return { c, r, D, ref: fdRef(c, y), items };
 }
@@ -43136,7 +43148,8 @@ function fdAutoTyp(y = fdYf()) { return fdAutoMax(y) * 0.7; }
    良くする工夫は重ねるほど効きが鈍る（1より小さい分は0.6乗）。立ち上げたばかりのライン（慣れ）・組織の摩擦・被害は、そのまま重くなる */
 function fdHrsMul(f, line, y = fdYf()) {
   const gap = fdGap(fdProdField(line.cat), y);
-  const techF = gap === Infinity ? 2.5 : gap > 0 ? Math.pow(1.035, gap) : Math.pow(0.98, -gap);
+  // 先を行く分の省力は60年分まで（はるか先の技術でも、工数が0にはならない）
+  const techF = gap === Infinity ? 2.5 : gap > 0 ? Math.pow(1.035, gap) : Math.pow(0.98, Math.min(60, -gap));
   const ak = 0.6 * (fdCat(line.cat).autoK ?? 1);
   const autoF = (1 - ak * (line.auto || 0)) / (1 - ak * fdAutoTyp(y));
   const kzF = 1 - 0.15 * (G.kaizen || 0);
@@ -44627,7 +44640,7 @@ function fdCuResolve(scen, cu = {}) {
   for (const [f, F] of Object.entries(S.fields)) {
     if (F.born > y) { tech[f] = null; continue; }
     const g = fdCuNum((cu.techF || {})[f]) ?? gapAll ?? fdCuTechDefault(scen, f, y);
-    tech[f] = clamp(g, -2, 80);
+    tech[f] = Math.min(80, g);
   }
   // 事業：選ばれていなければ、会社の大きさに合わせて中心の分野から順に
   const avail = fdCuCats(scen, y);
@@ -44643,7 +44656,7 @@ function fdCuResolve(scen, cu = {}) {
     const o = (cu.cats || {})[c] || {};
     const on = anySet ? !!o.on : deflt.includes(c);
     if (!on) continue;
-    cats.push({ c, w: Math.max(0.1, fdCuNum(o.w) ?? 1), wSet: fdCuNum(o.w) !== null, gap: clamp(fdCuNum(o.gap) ?? fdCuCatGap(scen, c, tech), -2, 80), pr: clamp(Math.round(fdCuNum(o.pr) ?? 100), 50, 200) });
+    cats.push({ c, w: Math.max(0.1, fdCuNum(o.w) ?? 1), wSet: fdCuNum(o.w) !== null, gap: Math.min(80, fdCuNum(o.gap) ?? fdCuCatGap(scen, c, tech)), pr: clamp(Math.round(fdCuNum(o.pr) ?? 100), 50, 200) });
   }
   if (!cats.length && avail.length) cats.push({ c: avail[0], w: 1, gap: fdCuCatGap(scen, avail[0], tech), pr: 100 });
   const wsum = sum(cats, k => k.w);
@@ -44866,13 +44879,13 @@ function fdEditMoney(o) {
   if (msg.length) fdEdited(msg.join('・'));
   return msg.length > 0;
 }
-/* 技術：分野 → 世界の先端より何年遅れているか（マイナスは先を行く。最大2年） */
+/* 技術：分野 → 世界の先端より何年遅れているか（マイナスは先を行く。先を行く年数に上限はない） */
 function fdEditTech(gaps) {
   const y = fdYf();
   let n = 0;
   for (const [f, g] of Object.entries(gaps)) {
     if (!G.tech[f] || g === null || g === undefined || !isFinite(g) || fdFrontier(f, y) === null) continue;
-    const t = fdFrontier(f, y) - clamp(g, -2, 80);
+    const t = fdFrontier(f, y) - Math.min(80, g);
     if (G.tech[f].t === null || Math.abs(G.tech[f].t - t) > 0.05) { G.tech[f].t = t; n++; }
   }
   if (n) { fdAutoRd(); fdEdited(`技術 ${n}分野`); }
@@ -44885,7 +44898,7 @@ function fdEditProds(map) {
   for (const [id, o] of Object.entries(map)) {
     const p = G.prods.find(x => x.id === id);
     if (!p) continue;
-    if (o.gap !== null && o.gap !== undefined && isFinite(o.gap)) { const qy = y - clamp(o.gap, -2, 80); if (Math.abs(qy - p.qy) > 0.05) { p.qy = qy; const C = fdCat(p.cat); p.spec = C.spec ? C.spec(qy, y) : p.spec; n++; } }
+    if (o.gap !== null && o.gap !== undefined && isFinite(o.gap)) { const qy = y - Math.min(80, o.gap); if (Math.abs(qy - p.qy) > 0.05) { p.qy = qy; const C = fdCat(p.cat); p.spec = C.spec ? C.spec(qy, y) : p.spec; n++; } }
     if (o.pr !== null && o.pr !== undefined && isFinite(o.pr)) { const pr = clamp(Math.round(o.pr), 50, 200); if (pr !== p.pr) { p.pr = pr; n++; } }
   }
   if (n) fdEdited('製品');
@@ -45713,7 +45726,7 @@ function fdCustomHtml() {
     <div class="grid g3 cu-nums">${num('sales', '年商（億円）', Math.round(bench / 1e8), 'min="1" step="1"')}${num('cash', '現金（億円）', '自動', 'min="0" step="1"')}${num('debt', '借入金（億円）', '自動', 'min="0" step="1"')}</div>
     <span class="small muted">金額は今の価値（2025年の円）。空欄の年商は、${esc(S.bench.n)}の${y}年の売上（約${fmtYen(bench)}）。市場の取り分から見込める年商が目安に届くまでブランドを上げ（国内85・海外65まで）、それでも届かない分は小さく始めます。現金は見込みの年商の12%、借入金は2〜3割が初期値です。</span>
     <div class="grid g3 cu-nums">${num('gap', '技術の遅れ（年）', `約${Math.max(1, Math.round(fdSer(FD_JP_BASE, y) + (y < 1980 ? 2 : 1)))}年`, '', true)}${num('eng', '技術者の数', '自動', 'min="0" step="1"')}${num('ovs', '海外で作る割合（%）', R.ovs ? Math.round(R.ovs * 100) : '0', 'min="0" max="80" step="5"')}</div>
-    <span class="small muted">技術の遅れは世界の先端より何年遅れているか（空欄は日本の産業の地力に合わせる）。先を行くならマイナス（-2まで。品質の遅れも同じ）。技術者は空欄なら売上の4%を研究に使える数。海外で作る割合は、販路が「現地生産」以上の地域に工場を建てて分けます。</span>
+    <span class="small muted">技術の遅れは世界の先端より何年遅れているか（空欄は日本の産業の地力に合わせる）。先を行くならマイナス（何年先でも。品質の遅れも同じ）。技術者は空欄なら売上の4%を研究に使える数。海外で作る割合は、販路が「現地生産」以上の地域に工場を建てて分けます。</span>
     <div class="field"><span>事業（割合は売上の配分の重み。空欄は市場の大きさに合わせる。品質の遅れは年、値段は相場の%）</span>
       <div class="tbl-wrap"><table class="t compact fcu-tbl"><thead><tr><th>分野</th><th>割合</th><th>品質の遅れ</th><th>値段</th></tr></thead><tbody>${catRows}</tbody></table></div></div>
     <div class="field"><span>販路とブランド（0〜100）</span>
@@ -45784,7 +45797,7 @@ MODALS.fdEdit = (a = {}) => {
       const g = fdGap(f, y);
       return `<tr><td>${esc(F.n)}</td><td class="small muted">${g === Infinity ? '手を付けていない' : fdGapTxt(g)}</td><td>${inpS(`data-ed="tech" data-f="${f}" aria-label="${esc(F.n)}の遅れ（先を行くならマイナス）"`, g === Infinity ? '' : fdEdNum(g, 1), g === Infinity ? 'placeholder="―"' : '')} 年遅れ</td></tr>`;
     }).join('');
-    body = `<div class="tbl-wrap"><table class="t compact fcu-tbl"><thead><tr><th>技術</th><th>いま</th><th>世界の先端より</th></tr></thead><tbody>${rows}</tbody></table></div><p class="small muted">マイナスは先端より先を行く（最大2年）。</p>`;
+    body = `<div class="tbl-wrap"><table class="t compact fcu-tbl"><thead><tr><th>技術</th><th>いま</th><th>世界の先端より</th></tr></thead><tbody>${rows}</tbody></table></div><p class="small muted">マイナスは先端より先を行く（何年先でも。先へ行くほど研究では進みにくい）。</p>`;
   } else if (tab === 'prod') {
     const ps = fdActiveProds();
     const rows = ps.map(p => `<tr><td><b>${esc(p.name)}</b><div class="small muted">${esc(fdCat(p.cat).n)}</div></td><td>${inpS(`data-ed="pgap" data-p="${p.id}" aria-label="${esc(p.name)}の品質の遅れ（先を行くならマイナス）"`, fdEdNum(y - p.qy, 1))} 年遅れ</td><td>${inp(`data-ed="ppr" data-p="${p.id}" min="50" max="200" step="1" aria-label="${esc(p.name)}の値段"`, p.pr)} %</td></tr>`).join('');
@@ -45792,7 +45805,7 @@ MODALS.fdEdit = (a = {}) => {
     body = `${rows ? `<div class="tbl-wrap"><table class="t compact fcu-tbl"><thead><tr><th>製品</th><th>品質</th><th>値段（相場の%）</th></tr></thead><tbody>${rows}</tbody></table></div>` : '<div class="empty">売っている製品がありません</div>'}
       ${newCats.length ? `<h3 class="cu-h">新しい分野の製品をすぐに出す</h3><div class="row"><select data-ed="newc" aria-label="分野">${newCats.map(c => `<option value="${c}">${esc(fdCat(c).n)}</option>`).join('')}</select>
         <label class="inline small">本社工場にラインを ${inp('data-ed="newcap" min="0" step="1" aria-label="年に作れる数"', '', 'placeholder="年に作れる数" style="width:8.5em"')}</label>${btn('出す', 'fEdAddProd', {}, 'sm')}</div>
-        <p class="small muted">品質の遅れは、先を行くならマイナス（-2まで）。新しい製品の品質は、いまのその分野の技術の水準。ラインの数を空欄にすると、製品だけを出します（作る場所は工場の項目で足せます）。</p>` : ''}`;
+        <p class="small muted">品質の遅れは、先を行くならマイナス（何年先でも）。新しい製品の品質は、いまのその分野の技術の水準。ラインの数を空欄にすると、製品だけを出します（作る場所は工場の項目で足せます）。</p>` : ''}`;
   } else if (tab === 'fac') {
     const facs = G.facs.map(f => {
       const lines = f.lines.map(l => `<tr><td>${esc(fdCat(l.cat).n)}</td><td>${inp(`data-ed="lcap" data-f="${f.id}" data-c="${l.cat}" min="0" step="1" aria-label="${esc(f.n)}の${esc(fdCat(l.cat).n)}の能力"`, fdEdNum(l.cap, fdCat(l.cat).kind === 'big' ? 1 : 0))} ${esc(fdCat(l.cat).unit)}/年</td><td>${inp(`data-ed="lauto" data-f="${f.id}" data-c="${l.cat}" min="0" max="${Math.round(fdAutoMax(y) * 100)}" step="5" aria-label="${esc(f.n)}の${esc(fdCat(l.cat).n)}の自動化"`, Math.round((l.auto || 0) * 100))} %</td></tr>`).join('');
