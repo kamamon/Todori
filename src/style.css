@@ -649,7 +649,7 @@ table.fs tr.focus td:first-child { box-shadow: inset 3px 0 0 var(--brass); }
 .fsh { font-size: 14px; margin: 0 0 6px; }
 h4.fsh { font-size: 13px; }
 /* 開始画面：モードの切り替えと業種 */
-.modesw { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.modesw { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .modebtn { text-align: left; border: 1px solid var(--rule-strong); background: var(--sheet-2); border-radius: var(--r-m); padding: 10px 12px; cursor: pointer; display: grid; gap: 3px; font: inherit; color: inherit; }
 .modebtn b { font-size: 14px; font-family: var(--f-doc); letter-spacing: .04em; }
 .modebtn span { font-size: 11px; color: var(--ink-3); line-height: 1.45; }
@@ -1388,4 +1388,80 @@ details.custom > summary { cursor: pointer; font-weight: 700; font-size: 13px; c
 @media (max-width: 760px) {
   .mvrow { grid-template-columns: minmax(0, 1fr) auto; }
   .mvrow > span { grid-column: 1 / -1; }
+}
+
+
+/* =========================================================
+ *  創業記モード（会社を創業する）
+ *  時代の色：明治・大正はセピア、戦前の昭和は国防色、戦後は灰青、高度成長は青緑、安定成長は藍、平成は紺、令和は今の緑。
+ *  見出しの帯と社長室の「時代の帯」が、時代とともに移り変わる。
+ * ========================================================= */
+.fmast.era-meiji { --mast: #5b3d22; }
+.fmast.era-senzen { --mast: #4a512b; }
+.fmast.era-sengo { --mast: #3b4a59; }
+.fmast.era-kodo { --mast: #1d5f62; }
+.fmast.era-antei { --mast: #2a4572; }
+.fmast.era-heisei { --mast: #24335a; }
+.fmast.era-reiwa { --mast: #1d5240; }
+.fdbody { --era: #5b3d22; }
+.fdbody.era-senzen { --era: #4a512b; }
+.fdbody.era-sengo { --era: #3b4a59; }
+.fdbody.era-kodo { --era: #1d5f62; }
+.fdbody.era-antei { --era: #2a4572; }
+.fdbody.era-heisei { --era: #24335a; }
+.fdbody.era-reiwa { --era: #1d5240; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .fdbody { --era: #c79a64; } :root:not([data-theme="light"]) .fdbody.era-senzen { --era: #a8b071; } :root:not([data-theme="light"]) .fdbody.era-sengo { --era: #93a7bc; } :root:not([data-theme="light"]) .fdbody.era-kodo { --era: #6cc0c2; } :root:not([data-theme="light"]) .fdbody.era-antei { --era: #8aa6dc; } :root:not([data-theme="light"]) .fdbody.era-heisei { --era: #93a3d6; } :root:not([data-theme="light"]) .fdbody.era-reiwa { --era: #62b897; } }
+:root[data-theme="dark"] .fdbody { --era: #c79a64; } :root[data-theme="dark"] .fdbody.era-senzen { --era: #a8b071; } :root[data-theme="dark"] .fdbody.era-sengo { --era: #93a7bc; } :root[data-theme="dark"] .fdbody.era-kodo { --era: #6cc0c2; } :root[data-theme="dark"] .fdbody.era-antei { --era: #8aa6dc; } :root[data-theme="dark"] .fdbody.era-heisei { --era: #93a3d6; } :root[data-theme="dark"] .fdbody.era-reiwa { --era: #62b897; }
+.era-band { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px; align-items: center; border-left: 4px solid var(--era); background: color-mix(in srgb, var(--era) 9%, var(--sheet)); border-radius: 0 var(--r-m) var(--r-m) 0; padding: 12px 16px; margin-bottom: 16px; }
+.era-y { font-family: var(--f-doc); font-size: 24px; font-weight: 700; color: var(--era); letter-spacing: .06em; line-height: 1.15; white-space: nowrap; }
+.era-y span { display: block; font-family: var(--f-num); font-size: 12px; font-weight: 400; color: var(--ink-3); letter-spacing: 0; }
+.era-t { font-family: var(--f-doc); font-size: 14px; line-height: 1.8; color: var(--ink-2); }
+.fdbody .subtabs button[aria-pressed="true"] { border-bottom-color: var(--era); }
+.liccard, .progrow { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--rule); }
+.liccard:last-child, .progrow:last-child { border-bottom: 0; }
+.liccard > div, .progrow > div { min-width: 0; }
+.people { display: grid; gap: 10px; }
+.person { border: 1px solid var(--rule); border-radius: var(--r-m); padding: 8px 10px; background: var(--sheet); }
+.person .pn { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.pab { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 4px 0; }
+.pab b { font-weight: 400; color: var(--era, var(--vault)); margin-left: 4px; letter-spacing: -1px; }
+.pab i { font-style: normal; color: var(--rule-strong); }
+.orgsteps { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
+.orgsteps > div { display: grid; justify-items: center; gap: 4px; text-align: center; font-size: 11px; color: var(--ink-3); }
+.orgsteps .n { width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--rule-strong); display: grid; place-items: center; font-family: var(--f-num); }
+.orgsteps .done { color: var(--ink-2); }
+.orgsteps .done .n { background: var(--vault-soft); border-color: var(--vault); color: var(--vault); }
+.orgsteps .now { color: var(--ink); font-weight: 700; }
+.orgsteps .now .n { background: var(--era, var(--vault)); border-color: var(--era, var(--vault)); color: var(--on-vault); }
+.evhead { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+.evdate { font-size: 12px; color: var(--ink-3); font-family: var(--f-num); }
+.evtext { font-family: var(--f-doc); font-size: 15px; line-height: 1.9; }
+.evtext p { margin: 0 0 10px; }
+.evch { display: grid; gap: 8px; margin-top: 14px; }
+.evopt { text-align: left; display: grid; gap: 3px; padding: 10px 12px; border: 1px solid var(--rule-strong); border-radius: var(--r-m); background: var(--sheet); color: var(--ink); cursor: pointer; font: inherit; }
+.evopt b { font-size: 14px; }
+.evopt span { font-size: 12px; color: var(--ink-3); line-height: 1.5; }
+.evopt:hover:not(:disabled) { border-color: var(--vault); background: var(--vault-soft); }
+.evopt:disabled { opacity: .5; cursor: default; }
+.evopt:focus-visible { outline: 3px solid var(--s2); outline-offset: 1px; }
+.evimg img { max-height: 220px; object-fit: cover; }
+.chron h3 { font-family: var(--f-doc); font-size: 17px; margin: 0 0 6px; letter-spacing: .04em; }
+.chron h3 .small { margin-left: 6px; font-family: var(--f-ui); }
+.chron ol { list-style: none; margin: 0 0 18px; padding: 0; border-left: 2px solid var(--era, var(--rule)); }
+.chron li { display: grid; grid-template-columns: 58px minmax(0, 1fr); gap: 8px; padding: 6px 0 6px 12px; border-bottom: 1px dotted var(--rule); font-size: 13px; }
+.chron li .when { font-family: var(--f-num); color: var(--ink-3); font-size: 12px; padding-top: 1px; }
+.chron li.big .what { font-weight: 700; }
+.endtitle { font-family: var(--f-doc); font-size: 20px; text-align: center; margin: 4px 0 6px; letter-spacing: .04em; }
+.endrank { text-align: center; margin-bottom: 12px; }
+.endrank b { font-size: 28px; font-family: var(--f-doc); color: var(--era, var(--vault)); margin: 0 4px; }
+.fdrv tr.me td { background: var(--vault-soft); }
+.fdpl tr.sum td { border-top: 1px solid var(--rule-strong); }
+.fdletter { background: color-mix(in srgb, #b98a4a 9%, var(--sheet)); }
+.fdletter h1 { letter-spacing: .3em; padding-left: .3em; font-size: 30px; }
+.fdletter .body-text { font-size: 16px; }
+@media (max-width: 760px) {
+  .era-band { grid-template-columns: minmax(0, 1fr); gap: 4px; padding: 10px 12px; }
+  .era-y { font-size: 20px; }
+  .orgsteps { grid-template-columns: repeat(5, minmax(56px, 1fr)); overflow-x: auto; }
+  .liccard, .progrow { flex-direction: column; align-items: stretch; }
 }

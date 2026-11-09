@@ -1040,8 +1040,8 @@ function ksDeserialize(s) {
 }
 /* 今のモード（ゲーム中ならそのモード、開始画面なら選んでいるモード）の保存先 */
 function lsKeys() {
-  const m = G ? (isG() ? 'gyosei' : isK() ? 'kaisha' : 'bank') : (UI.start && UI.start.mode) || 'bank';
-  return m === 'gyosei' ? LSG : m === 'kaisha' ? LSK : LS;
+  const m = G ? (isF() ? 'sogyo' : isG() ? 'gyosei' : isK() ? 'kaisha' : 'bank') : (UI.start && UI.start.mode) || 'bank';
+  return m === 'sogyo' ? LSF : m === 'gyosei' ? LSG : m === 'kaisha' ? LSK : LS;
 }
 
 /* ---------- 開始画面（会社を経営する） ---------- */
@@ -1051,6 +1051,7 @@ function startModeSwitch() {
     <button type="button" class="modebtn${m === 'bank' ? ' on' : ''}" data-act="stMode" data-v="bank" aria-pressed="${m === 'bank'}"><b>銀行を経営する</b><span>頭取として融資を審査し、銀行の決算をまとめる</span></button>
     <button type="button" class="modebtn${m === 'kaisha' ? ' on' : ''}" data-act="stMode" data-v="kaisha" aria-pressed="${m === 'kaisha'}"><b>会社を経営する</b><span>社長として商売をし、決算書を作り、銀行から借りる</span></button>
     <button type="button" class="modebtn${m === 'gyosei' ? ' on' : ''}" data-act="stMode" data-v="gyosei" aria-pressed="${m === 'gyosei'}"><b>法令を守らせる</b><span>監督署・消防署の署長として立入検査をし、労災や火災に対応する</span></button>
+    <button type="button" class="modebtn${m === 'sogyo' ? ' on' : ''}" data-act="stMode" data-v="sogyo" aria-pressed="${m === 'sogyo'}"><b>会社を創業する</b><span>明治の小さな工場から、技術と戦略で世界企業に育てる</span></button>
   </div>`;
 }
 function ksStartDefaults() { return UI.start.k || (UI.start.k = { units: [{ type: KS_LEGACY_TYPE.ret, sc: 1 }], cond: 'normal', term: 10, coName: '', ceo: '', seed: '', coEdited: false, q: '', sec: '', eng: '' }); }
@@ -1121,7 +1122,7 @@ function renderStartK() {
   return `${scene('hero', { cls: 'hero', alt: `港町の${CITY_NAME}の風景` })}<div class="startwrap${artSrc('hero') ? ' with-hero' : ''}">${setup}${letter}</div>`;
 }
 Object.assign(ACTIONS, {
-  stMode: d => { if (UI.start.mode === 'gyosei') gyStartStore(); else if (UI.start.mode === 'kaisha') ksStartStore(); else if (typeof startStoreInputs === 'function') startStoreInputs(); UI.start.mode = d.v; render(); },
+  stMode: d => { if (UI.start.mode === 'sogyo') fdStartStore(); else if (UI.start.mode === 'gyosei') gyStartStore(); else if (UI.start.mode === 'kaisha') ksStartStore(); else if (typeof startStoreInputs === 'function') startStoreInputs(); UI.start.mode = d.v; render(); },
   kStPick: d => { ksStartStore(); const k = UI.start.k; k.units = [{ type: d.v, sc: 1 }]; if (!k.coEdited) k.coName = ''; render(); },
   kStAdd: d => { ksStartStore(); const k = UI.start.k; if (!k.units.some(x => x.type === d.v)) k.units.push({ type: d.v, sc: 1 }); render(); },
   kStMorePicks: () => { ksStartStore(); UI.start.k.morePicks = !UI.start.k.morePicks; render(); },
