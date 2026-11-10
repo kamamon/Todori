@@ -39,6 +39,8 @@ function fdEraOf(y, mo = 1) {
 }
 function fdWareki(y, mo = 1) { const e = fdEraOf(y, mo); return `${e.n}${e.y === 1 ? '元' : e.y}年`; }
 function fdQWareki(q = G.q) { return fdWareki(fdY(q), fdQo(q) * 3 + 3); }
+/* 技術の年を書く（1931 のように桁の区切りなし。1万年より先は区切る） */
+function fdYearN(t) { const v = Math.floor(t); return Math.abs(v) < 1e4 ? String(v) : fmtNum(v, 0); }
 
 /* ---------- 時代の数字（補間） ---------- */
 /* pts：[[年, 値], …]（年の昇順）。log=true は対数で補間（物価・需要のように倍で動く数字） */

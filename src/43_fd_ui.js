@@ -140,7 +140,7 @@ FD_SCREENS.f_dash = () => {
 /* ---------- 製品と市場 ---------- */
 function fdCatsShown() {
   const y = fdYf();
-  const cs = Object.keys(fdS().cats).filter(c => fdActiveProds(c).length || G.devs.some(d => d.cat === c) || G.miles['cat_' + c] || y >= fdCat(c).from - 3);
+  const cs = Object.keys(fdS().cats).filter(c => fdActiveProds(c).length || G.devs.some(d => d.cat === c) || G.miles['cat_' + c] || fdCatOpen(c, y, 3));
   return cs;
 }
 function fdPriceTip(p) { const ref = fdRef(p.cat); return `相場 ${fmtYen(ref)} の${fmtNum(p.pr, 0)}%＝${fmtYen(ref * p.pr / 100)}`; }
@@ -179,16 +179,17 @@ FD_SCREENS.f_prod = () => {
   const rr = UI.fReg && G.mk[c] && G.mk[c][UI.fReg] ? UI.fReg : 'jp';
   const M = fdMarket(c, rr);
   const rv = M.items.slice().sort((a, b) => b.share - a.share).slice(0, 8).map(it => `<tr${it.me ? ' class="me"' : ''}><td>${it.me ? '<b>' : ''}${esc(it.n)}${it.me ? '</b>' : ''}${it.o ? ` <span class="small muted">${esc(FD_REG[it.o] ? FD_REG[it.o].n : '')}</span>` : ''}</td><td class="n">${fdGapTxt(y - it.Q)}</td><td class="n">${fmtNum(it.priceK * 100, 0)}%</td><td class="n">${fmtPct(it.share * 100, 1)}</td></tr>`).join('');
-  const regSel = `<div class="seg" role="radiogroup" aria-label="地域">${fdRegOrder().filter(r => fdDemandQ(c, r) > 0).map(r => `<button type="button" data-act="fRegSel" data-r="${r}" aria-pressed="${rr === r}">${esc(FD_REG[r].s || FD_REG[r].n)}</button>`).join('')}</div>`;
+  const regsD = fdRegOrder().filter(r => fdDemandQ(c, r) > 0);
+  const regSel = regsD.length ? `<div class="seg" role="radiogroup" aria-label="地域">${regsD.map(r => `<button type="button" data-act="fRegSel" data-r="${r}" aria-pressed="${rr === r}">${esc(FD_REG[r].s || FD_REG[r].n)}</button>`).join('')}</div>` : '';
   const world = fdWorldDem(c, y);
   return `<h1 class="h1">製品と市場</h1><p class="lead">分野ごとに、製品の品質（世界の先端と比べた技術の年）・値段（相場の何%か）・作る数を決めます。取り分は、品質・値段・ブランド・販路で決まります。</p>
     ${sub}
     <div class="grid g-side"><div class="stack">
       ${panel(`${esc(C.n)}の製品`, `${ps.length ? `<div class="tbl-wrap"><table class="t"><thead><tr><th>製品</th><th class="n">品質</th><th class="n">値段</th><th class="n">原価</th><th class="n">作った数</th><th class="n">売れた数</th><th class="n"></th></tr></thead><tbody>${rows}</tbody></table></div>` : `<div class="empty">${esc(C.d || '')}</div>`}
-        <div class="stack" style="margin-top:10px">${devHtml}<div class="row">${devBtn}<span class="small muted">いまの技術で作ると、品質は${fdGapTxt(y - fdCatTech(c))}</span></div></div>`)}
-      ${panel(`${esc(C.n)}の市場（年）`, `<p class="small muted" style="margin:0 0 8px">世界の需要 約${fmtNum(world, 0)}${esc(C.unit)}・相場 ${fmtYen(fdRef(c))}（今の約${fmtYen(fdRefReal(c))}）</p><div class="tbl-wrap"><table class="t"><thead><tr><th>地域</th><th class="n">需要</th><th class="n">自社の取り分</th><th class="n">関税と運賃</th><th>進出</th></tr></thead><tbody>${regRows}</tbody></table></div>`)}
+        <div class="stack" style="margin-top:10px">${devHtml}<div class="row">${devBtn}<span class="small muted">いまの技術で作ると、品質は${fdGapTxt(y - fdLaunchQy(c))}</span></div></div>`)}
+      ${panel(`${esc(C.n)}の市場（年）`, `${fdEarly(c, y) ? `<div class="callout ok" style="margin:0 0 8px">世界にまだない製品です（世界に広まるのは${Math.ceil(C.from)}年ごろ）。世に出せば、ライバルのいない自社だけの市場が生まれます。いまは小さく、世界に広まる年に近づくほど大きくなります。</div>` : ''}<p class="small muted" style="margin:0 0 8px">世界の需要 約${fmtNum(world, 0)}${esc(C.unit)}・相場 ${fmtYen(fdRef(c))}（今の約${fmtYen(fdRefReal(c))}）</p><div class="tbl-wrap"><table class="t"><thead><tr><th>地域</th><th class="n">需要</th><th class="n">自社の取り分</th><th class="n">関税と運賃</th><th>進出</th></tr></thead><tbody>${regRows}</tbody></table></div>`)}
     </div><div class="stack">
-      ${panel('競う相手', `<div style="margin-bottom:8px">${regSel}</div><div class="tbl-wrap"><table class="t fdrv"><thead><tr><th>会社</th><th class="n">品質</th><th class="n">値段</th><th class="n">取り分</th></tr></thead><tbody>${rv}</tbody></table></div><p class="small muted" style="margin:8px 0 0">値段は相場を100%とした、その地域で買うときの値段（関税・運賃・為替を含む）。</p>`)}
+      ${panel('競う相手', `${regSel ? `<div style="margin-bottom:8px">${regSel}</div>` : ''}<div class="tbl-wrap"><table class="t fdrv"><thead><tr><th>会社</th><th class="n">品質</th><th class="n">値段</th><th class="n">取り分</th></tr></thead><tbody>${rv}</tbody></table></div><p class="small muted" style="margin:8px 0 0">値段は相場を100%とした、その地域で買うときの値段（関税・運賃・為替を含む）。</p>`)}
       ${panel('この分野について', `<p class="small" style="margin:0">${esc(C.d || '')}</p>${C.tip ? `<p class="small muted" style="margin:8px 0 0">${esc(C.tip)}</p>` : ''}`)}
     </div></div>`;
 };
@@ -207,7 +208,7 @@ FD_SCREENS.f_tech = () => {
     const gap = fdGap(f, y);
     const uses = Object.entries(S.cats).filter(([, C]) => (C.w[f] || 0) >= 0.2).map(([, C]) => C.n).slice(0, 3).join('・');
     return `<tr><td><b>${esc(F.n)}</b><div class="small muted">${esc(uses)}</div></td>
-      <td class="n">${T.t === null ? '<span class="muted">未着手</span>' : `${fmtNum(Math.floor(T.t), 0)}年`}</td><td class="n">${fdGapTxt(gap)}</td>
+      <td class="n">${T.t === null ? '<span class="muted">未着手</span>' : `${fdYearN(T.t)}年`}</td><td class="n">${fdGapTxt(gap)}</td>
       <td class="n">${T.t === null && !T.a ? '―' : `${fmtNum(T.lastD || 0, 1)}年/年`}</td>
       <td class="n nowrap">${btn('−', 'fRdW', { f, d: -1 }, 'sm', { disabled: !(T.a > 0), 'aria-label': `${F.n}の配分を減らす` })}<span class="num" style="display:inline-block;min-width:3.2em;text-align:center">${fmtPct((T.a || 0) / totW * 100, 0)}</span>${btn('＋', 'fRdW', { f, d: 1 }, 'sm', { 'aria-label': `${F.n}の配分を増やす` })}</td></tr>`;
   }).join('');
@@ -216,7 +217,7 @@ FD_SCREENS.f_tech = () => {
     <div class="row" style="margin-top:8px">${hireSteps.map(n => btn(`−${fmtNum(n, 0)}人`, 'fEng', { n: -n }, 'sm', { disabled: G.staff.eng < n })).join('')}${hireSteps.map(n => btn(`＋${fmtNum(n, 0)}人`, 'fEng', { n }, 'sm')).join('')}</div>
     <label class="row small" style="margin-top:8px"><input type="checkbox" data-ch="fAutoRd"${G.policy.autoRd ? ' checked' : ''}> 研究の配分を自動にする（売っている製品に使う技術を、遅れているほど厚く）</label>`;
   const devs = G.devs.map(d => `<tr><td><b>${esc(d.n)}</b><div class="small muted">${esc(fdCat(d.cat).n)}</div></td><td>${meter(d.prog, d.need, 'ok')}</td><td class="n">${fmtPct(d.prog / d.need * 100, 0)}</td><td class="n">${fmtNum(d.eng, 0)}人</td><td class="n nowrap">${btn('人を増やす', 'fDevEng', { id: d.id, d: 1 }, 'sm')}${btn('やめる', 'fDevStop', { id: d.id }, 'sm danger')}</td></tr>`).join('');
-  const lics = fdLicOffers().map(o => `<div class="liccard"><div><b>${esc(o.L.n)}</b>（${esc(FD_REG[o.L.o].n)}）<div class="small">${esc(fdField(o.L.f).n)}：いま${fmtNum(Math.floor(G.tech[o.L.f].t ?? (y - 40)), 0)}年 → 約${fmtNum(Math.floor(y - o.lag), 0)}年の水準</div><div class="small muted">一時金 ${fmtYen(o.fee)}・売上の${o.roy}%を${o.years}年${o.L.ban && o.L.ban.length ? `・その間は${o.L.ban.map(r => FD_REG[r].n).join('・')}へ輸出できない` : ''}</div>${o.L.d ? `<div class="small muted">${esc(o.L.d)}</div>` : ''}</div>${btn('導入する', 'fLic', { id: o.L.id }, 'sm primary', { disabled: G.bs.cash < o.fee })}</div>`).join('');
+  const lics = fdLicOffers().map(o => `<div class="liccard"><div><b>${esc(o.L.n)}</b>（${esc(FD_REG[o.L.o].n)}）<div class="small">${esc(fdField(o.L.f).n)}：いま${fdYearN(G.tech[o.L.f].t ?? (y - 40))}年 → 約${fdYearN(y - o.lag)}年の水準</div><div class="small muted">一時金 ${fmtYen(o.fee)}・売上の${o.roy}%を${o.years}年${o.L.ban && o.L.ban.length ? `・その間は${o.L.ban.map(r => FD_REG[r].n).join('・')}へ輸出できない` : ''}</div>${o.L.d ? `<div class="small muted">${esc(o.L.d)}</div>` : ''}</div>${btn('導入する', 'fLic', { id: o.L.id }, 'sm primary', { disabled: G.bs.cash < o.fee })}</div>`).join('');
   const active = G.lics.filter(L => L.until > G.q).map(L => `<li>${esc(L.n)}：${esc(fdField(L.f).n)}（${fdY(L.until)}年まで・使用料 ${L.roy}%）</li>`).join('');
   return `<h1 class="h1">技術と開発</h1><p class="lead">技術の水準は「世界の何年の先端に追いついているか」で表します。世界の先端は毎年1年ずつ進みます。遅れているうちは学べることが多く速く追いつけますが、先端に近づくほど自分で切り開く必要があり、進みは遅くなります。</p>
     <div class="grid g-side"><div class="stack">
